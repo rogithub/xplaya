@@ -10,7 +10,7 @@
     </form>
     
     <h2 class="pt-4">
-        Categorías
+        Productos y Servicios
     </h2>
     <div class="row row-cols-sm-1 row-cols-md-2 row-cols-lg-4 g-2 pb-4">
         {{ range .Pages }}
@@ -24,13 +24,8 @@
 
 {{ define "carpeta" }}
 <div class="col">
-    <div class="card" style="max-width: 32rem;">
-        <div class="card-header">{{ .Title }}</div>
-        <div class="card-body">
-            <p class="card-text text-center">
-                <a href="{{ .Permalink }}">{{ .Title }}</a>
-            </p>
-        </div>
-    </div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item"><a href="{{ .Permalink }}">{{ .Title }}</a></li>            
+    </ul>
 </div>
 {{end}}
