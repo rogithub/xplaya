@@ -6,27 +6,29 @@
 #+layout: anunciar
 
 * Cómo anunciarte
-Para publicar un anuncio con nosotros sólo necesitas enviar un email con lo que
+Para publicar un anuncio sólo necesitas [[https://wa.me/524522018336/?text=xPlaya][enviarme un WhatsApp 452 201 8336]] con lo que
 quieras que diga tu anuncio.
 
-El email puede tener cualquier tipo de contenido incluyendo texto, emojis, fotos, video, 
-coordenadas, links a otras páginas, etcétera.
-
-Las imágenes pueden estar como archivos adjuntos. 
+Puedes incluir todo tipo de contenido incluyendo texto, emojis, fotos, 
+ubicación de tu negocio, links a tus redes sociales, etcétera.
 
 No olvides incluir datos de contacto que serán visibles para que te busquen posibles
 clientes.
 
-[[mailto:correo.rodrigo@gmail.com][correo.rodrigo@gmail.com]]
+Cada anuncio estará asociado a la cuenta de WhatsApp que nos contácte, y él propietario de ese
+número de célular es el único que puede solicitar cambios de contenido o que se borre el anuncio.
+
+* ¿Por qué existe ésta página?
+Por qué a veces, los clientes no quieren recibir miles de mensages en un grupo de ventas, pero
+quieren saber dónde buscarte cuando necesiten un plomero, una tienda de abarrotes, una escuela de idiomas, etc. 
 
 ** Quién puede anunciar
-Por ahora sólo estamos ofreciendo el servicio en México. Nosotros sólo ofrecemos
-el servicio de anuncio, las negociaciones y contrato final se hace entre el 
-propietario y el inquilino. Si te interesa éste servicio para otro país 
-ponte en contacto con nostros.
+Negocios y servicios en Playa del Carmen, Quintana Roo, México. Nosotros sólo ofrecemos
+el servicio de anuncio, las negociaciones y contrato final se hace directamente entre los
+interesados.
 
-** Tengo varias propiedades
-Anunciaremos todas las que tu nos digas. Cada una en su página con un link
+** Tengo varios negocios
+Anunciaremos todo lo que tú nos digas. Cada uno en su página con un link
 partícular ¡GRATIS!
 
 ** Emojis  🥳👏🏘️
@@ -37,18 +39,6 @@ expresen tus ideas en [[https://emojipedia.org/][emojipedia]]
 ** Ya estoy anunciado en otro lugar
 Aun así puedes anunciarte aquí, incluso puedes agregar links
 a otras páginas como por ejemplo redes sociales.
-
-** Mi casa ya se rentó
-Puedes pedir que se siga anunciando con la advertencia "rentada". O bien
-puedes pedir que se deshabilite temporalmente tu anuncio y habilitarlo 
-de nuevo cuando tu casa vuelva a estar disponible.
-
-** Tarifas por temporada
-Pon una tablita con las tarifas por temporada. Si no sabes cómo, nosotros te ayudamos.
-
-** No quiero publicar el precio
-Aunque se sugiere brindar toda la información disponible a los visitantes
-de la página, nada es obligatorio, tú controlas tu contenido.
 
 ** Mapa y gelocalización
 Si deseas publicar la ubicación con ayuda de un mapa, sólo necesitamos
@@ -62,15 +52,8 @@ nos hayas proporcionado. Estar aquí es totalmente voluntario.
 ** No puedo
 Si se te dificulta sólo pon toda la información como tú puedas y 
 pide que lo acomodemos por ti. Sí aún te resulta demaciado difícil contáctanos
-por WhatsApp [[https://wa.me/524522018336?text=RENTAS][452 201 8336]]
+por WhatsApp [[https://wa.me/524522018336?text=xPlaya][452 201 8336]]
 y con gusto te apoyamos.
-
-** Más servicios
-Por ahora sólo ofrecemos rentas de bienes inmuebles, 
-estamos explorando la posibilidad de extender éste modelo para
-anunciar otros productos y servicios como: restaurantes, compra-venta
-de vehículos, etcétera. Si algo de eso te parece
-interesante hásnolo saber para iniciar cuanto antes.
 
 ** Sugerencias
 Si tienes alguna duda o comentario, comunícate con nosotros 
