@@ -12,8 +12,8 @@ title = "xPlaya"
   category = "categorias"
   series = "series"
   tag = "tags"
-  estado = "carpeta"
-  ciudad = "subcarpeta"
+  carpeta = "carpeta"
+  subcarpeta = "subcarpeta"
 
 
 [params]
