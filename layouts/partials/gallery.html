@@ -1,0 +1,13 @@
+<div id="gallery">
+    {{ with .Resources.ByType "image" }}
+    {{ range . }}
+
+    {{ $resource := . }}
+    {{ $image := $resource.Fit "600x400" }}
+    <figure class="figure pt-2">
+        <img class="img-fluid mx-auto d-block" src="{{ .RelPermalink }}" width="{{ $image.Width }}"
+            height="{{ $image.Height }}">
+    </figure>
+    {{ end }}
+    {{ end }}
+</div>

@@ -1,0 +1,10 @@
+
+{{ range .Site.Params.always_on_js -}}
+<script type="text/javascript" src="{{ . | absURL }}"></script>
+{{- end }}
+
+{{ if .IsPage }} 
+{{ range .Site.Params.content_pages_js -}}
+<script type="text/javascript" src="{{ . | absURL }}"></script>
+{{- end }}
+{{ end }}

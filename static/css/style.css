@@ -1,0 +1,47 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Bellota+Text');
+body {
+    font-size: larger;
+    font-family: 'Bellota Text';    
+}
+
+a {
+    color: black;
+}
+
+main {
+    padding-top: 1em;
+    padding-bottom: 4em;
+}
+
+.topbar {
+    background-color:cadetblue;
+}
+
+
+/* gallery arrows begin */
+.slick-arrow {
+    z-index: 1;
+}
+.slick-prev:before,
+.slick-next:before
+{
+    font-size: 50px;
+
+    opacity: .75;
+    color: cadetblue;   
+}
+
+.slick-prev {
+    left: 10px;
+}
+.slick-next {
+    right: 40px;
+}
+/* gallery arrows end */
+
+
+#map {
+    height: 600px;
+    width: 100%;
+}

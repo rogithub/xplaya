@@ -1,0 +1,85 @@
+baseURL = "https://rockdrigoj.gitlab.io/rentas/"
+# Using two lines bellow to make possible
+# to navigate using virtual folder /rentas/ 
+RelativeURLs=true
+CanonifyURLs=true
+
+languageCode = "es-mx"
+title = "Rentas"
+
+
+[taxonomies]
+  category = "categories"
+  series = "series"
+  tag = "tags"
+  estado = "estado"
+  ciudad = "ciudad"
+  colonia = "colonia"
+  condominio = "condominio"
+
+[params]
+  always_on_css = ["libs/bootstrap-5.0.1-dist/css/bootstrap.min.css",                
+                "css/style.css"]
+  content_pages_css = [ "libs/v6.5.0-dist/ol.css", 
+                "libs/slick-1.8.1/slick/slick.css", 
+                "libs/slick-1.8.1/slick/slick-theme.css", ]
+
+  always_on_js = ["libs/bootstrap-5.0.1-dist/js/bootstrap.bundle.min.js", 
+                "libs/jquery/jquery-3.3.1.min.js", 
+                "libs/fuse/fuse.min.js", 
+                "libs/jquerymark/jquery.mark.min.js", 
+                "js/search.js"]
+  content_pages_js = [ "libs/slick-1.8.1/slick/slick.min.js",
+                "libs/v6.5.0-dist/ol.js",
+                "js/site.js"]
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[imaging]
+# Default resample filter used for resizing. Default is Box,
+# a simple and fast averaging filter appropriate for downscaling.
+# See https://github.com/disintegration/imaging
+resampleFilter = "box"
+
+# Default JPEG or WebP quality setting. Default is 75.
+quality = 100
+
+# Default hint about what type of image. Currently only used for WebP encoding.
+# Default is "photo".
+# Valid values are "picture", "photo", "drawing", "icon", or "text".
+hint = "photo"
+
+# Anchor used when cropping pictures.
+# Default is "smart" which does Smart Cropping, using https://github.com/muesli/smartcrop
+# Smart Cropping is content aware and tries to find the best crop for each image.
+# Valid values are Smart, Center, TopLeft, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight
+anchor = "smart"
+
+# Default background color.
+# Hugo will preserve transparency for target formats that supports it,
+# but will fall back to this color for JPEG.
+# Expects a standard HEX color string with 3 or 6 digits.
+# See https://www.google.com/search?q=color+picker
+bgColor = "#ffffff"
+
+[imaging.exif]
+ # Regexp matching the fields you want to Exclude from the (massive) set of Exif info
+# available. As we cache this info to disk, this is for performance and
+# disk space reasons more than anything.
+# If you want it all, put ".*" in this config setting.
+# Note that if neither this or ExcludeFields is set, Hugo will return a small
+# default set.
+includeFields = ""
+
+# Regexp matching the Exif fields you want to exclude. This may be easier to use
+# than IncludeFields above, depending on what you want.
+excludeFields = ""
+
+# Hugo extracts the "photo taken" date/time into .Date by default.
+# Set this to true to turn it off.
+disableDate = false
+
+# Hugo extracts the "photo taken where" (GPS latitude and longitude) into
+# .Long and .Lat. Set this to true to turn it off.
+disableLatLong = false

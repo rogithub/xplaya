@@ -1,0 +1,37 @@
+{{ define "main" }}
+<main>
+    <h1>
+        Renta de Casas y Departamentos
+        <small class="text-muted">¡Anuncio Gratis!</small>
+    </h1>
+
+    <p>
+        El trato se hace directamente entre propietario e inquilino, 
+        sin intermediarios, sin tarifas ocultas, sin problemas.
+    </p>
+
+    <h2>
+        Estados
+    </h2>
+    <div class="row row-cols-sm-1 row-cols-md-2 row-cols-lg-4 g-2 pb-4">
+        {{ range .Pages }}
+        {{ if .IsSection }}
+            {{ template "estado" . }}
+        {{end}}
+        {{end}}
+    </div>
+</main>
+{{ end }}
+
+{{ define "estado" }}
+<div class="col">
+    <div class="card" style="max-width: 32rem;">
+        <div class="card-header">{{ .Title }}</div>
+        <div class="card-body">
+            <p class="card-text text-center">
+                <a href="{{ .Permalink }}">{{ .Title }}</a>
+            </p>
+        </div>
+    </div>
+</div>
+{{end}}

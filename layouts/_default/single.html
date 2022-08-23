@@ -1,0 +1,25 @@
+{{ define "main" }}
+<main>
+    <div class="row">
+        <div class="col">
+            <h1>{{ .Title }}</h1>
+
+            {{ if isset .Params "date" }}
+            <span class="text-muted">
+                {{ .Date.Format "Jan 2, 2006" }}
+            </span>
+            {{ end }}
+
+            {{ partial "gallery" . }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            {{ .Content }}
+        </div>
+    </div>
+
+    {{ partial "map" . }}
+</main>
+{{ end }}

@@ -1,0 +1,19 @@
+{{ define "main" }}
+<main>
+    <header>
+        <h1>{{ .Title }}</h1>
+    </header>
+    <div>
+        <ul class="list-group list-group-flush">
+            {{ range .Pages }}
+            <li class="list-group-item">
+                {{ if not .IsSection }} [<span>{{ .Date.Format "Jan 2, 2006" }}</span>]{{ end }}
+                <a href="{{ .Permalink }}">{{ .Title }}</a>
+            </li>
+
+            {{ end }}
+        </ul>
+
+    </div>
+</main>
+{{ end }}
