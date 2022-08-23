@@ -4,8 +4,12 @@
         Directorio de servicios en Playa del Carmen
         <small class="text-muted">¡Anuncio Gratis!</small>
     </h1>
+    <form class="d-flex" method="GET" action="{{"search"|absURL}}">
+        <input id="search-query" name="s" class="form-control me-2" type="search" placeholder="Buscar" aria-label="search">
+        <button class="btn btn-warning" type="submit">Buscar</button>
+    </form>
     
-    <h2>
+    <h2 class="pt-4">
         Categorías
     </h2>
     <div class="row row-cols-sm-1 row-cols-md-2 row-cols-lg-4 g-2 pb-4">

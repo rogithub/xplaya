@@ -12,9 +12,11 @@
     <div class="container pt-4">
         {{ partial "menu" . }}
 
-        {{ block "main" . }}
-        {{ end }}
-
+        <div class="container pt-3">            
+            {{ block "main" . }}
+            {{ end }}
+        </div>        
+        
         {{ partial "footer" . }}
     </div>
 
