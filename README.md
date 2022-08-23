@@ -1,2 +1,2 @@
 # url
-https://rockdrigoj.gitlab.io/rentas/
+https://xplaya.com

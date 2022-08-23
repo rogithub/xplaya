@@ -1,15 +1,15 @@
-baseURL = "https://rockdrigoj.gitlab.io/rentas/"
+baseURL = "https://xplaya.com"
 # Using two lines bellow to make possible
 # to navigate using virtual folder /rentas/ 
-RelativeURLs=true
-CanonifyURLs=true
+# RelativeURLs=true
+# CanonifyURLs=true
 
 languageCode = "es-mx"
-title = "Rentas"
+title = "xPlaya"
 
 
 [taxonomies]
-  category = "categories"
+  category = "categorias"
   series = "series"
   tag = "tags"
   estado = "estado"
