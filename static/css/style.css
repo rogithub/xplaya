@@ -15,7 +15,7 @@ main {
 }
 
 .topbar {
-    background-color:cadetblue;
+    background-color:#e3f2fd;
 }
 
 
@@ -29,7 +29,7 @@ main {
     font-size: 50px;
 
     opacity: .75;
-    color: cadetblue;   
+    color: #e3f2fd; 
 }
 
 .slick-prev {
