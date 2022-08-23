@@ -26,10 +26,8 @@ if (searchQuery) {
     $('#search-results').append("<p>Capture una palabra o frase para buscar</p>");
 }
 
-
-// added /rentas/ cause it is hosted on a virtual directory
 function executeSearch(searchQuery) {
-    $.getJSON("/rentas/index.json", function (data) {
+    $.getJSON("/index.json", function (data) {
         var pages = data;
         var fuse = new Fuse(pages, fuseOptions);
         var result = fuse.search(searchQuery);

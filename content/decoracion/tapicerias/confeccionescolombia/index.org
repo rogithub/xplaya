@@ -1,0 +1,18 @@
+#+title: Confecciones Colombia
+#+date: 2022-08-23
+#+draft: false
+#+categorias[]: decoración interiores tapicería cojinería cortinas toldos camastros colchonetas fundas cubiertas
+#+latitud: 20.677421
+#+longitud: -87.111919
+#+whatsapp: 52 452 201 8336
+
+Confecciones Colombia es una empresa nueva en la ciudad de Playa del Carmen, 
+que brinda servicios de confección industrial a la medida de tus necesidades.
+
+
+- 🌐 [[https://www.confeccionescolombia.com/][https://confeccionescolombia.com]]
+- ☎️ 984 147 4171
+- 📱 [[https://wa.me/524522018336/?text=xPlaya][WhatsApp 452 201 8336]]
+- 📧 contacto@confeccionescolombia.com
+
+Canoras 11 MZ26 LT2 42, Villas del Carmen. Solidaridad, Quintana Roo. México.

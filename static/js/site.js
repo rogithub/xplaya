@@ -1,4 +1,5 @@
 let setupGallery = () => {
+    if ($('#gallery').find("img").length === 0) return;
     $('#gallery').slick({
         dots: true,
         infinite: true,
@@ -37,7 +38,7 @@ let setupMap = () => {
         style: new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '/rentas/img/marker.png'
+                src: '/img/marker.png'
             })
         })
     });
