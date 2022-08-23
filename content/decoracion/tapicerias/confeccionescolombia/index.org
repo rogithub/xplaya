@@ -1,7 +1,7 @@
 #+title: Confecciones Colombia
 #+date: 2022-08-23
 #+draft: false
-#+categorias[]: decoración interiores tapicería cojinería cortinas toldos camastros colchonetas fundas cubiertas
+#+categories[]: decoración interiores tapicería cojinería cortinas toldos camastros colchonetas fundas cubiertas
 #+latitud: 20.677421
 #+longitud: -87.111919
 #+whatsapp: 52 452 201 8336

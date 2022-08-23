@@ -9,7 +9,7 @@ title = "xPlaya"
 
 
 [taxonomies]
-  category = "categorias"
+  category = "categories"
   series = "series"
   tag = "tags"
   carpeta = "carpeta"
