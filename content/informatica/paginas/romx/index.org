@@ -1,0 +1,12 @@
+#+title: Ingeniero en Sistemas
+#+date: 2022-08-24
+#+draft: false
+#+categories[]: servidores bases de datos
+#+whatsapp: 52 452 201 8336
+
+Desarrollo de páginas web, mantenimiento e instalación de servidores, sistemas informáticos, bases de datos.
+
+
+- 🌐 [[https://rogithub.github.io//][Web master]]
+- ☎️ 984 147 4171
+- 📱 [[https://wa.me/524522018336/?text=xPlaya][WhatsApp 452 201 8336]]
