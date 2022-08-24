@@ -7,6 +7,4 @@
 Desarrollo de páginas web, mantenimiento e instalación de servidores, sistemas informáticos, bases de datos.
 
 
-- 🌐 [[https://rogithub.github.io//][Web master]]
-- ☎️ 984 147 4171
-- 📱 [[https://wa.me/524522018336/?text=xPlaya][WhatsApp 452 201 8336]]
+- 🌐 [[https://rogithub.github.io/][Web master]]
