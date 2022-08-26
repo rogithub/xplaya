@@ -9,6 +9,24 @@
         <button class="btn btn-warning" type="submit">Buscar</button>
     </form>
     
+    
+    <div id="gallery">
+        {{ $all_images := slice }}
+        {{ range .Site.Pages }}
+            {{ $all_images = $all_images | append (.Page.Resources.ByType "image") }}
+        {{ end }}
+        {{ range sort $all_images ".Name" "asc" }}            
+                            
+        <figure class="figure pt-2">
+            <img class="img-fluid mx-auto d-block" src="{{ .RelPermalink }}" width="300" height="300">
+        </figure>                            
+            
+        {{ end }}
+    </div>
+
+    
+    
+
     <h2 class="pt-4">
         Productos y Servicios
     </h2>
@@ -28,4 +46,5 @@
         <li class="list-group-item"><a href="{{ .Permalink }}">{{ .Title }}</a></li>            
     </ul>
 </div>
+
 {{end}}
