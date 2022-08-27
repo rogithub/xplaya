@@ -4,28 +4,30 @@
         Playa del Carmen
         <small class="text-muted">Directorio de proveedores</small>
     </h1>
-    <form class="d-flex" method="GET" action="{{"search"|absURL}}">
-        <input id="search-query" name="s" class="form-control me-2" type="search" placeholder="Buscar" aria-label="search">
+    <form class="d-flex" method="GET" action="{{" search"|absURL}}">
+        <input id="search-query" name="s" class="form-control me-2" type="search" placeholder="Buscar"
+            aria-label="search">
         <button class="btn btn-warning" type="submit">Buscar</button>
     </form>
-    
-    
+
+
     <div id="gallery">
         {{ $all_images := slice }}
         {{ range .Site.Pages }}
-            {{ $all_images = $all_images | append (.Page.Resources.ByType "image") }}
+        {{ $all_images = $all_images | append (.Page.Resources.ByType "image") }}
         {{ end }}
-        {{ range sort $all_images ".Name" "asc" }}            
-                            
+        {{ range sort $all_images ".Name" "asc" }}
+
         <figure class="figure pt-2">
-            <img class="img-fluid mx-auto d-block" src="{{ .RelPermalink }}" width="300" height="300">
-        </figure>                            
-            
+            <a href="{{ .RelPermalink  }}">
+                <img class="img-fluid mx-auto d-block" src="{{ .RelPermalink }}" width="300" height="300">
+            </a>
+        </figure>
         {{ end }}
     </div>
 
-    
-    
+
+
 
     <h2 class="pt-4">
         Productos y Servicios
@@ -33,7 +35,7 @@
     <div class="row row-cols-sm-1 row-cols-md-2 row-cols-lg-4 g-2 pb-4">
         {{ range .Pages }}
         {{ if .IsSection }}
-            {{ template "carpeta" . }}
+        {{ template "carpeta" . }}
         {{end}}
         {{end}}
     </div>
@@ -43,7 +45,7 @@
 {{ define "carpeta" }}
 <div class="col">
     <ul class="list-group list-group-flush">
-        <li class="list-group-item"><a href="{{ .Permalink }}">{{ .Title }}</a></li>            
+        <li class="list-group-item"><a href="{{ .Permalink }}">{{ .Title }}</a></li>
     </ul>
 </div>
 
