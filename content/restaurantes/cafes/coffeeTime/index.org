@@ -1,0 +1,10 @@
+#+title: Coffee Time
+#+date: 2022-08-29
+#+draft: false
+#+categories[]: domicilio café cafetería
+#+whatsapp: 52 984 196 6381
+
+Servicio a domicilio
+
+- 📱 [[https://wa.me/529841966381/?text=xPlaya][WhatsApp 984 196 6381]]
+
