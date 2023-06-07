@@ -1,4 +1,4 @@
-baseURL = "https://rogithub.github.io/xplaya"
+baseURL = "https://xplaya.pages.dev/"
 # Using two lines bellow to make possible
 # to navigate using virtual folder /rentas/ 
 # RelativeURLs=true
