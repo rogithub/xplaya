@@ -131,9 +131,9 @@ Documentar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 - [ ] Ruta `GET /terminos` — lee `DIAS_VIGENCIA_MONEDERO` y `TIPO_CAMBIO_MONEDERO`
 - [ ] Ruta `GET /r/:code` — redirect 301 según `Tipo` en `ShortUrls`
 
-## Fase 5 — Reseñas
+## Fase 5 — Reseñas ✓
 
-- [ ] Ruta `GET /resena` — página de reseñas
+- [x] Ruta `GET /resena` — página de reseñas
 
 ## Fase 6 — Deploy
 

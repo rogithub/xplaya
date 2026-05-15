@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fase 5 — Reseñas
+
+**Archivos a revisar:**
+- `src/routes/pages.rs` — handler estático para `GET /resena`
+- `src/routes/mod.rs` — se agregó `pub mod pages`
+- `src/main.rs` — se registró la ruta `/resena`
+- `templates/pages/resena.html` — página con card centrada y link a Google Maps
+- `static/img/circleai.jpg` — logo copiado desde `inventario_papeleria`
+
+**Qué hace cada parte:**
+
+`pages.rs` es el módulo para páginas estáticas — rutas que no necesitan consultar la BD. El handler `resena` solo obtiene el template, lo renderiza con un contexto vacío (`context!()`) y devuelve el HTML. `context!()` sin argumentos es válido en Minijinja cuando el template no usa variables de servidor.
+
+El template extiende `base.html` y usa Bulma puro: `box`, `columns is-centered`, `is-narrow` para centrar la card sin escribir CSS propio. El link a Google Maps usa el Place ID de la papelería (`ChIJVw8jFnxDTo8RnF2hE0foXRw`) que venía hardcodeado en el componente Angular predecesor.
+
+`static/img/` es una subcarpeta nueva — `ServeDir::new("static")` en `main.rs` sirve todo el árbol bajo `/static/`, así que `/static/img/circleai.jpg` funciona automáticamente sin cambios en la config.
+
+---
+
 ## Fase 3 — Carrito de compras
 
 **Archivos a revisar:**
