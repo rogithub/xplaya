@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Monedero — Papelería xplaya.com{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+    <div class="column is-narrow" style="max-width: 480px;">
+
+        <div class="has-text-centered mb-5">
+            <span style="font-size: 3rem;">💳</span>
+            <h1 class="title is-4 mt-3">Monedero electrónico</h1>
+            <p class="has-text-grey">Ingresa tu número de teléfono para consultar tu saldo y cashback.</p>
+        </div>
+
+        {% if error %}
+        <div class="notification is-danger is-light mb-4">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="/saldo">
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large has-text-centered"
+                           type="tel" name="telefono"
+                           placeholder="10 dígitos"
+                           maxlength="15"
+                           inputmode="numeric"
+                           autofocus>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button type="submit" class="button is-success is-large is-fullwidth">
+                        Consultar saldo
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="box has-text-centered mt-5">
+            <p class="has-text-weight-semibold mb-2">💳 ¿Aún no tienes Monedero?</p>
+            <a href="https://wa.me/524522018336?text=%23monedero%20"
+               target="_blank" rel="noopener" class="has-text-success">
+                Manda <strong>#monedero</strong> y tu nombre para registrarte.
+            </a>
+        </div>
+
+        <p class="has-text-centered mt-3">
+            <a href="/terminos" class="is-size-7 has-text-grey">Términos y condiciones</a>
+        </p>
+
+    </div>
+</div>
+
+{% endblock %}

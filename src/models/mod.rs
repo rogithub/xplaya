@@ -1,3 +1,3 @@
 pub mod producto;
 pub mod pedido;
-// pub mod monedero;    // Fase 4
+pub mod monedero;

@@ -4,6 +4,46 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fase 4 — Monedero, recibos y URLs cortas
+
+**Archivos a revisar:**
+- `Cargo.toml` — se agregaron `chrono` y la feature `chrono` en sqlx
+- `src/models/monedero.rs` — structs serializables para todas las vistas de esta fase
+- `src/db/settings.rs` — lee `DIAS_VIGENCIA_MONEDERO` y `TIPO_CAMBIO_MONEDERO` de la tabla `Settings`
+- `src/db/short_urls.rs` — busca un `code` en la tabla `ShortUrls` y devuelve tipo + UUID destino
+- `src/db/monedero.rs` — cuatro queries: `recibo`, `cotizacion`, `monedero` y `buscar_cliente`
+- `src/routes/monedero.rs` — handlers para `/terminos`, `/saldo`, `/app/:id`, `/recibo/:id`, `/cotizacion/:uid`, `/r/:code`
+- `src/main.rs` — se registraron las 7 rutas nuevas
+- `templates/monedero/saldo.html` — formulario de búsqueda por teléfono; errores via query param `?error=...`
+- `templates/monedero/app.html` — monedero del cliente: saldo card + historial con badges de estado
+- `templates/monedero/recibo.html` — ticket digital con tabla de productos, formas de pago y bloque de monedero
+- `templates/monedero/cotizacion.html` — tabla de cotización con total
+- `templates/pages/terminos.html` — términos completos del monedero con datos dinámicos de BD
+
+**Qué hace cada parte:**
+
+`chrono` es la crate estándar de Rust para fechas y horas. La agregamos porque sqlx necesita mapear columnas TIMESTAMP de PostgreSQL a un tipo Rust, y `chrono::NaiveDateTime` es el estándar para eso. Sin ella, las fechas llegarían como bytes crudos. La feature `chrono` en sqlx activa ese mapeo automático vía `#[derive(sqlx::FromRow)]`.
+
+`db/settings.rs` lee dos claves de la tabla `Settings` con un solo `fetch_all`. Luego itera las filas y parsea cada valor: `DIAS_VIGENCIA_MONEDERO` a `i32`, `TIPO_CAMBIO_MONEDERO` a `Decimal`. Si alguna clave no existe en la BD, el código usa valores por defecto (90 días, 2%). Esto hace que el handler de `/terminos` nunca falle por datos faltantes.
+
+`db/short_urls.rs` hace un `fetch_optional` en la tabla `ShortUrls`. Si el código no existe, devuelve `None` → el handler retorna 404. Si existe, devuelve `(tipo, targetid)` que el handler usa para construir la URL de destino y hacer el redirect 301.
+
+`db/monedero.rs` tiene las queries más complejas de la fase:
+
+- `recibo()`: 4 queries en paralelo lógico (secuencial en código): (1) la venta de `Ajustes`, (2) los productos de `AjustesProductos` con un `EXISTS` al view `v_ingresos_trasladados` para marcar los "Sin cashback", (3) el cashback generado sumando `MonederoGenerados`, (4) el saldo actual del cliente desde `v_ajuste_producto_monedero`. El `total` se calcula en Rust sumando todos los pagos menos el cambio — mismo algoritmo que el POS en C#.
+
+- `cotizacion()`: usa `LATERAL` para obtener el precio más reciente de cada producto en `PreciosProductos`. `LATERAL` es un JOIN especial de PostgreSQL que permite hacer una subquery correlacionada por fila, útil cuando queremos el último precio de un producto sin duplicar filas con `DISTINCT ON` y GROUP BY.
+
+- `monedero()`: replica la query `HistorialMonedero` del POS. Agrupa por venta (`Ajustes.Id`), suma el cashback generado y gastado, y calcula `BOOL_OR(g.devolucionid IS NOT NULL)` para saber si algún ítem de esa venta fue devuelto. También detecta entradas con saldo próximo a vencer (en los próximos 30 días) para mostrar la alerta.
+
+- `buscar_cliente()`: busca por los últimos 10 dígitos del teléfono — mismo patrón que `db/pedidos.rs`.
+
+`saldo_post` usa `Form<SaldoForm>` — extractor de Axum para datos de formulario HTML (`Content-Type: application/x-www-form-urlencoded`). Normaliza el teléfono igual que el POS en C#. Los errores no usan cookies (no hay TempData como en ASP.NET) sino query params: redirect a `/saldo?error=mensaje`.
+
+Los helpers `fecha_es()` y `hora()` en `db/monedero.rs` formatean `NaiveDateTime` a texto en español. Los meses están hardcodeados — Rust no tiene localización de fechas en la stdlib, y una dependencia solo para los nombres de los meses sería excesiva.
+
+---
+
 ## Fase 5 — Reseñas
 
 **Archivos a revisar:**

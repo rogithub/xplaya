@@ -40,6 +40,13 @@ async fn main() {
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))
         .route("/resena", get(routes::pages::resena))
+        .route("/terminos", get(routes::monedero::terminos))
+        .route("/saldo", get(routes::monedero::saldo_get))
+        .route("/saldo", post(routes::monedero::saldo_post))
+        .route("/app/{cliente_id}", get(routes::monedero::app))
+        .route("/recibo/{id}", get(routes::monedero::recibo))
+        .route("/cotizacion/{uid}", get(routes::monedero::cotizacion))
+        .route("/r/{code}", get(routes::monedero::redirigir))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state);
 

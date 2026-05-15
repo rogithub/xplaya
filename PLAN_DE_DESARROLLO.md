@@ -119,17 +119,17 @@ Documentar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 - [x] `db/pedidos.rs` — crear cliente por teléfono, crear pedido
 - [x] `POST /pedidos` — enviar pedido al servidor
 
-## Fase 4 — Monedero, recibos y URLs cortas
+## Fase 4 — Monedero, recibos y URLs cortas ✓
 
-- [ ] `db/monedero.rs` — balance y historial de cashback por cliente (`Clientes.Id`)
-- [ ] `db/settings.rs` — leer valores de tabla `Settings` (para /terminos)
-- [ ] `db/short_urls.rs` — buscar y generar códigos base62 en `ShortUrls`
-- [ ] Ruta `GET /recibo/:guid` — ticket de venta (`Ajustes.Id`)
-- [ ] Ruta `GET /cotizacion/:guid` — cotización/pedido (`Pedidos.Id`)
-- [ ] Ruta `GET /app/:guid` — monedero del cliente (`Clientes.Id`)
-- [ ] Ruta `GET /saldo` — form de búsqueda por teléfono → redirect a `/app/:guid`
-- [ ] Ruta `GET /terminos` — lee `DIAS_VIGENCIA_MONEDERO` y `TIPO_CAMBIO_MONEDERO`
-- [ ] Ruta `GET /r/:code` — redirect 301 según `Tipo` en `ShortUrls`
+- [x] `db/monedero.rs` — balance y historial de cashback por cliente (`Clientes.Id`)
+- [x] `db/settings.rs` — leer valores de tabla `Settings` (para /terminos)
+- [x] `db/short_urls.rs` — buscar códigos en `ShortUrls`
+- [x] Ruta `GET /recibo/:guid` — ticket de venta (`Ajustes.Id`)
+- [x] Ruta `GET /cotizacion/:guid` — cotización/pedido (`Pedidos.Id`)
+- [x] Ruta `GET /app/:guid` — monedero del cliente (`Clientes.Id`)
+- [x] Ruta `GET /saldo` + `POST /saldo` — form de búsqueda por teléfono → redirect a `/app/:guid`
+- [x] Ruta `GET /terminos` — lee `DIAS_VIGENCIA_MONEDERO` y `TIPO_CAMBIO_MONEDERO`
+- [x] Ruta `GET /r/:code` — redirect 301 según `Tipo` en `ShortUrls`
 
 ## Fase 5 — Reseñas ✓
 

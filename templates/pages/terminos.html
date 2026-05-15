@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Términos del Monedero Electrónico — xplaya.com{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+<div class="column" style="max-width: 680px;">
+
+    {# Encabezado #}
+    <div class="is-flex is-align-items-center mb-5" style="gap: 1rem;">
+        <div class="has-background-success has-text-white
+                    is-flex is-justify-content-center is-align-items-center is-size-3"
+             style="width:52px; height:52px; border-radius:50%; flex-shrink:0;">
+            💳
+        </div>
+        <div>
+            <h1 class="title is-4 mb-0">Monedero Electrónico</h1>
+            <p class="has-text-grey is-size-7 mb-0">Papelería xplaya.com — Playa del Carmen</p>
+        </div>
+    </div>
+
+    <p class="has-text-grey mb-5">
+        El Monedero Electrónico es nuestra forma de recompensarte por tu preferencia: acumulas
+        cashback en cada compra y lo usas cuando quieras. Estos términos explican cómo funciona
+        el programa; al participar aceptas las condiciones descritas.
+    </p>
+
+    <div class="notification is-success is-light mb-5">
+        Consulta tu saldo en cualquier momento en
+        <a href="/saldo" class="has-text-weight-semibold">xplaya.com/saldo</a>
+        — solo necesitas tu número de teléfono.
+    </div>
+
+    {# 1. Qué es #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            ℹ️ ¿Qué es el Monedero Electrónico?
+        </h2>
+        <p class="is-size-7 mb-2">
+            El Monedero Electrónico es un programa de lealtad gratuito que permite a los
+            clientes registrados acumular saldo (<em>cashback</em>) en sus compras en la
+            Tienda y utilizarlo como descuento en compras futuras.
+        </p>
+        <p class="is-size-7 mb-0">
+            <strong>Este programa no es un producto financiero, bancario ni de inversión.</strong>
+            El saldo acumulado no genera intereses y no tiene valor monetario fuera de la Tienda.
+        </p>
+    </div>
+
+    {# 2. Requisitos #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            ✅ Requisitos de participación
+        </h2>
+        <ul class="is-size-7 mb-2" style="padding-left: 1.5rem;">
+            <li>Ser <strong>mayor de 18 años</strong>.</li>
+            <li>Proporcionar un <strong>nombre</strong> al realizar tu compra.</li>
+            <li>
+                Proporcionar un <strong>número de teléfono móvil</strong> válido. Este número
+                es tu identificador único; utiliza siempre el mismo para que tu saldo se
+                acumule correctamente.
+            </li>
+        </ul>
+        <p class="is-size-7 mb-0 has-text-grey">
+            La participación es voluntaria. Puedes solicitar la eliminación de tus datos en
+            cualquier momento (ver sección <em>Privacidad</em>).
+        </p>
+    </div>
+
+    {# 3. Cómo registrarse #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            💬 Cómo registrarte
+        </h2>
+        <p class="is-size-7 mb-2">
+            El registro es por WhatsApp, es inmediato y gratuito. Manda un mensaje con tu nombre así:
+        </p>
+        <div class="has-background-light has-text-centered has-text-weight-semibold p-3 mb-4"
+             style="border-radius: 6px;">
+            #monedero TuNombre
+        </div>
+        <a href="https://wa.me/524522018336?text=%23monedero%20"
+           class="button is-success is-fullwidth"
+           target="_blank" rel="noopener">
+            Registrarme al Monedero
+        </a>
+        <p class="is-size-7 has-text-grey has-text-centered mt-2 mb-0">
+            Tus próximas compras comenzarán a acumular cashback automáticamente.
+        </p>
+    </div>
+
+    {# 4. Acumulación #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            🐷 Acumulación de cashback
+        </h2>
+        <ul class="is-size-7 mb-0" style="padding-left: 1.5rem;">
+            <li>
+                En cada compra elegible acumulas el <strong>{{ t.porcentaje }} del total pagado</strong>
+                como saldo en tu Monedero Electrónico.
+            </li>
+            <li>
+                El saldo generado en cada compra tiene una vigencia de
+                <strong>{{ t.dias_vigencia }} días</strong> contados a partir de la
+                <strong>fecha de esa compra</strong>, no desde la fecha de tu registro.
+            </li>
+            <li>
+                El porcentaje vigente es el indicado en esta página, que se actualiza
+                cada vez que la Tienda realiza un ajuste.
+            </li>
+        </ul>
+    </div>
+
+    {# 5. Exclusiones #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            🚫 Productos y servicios excluidos
+        </h2>
+        <p class="is-size-7 mb-0">
+            La Tienda se reserva el derecho de excluir categorías de productos o servicios
+            del programa de cashback sin previo aviso. Los artículos o servicios excluidos
+            se identifican en el punto de venta y en el recibo digital con la leyenda
+            <strong>"Sin cashback"</strong>.
+        </p>
+    </div>
+
+    {# 6. Cómo usar #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            💵 Cómo usar tu saldo
+        </h2>
+        <ul class="is-size-7 mb-0" style="padding-left: 1.5rem;">
+            <li>El saldo solo puede aplicarse como <strong>descuento en compras</strong> realizadas presencialmente en la Tienda.</li>
+            <li>El saldo <strong>no es transferible</strong> a otra cuenta.</li>
+            <li>El saldo <strong>no es canjeable en efectivo</strong> bajo ninguna circunstancia.</li>
+            <li>Puedes usar tu saldo de forma parcial o total en una sola compra.</li>
+        </ul>
+    </div>
+
+    {# 7. Privacidad #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            🔒 Privacidad y protección de datos
+        </h2>
+        <p class="is-size-7 mb-2">
+            De conformidad con la <em>Ley Federal de Protección de Datos Personales en
+            Posesión de los Particulares</em> (LFPDPPP), te informamos:
+        </p>
+        <ul class="is-size-7 mb-0" style="padding-left: 1.5rem;">
+            <li><strong>Datos recabados:</strong> nombre y número de teléfono.</li>
+            <li>
+                <strong>Finalidad:</strong> identificarte como cliente, administrar tu
+                Monedero Electrónico y, si lo solicitas, informarte sobre tu saldo
+                disponible por WhatsApp o mensaje de texto.
+            </li>
+            <li>
+                <strong>Transferencia:</strong> tus datos no se venden ni se comparten
+                con terceros ajenos a la operación de la Tienda.
+            </li>
+            <li>
+                <strong>Derechos ARCO</strong> (Acceso, Rectificación, Cancelación y
+                Oposición): puedes ejercerlos acudiendo personalmente a la Tienda o
+                contactándonos por nuestros canales oficiales.
+            </li>
+            <li>
+                Tus datos se conservan mientras mantengas actividad en el programa. Ante
+                solicitud de cancelación, los datos serán eliminados en un plazo razonable.
+            </li>
+        </ul>
+    </div>
+
+    {# 8. Modificaciones #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            📝 Modificaciones a estos términos
+        </h2>
+        <p class="is-size-7 mb-2">
+            La Tienda puede modificar estos términos en cualquier momento. Los cambios
+            entran en vigor al publicarse en esta página. Si el cambio es sustancial
+            (por ejemplo, reducción del porcentaje de cashback o del plazo de vigencia),
+            se notificará además por los <strong>canales oficiales de la Tienda</strong>
+            (WhatsApp, redes sociales y aviso en tienda física).
+        </p>
+        <p class="is-size-7 mb-0">
+            Continuar participando en el programa después de publicados los cambios implica
+            la aceptación de los nuevos términos.
+        </p>
+    </div>
+
+    {# Pie del documento #}
+    <div class="has-text-centered has-text-grey is-size-7 py-4"
+         style="border-top: 1px solid #dbdbdb;">
+        <p class="mb-1">
+            <strong>Versión vigente desde:</strong> {{ t.fecha_actualizacion }}
+        </p>
+        <p class="mb-0">Papelería xplaya.com — Playa del Carmen</p>
+    </div>
+
+</div>
+</div>
+
+{% endblock %}

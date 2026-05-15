@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Mi Monedero — {{ cliente.nombre }}{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+<div class="column" style="max-width: 680px;">
+
+    {# Cabecera cliente #}
+    <div class="is-flex is-align-items-center mb-5" style="gap: 1rem;">
+        <div class="has-background-success has-text-white has-text-weight-bold
+                    is-flex is-justify-content-center is-align-items-center is-size-3"
+             style="width:56px; height:56px; border-radius:50%; flex-shrink:0;">
+            {{ cliente.nombre | first | upper }}
+        </div>
+        <div>
+            <p class="has-text-weight-semibold is-size-5 mb-0">{{ cliente.nombre }}</p>
+            <p class="has-text-grey is-size-7">Cliente desde {{ cliente.miembro_desde }}</p>
+        </div>
+    </div>
+
+    {# Alerta de vencimiento próximo #}
+    {% if cliente.alerta %}
+    <div class="notification is-warning is-light mb-4">
+        Tienes <strong>${{ cliente.alerta.monto }}</strong> que vencen el
+        <strong>{{ cliente.alerta.fecha }}</strong>. ¡Úsalos pronto en tienda!
+    </div>
+    {% endif %}
+
+    {# Saldo card #}
+    <div class="mb-5 p-5 has-text-centered has-text-white"
+         style="background: linear-gradient(135deg, #48c774 0%, #23d160 100%);
+                border-radius: 8px;">
+        <p class="is-size-7 mb-1" style="opacity:.8; text-transform:uppercase; letter-spacing:.05em;">
+            Saldo disponible
+        </p>
+        <p class="is-size-2 has-text-weight-bold">${{ cliente.saldo }}</p>
+        <p class="is-size-7" style="opacity:.7;">Monedero electrónico</p>
+    </div>
+
+    {# Historial #}
+    {% if cliente.historial %}
+    <p class="has-text-grey is-size-7 has-text-weight-semibold mb-3"
+       style="text-transform:uppercase; letter-spacing:.05em;">
+        Historial de compras
+    </p>
+    {% for row in cliente.historial %}
+    <div class="box py-3 px-4 mb-2">
+        <div class="is-flex is-justify-content-space-between is-align-items-start"
+             style="gap: .5rem;">
+            <div>
+                <a href="/recibo/{{ row.ajuste_id }}" class="has-text-weight-semibold">
+                    {{ row.fecha }}
+                </a>
+                <p class="is-size-7 has-text-grey mt-1">
+                    Generado: ${{ row.dinero_generado }}
+                    {% if row.dinero_gastado != "0.00" %}
+                    &nbsp;·&nbsp;Usado: ${{ row.dinero_gastado }}
+                    {% endif %}
+                </p>
+                <p class="is-size-7 has-text-grey">Vence: {{ row.fecha_expiracion }}</p>
+            </div>
+            <div class="has-text-right" style="flex-shrink:0;">
+                {% if row.disponible_neto != "0.00" %}
+                <p class="has-text-success has-text-weight-semibold">${{ row.disponible_neto }}</p>
+                {% else %}
+                <p class="has-text-grey">—</p>
+                {% endif %}
+                {% if row.estado == "Disponible" %}
+                <span class="tag is-success is-light mt-1">Disponible</span>
+                {% elif row.estado == "Devuelto" %}
+                <span class="tag is-warning is-light mt-1">Devuelto</span>
+                {% else %}
+                <span class="tag is-light mt-1">Agotado</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="has-text-centered has-text-grey py-6">
+        <p class="is-size-2">🧾</p>
+        <p class="mt-2 is-size-7">Aún no tienes compras registradas.</p>
+    </div>
+    {% endif %}
+
+    <p class="has-text-centered mt-5">
+        <a href="/terminos" class="is-size-7 has-text-grey">Términos y condiciones del monedero</a>
+    </p>
+
+</div>
+</div>
+
+{% endblock %}

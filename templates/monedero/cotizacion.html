@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Cotización {{ cotizacion.total }} — xplaya.com{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+<div class="column" style="max-width: 680px;">
+<div class="box">
+
+    <h1 class="title is-5 mb-1">Cotización</h1>
+    <p class="has-text-grey is-size-7 mb-4">
+        🕓{{ cotizacion.hora }} &nbsp; 🗓️{{ cotizacion.fecha }}
+    </p>
+
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Cantidad</th>
+                <th>Producto</th>
+                <th class="has-text-right">Precio</th>
+                <th class="has-text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in cotizacion.productos %}
+            <tr>
+                <td>{{ p.cantidad }}</td>
+                <td>{{ p.nombre }}</td>
+                <td class="has-text-right">{{ p.precio }}</td>
+                <td class="has-text-right">{{ p.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="2"></th>
+                <th class="has-text-right">Total</th>
+                <th class="has-text-right has-text-success">{{ cotizacion.total }}</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if cotizacion.cliente_id %}
+    <a href="/app/{{ cotizacion.cliente_id }}" class="button is-success mt-2">
+        💳 Ver Monedero
+    </a>
+    {% endif %}
+
+</div>
+</div>
+</div>
+
+{% endblock %}
