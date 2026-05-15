@@ -94,14 +94,14 @@ Documentar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 
 ---
 
-## Fase 1 — Servidor base
+## Fase 1 — Servidor base ✓
 
-- [ ] `cargo init`, dependencias: Axum, Minijinja, tokio, tower-http
-- [ ] Estructura: `src/`, `src/db/`, `src/routes/`, `templates/`, `static/`
-- [ ] Template base con Bulma, HTMX y Alpine.js desde CDN
-- [ ] Ruta `/` redirige a `/productos` — confirmar que el servidor responde
-- [ ] `Containerfile` multi-stage ARM64 (construir aunque no se desplegue aún)
-- [ ] `.env.example` con `DATABASE_URL`
+- [x] `cargo init`, dependencias: Axum, Minijinja, tokio, tower-http
+- [x] Estructura: `src/`, `src/db/`, `src/routes/`, `templates/`, `static/`
+- [x] Template base con Bulma, HTMX y Alpine.js desde CDN
+- [x] Ruta `/` redirige a `/productos` — confirmar que el servidor responde
+- [x] `Containerfile` multi-stage ARM64 (construir aunque no se desplegue aún)
+- [x] `.env.example` con `DATABASE_URL`
 
 ## Fase 2 — Base de datos y catálogo
 
