@@ -1,6 +1,6 @@
 # CLAUDE.md — xplaya
 
-Tienda en línea pública de **Papelería y Mercería El Gordo**, en **https://xplaya.com**.
+Tienda en línea pública de la papelería, en **https://xplaya.com**.
 
 Reemplaza `papeleria-ecomerce-web` (Angular 21 SSR) + `papeleria-ecomerce-api` (ASP.NET Core). El nuevo proyecto es Rust puro: accede directamente a PostgreSQL con sqlx, sin la capa intermedia del API .NET. El frontend está en discusión — ver sección Stack.
 

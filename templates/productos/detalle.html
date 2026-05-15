@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ producto.nombre }}{% endblock %}
+{% block content %}
+
+<nav class="breadcrumb mb-4" aria-label="breadcrumbs">
+    <ul>
+        <li><a href="/productos">Catálogo</a></li>
+        <li class="is-active"><a aria-current="page">{{ producto.nombre }}</a></li>
+    </ul>
+</nav>
+
+<div class="columns">
+    {# Columna de fotos — Alpine maneja la foto principal sin recargar la página #}
+    <div class="column is-half"
+         x-data="{ principal: '{{ producto.fotos[0] if producto.fotos else "" }}' }">
+
+        {% if producto.fotos %}
+        <figure class="image mb-3">
+            <img :src="principal" alt="{{ producto.nombre }}"
+                 style="object-fit: contain; max-height: 400px; width: 100%;">
+        </figure>
+        {% if producto.fotos | length > 1 %}
+        <div class="columns is-mobile is-multiline">
+            {% for foto in producto.fotos %}
+            <div class="column is-narrow">
+                <img src="{{ foto }}" alt="foto {{ loop.index }}"
+                     @click="principal = '{{ foto }}'"
+                     class="is-clickable"
+                     style="width: 64px; height: 64px; object-fit: cover;
+                            border: 2px solid transparent; border-radius: 4px;"
+                     :style="principal === '{{ foto }}' ? 'border-color: #48c774' : ''">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="has-background-light has-text-centered py-6"
+             style="border-radius: 8px; min-height: 300px; display: flex;
+                    align-items: center; justify-content: center;">
+            <span class="has-text-grey-light is-size-1">📦</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Columna de info del producto #}
+    <div class="column">
+        <p class="is-size-7 has-text-grey mb-1">{{ producto.categoria }}</p>
+        <h1 class="title is-4">{{ producto.nombre }}</h1>
+        <p class="is-size-2 has-text-success has-text-weight-bold">${{ producto.precio_venta }}</p>
+        <p class="has-text-grey mb-4">por {{ producto.unidad_medida }}</p>
+
+        {# Botón de carrito — Fase 3 #}
+        <button class="button is-success is-fullwidth" disabled>
+            Agregar al carrito
+        </button>
+
+        {% if producto.videos %}
+        <div class="mt-4">
+            {% for video in producto.videos %}
+            <a href="{{ video }}" target="_blank" rel="noopener"
+               class="button is-light is-fullwidth mb-2">Ver video</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

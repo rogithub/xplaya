@@ -1,6 +1,6 @@
 # Plan de Desarrollo — xplaya
 
-Tienda en línea pública de Papelería El Gordo. Rust + Axum + sqlx + Minijinja + HTMX + Alpine.js + Bulma.
+Tienda en línea pública — xplaya.com. Rust + Axum + sqlx + Minijinja + HTMX + Alpine.js + Bulma.
 Reemplaza `papeleria-ecomerce-web` (Angular) + `papeleria-ecomerce-api` (ASP.NET).
 
 ---
@@ -103,13 +103,13 @@ Documentar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 - [x] `Containerfile` multi-stage ARM64 (construir aunque no se desplegue aún)
 - [x] `.env.example` con `DATABASE_URL`
 
-## Fase 2 — Base de datos y catálogo
+## Fase 2 — Base de datos y catálogo ✓
 
-- [ ] Conectar PostgreSQL con sqlx (`DATABASE_URL`)
+- [x] Conectar PostgreSQL con sqlx (`DATABASE_URL`)
 - [ ] Crear tablas `Visitas` y `ShortUrls` en la BD
-- [ ] `db/productos.rs` — query paginado de productos
-- [ ] Ruta `GET /productos` — catálogo con paginación via HTMX
-- [ ] Ruta `GET /productos/:id` — detalle de producto
+- [x] `db/productos.rs` — query paginado de productos
+- [x] Ruta `GET /productos` — catálogo con paginación via HTMX
+- [x] Ruta `GET /productos/:id` — detalle de producto
 
 ## Fase 3 — Carrito de compras
 
