@@ -86,7 +86,7 @@ pub async fn saldo_post(
         None => Ok(Redirect::to(
             "/saldo?error=Número+no+registrado.+Visítanos+en+la+papelería+para+unirte.",
         )),
-        Some(id) => Ok(Redirect::to(&format!("/app/{}", id))),
+        Some(id) => Ok(Redirect::to(&format!("/monedero/{}", id))),
     }
 }
 
@@ -187,7 +187,7 @@ pub async fn redirigir(
     let url = match tipo.as_str() {
         "recibo" => format!("/recibo/{}", id),
         "cotizacion" => format!("/cotizacion/{}", id),
-        "monedero" => format!("/app/{}", id),
+        "monedero" => format!("/monedero/{}", id),
         _ => return Err(StatusCode::NOT_FOUND),
     };
 

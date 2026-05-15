@@ -43,7 +43,7 @@ async fn main() {
         .route("/terminos", get(routes::monedero::terminos))
         .route("/saldo", get(routes::monedero::saldo_get))
         .route("/saldo", post(routes::monedero::saldo_post))
-        .route("/app/{cliente_id}", get(routes::monedero::app))
+        .route("/monedero/{cliente_id}", get(routes::monedero::app))
         .route("/recibo/{id}", get(routes::monedero::recibo))
         .route("/cotizacion/{uid}", get(routes::monedero::cotizacion))
         .route("/r/{code}", get(routes::monedero::redirigir))
