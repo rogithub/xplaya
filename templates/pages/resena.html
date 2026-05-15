@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}⭐ Déjanos tu reseña — Papelería xplaya.com{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+    <div class="column is-narrow" style="max-width: 480px;">
+        <div class="box has-text-centered p-6">
+
+            <figure class="image is-128x128 mx-auto mb-4">
+                <img src="/static/img/circleai.jpg" alt="Papelería xplaya.com"
+                     style="border-radius: 50%; object-fit: cover;">
+            </figure>
+
+            <h1 class="title is-4">¿Te gustó nuestro servicio?</h1>
+            <p class="subtitle is-6 has-text-grey mb-5">
+                Tu opinión nos ayuda a seguir mejorando y llegar a más personas.
+            </p>
+
+            <div class="is-size-3 mb-5" aria-label="5 estrellas">
+                ⭐⭐⭐⭐⭐
+            </div>
+
+            <a href="https://search.google.com/local/writereview?placeid=ChIJVw8jFnxDTo8RnF2hE0foXRw"
+               target="_blank" rel="noopener"
+               class="button is-success is-medium is-fullwidth mb-3">
+                Dejar mi reseña en Google
+            </a>
+
+            <p class="is-size-7 has-text-grey">Se abre Google Maps</p>
+
+            <hr>
+            <p class="is-size-7 has-text-grey-light">
+                Papelería xplaya.com · Playa del Carmen
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -39,6 +39,7 @@ async fn main() {
         .route("/productos/{nid}", get(routes::productos::detalle))
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))
+        .route("/resena", get(routes::pages::resena))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state);
 
