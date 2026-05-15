@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Carrito{% endblock %}
+{% block content %}
+
+<h1 class="title">Tu carrito</h1>
+
+<div x-data="paginaCarrito()">
+
+    {# Carrito vacío #}
+    <template x-if="$store.carrito.items.length === 0 && !confirmado">
+        <div class="has-text-centered py-6">
+            <p class="is-size-5 has-text-grey mb-4">Tu carrito está vacío.</p>
+            <a href="/productos" class="button is-success">Ver catálogo</a>
+        </div>
+    </template>
+
+    {# Confirmación de pedido #}
+    <template x-if="confirmado">
+        <div class="notification is-success">
+            <h2 class="title is-4">¡Pedido recibido!</h2>
+            <p>Nos pondremos en contacto contigo para confirmar y coordinar la entrega.</p>
+            <a href="/productos" class="button is-white mt-3">Seguir comprando</a>
+        </div>
+    </template>
+
+    {# Carrito con items #}
+    <template x-if="$store.carrito.items.length > 0 && !confirmado">
+        <div>
+            <div class="table-container mb-5">
+                <table class="table is-fullwidth is-striped">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="has-text-right">Precio</th>
+                            <th class="has-text-centered">Cantidad</th>
+                            <th class="has-text-right">Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="item in $store.carrito.items" :key="item.nid">
+                            <tr>
+                                <td>
+                                    <p x-text="item.nombre" class="has-text-weight-semibold"></p>
+                                    <p x-text="'por ' + item.unidad_medida" class="is-size-7 has-text-grey"></p>
+                                </td>
+                                <td class="has-text-right" x-text="'$' + item.precio"></td>
+                                <td class="has-text-centered">
+                                    <input class="input is-small has-text-centered"
+                                           style="width: 4rem;"
+                                           type="number" min="1"
+                                           :value="item.cantidad"
+                                           @change="$store.carrito.cambiarCantidad(item.nid, $event.target.value)">
+                                </td>
+                                <td class="has-text-right"
+                                    x-text="'$' + (parseFloat(item.precio) * item.cantidad).toFixed(2)"></td>
+                                <td>
+                                    <button class="delete" @click="$store.carrito.quitar(item.nid)"
+                                            aria-label="Quitar"></button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3" class="has-text-right">Total estimado</th>
+                            <th class="has-text-right has-text-success"
+                                x-text="'$' + $store.carrito.subtotal"></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            {# Formulario de contacto #}
+            <div class="columns">
+                <div class="column is-half">
+                    <h2 class="subtitle">¿A quién le avisamos?</h2>
+
+                    <div x-show="error" class="notification is-danger is-light mb-4">
+                        <span x-text="error"></span>
+                    </div>
+
+                    <form @submit.prevent="enviar()">
+                        <div class="field">
+                            <label class="label">Nombre</label>
+                            <div class="control">
+                                <input class="input" type="text"
+                                       placeholder="Tu nombre"
+                                       x-model="nombre"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Teléfono (10 dígitos)</label>
+                            <div class="control">
+                                <input class="input" type="tel"
+                                       placeholder="9991234567"
+                                       x-model="telefono"
+                                       maxlength="15"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <div class="control">
+                                <button class="button is-success is-fullwidth"
+                                        type="submit"
+                                        :class="{ 'is-loading': enviando }">
+                                    Confirmar pedido
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</div>
+
+<script>
+function paginaCarrito() {
+    return {
+        nombre: '',
+        telefono: '',
+        enviando: false,
+        confirmado: false,
+        error: null,
+
+        async enviar() {
+            this.error = null;
+            this.enviando = true;
+
+            const tel = this.telefono.replace(/\D/g, '').slice(-10);
+            if (tel.length !== 10) {
+                this.error = 'Ingresa un número de teléfono de 10 dígitos.';
+                this.enviando = false;
+                return;
+            }
+
+            const items = this.$store.carrito.items.map(i => ({
+                producto_id: i.id,
+                cantidad: i.cantidad,
+            }));
+
+            try {
+                const res = await fetch('/pedidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre: this.nombre.trim(),
+                        telefono: tel,
+                        items,
+                    }),
+                });
+
+                if (!res.ok) {
+                    this.error = await res.text() || 'Error al enviar el pedido.';
+                    return;
+                }
+
+                this.$store.carrito.vaciar();
+                this.confirmado = true;
+            } catch {
+                this.error = 'Error de conexión. Intenta de nuevo.';
+            } finally {
+                this.enviando = false;
+            }
+        },
+    };
+}
+</script>
+
+{% endblock %}

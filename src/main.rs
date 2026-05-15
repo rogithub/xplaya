@@ -1,4 +1,4 @@
-use axum::{Router, routing::get, response::Redirect};
+use axum::{Router, routing::{get, post}, response::Redirect};
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
 use tower_http::services::ServeDir;
@@ -37,6 +37,8 @@ async fn main() {
         .route("/", get(|| async { Redirect::permanent("/productos") }))
         .route("/productos", get(routes::productos::lista))
         .route("/productos/{nid}", get(routes::productos::detalle))
+        .route("/carrito", get(routes::carrito::pagina))
+        .route("/pedidos", post(routes::carrito::crear_pedido))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state);
 

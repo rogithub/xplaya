@@ -20,6 +20,7 @@ pub struct Paginacion {
 #[derive(Serialize)]
 pub struct ProductoDetalle {
     pub nid: i32,
+    pub id: uuid::Uuid,  // necesario para el carrito
     pub nombre: String,
     pub categoria: String,
     pub precio_venta: String,

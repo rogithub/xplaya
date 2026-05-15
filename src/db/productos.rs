@@ -115,6 +115,7 @@ pub async fn detalle(
 
     Ok(Some(ProductoDetalle {
         nid: row.nid,
+        id: row.id,
         nombre: row.nombre,
         categoria: row.categoria,
         precio_venta: format!("{:.2}", row.ultimoprecioventa),

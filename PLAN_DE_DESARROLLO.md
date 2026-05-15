@@ -111,13 +111,13 @@ Documentar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 - [x] Ruta `GET /productos` — catálogo con paginación via HTMX
 - [x] Ruta `GET /productos/:id` — detalle de producto
 
-## Fase 3 — Carrito de compras
+## Fase 3 — Carrito de compras ✓
 
-- [ ] Carrito en Alpine.js: agregar, quitar, persistir en localStorage
-- [ ] Badge de items en el header — reactivo con Alpine
-- [ ] Ruta `GET /carrito` — vista del carrito
-- [ ] `db/pedidos.rs` — crear cliente por teléfono, crear pedido
-- [ ] `POST /pedidos` — enviar pedido al servidor
+- [x] Carrito en Alpine.js: agregar, quitar, persistir en localStorage
+- [x] Badge de items en el header — reactivo con Alpine
+- [x] Ruta `GET /carrito` — vista del carrito
+- [x] `db/pedidos.rs` — crear cliente por teléfono, crear pedido
+- [x] `POST /pedidos` — enviar pedido al servidor
 
 ## Fase 4 — Monedero, recibos y URLs cortas
 

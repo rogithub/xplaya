@@ -50,10 +50,23 @@
         <p class="is-size-2 has-text-success has-text-weight-bold">${{ producto.precio_venta }}</p>
         <p class="has-text-grey mb-4">por {{ producto.unidad_medida }}</p>
 
-        {# Botón de carrito — Fase 3 #}
-        <button class="button is-success is-fullwidth" disabled>
-            Agregar al carrito
-        </button>
+        <div x-data="{
+            p: {
+                id: '{{ producto.id }}',
+                nid: {{ producto.nid }},
+                nombre: {{ producto.nombre | tojson }},
+                precio: {{ producto.precio_venta | tojson }},
+                unidad_medida: {{ producto.unidad_medida | tojson }}
+            },
+            agregado: false
+        }">
+            <button class="button is-fullwidth"
+                    :class="agregado ? 'is-success is-light' : 'is-success'"
+                    @click="$store.carrito.agregar(p); agregado = true">
+                <span x-show="!agregado">Agregar al carrito</span>
+                <span x-show="agregado">✓ Agregado al carrito</span>
+            </button>
+        </div>
 
         {% if producto.videos %}
         <div class="mt-4">
