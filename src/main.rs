@@ -30,7 +30,7 @@ async fn main() {
 
     let mut tmpl = Environment::new();
     tmpl.set_loader(path_loader("templates"));
-    tmpl.add_global("site_url", cfg.site_url.clone());
+    tmpl.add_global("site_url", minijinja::Value::from_safe_string(cfg.site_url.clone()));
 
     let state = AppState { tmpl, config: cfg, pool };
 

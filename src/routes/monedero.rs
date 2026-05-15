@@ -135,10 +135,12 @@ pub async fn recibo(
         tracing::error!("Template recibo: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
-    let html = tmpl.render(context! { venta => venta }).map_err(|e| {
-        tracing::error!("Render recibo: {e}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
+    let html = tmpl
+        .render(context! { venta => venta, id => id.to_string() })
+        .map_err(|e| {
+            tracing::error!("Render recibo: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
     Ok(Html(html))
 }
 

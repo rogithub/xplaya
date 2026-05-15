@@ -9,17 +9,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 **Archivos a revisar:**
 - `src/config.rs` — nueva variable `site_url` (default `https://xplaya.com`)
 - `.env.example` — nueva entrada `SITE_URL`
-- `src/main.rs` — `tmpl.add_global("site_url", ...)` registra la variable globalmente; todos los templates la tienen sin cambios en los handlers
-- `templates/base.html` — `{% block head %}` para que cada página inyecte sus meta tags; `LocalBusiness` JSON-LD fijo con nombre, teléfono y URL de la tienda
-- `templates/productos/detalle.html` — OG completo: `og:type product`, título, descripción con precio, imagen (si existe), URL canónica; `Product` JSON-LD con `Offer` (precio MXN, InStock)
-- `templates/productos/lista.html` — OG básico: título y descripción del catálogo
-- `templates/monedero/recibo.html` — OG con el total de la venta (útil al compartir por WhatsApp)
-- `templates/monedero/saldo.html` — OG con descripción del monedero electrónico
+- `src/main.rs` — `tmpl.add_global("site_url", Value::from_safe_string(...))` registra la variable globalmente como safe string; todos los templates la tienen sin cambios en los handlers y sin escape de slashes
+- `templates/base.html` — meta tags globales: `keywords`, `author`, `theme-color #E85D04`, `og:locale es_MX`, logo como imagen OG default, Twitter Card, microdata itemprop; `Store` JSON-LD completo (dirección Playa del Carmen, geo, horarios); `WebSite` JSON-LD con `SearchAction` para caja de búsqueda en Google
+- `templates/productos/detalle.html` — OG completo: título y descripción con precio + categoría (formato `$38.00 | MARCADOR`), imagen del producto desde MinIO, `og:image:width/height`; Twitter Card específico del producto; `Product` JSON-LD con `Offer`
+- `templates/productos/lista.html` — OG básico del catálogo
+- `templates/monedero/recibo.html` — OG con título dinámico "Tu ticket $X.XX", descripción con emoji call-to-action, imagen estática `recibo.jpg`; handler actualizado para pasar `id` (UUID) al template y poder poner `og:url` exacta
+- `templates/monedero/saldo.html` — OG completo con imagen estática `saldo.jpeg`
+- `static/img/` — se copiaron `logocircle.png`, `papeleria.png`, `recibo.jpg` y `saldo.jpeg` de los proyectos predecesores
 
 **Decisiones de implementación:**
-- `tmpl.add_global` en lugar de pasar `site_url` en cada contexto de handler — más DRY y cero riesgo de olvidarlo en una nueva ruta
-- `twitter:card = "summary_large_image"` en detalle si hay foto, `"summary"` en el resto
-- `| tojson` en el Product JSON-LD sigue el mismo patrón establecido en `carritoDetalle()` — sin conflicto de comillas porque está en `<script>`, no en atributo HTML
+- `Value::from_safe_string` en el global de `site_url` — Minijinja escapa `/` a `&#x2f;` en auto-escape; marcarlo como safe evita el doble-escape en JSON-LD sin tocar ningún template
+- `| tojson` para strings dentro de bloques `<script>` — maneja sus propias comillas, marca la salida como safe, evita conflicto con el auto-escape HTML
+- Imágenes OG del recibo y saldo: estáticas por ahora (imagen ilustrativa de ticket / monedero). **Pendiente**: imagen dinámica vía Gotenberg (`GET /recibo/{id}/og`) cuando se defina el diseño
 
 ---
 

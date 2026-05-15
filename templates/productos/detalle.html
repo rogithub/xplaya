@@ -1,23 +1,29 @@
 {% extends "base.html" %}
 {% block title %}{{ producto.nombre }}{% endblock %}
 {% block head %}
+<meta name="description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
 <meta property="og:type" content="product">
-<meta property="og:title" content="{{ producto.nombre }} — xplaya.com">
-<meta property="og:description" content="${{ producto.precio_venta }} por {{ producto.unidad_medida }} · Papelería xplaya.com">
 <meta property="og:url" content="{{ site_url }}/productos/{{ producto.nid }}">
+<meta property="og:title" content="{{ producto.nombre }}">
+<meta property="og:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
 {% if producto.fotos %}
 <meta property="og:image" content="{{ producto.fotos[0] }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ producto.fotos[0] }}">
 {% else %}
 <meta name="twitter:card" content="summary">
 {% endif %}
+<meta name="twitter:title" content="{{ producto.nombre }}">
+<meta name="twitter:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Product",
   "name": {{ producto.nombre | tojson }},
   "url": "{{ site_url }}/productos/{{ producto.nid }}",
-  {% if producto.fotos %}"image": "{{ producto.fotos[0] }}",{% endif %}
+  {% if producto.fotos %}"image": {{ producto.fotos[0] | tojson }},{% endif %}
   "offers": {
     "@type": "Offer",
     "price": "{{ producto.precio_venta }}",

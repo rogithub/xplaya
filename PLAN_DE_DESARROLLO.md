@@ -147,6 +147,8 @@ Mejoras de visibilidad para buscadores y redes sociales. Sin cambios en rutas ni
 - [x] OG en `templates/monedero/recibo.html` — título con el total para compartir por WhatsApp
 - [x] OG en `templates/monedero/saldo.html` — descripción del monedero electrónico
 - [x] Pasar `config.site_url` al `AppState` en `main.rs` y al contexto de los templates que lo necesiten
+- [x] OG title/description llamativos en `recibo.html` — "Tu ticket $X.XX — toca para ver detalles 👆"
+- [ ] **Imagen OG dinámica del recibo via Gotenberg** — `GET /recibo/{id}/og` llama a Gotenberg con un template HTML minimalista (texto grande, legible para adultos mayores) y devuelve PNG 1200×630; agregar `GOTENBERG_URL` a `config.rs` y `.env.example`
 
 ## Fase 7 — Deploy
 
