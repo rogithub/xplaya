@@ -20,6 +20,28 @@ Reemplaza `papeleria-ecomerce-web` (Angular 21 SSR) + `papeleria-ecomerce-api` (
 
 ---
 
+## Arquitectura general
+
+```mermaid
+graph TD
+    Browser["Navegador"]
+    Axum["xplaya\nRust + Axum"]
+    DB[("PostgreSQL\ninventario_papeleria")]
+    Minio["MinIO\ncntnt.xplaya.com"]
+    Superset["Superset\nAnalytics"]
+
+    Browser -->|HTTP| Axum
+    Axum -->|sqlx queries| DB
+    Browser -->|imágenes| Minio
+    DB -->|solo lectura| Superset
+
+    subgraph "Cluster k3s — namespace papeleria"
+        Axum
+    end
+```
+
+---
+
 ## Stack
 
 **Backend**
@@ -40,6 +62,64 @@ Reemplaza `papeleria-ecomerce-web` (Angular 21 SSR) + `papeleria-ecomerce-api` (
 
 ---
 
+## Estructura del proyecto
+
+```
+xplaya/
+├── src/
+│   ├── main.rs              # Startup: config, pool, router, middleware
+│   ├── config.rs            # Variables de entorno (DATABASE_URL, PORT, etc.)
+│   ├── db/
+│   │   ├── mod.rs           # Pool de conexiones sqlx
+│   │   ├── productos.rs     # Queries de catálogo
+│   │   ├── pedidos.rs       # Crear cliente + pedido
+│   │   ├── monedero.rs      # Balance y historial de cashback
+│   │   └── visitas.rs       # INSERT en tabla Visitas
+│   ├── routes/
+│   │   ├── mod.rs           # Registro de todas las rutas
+│   │   ├── productos.rs     # GET /productos, GET /productos/:id
+│   │   ├── carrito.rs       # GET /carrito, POST /pedidos
+│   │   ├── monedero.rs      # GET /app/:guid, GET /saldo, GET /recibo/:guid
+│   │   └── pages.rs         # GET /resena, GET /terminos (páginas estáticas)
+│   ├── middleware/
+│   │   ├── mod.rs
+│   │   ├── session.rs       # Gestión de SessionId en cookie
+│   │   └── analytics.rs     # Insertar visita en cada request
+│   └── models/
+│       ├── mod.rs
+│       ├── producto.rs      # Structs de producto
+│       ├── pedido.rs        # Structs de pedido / request
+│       └── monedero.rs      # Structs de cashback
+├── templates/
+│   ├── base.html            # Layout: Bulma + HTMX + Alpine desde CDN
+│   ├── productos/
+│   │   ├── lista.html
+│   │   ├── detalle.html
+│   │   └── partials/
+│   │       ├── card.html        # Fragmento HTMX — tarjeta de producto
+│   │       └── paginacion.html  # Fragmento HTMX — controles de paginación
+│   ├── carrito/
+│   │   └── index.html
+│   ├── monedero/
+│   │   ├── app.html         # Monedero del cliente
+│   │   ├── saldo.html       # Consulta de saldo
+│   │   └── recibo.html      # Ticket de venta
+│   └── pages/
+│       ├── resena.html
+│       └── terminos.html
+├── static/
+│   └── css/
+│       └── main.css         # Estilos propios mínimos (todo lo demás es Bulma)
+├── Containerfile            # Multi-stage, ARM64
+├── .env.example
+└── CLAUDE.md
+```
+
+Los fragmentos que HTMX reemplaza viven en `templates/*/partials/`.  
+Un archivo por tema en `db/` y un archivo por grupo de rutas en `routes/`.
+
+---
+
 ## Páginas a implementar
 
 ### Heredadas de `papeleria-ecomerce-web`
@@ -54,12 +134,13 @@ Reemplaza `papeleria-ecomerce-web` (Angular 21 SSR) + `papeleria-ecomerce-api` (
 
 ### Nuevas — vistas públicas del POS (migradas fuera del POS)
 
-| Ruta | Descripción | Origen en POS |
-|---|---|---|
-| `/recibo/{guid}` | Ticket de venta | `inventario_papeleria /Recibo/{guid}` |
-| `/app/{guid}` | Monedero del cliente (cashback) | `inventario_papeleria /App/{guid}` |
-| `/saldo` | Consulta de saldo | `inventario_papeleria /saldo` |
-| `/terminos` | Términos y condiciones | `inventario_papeleria /Terminos` |
+| Ruta | GUID es... | Descripción | Origen en POS |
+|---|---|---|---|
+| `/recibo/{guid}` | `Ajustes.Id` | Ticket de venta | `/Recibo/{id:guid}` |
+| `/cotizacion/{guid}` | `Pedidos.Id` | Cotización/pedido | `/Cotizacion/{id:guid}` |
+| `/app/{guid}` | `Clientes.Id` | Monedero del cliente (cashback) | `/App/{clienteId:guid}` |
+| `/saldo` | — | Busca cliente por teléfono → redirige a `/app/{guid}` | `/saldo` |
+| `/terminos` | — | Lee `Settings`: `DIAS_VIGENCIA_MONEDERO`, `TIPO_CAMBIO_MONEDERO` | `/Terminos` |
 
 **Ninguna ruta requiere autenticación.** El acceso al monedero se protege solo con el GUID del cliente.
 
@@ -104,6 +185,23 @@ El esquema canónico está en `Ro.Inventario.Core/dbscripts/postgresql_inventari
 | `Pedidos.Origen` | `0`=Tienda, `1`=EnLinea |
 | `Contactos.Tipo` | `0`=Cliente, `1`=Proveedor |
 
+### Tabla ShortUrls — acortador de URLs
+
+```sql
+CREATE TABLE ShortUrls (
+    Code        VARCHAR(10)  PRIMARY KEY,  -- base62 aleatorio, ej: "xK9mPq"
+    Tipo        VARCHAR(20)  NOT NULL,     -- 'recibo' | 'cotizacion' | 'monedero'
+    TargetId    UUID         NOT NULL,
+    FechaCreado TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+```
+
+- URL pública: `xplaya.com/r/{code}` → redirect 301 al destino completo
+- **xplaya** genera el código y hace el redirect (ruta `GET /r/:code`)
+- **El POS** inserta en `ShortUrls` al crear una venta o pedido
+- El POS muestra la URL completa en su UI; el botón "Copiar para cliente" usa la URL corta
+- Documentar también en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`
+
 ### Trampas críticas del dominio
 
 **JOIN que multiplica pagos — nunca hacer esto:**
@@ -130,11 +228,23 @@ Calcular pagos solo desde `Ajustes`; datos de líneas desde `AjustesProductos` e
 
 ---
 
+## Variables de entorno
+
+| Variable | Requerida | Default | Descripción |
+|---|---|---|---|
+| `DATABASE_URL` | Sí | — | `postgres://user:pass@host/inventario_papeleria` |
+| `PORT` | No | `3000` | Puerto HTTP — nunca hardcodeado, k3s asigna el NodePort externamente |
+| `CONTENT_BASE_URL` | No | `https://cntnt.xplaya.com` | Base URL de imágenes en MinIO. Sin cliente MinIO — solo construcción de URL: `{CONTENT_BASE_URL}/papeleria-fotos-productos/{filename}` |
+
+Si `CONTENT_BASE_URL` no está definida, las imágenes no se muestran — comportamiento aceptable en desarrollo local.  
+Copiar `.env.example` a `.env` para desarrollo. `.env` está en `.gitignore`.
+
 ## Desarrollo local
 
 ```bash
-DATABASE_URL=postgres://user:pass@host/inventario_papeleria cargo run
-# http://localhost:3000 (por definir)
+cp .env.example .env   # completar DATABASE_URL
+cargo run
+# http://localhost:3000
 ```
 
 ---
