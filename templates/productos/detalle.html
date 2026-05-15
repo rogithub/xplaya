@@ -50,16 +50,7 @@
         <p class="is-size-2 has-text-success has-text-weight-bold">${{ producto.precio_venta }}</p>
         <p class="has-text-grey mb-4">por {{ producto.unidad_medida }}</p>
 
-        <div x-data="{
-            p: {
-                id: '{{ producto.id }}',
-                nid: {{ producto.nid }},
-                nombre: {{ producto.nombre | tojson }},
-                precio: {{ producto.precio_venta | tojson }},
-                unidad_medida: {{ producto.unidad_medida | tojson }}
-            },
-            agregado: false
-        }">
+        <div x-data="carritoDetalle()">
             <button class="button is-fullwidth"
                     :class="agregado ? 'is-success is-light' : 'is-success'"
                     @click="$store.carrito.agregar(p); agregado = true">
@@ -67,6 +58,21 @@
                 <span x-show="agregado">✓ Agregado al carrito</span>
             </button>
         </div>
+
+        <script>
+        function carritoDetalle() {
+            return {
+                p: {
+                    id: '{{ producto.id }}',
+                    nid: {{ producto.nid }},
+                    nombre: {{ producto.nombre | tojson }},
+                    precio: {{ producto.precio_venta | tojson }},
+                    unidad_medida: {{ producto.unidad_medida | tojson }}
+                },
+                agregado: false
+            };
+        }
+        </script>
 
         {% if producto.videos %}
         <div class="mt-4">
