@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Monedero — Papelería xplaya.com{% endblock %}
+{% block head %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="Monedero electrónico — xplaya.com">
+<meta property="og:description" content="Consulta tu saldo de cashback en Papelería xplaya.com.">
+<meta property="og:url" content="{{ site_url }}/saldo">
+<meta name="twitter:card" content="summary">
+{% endblock %}
 {% block content %}
 
 <div class="columns is-centered">

@@ -135,14 +135,27 @@ Documentar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 
 - [x] Ruta `GET /resena` — página de reseñas
 
-## Fase 6 — Deploy
+## Fase 6 — SEO y Open Graph ✓
+
+Mejoras de visibilidad para buscadores y redes sociales. Sin cambios en rutas ni BD.
+
+- [x] Agregar `SITE_URL` a `config.rs` y `.env.example` — necesario para URLs absolutas en meta tags
+- [x] Agregar `{% block head %}{% endblock %}` en `templates/base.html` — slot para que cada página inyecte sus propios tags
+- [x] JSON-LD `LocalBusiness` fijo en `base.html` — nombre, teléfono, ciudad, URL
+- [x] OG tags + JSON-LD `Product` en `templates/productos/detalle.html` — rich snippets en Google con precio; imagen absoluta desde MinIO
+- [x] OG básico en `templates/productos/lista.html` — título y descripción del catálogo
+- [x] OG en `templates/monedero/recibo.html` — título con el total para compartir por WhatsApp
+- [x] OG en `templates/monedero/saldo.html` — descripción del monedero electrónico
+- [x] Pasar `config.site_url` al `AppState` en `main.rs` y al contexto de los templates que lo necesiten
+
+## Fase 7 — Deploy
 
 - [ ] GitHub Actions: build + push imagen a `ghcr.io`
 - [ ] Manifiestos k3s en `k3s-manifests/workloads/papeleria/`
 - [ ] SealedSecret para `DATABASE_URL`
 - [ ] Verificar deploy via ArgoCD
 
-## Fase 7 — Analytics de visitas
+## Fase 8 — Analytics de visitas
 
 - [ ] Middleware Axum que inserta en `Visitas` en cada request
 - [ ] Gestión de `SessionId` en cookie (generar, renovar si expiró)

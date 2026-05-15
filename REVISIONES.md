@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fase 6 — SEO y Open Graph
+
+**Archivos a revisar:**
+- `src/config.rs` — nueva variable `site_url` (default `https://xplaya.com`)
+- `.env.example` — nueva entrada `SITE_URL`
+- `src/main.rs` — `tmpl.add_global("site_url", ...)` registra la variable globalmente; todos los templates la tienen sin cambios en los handlers
+- `templates/base.html` — `{% block head %}` para que cada página inyecte sus meta tags; `LocalBusiness` JSON-LD fijo con nombre, teléfono y URL de la tienda
+- `templates/productos/detalle.html` — OG completo: `og:type product`, título, descripción con precio, imagen (si existe), URL canónica; `Product` JSON-LD con `Offer` (precio MXN, InStock)
+- `templates/productos/lista.html` — OG básico: título y descripción del catálogo
+- `templates/monedero/recibo.html` — OG con el total de la venta (útil al compartir por WhatsApp)
+- `templates/monedero/saldo.html` — OG con descripción del monedero electrónico
+
+**Decisiones de implementación:**
+- `tmpl.add_global` en lugar de pasar `site_url` en cada contexto de handler — más DRY y cero riesgo de olvidarlo en una nueva ruta
+- `twitter:card = "summary_large_image"` en detalle si hay foto, `"summary"` en el resto
+- `| tojson` en el Product JSON-LD sigue el mismo patrón establecido en `carritoDetalle()` — sin conflicto de comillas porque está en `<script>`, no en atributo HTML
+
+---
+
 ## Fase 4 — Monedero, recibos y URLs cortas
 
 **Archivos a revisar:**

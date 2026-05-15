@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Catálogo{% endblock %}
+{% block head %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="Catálogo — xplaya.com">
+<meta property="og:description" content="Material escolar, de oficina y más. Compra en línea en Papelería xplaya.com.">
+<meta property="og:url" content="{{ site_url }}/productos">
+<meta name="twitter:card" content="summary">
+{% endblock %}
 {% block content %}
 
 <div class="level mb-5">

@@ -4,12 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}xplaya.com{% endblock %}</title>
+    <meta property="og:site_name" content="xplaya.com">
+    {% block head %}{% endblock %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="/static/css/main.css">
     {# Alpine debe cargarse antes de que el DOM esté listo para capturar alpine:init #}
     <script src="/static/js/cart.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js"></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Papelería xplaya.com",
+      "url": "{{ site_url }}",
+      "telephone": "+524522018336",
+      "priceRange": "$",
+      "areaServed": "MX",
+      "currenciesAccepted": "MXN"
+    }
+    </script>
 </head>
 <body>
     <nav class="navbar is-light" role="navigation" x-data="{ open: false }">

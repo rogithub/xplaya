@@ -30,6 +30,7 @@ async fn main() {
 
     let mut tmpl = Environment::new();
     tmpl.set_loader(path_loader("templates"));
+    tmpl.add_global("site_url", cfg.site_url.clone());
 
     let state = AppState { tmpl, config: cfg, pool };
 

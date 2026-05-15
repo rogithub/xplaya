@@ -3,6 +3,7 @@ pub struct Config {
     pub port: u16,
     pub database_url: String,
     pub content_base_url: String,
+    pub site_url: String,
 }
 
 impl Config {
@@ -16,6 +17,8 @@ impl Config {
                 .expect("DATABASE_URL no está configurada"),
             content_base_url: std::env::var("CONTENT_BASE_URL")
                 .unwrap_or_else(|_| "https://cntnt.xplaya.com".to_string()),
+            site_url: std::env::var("SITE_URL")
+                .unwrap_or_else(|_| "https://xplaya.com".to_string()),
         }
     }
 }

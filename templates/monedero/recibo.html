@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Ticket {{ venta.total }} — xplaya.com{% endblock %}
+{% block head %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ticket {{ venta.total }} — xplaya.com">
+<meta property="og:description" content="Tu compra en Papelería xplaya.com.">
+<meta name="twitter:card" content="summary">
+{% endblock %}
 {% block content %}
 
 <div class="columns is-centered">

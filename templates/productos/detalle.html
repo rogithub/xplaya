@@ -1,5 +1,33 @@
 {% extends "base.html" %}
 {% block title %}{{ producto.nombre }}{% endblock %}
+{% block head %}
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ producto.nombre }} — xplaya.com">
+<meta property="og:description" content="${{ producto.precio_venta }} por {{ producto.unidad_medida }} · Papelería xplaya.com">
+<meta property="og:url" content="{{ site_url }}/productos/{{ producto.nid }}">
+{% if producto.fotos %}
+<meta property="og:image" content="{{ producto.fotos[0] }}">
+<meta name="twitter:card" content="summary_large_image">
+{% else %}
+<meta name="twitter:card" content="summary">
+{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ producto.nombre | tojson }},
+  "url": "{{ site_url }}/productos/{{ producto.nid }}",
+  {% if producto.fotos %}"image": "{{ producto.fotos[0] }}",{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ producto.precio_venta }}",
+    "priceCurrency": "MXN",
+    "availability": "https://schema.org/InStock",
+    "url": "{{ site_url }}/productos/{{ producto.nid }}"
+  }
+}
+</script>
+{% endblock %}
 {% block content %}
 
 <nav class="breadcrumb mb-4" aria-label="breadcrumbs">
