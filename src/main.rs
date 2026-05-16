@@ -1,7 +1,9 @@
-use axum::{Router, routing::{get, post}, response::Redirect};
+use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}};
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
+use tower::ServiceBuilder;
 use tower_http::services::ServeDir;
+use tower_http::set_header::SetResponseHeaderLayer;
 
 mod config;
 mod db;
@@ -50,7 +52,15 @@ async fn main() {
         .route("/recibo/{id}", get(routes::monedero::recibo))
         .route("/cotizacion/{uid}", get(routes::monedero::cotizacion))
         .route("/r/{code}", get(routes::monedero::redirigir))
-        .nest_service("/static", ServeDir::new("static"))
+        .nest_service(
+            "/static",
+            ServiceBuilder::new()
+                .layer(SetResponseHeaderLayer::if_not_present(
+                    header::CACHE_CONTROL,
+                    HeaderValue::from_static("public, max-age=86400"),
+                ))
+                .service(ServeDir::new("static")),
+        )
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
