@@ -36,6 +36,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { Redirect::permanent("/productos") }))
+        .route("/robots.txt", get(routes::pages::robots_txt))
+        .route("/sitemap.xml", get(routes::pages::sitemap_xml))
         .route("/productos", get(routes::productos::lista))
         .route("/productos/{nid}", get(routes::productos::detalle))
         .route("/carrito", get(routes::carrito::pagina))

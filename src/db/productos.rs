@@ -4,6 +4,35 @@ use uuid::Uuid;
 
 use crate::models::producto::{Paginacion, ProductoCard, ProductoDetalle};
 
+#[derive(sqlx::FromRow)]
+struct SitemapRow {
+    nid: i32,
+    filename: Option<String>,
+}
+
+pub async fn sitemap_productos(pool: &PgPool) -> Result<Vec<(i32, Vec<String>)>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, SitemapRow>(
+        "SELECT vi.nid, fp.filename
+         FROM v_inventario vi
+         LEFT JOIN fotosproductos fp ON fp.productoid = vi.id
+         WHERE vi.stock > 0
+         ORDER BY vi.nid, fp.filename",
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut result: Vec<(i32, Vec<String>)> = Vec::new();
+    for row in rows {
+        if result.last().map(|(n, _)| *n) != Some(row.nid) {
+            result.push((row.nid, Vec::new()));
+        }
+        if let Some(f) = row.filename {
+            result.last_mut().unwrap().1.push(f);
+        }
+    }
+    Ok(result)
+}
+
 // Filas internas que sqlx mapea directamente desde la BD.
 // Solo se usan aquí para construir los modelos públicos.
 

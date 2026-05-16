@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ producto.nombre }}{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/productos/{{ producto.nid }}">{% endblock %}
 {% block meta_description %}<meta name="description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
