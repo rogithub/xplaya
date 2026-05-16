@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fix — Metas SEO duplicadas en templates
+
+**Archivos a revisar:**
+- `templates/base.html` — `<meta name="description">` ahora es `{% block meta_description %}`; el bloque de tags `og:image`, `og:image:width/height`, `twitter:card`, `twitter:image` ahora es `{% block meta_social %}`
+- `templates/productos/detalle.html` — sobreescribe `{% block meta_description %}` y `{% block meta_social %}` en lugar de añadir duplicados en `{% block head %}`; `{% block head %}` queda solo para el JSON-LD de Product
+- `templates/productos/lista.html` — sobreescribe `{% block meta_social %}` con el bloque completo (incluye `og:site_name`, `og:locale`, `twitter:card` = `summary`)
+- `templates/monedero/recibo.html` — ídem, sobreescribe `meta_description` y `meta_social`
+- `templates/monedero/saldo.html` — ídem
+
+**Qué hace cada parte:**
+
+El problema era que `base.html` declaraba tags OG y Twitter hardcodeados, y los templates de producto/recibo/saldo los volvían a declarar dentro de `{% block head %}`. El resultado era el doble de tags en el HTML final, con valores contradictorios (ej. dos `twitter:card`, dos `og:image`).
+
+La solución es convertir las secciones que varían por página en bloques Minijinja. `{% block meta_description %}` envuelve el `<meta name="description">` del sitio; `{% block meta_social %}` envuelve todo el bloque OG/Twitter. Los templates que necesitan customización sobreescriben esos bloques completamente — el bloque de la base desaparece y no hay duplicados. Las páginas que no los sobreescriben (carrito, app, cotizacion, resena, terminos) siguen usando los defaults del sitio sin ningún cambio.
+
+**Regla de ahora en adelante:** si una página quiere metas sociales propias, sobreescribe `{% block meta_social %}` y/o `{% block meta_description %}`. Nunca agregar tags OG/Twitter dentro de `{% block head %}`.
+
+---
+
 ## Fase 6 — SEO y Open Graph
 
 **Archivos a revisar:**
