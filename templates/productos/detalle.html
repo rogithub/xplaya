@@ -9,11 +9,11 @@
 <meta property="og:title" content="{{ producto.nombre }}">
 <meta property="og:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
 {% if producto.fotos %}
-<meta property="og:image" content="{{ producto.fotos[0] }}">
+<meta property="og:image" content="{{ producto.fotos[0] | safe }}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="{{ producto.fotos[0] }}">
+<meta name="twitter:image" content="{{ producto.fotos[0] | safe }}">
 {% else %}
 <meta property="og:image" content="{{ site_url }}/static/img/logocircle.png">
 <meta property="og:image:width" content="1200">
@@ -54,7 +54,7 @@
 <div class="columns">
     {# Columna de fotos — Alpine maneja la foto principal sin recargar la página #}
     <div class="column is-half"
-         x-data="{ principal: '{{ producto.fotos[0] if producto.fotos else "" }}' }">
+         x-data="{ principal: '{{ producto.fotos[0] | safe if producto.fotos else "" }}' }">
 
         {% if producto.fotos %}
         <figure class="image mb-3">
@@ -65,12 +65,12 @@
         <div class="columns is-mobile is-multiline">
             {% for foto in producto.fotos %}
             <div class="column is-narrow">
-                <img src="{{ foto }}" alt="foto {{ loop.index }}"
-                     @click="principal = '{{ foto }}'"
+                <img src="{{ foto | safe }}" alt="foto {{ loop.index }}"
+                     @click="principal = '{{ foto | safe }}'"
                      class="is-clickable"
                      style="width: 64px; height: 64px; object-fit: cover;
                             border: 2px solid transparent; border-radius: 4px;"
-                     :style="principal === '{{ foto }}' ? 'border-color: #48c774' : ''">
+                     :style="principal === '{{ foto | safe }}' ? 'border-color: #48c774' : ''">
             </div>
             {% endfor %}
         </div>

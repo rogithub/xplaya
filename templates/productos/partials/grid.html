@@ -8,7 +8,7 @@
                 <div class="card-image">
                     {% if p.foto_url %}
                     <figure class="image is-4by3">
-                        <img src="{{ p.foto_url }}" alt="{{ p.nombre }}" loading="lazy"
+                        <img src="{{ p.foto_url | safe }}" alt="{{ p.nombre }}" loading="lazy"
                              style="object-fit: contain;">
                     </figure>
                     {% else %}
