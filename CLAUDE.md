@@ -247,6 +247,18 @@ cargo run
 # http://localhost:3000
 ```
 
+## Calidad de código — Clippy
+
+Correr antes de cada commit:
+
+```bash
+cargo clippy
+```
+
+- **No usar `#![deny(clippy::all)]`** en el código — convierte warnings en errores y cada versión nueva de Clippy puede agregar reglas que bloqueen la compilación sin razón de negocio.
+- Si un lint específico no aplica al contexto, silenciarlo en la línea con `#[allow(clippy::nombre_del_lint)]`, nunca globalmente.
+- El patrón idiomático para `if let` anidados es colapsarlos con `&&`: `if let Some(v) = x && let Ok(d) = v.parse() { ... }`.
+
 ---
 
 ## Modo de trabajo con AI
@@ -271,3 +283,16 @@ cargo run
 - Rust: código explícito sobre abstracciones elegantes — este es un proyecto de práctica, no aprendizaje, pero la claridad sigue siendo prioritaria.
 - No añadir capas de abstracción que no aporten funcionalidad real.
 - Images siempre `latest` (proyecto propio, un solo consumer).
+
+### Convenciones de templates — URLs y escape
+
+Minijinja auto-escapa `/` a `&#x2f;` en variables de tipo `String`. Regla:
+
+| Origen de la URL | Qué hacer en el template |
+|---|---|
+| `site_url` (global) | Nada — ya viene como `safe_string` desde Rust |
+| `format!("{}/ruta/{}", content_base_url, f)` en Rust | Usar `\| safe` en el template: `{{ url \| safe }}` |
+| Texto literal en el template (`/static/img/logo.png`) | Nada — el texto literal no se escapa |
+| JSON-LD dentro de `<script>` | Usar `\| tojson` — maneja sus propias comillas y marca la salida como safe |
+
+Para sobreescribir metas OG/Twitter por página usar `{% block meta_social %}` y `{% block meta_description %}`, nunca agregar tags duplicados en `{% block head %}`.

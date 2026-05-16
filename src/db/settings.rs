@@ -34,17 +34,15 @@ pub async fn terminos(pool: &PgPool) -> Result<Terminos, sqlx::Error> {
     for row in rows {
         match row.key.as_str() {
             "DIAS_VIGENCIA_MONEDERO" => {
-                if let Some(v) = &row.value {
-                    if let Ok(d) = v.parse::<i32>() {
-                        dias = d;
-                    }
+                if let Some(v) = &row.value
+                    && let Ok(d) = v.parse::<i32>() {
+                    dias = d;
                 }
             }
             "TIPO_CAMBIO_MONEDERO" => {
-                if let Some(v) = &row.value {
-                    if let Ok(d) = v.parse::<Decimal>() {
-                        cashback = d;
-                    }
+                if let Some(v) = &row.value
+                    && let Ok(d) = v.parse::<Decimal>() {
+                    cashback = d;
                 }
             }
             _ => {}
