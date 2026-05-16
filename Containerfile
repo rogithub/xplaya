@@ -1,5 +1,5 @@
 # ── build ──────────────────────────────────────────────────────────────────
-FROM rust:1.86-slim AS builder
+FROM rust:latest AS builder
 WORKDIR /app
 
 # Cache de dependencias: solo se recompilan si cambia Cargo.toml o Cargo.lock
