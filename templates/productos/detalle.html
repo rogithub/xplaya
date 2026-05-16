@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ producto.nombre }}{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/productos/{{ producto.nid }}">{% endblock %}
-{% block meta_description %}<meta name="description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">{% endblock %}
+{% block meta_description %}<meta name="description" content="Compra {{ producto.nombre }} en Papelería xplaya.com · ${{ producto.precio_venta }} MXN por {{ producto.unidad_medida }} · Playa del Carmen.">{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
 <meta property="og:locale" content="es_MX">
@@ -11,16 +11,20 @@
 <meta property="og:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
 {% if producto.fotos %}
 <meta property="og:image" content="{{ producto.fotos[0] | safe }}">
+<meta property="og:image:alt" content="{{ producto.nombre }}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{{ producto.fotos[0] | safe }}">
+<meta name="twitter:image:alt" content="{{ producto.nombre }}">
 {% else %}
 <meta property="og:image" content="{{ site_url }}/static/img/logocircle.png">
+<meta property="og:image:alt" content="Papelería xplaya.com">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="{{ site_url }}/static/img/logocircle.png">
+<meta name="twitter:image:alt" content="Papelería xplaya.com">
 {% endif %}
 <meta name="twitter:title" content="{{ producto.nombre }}">
 <meta name="twitter:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
@@ -38,8 +42,33 @@
     "price": "{{ producto.precio_venta }}",
     "priceCurrency": "MXN",
     "availability": "https://schema.org/InStock",
-    "url": "{{ site_url }}/productos/{{ producto.nid }}"
+    "url": "{{ site_url }}/productos/{{ producto.nid }}",
+    "seller": {
+      "@type": "Organization",
+      "name": "Papelería xplaya.com",
+      "url": "{{ site_url }}"
+    }
   }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Catálogo",
+      "item": "{{ site_url }}/productos"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ producto.nombre | tojson }},
+      "item": "{{ site_url }}/productos/{{ producto.nid }}"
+    }
+  ]
 }
 </script>
 {% endblock %}
