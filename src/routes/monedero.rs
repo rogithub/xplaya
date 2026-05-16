@@ -1,7 +1,7 @@
 use axum::{
     extract::{Form, Path, Query, State},
     http::StatusCode,
-    response::{Html, Redirect},
+    response::{Html, IntoResponse, Redirect, Response},
 };
 use minijinja::context;
 use serde::Deserialize;
@@ -34,12 +34,36 @@ pub async fn terminos(State(state): State<AppState>) -> Result<Html<String>, Sta
 #[derive(Deserialize)]
 pub struct SaldoParams {
     pub error: Option<String>,
+    pub p: Option<String>,
 }
 
 pub async fn saldo_get(
     State(state): State<AppState>,
     Query(params): Query<SaldoParams>,
-) -> Result<Html<String>, StatusCode> {
+) -> Result<Response, StatusCode> {
+    // Si viene ?p=telefono, busca directamente sin mostrar el formulario
+    if let Some(raw) = params.p {
+        let digits: String = raw.chars().filter(|c| c.is_ascii_digit()).collect();
+        let tel = if digits.len() > 10 {
+            digits[digits.len() - 10..].to_string()
+        } else {
+            digits
+        };
+        if tel.len() == 10 {
+            let cliente_id = db::monedero::buscar_cliente(&state.pool, &tel)
+                .await
+                .map_err(|e| {
+                    tracing::error!("buscar_cliente (param p): {e}");
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?;
+            if let Some(id) = cliente_id {
+                return Ok(Redirect::to(&format!("/monedero/{}", id)).into_response());
+            }
+        }
+        // Teléfono inválido o no encontrado → cae al formulario sin error (el QR simplemente no funcionó)
+        return Ok(Redirect::to("/saldo").into_response());
+    }
+
     let tmpl = state.tmpl.get_template("monedero/saldo.html").map_err(|e| {
         tracing::error!("Template saldo: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
@@ -50,7 +74,7 @@ pub async fn saldo_get(
             tracing::error!("Render saldo: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
-    Ok(Html(html))
+    Ok(Html(html).into_response())
 }
 
 #[derive(Deserialize)]
