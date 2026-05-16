@@ -32,17 +32,50 @@
     {% endfor %}
 </div>
 
-{% if paginacion.total_paginas > 1 %}
+{% if paginacion.paginas %}
 <nav class="pagination is-centered mt-5" role="navigation" aria-label="paginación">
+
+    {# Botón Anterior #}
+    {% if paginacion.pagina_actual > 1 %}
+    <a class="pagination-previous"
+       hx-get="/productos?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}"
+       hx-target="#catalogo" hx-push-url="true"
+       href="/productos?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}">
+        <span class="icon is-small"><i class="fas fa-chevron-left"></i></span>
+    </a>
+    {% else %}
+    <a class="pagination-previous" disabled>
+        <span class="icon is-small"><i class="fas fa-chevron-left"></i></span>
+    </a>
+    {% endif %}
+
+    {# Botón Siguiente #}
+    {% if paginacion.pagina_actual < paginacion.total_paginas %}
+    <a class="pagination-next"
+       hx-get="/productos?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}"
+       hx-target="#catalogo" hx-push-url="true"
+       href="/productos?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}">
+        <span class="icon is-small"><i class="fas fa-chevron-right"></i></span>
+    </a>
+    {% else %}
+    <a class="pagination-next" disabled>
+        <span class="icon is-small"><i class="fas fa-chevron-right"></i></span>
+    </a>
+    {% endif %}
+
+    {# Números de página — None serializa como null (falsy) = puntos suspensivos #}
     <ul class="pagination-list">
-        {% for p in range(1, paginacion.total_paginas + 1) %}
+        {% for p in paginacion.paginas %}
+        {% if p %}
         <li>
             <a class="pagination-link {% if p == paginacion.pagina_actual %}is-current{% endif %}"
                hx-get="/productos?pagina={{ p }}&busqueda={{ busqueda }}"
-               hx-target="#catalogo"
-               hx-push-url="true"
+               hx-target="#catalogo" hx-push-url="true"
                href="/productos?pagina={{ p }}&busqueda={{ busqueda }}">{{ p }}</a>
         </li>
+        {% else %}
+        <li><span class="pagination-ellipsis">&hellip;</span></li>
+        {% endif %}
         {% endfor %}
     </ul>
 </nav>

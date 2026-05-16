@@ -25,6 +25,7 @@
 
     {% block head %}{% endblock %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/main.css">
     {# Alpine debe cargarse antes de que el DOM esté listo para capturar alpine:init #}
     <script src="/static/js/cart.js"></script>
@@ -89,11 +90,13 @@
     </script>
 </head>
 <body>
-    <nav class="navbar is-light" role="navigation" x-data="{ open: false }">
+    <nav class="navbar is-white has-shadow" role="navigation" x-data="{ open: false }">
         <div class="container">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/productos">
-                    <strong>xplaya.com</strong>
+                    <img src="/static/img/logocircle.png" alt="xplaya.com"
+                         style="max-height: 2.25rem; width: auto; margin-right: .5rem;">
+                    <span class="has-text-weight-bold" style="color: #E85D04;">xplaya.com</span>
                 </a>
                 <a role="button" class="navbar-burger" :class="{ 'is-active': open }"
                    @click="open = !open" aria-label="menú">
@@ -104,10 +107,22 @@
             </div>
             <div class="navbar-menu" :class="{ 'is-active': open }">
                 <div class="navbar-start">
-                    <a class="navbar-item" href="/productos">Catálogo</a>
+                    <a class="navbar-item" href="/productos">
+                        <span class="icon mr-1"><i class="fas fa-store fa-sm"></i></span>
+                        Catálogo
+                    </a>
                 </div>
                 <div class="navbar-end">
+                    <a class="navbar-item" href="/saldo">
+                        <span class="icon mr-1"><i class="fas fa-wallet fa-sm"></i></span>
+                        Monedero
+                    </a>
+                    <a class="navbar-item" href="/resena">
+                        <span class="icon mr-1"><i class="fas fa-star fa-sm"></i></span>
+                        Reseñas
+                    </a>
                     <a class="navbar-item" href="/carrito">
+                        <span class="icon mr-1"><i class="fas fa-cart-shopping fa-sm"></i></span>
                         Carrito
                         <span class="tag is-success is-rounded ml-2"
                               x-show="$store.carrito.total > 0"
@@ -126,11 +141,81 @@
     </main>
 
     <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-                <strong>xplaya.com</strong> &mdash;
-                <a href="/terminos">Términos y condiciones</a>
-            </p>
+        <div class="container">
+            <div class="columns">
+                <div class="column">
+                    <p class="has-text-weight-semibold mb-3">
+                        <span class="icon mr-1"><i class="fas fa-print fa-sm"></i></span>
+                        Servicios
+                    </p>
+                    <ul class="is-size-7" style="list-style: none; padding: 0; line-height: 2;">
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-copy"></i></span>Copias e impresiones $1 b&amp;n</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-wifi"></i></span>WIFI gratis para enviar archivos</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-file-lines"></i></span>Trámites</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-book"></i></span>Engargolados</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-id-card"></i></span>Enmicados</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-barcode"></i></span>Escáner</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-scissors"></i></span>Arreglos de ropa</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-ruler"></i></span>Material didáctico</li>
+                    </ul>
+                </div>
+                <div class="column">
+                    <p class="has-text-weight-semibold mb-3">
+                        <span class="icon mr-1"><i class="fas fa-location-dot fa-sm"></i></span>
+                        Contacto
+                    </p>
+                    <ul class="is-size-7" style="list-style: none; padding: 0; line-height: 2.2;">
+                        <li>
+                            <span class="icon is-small mr-1 has-text-grey"><i class="fab fa-whatsapp"></i></span>
+                            <a href="https://wa.me/524522018336" target="_blank" rel="noopener">452-201-8336</a>
+                        </li>
+                        <li>
+                            <span class="icon is-small mr-1 has-text-grey"><i class="fas fa-envelope"></i></span>
+                            <a href="mailto:papeleria@xplaya.com">papeleria@xplaya.com</a>
+                        </li>
+                        <li>
+                            <span class="icon is-small mr-1 has-text-grey"><i class="fas fa-location-dot"></i></span>
+                            <a href="https://maps.app.goo.gl/MAboYSrPtfU148ca7" target="_blank" rel="noopener">
+                                Villas del Sol, junto a Palmas Turquesa<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Playa del Carmen, Q.Roo
+                            </a>
+                        </li>
+                    </ul>
+                    <p class="has-text-weight-semibold mb-2 mt-4">
+                        <span class="icon mr-1"><i class="fas fa-clock fa-sm"></i></span>
+                        Horarios
+                    </p>
+                    <ul class="is-size-7" style="list-style: none; padding: 0; line-height: 2;">
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-sun"></i></span>Lun – Vie &nbsp;6:30 – 18:00</li>
+                        <li><span class="icon is-small mr-1 has-text-grey"><i class="fas fa-umbrella-beach"></i></span>Sáb &nbsp;9:00 – 14:00</li>
+                    </ul>
+                </div>
+                <div class="column">
+                    <p class="has-text-weight-semibold mb-3">
+                        <span class="icon mr-1"><i class="fas fa-share-nodes fa-sm"></i></span>
+                        Síguenos
+                    </p>
+                    <ul class="is-size-7" style="list-style: none; padding: 0; line-height: 2.2;">
+                        <li>
+                            <span class="icon is-small mr-1 has-text-grey"><i class="fab fa-tiktok"></i></span>
+                            <a href="https://www.tiktok.com/@papeleria.xplaya.com" target="_blank" rel="noopener">@papeleria.xplaya.com</a>
+                        </li>
+                        <li>
+                            <span class="icon is-small mr-1 has-text-grey"><i class="fab fa-google"></i></span>
+                            <a href="/resena">Déjanos tu reseña en Google</a>
+                        </li>
+                    </ul>
+                    <hr>
+                    <ul class="is-size-7" style="list-style: none; padding: 0; line-height: 2;">
+                        <li><a href="/terminos">Términos del Monedero</a></li>
+                        <li><a href="/saldo">Consultar saldo</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="has-text-centered has-text-grey is-size-7 mt-2"
+                 style="border-top: 1px solid #dbdbdb; padding-top: 1rem;">
+                <strong>xplaya.com</strong> — Papelería y Mercería El Gordo · Playa del Carmen
+            </div>
         </div>
     </footer>
 </body>

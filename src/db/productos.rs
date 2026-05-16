@@ -49,17 +49,14 @@ pub async fn busqueda(
     .await?;
 
     if rows.is_empty() {
-        return Ok((
-            vec![],
-            Paginacion { total_items: 0, pagina_actual: pagina, total_paginas: 0 },
-        ));
+        return Ok((vec![], Paginacion::new(0, pagina, 0)));
     }
 
-    let paginacion = Paginacion {
-        total_items: rows[0].total_items,
-        pagina_actual: rows[0].pagina_actual,
-        total_paginas: rows[0].total_paginas,
-    };
+    let paginacion = Paginacion::new(
+        rows[0].total_items,
+        rows[0].pagina_actual,
+        rows[0].total_paginas,
+    );
 
     let productos = rows
         .into_iter()
