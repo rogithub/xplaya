@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}xplaya.com{% endblock %}</title>
-    <meta name="description" content="Papelería y mercería en Playa del Carmen — copias, trámites, engargolados, enmicados, escáner y WIFI gratis.">
+    {% block meta_description %}<meta name="description" content="Papelería y mercería en Playa del Carmen — copias, trámites, engargolados, enmicados, escáner y WIFI gratis.">{% endblock %}
     <meta name="keywords" content="papelería, copias, mercería, trámites, engargolados, enmicados, escáner, WIFI, villas del sol, palmas turquesa, playa del carmen">
     <meta name="author" content="xplaya.com">
     <meta name="theme-color" content="#E85D04">
 
+    {% block meta_social %}
     <meta property="og:site_name" content="xplaya.com">
     <meta property="og:locale" content="es_MX">
     <meta property="og:image" content="{{ site_url }}/static/img/logocircle.png">
@@ -16,6 +17,7 @@
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="{{ site_url }}/static/img/logocircle.png">
+    {% endblock %}
 
     <meta itemprop="name" content="Papelería xplaya.com">
     <meta itemprop="description" content="Copias, trámites, engargolados, enmicados, escáner, WIFI gratis para enviar documentos">

@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Ticket {{ venta.total }} — xplaya.com{% endblock %}
-{% block head %}
-<meta name="description" content="Tu compra {{ venta.total }} en Papelería xplaya.com — toca para ver tu ticket y saldo de monedero.">
+{% block meta_description %}<meta name="description" content="Tu compra {{ venta.total }} en Papelería xplaya.com — toca para ver tu ticket y saldo de monedero.">{% endblock %}
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ site_url }}/recibo/{{ id }}">
 <meta property="og:title" content="Tu ticket {{ venta.total }} — Papelería xplaya.com">
