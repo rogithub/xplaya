@@ -13,7 +13,7 @@ Reemplaza `papeleria-ecomerce-web` (Angular 21 SSR) + `papeleria-ecomerce-api` (
 | **xplaya** | `/mnt/storage/data/code/xplaya` | Este proyecto — reemplaza web + api |
 | **papeleria-ecomerce-web** | `/mnt/storage/data/code/papeleria-ecomerce-web` | Predecesor — Angular 21 SSR (referencia) |
 | **papeleria-ecomerce-api** | `/mnt/storage/data/code/papeleria-ecomerce-api` | Predecesor — ASP.NET Core API (referencia) |
-| **Ro.Inventario.Core** | `/mnt/storage/data/code/Ro.Inventario.Core` | Esquema y entidades — leer para entender el dominio y la BD |
+| **Ro.Inventario.Core** | `/mnt/storage/data/code/inventario_papeleria/Ro.Inventario.Core` | Esquema y entidades — leer para entender el dominio y la BD (proyecto local dentro de inventario_papeleria) |
 | **inventario_papeleria** | `/mnt/storage/data/code/inventario_papeleria` | POS interno — comparte la misma BD PostgreSQL |
 | **Ro.Inventario.Charts** | `/mnt/storage/data/code/Ro.Inventario.Charts` | Referencia directa de arquitectura Rust para este proyecto |
 | **k3s-manifests** | `/mnt/storage/data/code/k3s-manifests` | GitOps — ArgoCD, deployments del cluster |
@@ -161,7 +161,7 @@ Si el teléfono ya existe en `Clientes`, reutiliza ese registro.
 
 ## Base de datos
 
-El esquema canónico está en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
+El esquema canónico está en `inventario_papeleria/Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
 
 ### Tablas clave para este proyecto
 
@@ -200,7 +200,7 @@ CREATE TABLE ShortUrls (
 - **xplaya** genera el código y hace el redirect (ruta `GET /r/:code`)
 - **El POS** inserta en `ShortUrls` al crear una venta o pedido
 - El POS muestra la URL completa en su UI; el botón "Copiar para cliente" usa la URL corta
-- Documentar también en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`
+- Documentar también en `inventario_papeleria/Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`
 
 ### Trampas críticas del dominio
 
