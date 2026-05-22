@@ -1,1 +1,12 @@
 /* Estilos propios — complementan Bulma */
+
+@media print {
+    nav.navbar,
+    footer.footer,
+    .no-print {
+        display: none !important;
+    }
+    .section {
+        padding: 0.5rem !important;
+    }
+}

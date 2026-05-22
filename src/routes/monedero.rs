@@ -221,7 +221,8 @@ async fn pdf_desde_url(state: &AppState, url: &str, filename: &str) -> Result<Re
     let gotenberg = format!("{}/forms/chromium/convert/url", state.config.gotenberg_url);
 
     let form = reqwest::multipart::Form::new()
-        .text("url", url.to_string());
+        .text("url", url.to_string())
+        .text("emulatedMediaType", "print");
 
     let resp = state.http
         .post(&gotenberg)
