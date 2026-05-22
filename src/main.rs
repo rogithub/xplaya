@@ -1,5 +1,4 @@
 use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}};
-use tower_http::normalize_path::NormalizePathLayer;
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
 use tower::ServiceBuilder;
@@ -68,7 +67,7 @@ async fn main() {
                 ))
                 .service(ServeDir::new("static")),
         )
-        .layer(NormalizePathLayer::trim_trailing_slash())
+        .fallback(routes::pages::fallback)
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();

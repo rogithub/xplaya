@@ -1,8 +1,28 @@
-use axum::{extract::State, http::{header, StatusCode}, response::{Html, IntoResponse, Response}};
+use axum::{extract::State, http::{header, StatusCode, Uri}, response::{Html, IntoResponse, Redirect, Response}};
 use chrono::Utc;
 use minijinja::context;
 
 use crate::{db, AppState};
+
+pub async fn fallback(State(state): State<AppState>, uri: Uri) -> Response {
+    let path = uri.path();
+    if path.ends_with('/') && path.len() > 1 {
+        let trimmed = path.trim_end_matches('/');
+        let location = match uri.query() {
+            Some(q) => format!("{}?{}", trimmed, q),
+            None => trimmed.to_string(),
+        };
+        return Redirect::permanent(&location).into_response();
+    }
+
+    match state.tmpl.get_template("pages/404.html") {
+        Ok(tmpl) => match tmpl.render(context!()) {
+            Ok(html) => (StatusCode::NOT_FOUND, Html(html)).into_response(),
+            Err(_) => StatusCode::NOT_FOUND.into_response(),
+        },
+        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    }
+}
 
 pub async fn robots_txt(State(state): State<AppState>) -> Response {
     let body = format!(
