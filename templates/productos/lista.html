@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Catálogo — Papelería xplaya.com | Villas del Sol, Playa del Carmen{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/productos">{% endblock %}
-{% block head %}{% if productos and productos[0].foto_url %}<link rel="preload" as="image" href="{{ productos[0].foto_url | safe }}">{% endif %}{% endblock %}
+{% block head %}{% if productos and productos[0].foto_url %}<link rel="preload" as="image" href="{{ productos[0].foto_url | safe }}" fetchpriority="high">{% endif %}{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
 <meta property="og:locale" content="es_MX">

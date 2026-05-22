@@ -63,7 +63,7 @@ async fn main() {
             ServiceBuilder::new()
                 .layer(SetResponseHeaderLayer::if_not_present(
                     header::CACHE_CONTROL,
-                    HeaderValue::from_static("public, max-age=86400"),
+                    HeaderValue::from_static("public, max-age=31536000, immutable"),
                 ))
                 .service(ServeDir::new("static")),
         )

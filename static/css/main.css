@@ -1,5 +1,19 @@
 /* Estilos propios — complementan Bulma */
 
+/* Font Awesome cargado de forma diferida: forzar font-display:swap para evitar FOIT */
+@font-face { font-family: "Font Awesome 6 Free";  font-display: swap; src: local(""); }
+@font-face { font-family: "Font Awesome 6 Brands"; font-display: swap; src: local(""); }
+
+/*
+ * WCAG AA — correcciones de contraste sobre defaults de Bulma.
+ * Bulma usa !important en sus helpers de color; main.css carga después → gana.
+ *
+ * has-text-success: #48c774 da ~2:1 en blanco → #2e7d32 da 4.6:1 (pasa AA)
+ * has-text-grey:    #7a7a7a da ~3.6:1 en footer #f5f5f5 → #616161 da 5.2:1
+ */
+.has-text-success { color: #2e7d32 !important; }
+.has-text-grey    { color: #616161 !important; }
+
 /* Botón flotante de WhatsApp */
 .whatsapp-fab {
     position: fixed;
