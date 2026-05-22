@@ -53,8 +53,10 @@ async fn main() {
         .route("/monedero/{cliente_id}", get(routes::monedero::app))
         .route("/recibo/{id}", get(routes::monedero::recibo))
         .route("/recibo/{id}/pdf", get(routes::monedero::recibo_pdf))
+        .route("/recibo/{id}/print", get(routes::monedero::recibo_print))
         .route("/cotizacion/{uid}", get(routes::monedero::cotizacion))
         .route("/cotizacion/{uid}/pdf", get(routes::monedero::cotizacion_pdf))
+        .route("/cotizacion/{uid}/print", get(routes::monedero::cotizacion_print))
         .route("/r/{code}", get(routes::monedero::redirigir))
         .nest_service(
             "/static",

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket {{ venta.total }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <style>
+        body { padding: 1rem; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div style="max-width: 480px; margin: 0 auto;">
+
+    <h1 class="title is-5 has-text-centered mb-1">Ticket Digital</h1>
+    <h2 class="subtitle is-6 has-text-centered has-text-grey">Papelería xplaya.com</h2>
+    <p class="has-text-centered is-size-7 has-text-grey mb-4">
+        🕓{{ venta.hora }} &nbsp; 🗓️{{ venta.fecha }}
+    </p>
+
+    <hr>
+
+    <table class="table is-fullwidth is-narrow is-size-7 mb-0">
+        <tbody>
+        {% for p in venta.productos %}
+        <tr>
+            <td>
+                <span class="has-text-grey">×{{ p.cantidad }}</span>&nbsp;{{ p.nombre }}
+                {% if p.es_ingreso_trasladado %}
+                <br><small class="has-text-grey">Sin cashback</small>
+                {% endif %}
+            </td>
+            <td class="has-text-right has-text-grey">{{ p.precio_unitario }}</td>
+            <td class="has-text-right has-text-weight-semibold">{{ p.subtotal }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+
+    <table class="table is-fullwidth is-narrow is-size-7 mb-4">
+        <tbody>
+        <tr>
+            <td colspan="2" class="has-text-weight-bold">Total</td>
+            <td class="has-text-right has-text-weight-bold">{{ venta.total }}</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="has-text-grey pb-1">Pagos</td>
+        </tr>
+        {% if venta.pago != "$0.00" %}
+        <tr><td colspan="2">Efectivo</td><td class="has-text-right">{{ venta.pago }}</td></tr>
+        {% endif %}
+        {% if venta.pago_monedero != "$0.00" %}
+        <tr><td colspan="2">Monedero</td><td class="has-text-right">{{ venta.pago_monedero }}</td></tr>
+        {% endif %}
+        {% if venta.pago_tarjeta != "$0.00" %}
+        <tr><td colspan="2">Tarjeta</td><td class="has-text-right">{{ venta.pago_tarjeta }}</td></tr>
+        {% endif %}
+        {% if venta.pago_transferencia != "$0.00" %}
+        <tr><td colspan="2">Transferencia</td><td class="has-text-right">{{ venta.pago_transferencia }}</td></tr>
+        {% endif %}
+        {% if venta.pago_dolares != "$0.00" %}
+        <tr>
+            <td colspan="2">Dólares (TC: {{ venta.tipo_cambio_dolares }})</td>
+            <td class="has-text-right">{{ venta.pago_dolares }} USD</td>
+        </tr>
+        {% endif %}
+        {% if venta.cambio != "$0.00" %}
+        <tr><td colspan="2">Cambio</td><td class="has-text-right">{{ venta.cambio }}</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    {% if venta.tiene_monedero %}
+    <div class="has-text-centered">
+        <p class="has-text-weight-semibold mb-2">💳 Monedero electrónico</p>
+        {% if venta.hay_actividad_monedero %}
+        <table class="table is-narrow is-size-7 mx-auto" style="max-width:260px;">
+            <tbody>
+            <tr>
+                <td class="has-text-left has-text-grey">Saldo anterior</td>
+                <td class="has-text-right">${{ venta.saldo_anterior }}</td>
+            </tr>
+            {% if venta.monedero_generado != "$0.00" %}
+            <tr>
+                <td class="has-text-left has-text-grey">Cashback ganado</td>
+                <td class="has-text-right has-text-success">+{{ venta.monedero_generado }}</td>
+            </tr>
+            {% endif %}
+            {% if venta.pago_monedero != "$0.00" %}
+            <tr>
+                <td class="has-text-left has-text-grey">Pago con monedero</td>
+                <td class="has-text-right">-{{ venta.pago_monedero }}</td>
+            </tr>
+            {% endif %}
+            <tr class="has-text-weight-semibold" style="border-top: 1px solid #dbdbdb;">
+                <td class="has-text-left">Saldo disponible</td>
+                <td class="has-text-right">{{ venta.saldo_monedero }}</td>
+            </tr>
+            </tbody>
+        </table>
+        {% else %}
+            {% if venta.saldo_monedero != "$0.00" %}
+            <p class="is-size-7">Tienes <strong>{{ venta.saldo_monedero }}</strong> en tu monedero.</p>
+            {% else %}
+            <p class="is-size-7 has-text-grey">Tu monedero tiene saldo <strong>$0.00</strong>.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <p class="has-text-centered has-text-grey is-size-7 mt-5">
+        xplaya.com — Papelería y Mercería · Playa del Carmen
+    </p>
+
+</div>
+</body>
+</html>

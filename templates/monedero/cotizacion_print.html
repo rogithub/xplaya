@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización {{ cotizacion.total }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <style>
+        body { padding: 1rem; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div style="max-width: 680px; margin: 0 auto;">
+
+    <h1 class="title is-5 mb-1">Cotización</h1>
+    <p class="has-text-grey is-size-7 mb-4">
+        🕓{{ cotizacion.hora }} &nbsp; 🗓️{{ cotizacion.fecha }}
+    </p>
+
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Cantidad</th>
+                <th>Producto</th>
+                <th class="has-text-right">Precio</th>
+                <th class="has-text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in cotizacion.productos %}
+            <tr>
+                <td>{{ p.cantidad }}</td>
+                <td>{{ p.nombre }}</td>
+                <td class="has-text-right">{{ p.precio }}</td>
+                <td class="has-text-right">{{ p.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="2"></th>
+                <th class="has-text-right">Total</th>
+                <th class="has-text-right has-text-success">{{ cotizacion.total }}</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <p class="has-text-centered has-text-grey is-size-7 mt-5">
+        xplaya.com — Papelería y Mercería · Playa del Carmen
+    </p>
+
+</div>
+</body>
+</html>

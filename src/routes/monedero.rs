@@ -168,13 +168,35 @@ pub async fn recibo(
     Ok(Html(html))
 }
 
+// ── /recibo/:id/print ─────────────────────────────────────────────────────────
+
+pub async fn recibo_print(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<Html<String>, StatusCode> {
+    let venta = db::monedero::recibo(&state.pool, id)
+        .await
+        .map_err(|e| { tracing::error!("DB recibo {id}: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let tmpl = state.tmpl.get_template("monedero/recibo_print.html").map_err(|e| {
+        tracing::error!("Template recibo_print: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(minijinja::context! { venta => venta }).map_err(|e| {
+        tracing::error!("Render recibo_print: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
 // ── /recibo/:id/pdf ───────────────────────────────────────────────────────────
 
 pub async fn recibo_pdf(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Response, StatusCode> {
-    let url = format!("{}/recibo/{}", state.config.site_url, id);
+    let url = format!("{}/recibo/{}/print", state.config.site_url, id);
     pdf_desde_url(&state, &url, &format!("Recibo_{}.pdf", id)).await
 }
 
@@ -205,13 +227,35 @@ pub async fn cotizacion(
     Ok(Html(html))
 }
 
+// ── /cotizacion/:uid/print ────────────────────────────────────────────────────
+
+pub async fn cotizacion_print(
+    State(state): State<AppState>,
+    Path(uid): Path<Uuid>,
+) -> Result<Html<String>, StatusCode> {
+    let cot = db::monedero::cotizacion(&state.pool, uid)
+        .await
+        .map_err(|e| { tracing::error!("DB cotizacion {uid}: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let tmpl = state.tmpl.get_template("monedero/cotizacion_print.html").map_err(|e| {
+        tracing::error!("Template cotizacion_print: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(minijinja::context! { cotizacion => cot }).map_err(|e| {
+        tracing::error!("Render cotizacion_print: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
 // ── /cotizacion/:uid/pdf ──────────────────────────────────────────────────────
 
 pub async fn cotizacion_pdf(
     State(state): State<AppState>,
     Path(uid): Path<Uuid>,
 ) -> Result<Response, StatusCode> {
-    let url = format!("{}/cotizacion/{}", state.config.site_url, uid);
+    let url = format!("{}/cotizacion/{}/print", state.config.site_url, uid);
     pdf_desde_url(&state, &url, &format!("Cotizacion_{}.pdf", uid)).await
 }
 
@@ -221,8 +265,7 @@ async fn pdf_desde_url(state: &AppState, url: &str, filename: &str) -> Result<Re
     let gotenberg = format!("{}/forms/chromium/convert/url", state.config.gotenberg_url);
 
     let form = reqwest::multipart::Form::new()
-        .text("url", url.to_string())
-        .text("emulatedMediaType", "print");
+        .text("url", url.to_string());
 
     let resp = state.http
         .post(&gotenberg)
