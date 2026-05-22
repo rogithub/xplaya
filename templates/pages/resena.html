@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 {% block title %}⭐ Déjanos tu reseña — Papelería xplaya.com{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/resena">{% endblock %}
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/resena">
+<meta property="og:title" content="⭐ Déjanos tu reseña — Papelería xplaya.com">
+<meta property="og:description" content="Tu opinión nos ayuda a seguir mejorando y llegar a más personas.">
+<meta property="og:image" content="{{ site_url }}/static/img/resena.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="⭐ Déjanos tu reseña — Papelería xplaya.com">
+<meta name="twitter:description" content="Tu opinión nos ayuda a seguir mejorando y llegar a más personas.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/resena.png">
+{% endblock %}
 {% block content %}
 
 <div class="columns is-centered">
@@ -8,8 +23,8 @@
         <div class="box has-text-centered p-6">
 
             <figure class="image is-128x128 mx-auto mb-4">
-                <img src="/static/img/resena.png" alt="Papelería xplaya.com"
-                     style="object-fit: cover;">
+                <img src="/static/img/circleai.jpg" alt="Papelería xplaya.com"
+                     style="object-fit: cover; border-radius: 50%;">
             </figure>
 
             <h1 class="title is-4">¿Te gustó nuestro servicio?</h1>
