@@ -57,11 +57,17 @@
         </tfoot>
     </table>
 
-    {% if cotizacion.cliente_id %}
-    <a href="/monedero/{{ cotizacion.cliente_id }}" class="button is-success mt-2">
-        💳 Ver Monedero
-    </a>
-    {% endif %}
+    <div class="mt-4">
+        {% if cotizacion.cliente_id %}
+        <a href="/monedero/{{ cotizacion.cliente_id }}" class="button is-success is-fullwidth mb-2">
+            💳 Ver Monedero
+        </a>
+        {% endif %}
+        <a href="/cotizacion/{{ cotizacion.uid }}/pdf" class="button is-light is-fullwidth">
+            <span class="icon"><i class="fas fa-file-pdf"></i></span>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
 
 </div>
 </div>

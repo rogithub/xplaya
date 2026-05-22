@@ -1,6 +1,6 @@
 use axum::{
     extract::{Form, Path, Query, State},
-    http::StatusCode,
+    http::{header, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
 };
 use minijinja::context;
@@ -168,6 +168,16 @@ pub async fn recibo(
     Ok(Html(html))
 }
 
+// ── /recibo/:id/pdf ───────────────────────────────────────────────────────────
+
+pub async fn recibo_pdf(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<Response, StatusCode> {
+    let url = format!("{}/recibo/{}", state.config.site_url, id);
+    pdf_desde_url(&state, &url, &format!("Recibo_{}.pdf", id)).await
+}
+
 // ── /cotizacion/:uid ──────────────────────────────────────────────────────────
 
 pub async fn cotizacion(
@@ -193,6 +203,52 @@ pub async fn cotizacion(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Html(html))
+}
+
+// ── /cotizacion/:uid/pdf ──────────────────────────────────────────────────────
+
+pub async fn cotizacion_pdf(
+    State(state): State<AppState>,
+    Path(uid): Path<Uuid>,
+) -> Result<Response, StatusCode> {
+    let url = format!("{}/cotizacion/{}", state.config.site_url, uid);
+    pdf_desde_url(&state, &url, &format!("Cotizacion_{}.pdf", uid)).await
+}
+
+// ── PDF helper ────────────────────────────────────────────────────────────────
+
+async fn pdf_desde_url(state: &AppState, url: &str, filename: &str) -> Result<Response, StatusCode> {
+    let gotenberg = format!("{}/forms/chromium/convert/url", state.config.gotenberg_url);
+
+    let form = reqwest::multipart::Form::new()
+        .text("url", url.to_string());
+
+    let resp = state.http
+        .post(&gotenberg)
+        .multipart(form)
+        .send()
+        .await
+        .map_err(|e| {
+            tracing::error!("Gotenberg request error: {e}");
+            StatusCode::BAD_GATEWAY
+        })?;
+
+    if !resp.status().is_success() {
+        tracing::error!("Gotenberg devolvió {}", resp.status());
+        return Err(StatusCode::BAD_GATEWAY);
+    }
+
+    let bytes = resp.bytes().await.map_err(|e| {
+        tracing::error!("Gotenberg read error: {e}");
+        StatusCode::BAD_GATEWAY
+    })?;
+
+    let disposition = format!("attachment; filename=\"{}\"", filename);
+    Ok((
+        [(header::CONTENT_TYPE, "application/pdf"),
+         (header::CONTENT_DISPOSITION, &disposition)],
+        bytes,
+    ).into_response())
 }
 
 // ── /r/:code (ShortUrls redirect) ────────────────────────────────────────────

@@ -16,6 +16,7 @@ pub struct AppState {
     pub tmpl: Environment<'static>,
     pub config: config::Config,
     pub pool: PgPool,
+    pub http: reqwest::Client,
 }
 
 #[tokio::main]
@@ -34,7 +35,8 @@ async fn main() {
     tmpl.set_loader(path_loader("templates"));
     tmpl.add_global("site_url", minijinja::Value::from_safe_string(cfg.site_url.clone()));
 
-    let state = AppState { tmpl, config: cfg, pool };
+    let http = reqwest::Client::new();
+    let state = AppState { tmpl, config: cfg, pool, http };
 
     let app = Router::new()
         .route("/", get(|| async { Redirect::permanent("/productos") }))
@@ -50,7 +52,9 @@ async fn main() {
         .route("/saldo", post(routes::monedero::saldo_post))
         .route("/monedero/{cliente_id}", get(routes::monedero::app))
         .route("/recibo/{id}", get(routes::monedero::recibo))
+        .route("/recibo/{id}/pdf", get(routes::monedero::recibo_pdf))
         .route("/cotizacion/{uid}", get(routes::monedero::cotizacion))
+        .route("/cotizacion/{uid}/pdf", get(routes::monedero::cotizacion_pdf))
         .route("/r/{code}", get(routes::monedero::redirigir))
         .nest_service(
             "/static",

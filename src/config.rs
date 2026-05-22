@@ -4,6 +4,7 @@ pub struct Config {
     pub database_url: String,
     pub content_base_url: String,
     pub site_url: String,
+    pub gotenberg_url: String,
 }
 
 impl Config {
@@ -19,6 +20,8 @@ impl Config {
                 .unwrap_or_else(|_| "https://cntnt.xplaya.com".to_string()),
             site_url: std::env::var("SITE_URL")
                 .unwrap_or_else(|_| "https://xplaya.com".to_string()),
+            gotenberg_url: std::env::var("GOTENBERG_URL")
+                .unwrap_or_else(|_| "http://gotenberg-service.gotenberg.svc.cluster.local:3000".to_string()),
         }
     }
 }
