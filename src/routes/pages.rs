@@ -32,7 +32,6 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
     // Páginas estáticas
     for (loc, priority, freq) in [
         (format!("{site}/"), "1.0", "daily"),
-        (format!("{site}/productos"), "0.9", "daily"),
         (format!("{site}/resena"), "0.5", "monthly"),
     ] {
         xml.push_str(&format!(

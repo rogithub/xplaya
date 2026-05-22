@@ -7,7 +7,7 @@ edition = "2024"
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 minijinja = { version = "2", features = ["loader", "json"] }
-tower-http = { version = "0.6", features = ["fs", "set-header"] }
+tower-http = { version = "0.6", features = ["fs", "set-header", "normalize-path"] }
 tower = "0.4"
 dotenvy = "0.15"
 serde = { version = "1", features = ["derive"] }

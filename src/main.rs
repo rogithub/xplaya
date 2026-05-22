@@ -1,4 +1,5 @@
 use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}};
+use tower_http::normalize_path::NormalizePathLayer;
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
 use tower::ServiceBuilder;
@@ -39,10 +40,10 @@ async fn main() {
     let state = AppState { tmpl, config: cfg, pool, http };
 
     let app = Router::new()
-        .route("/", get(|| async { Redirect::permanent("/productos") }))
+        .route("/", get(routes::productos::lista))
+        .route("/productos", get(|| async { Redirect::permanent("/") }))
         .route("/robots.txt", get(routes::pages::robots_txt))
         .route("/sitemap.xml", get(routes::pages::sitemap_xml))
-        .route("/productos", get(routes::productos::lista))
         .route("/productos/{nid}", get(routes::productos::detalle))
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))
@@ -67,6 +68,7 @@ async fn main() {
                 ))
                 .service(ServeDir::new("static")),
         )
+        .layer(NormalizePathLayer::trim_trailing_slash())
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
