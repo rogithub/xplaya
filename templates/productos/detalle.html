@@ -129,6 +129,12 @@
                 <span x-show="!agregado">Agregar al carrito</span>
                 <span x-show="agregado">✓ Agregado al carrito</span>
             </button>
+            <button class="button is-light is-fullwidth mt-2"
+                    :class="{ 'is-success': compartido }"
+                    @click="compartir()">
+                <span class="icon"><i class="fas fa-share-nodes"></i></span>
+                <span x-text="compartido ? '¡Enlace copiado!' : 'Compartir producto'"></span>
+            </button>
         </div>
 
         <script>
@@ -141,7 +147,27 @@
                     precio: {{ producto.precio_venta | tojson }},
                     unidad_medida: {{ producto.unidad_medida | tojson }}
                 },
-                agregado: false
+                agregado: false,
+                compartido: false,
+                compartir() {
+                    const url = window.location.href;
+                    if (navigator.share) {
+                        navigator.share({
+                            title: this.p.nombre,
+                            text: `${this.p.nombre} - $${this.p.precio}`,
+                            url
+                        }).catch(() => {});
+                    } else if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url)
+                            .then(() => {
+                                this.compartido = true;
+                                setTimeout(() => { this.compartido = false; }, 2500);
+                            })
+                            .catch(() => prompt('Copia este enlace para compartir:', url));
+                    } else {
+                        prompt('Copia este enlace para compartir:', url);
+                    }
+                }
             };
         }
         </script>

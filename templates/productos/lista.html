@@ -17,23 +17,23 @@
 {% endblock %}
 {% block content %}
 
-<div class="level mb-5">
-    <div class="level-left">
-        <h1 class="title">Catálogo</h1>
-    </div>
-    <div class="level-right">
-        <div class="field">
-            <div class="control">
-                <input class="input"
-                       type="search"
-                       name="busqueda"
-                       value="{{ busqueda }}"
-                       placeholder="Buscar productos..."
-                       hx-get="/productos"
-                       hx-target="#catalogo"
-                       hx-trigger="input changed delay:400ms, search"
-                       hx-push-url="true">
-            </div>
+<div class="mb-5">
+    <h1 class="title mb-3">Catálogo</h1>
+    <div class="field">
+        <div class="control has-icons-left">
+            <input class="input is-medium"
+                   type="search"
+                   name="busqueda"
+                   value="{{ busqueda }}"
+                   placeholder="Buscar productos..."
+                   autofocus
+                   hx-get="/productos"
+                   hx-target="#catalogo"
+                   hx-trigger="input changed delay:400ms, search"
+                   hx-push-url="true">
+            <span class="icon is-left">
+                <i class="fas fa-magnifying-glass"></i>
+            </span>
         </div>
     </div>
 </div>
