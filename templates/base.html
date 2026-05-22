@@ -104,7 +104,7 @@
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "{{ site_url }}/productos?busqueda={search_term_string}"
+          "urlTemplate": "{{ site_url }}/?busqueda={search_term_string}"
         },
         "query-input": "required name=search_term_string"
       }
@@ -115,7 +115,7 @@
     <nav class="navbar is-white has-shadow" role="navigation" x-data="{ open: false }">
         <div class="container">
             <div class="navbar-brand">
-                <a class="navbar-item" href="/productos">
+                <a class="navbar-item" href="/">
                     <img src="/static/img/favicon/web-app-manifest-192x192.png" alt="xplaya.com"
                          style="max-height: 2.25rem; width: auto; margin-right: .5rem;">
                     <span class="has-text-weight-bold" style="color: #E85D04;">xplaya.com</span>
@@ -129,7 +129,7 @@
             </div>
             <div class="navbar-menu" :class="{ 'is-active': open }">
                 <div class="navbar-start">
-                    <a class="navbar-item" href="/productos">
+                    <a class="navbar-item" href="/">
                         <span class="icon mr-1"><i class="fas fa-store fa-sm"></i></span>
                         Catálogo
                     </a>

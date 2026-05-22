@@ -38,9 +38,9 @@
     {# Botón Anterior #}
     {% if paginacion.pagina_actual > 1 %}
     <a class="pagination-previous"
-       hx-get="/productos?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}"
+       hx-get="/?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}"
        hx-target="#catalogo" hx-push-url="true"
-       href="/productos?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}">
+       href="/?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}">
         <span class="icon is-small"><i class="fas fa-chevron-left"></i></span>
     </a>
     {% else %}
@@ -52,9 +52,9 @@
     {# Botón Siguiente #}
     {% if paginacion.pagina_actual < paginacion.total_paginas %}
     <a class="pagination-next"
-       hx-get="/productos?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}"
+       hx-get="/?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}"
        hx-target="#catalogo" hx-push-url="true"
-       href="/productos?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}">
+       href="/?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}">
         <span class="icon is-small"><i class="fas fa-chevron-right"></i></span>
     </a>
     {% else %}
@@ -69,9 +69,9 @@
         {% if p %}
         <li>
             <a class="pagination-link {% if p == paginacion.pagina_actual %}is-current{% endif %}"
-               hx-get="/productos?pagina={{ p }}&busqueda={{ busqueda }}"
+               hx-get="/?pagina={{ p }}&busqueda={{ busqueda }}"
                hx-target="#catalogo" hx-push-url="true"
-               href="/productos?pagina={{ p }}&busqueda={{ busqueda }}">{{ p }}</a>
+               href="/?pagina={{ p }}&busqueda={{ busqueda }}">{{ p }}</a>
         </li>
         {% else %}
         <li><span class="pagination-ellipsis">&hellip;</span></li>

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Catálogo — Papelería xplaya.com | Villas del Sol, Playa del Carmen{% endblock %}
-{% block canonical %}<link rel="canonical" href="{{ site_url }}/productos">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/">{% endblock %}
 {% block head %}{% if productos and productos[0].foto_url %}<link rel="preload" as="image" href="{{ productos[0].foto_url | safe }}" fetchpriority="high">{% endif %}{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
 <meta property="og:locale" content="es_MX">
 <meta property="og:type" content="website">
-<meta property="og:url" content="{{ site_url }}/productos">
+<meta property="og:url" content="{{ site_url }}/">
 <meta property="og:title" content="Catálogo — xplaya.com">
 <meta property="og:description" content="Material escolar, de oficina y más. Compra en línea en Papelería xplaya.com.">
 <meta property="og:image" content="{{ site_url }}/static/img/og_catalogo.jpeg">
@@ -27,7 +27,7 @@
                    value="{{ busqueda }}"
                    placeholder="Buscar productos..."
                    autofocus
-                   hx-get="/productos"
+                   hx-get="/"
                    hx-target="#catalogo"
                    hx-trigger="input changed delay:400ms, search"
                    hx-push-url="true">
