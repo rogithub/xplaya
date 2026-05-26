@@ -117,26 +117,44 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
     .fetch_all(pool)
     .await?;
 
-    let monedero_generado: Decimal = sqlx::query_scalar(
-        "SELECT COALESCE(SUM(g.dinerodigital), 0)
-         FROM monederogenerados g
-         JOIN ajustesproductos ap ON g.ajusteproductoid = ap.id
-         WHERE ap.ajusteid = $1 AND g.devolucionid IS NULL",
-    )
-    .bind(id)
-    .fetch_one(pool)
-    .await?;
-
-    let saldo_monedero: Decimal = match venta.clienteid {
+    // Solo mostramos datos de monedero si el cliente vinculado aceptó el programa.
+    // Si no aceptó (o no hay cliente), el recibo aparece sin sección de monedero.
+    let acepto_programa: bool = match venta.clienteid {
         Some(cid) => sqlx::query_scalar(
+            "SELECT aceptoprograma FROM clientes WHERE id = $1",
+        )
+        .bind(cid)
+        .fetch_optional(pool)
+        .await?
+        .unwrap_or(false),
+        None => false,
+    };
+
+    let monedero_generado: Decimal = if acepto_programa {
+        sqlx::query_scalar(
+            "SELECT COALESCE(SUM(g.dinerodigital), 0)
+             FROM monederogenerados g
+             JOIN ajustesproductos ap ON g.ajusteproductoid = ap.id
+             WHERE ap.ajusteid = $1 AND g.devolucionid IS NULL",
+        )
+        .bind(id)
+        .fetch_one(pool)
+        .await?
+    } else {
+        Decimal::ZERO
+    };
+
+    let saldo_monedero: Decimal = if acepto_programa {
+        sqlx::query_scalar(
             "SELECT COALESCE(SUM(dinerodigitaldisponible), 0)
              FROM v_ajuste_producto_monedero
              WHERE clienteid = $1",
         )
-        .bind(cid)
+        .bind(venta.clienteid.expect("acepto_programa implica clienteid"))
         .fetch_one(pool)
-        .await?,
-        None => Decimal::ZERO,
+        .await?
+    } else {
+        Decimal::ZERO
     };
 
     let pago = venta.pago.unwrap_or(Decimal::ZERO);
@@ -186,7 +204,7 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
         monedero_generado: mxn(monedero_generado),
         saldo_monedero: mxn(saldo_monedero),
         saldo_anterior: mxn(saldo_anterior),
-        tiene_monedero: venta.clienteid.is_some(),
+        tiene_monedero: acepto_programa,
         hay_actividad_monedero,
     }))
 }
@@ -246,8 +264,9 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
 }
 
 pub async fn monedero(pool: &PgPool, cliente_id: Uuid) -> Result<Option<ClienteMonedero>, sqlx::Error> {
+    // Solo se muestra el monedero si el cliente aceptó explícitamente el programa.
     let Some(cliente) = sqlx::query_as::<_, ClienteRow>(
-        "SELECT nombre, fechacreado FROM clientes WHERE id = $1",
+        "SELECT nombre, fechacreado FROM clientes WHERE id = $1 AND aceptoprograma = true",
     )
     .bind(cliente_id)
     .fetch_optional(pool)
@@ -351,8 +370,9 @@ pub async fn monedero(pool: &PgPool, cliente_id: Uuid) -> Result<Option<ClienteM
 }
 
 pub async fn buscar_cliente(pool: &PgPool, tel: &str) -> Result<Option<Uuid>, sqlx::Error> {
+    // Solo busca clientes que aceptaron participar en el programa de monedero.
     sqlx::query_scalar(
-        "SELECT id FROM clientes WHERE right(telefono, 10) = $1 LIMIT 1",
+        "SELECT id FROM clientes WHERE right(telefono, 10) = $1 AND aceptoprograma = true LIMIT 1",
     )
     .bind(tel)
     .fetch_optional(pool)

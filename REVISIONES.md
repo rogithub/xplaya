@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Monedero — filtro por AceptoPrograma
+
+**Archivos a revisar:**
+- `src/db/monedero.rs` — único archivo modificado
+
+**Qué hace el cambio:**
+
+La participación en el monedero electrónico es voluntaria. Los clientes con `Clientes.AceptoPrograma = false` (el default) quedan excluidos silenciosamente de todas las vistas públicas:
+
+| Ruta | Comportamiento si AceptoPrograma = false |
+|---|---|
+| `/saldo` (búsqueda por teléfono) | "Número no registrado" — como si no existieran |
+| `/monedero/{guid}` | 404 — el GUID no resuelve a ningún monedero |
+| `/recibo/{id}` | El recibo se muestra normalmente, pero la sección de monedero desaparece (`tiene_monedero = false`, todos los montos en cero) |
+
+**Tres cambios en `db/monedero.rs`:**
+1. `buscar_cliente` — añade `AND aceptoprograma = true` al WHERE
+2. `monedero` — añade `AND aceptoprograma = true` al WHERE del cliente
+3. `recibo` — consulta `aceptoprograma` antes de calcular saldo/monedero; si no aceptó, todos los campos de monedero son cero y `tiene_monedero = false`
+
+---
+
 ## Fix — Metas SEO duplicadas en templates
 
 **Archivos a revisar:**
