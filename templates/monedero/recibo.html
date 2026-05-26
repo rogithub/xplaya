@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Ticket {{ venta.total }} — xplaya.com{% endblock %}
 {% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
-{% block meta_description %}<meta name="description" content="{% if venta.tiene_monedero %}👛 ${{ venta.saldo_monedero }} en tu monedero · Toca para ver tu ticket 👆{% else %}Toca aquí para ver los detalles de tu compra 👆{% endif %}">{% endblock %}
+{% block meta_description %}<meta name="description" content="{% if venta.tiene_monedero %}👛 {{ venta.saldo_monedero }} en tu monedero · Toca para ver tu ticket 👆{% else %}Toca aquí para ver los detalles de tu compra 👆{% endif %}">{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
 <meta property="og:locale" content="es_MX">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ site_url }}/recibo/{{ id }}">
 <meta property="og:title" content="Ticket {{ venta.total }} · 🗓️ {{ venta.fecha }} · 🕐 {{ venta.hora }}">
-<meta property="og:description" content="{% if venta.tiene_monedero %}👛 ${{ venta.saldo_monedero }} en tu monedero · Toca para ver tu ticket 👆{% else %}Toca aquí para ver los detalles de tu compra 👆{% endif %}">
+<meta property="og:description" content="{% if venta.tiene_monedero %}👛 {{ venta.saldo_monedero }} en tu monedero · Toca para ver tu ticket 👆{% else %}Toca aquí para ver los detalles de tu compra 👆{% endif %}">
 <meta property="og:image" content="{{ site_url }}/static/img/og_recibo.jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:url" content="{{ site_url }}/recibo/{{ id }}">
 <meta name="twitter:title" content="Ticket {{ venta.total }} · 🗓️ {{ venta.fecha }} · 🕐 {{ venta.hora }}">
-<meta name="twitter:description" content="{% if venta.tiene_monedero %}👛 ${{ venta.saldo_monedero }} en tu monedero · Toca para ver tu ticket 👆{% else %}Toca aquí para ver los detalles de tu compra 👆{% endif %}">
+<meta name="twitter:description" content="{% if venta.tiene_monedero %}👛 {{ venta.saldo_monedero }} en tu monedero · Toca para ver tu ticket 👆{% else %}Toca aquí para ver los detalles de tu compra 👆{% endif %}">
 <meta name="twitter:image" content="{{ site_url }}/static/img/og_recibo.jpeg">
 {% endblock %}
 {% block content %}
