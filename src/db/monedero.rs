@@ -253,11 +253,23 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
         })
         .collect();
 
+    let tiene_monedero: bool = match pedido.clienteid {
+        Some(cid) => sqlx::query_scalar(
+            "SELECT aceptoprograma FROM clientes WHERE id = $1",
+        )
+        .bind(cid)
+        .fetch_optional(pool)
+        .await?
+        .unwrap_or(false),
+        None => false,
+    };
+
     Ok(Some(Cotizacion {
         uid: pedido.uid,
         fecha: fecha_es(pedido.fechacreado),
         hora: hora(pedido.fechacreado),
         cliente_id: pedido.clienteid,
+        tiene_monedero,
         productos,
         total: mxn(total),
     }))

@@ -45,6 +45,7 @@ pub struct Cotizacion {
     pub fecha: String,
     pub hora: String,
     pub cliente_id: Option<Uuid>,
+    pub tiene_monedero: bool,
     pub productos: Vec<ProductoCotizacion>,
     pub total: String,
 }
