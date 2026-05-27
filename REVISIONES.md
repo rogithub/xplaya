@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## UI: OG imagen homepage, botón reseña mobile, ícono PDF en recibo
+
+**Archivos a revisar:**
+- `templates/productos/lista.html` — og:image cambiado de `og_catalogo.jpeg` a `og_xplaya.jpeg`; twitter:card a `summary_large_image`
+- `templates/pages/resena.html` — botón Google: texto "Dejar mi reseña en Google" → "Dejar mi reseña" + ícono `fa-google`
+- `templates/monedero/recibo.html` — ícono del botón Descargar PDF: `fa-file-pdf` → `fa-download`
+
+**Qué hace el cambio:**
+1. La imagen OG de la homepage (`/`) ahora muestra `og_xplaya.jpeg` (representativa de la papelería) en lugar de `og_catalogo.jpeg` que contenía una foto de producto.
+2. El botón de reseña en `/resena` ya no se sale del fondo verde en mobile — texto más corto + ícono de Google a la izquierda.
+3. El botón de descarga en `/recibo/:id` muestra una flecha de descarga limpia, sin la etiqueta "PDF" incrustada en el ícono.
+
+---
+
 ## Monedero — filtro por AceptoPrograma
 
 **Archivos a revisar:**
