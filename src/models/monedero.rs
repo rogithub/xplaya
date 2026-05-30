@@ -48,6 +48,8 @@ pub struct Cotizacion {
     pub tiene_monedero: bool,
     pub productos: Vec<ProductoCotizacion>,
     pub total: String,
+    pub monedero_potencial: String,
+    pub porcentaje_monedero: String,
 }
 
 #[derive(Serialize)]

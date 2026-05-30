@@ -19,6 +19,18 @@ fn fmt_fecha_es(dt: chrono::NaiveDateTime) -> String {
     format!("{} de {}, {}", dt.day(), MESES[(dt.month() - 1) as usize], dt.year())
 }
 
+pub async fn tipo_cambio_monedero(pool: &PgPool) -> Result<Decimal, sqlx::Error> {
+    let val: Option<String> = sqlx::query_scalar(
+        "SELECT value FROM settings WHERE key = 'TIPO_CAMBIO_MONEDERO'",
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(val
+        .and_then(|v| v.parse::<Decimal>().ok())
+        .unwrap_or(Decimal::new(2, 2)))
+}
+
 pub async fn terminos(pool: &PgPool) -> Result<Terminos, sqlx::Error> {
     let rows = sqlx::query_as::<_, SettingRow>(
         "SELECT key, value, lastupdated FROM settings \

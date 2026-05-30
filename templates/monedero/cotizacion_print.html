@@ -46,6 +46,16 @@
         </tfoot>
     </table>
 
+    <div class="notification is-success is-light mt-4" style="border-radius: 6px; padding: 0.75rem 1rem;">
+        <p class="has-text-weight-semibold is-size-7">
+            💳 Cashback estimado: <strong>{{ cotizacion.monedero_potencial }}</strong>
+            <span class="has-text-grey">({{ cotizacion.porcentaje_monedero }})</span>
+        </p>
+        {% if not cotizacion.tiene_monedero %}
+        <p class="is-size-7 mt-1 has-text-grey">Visítanos para unirte al programa Monedero y ganar en cada compra.</p>
+        {% endif %}
+    </div>
+
     <p class="has-text-centered has-text-grey is-size-7 mt-5">
         xplaya.com — Papelería y Mercería · Playa del Carmen
     </p>

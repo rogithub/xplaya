@@ -264,6 +264,10 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
         None => false,
     };
 
+    let tasa = crate::db::settings::tipo_cambio_monedero(pool).await?;
+    let potencial = (total * tasa).round_dp(2);
+    let pct = (tasa * Decimal::new(100, 0)).round_dp(0);
+
     Ok(Some(Cotizacion {
         uid: pedido.uid,
         fecha: fecha_es(pedido.fechacreado),
@@ -272,6 +276,8 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
         tiene_monedero,
         productos,
         total: mxn(total),
+        monedero_potencial: mxn(potencial),
+        porcentaje_monedero: format!("{}%", pct),
     }))
 }
 
