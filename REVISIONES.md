@@ -4,6 +4,24 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Cotización: cashback potencial + ícono descarga
+
+**Archivos a revisar:**
+- `src/db/settings.rs` — nueva función `tipo_cambio_monedero()` que lee solo `TIPO_CAMBIO_MONEDERO` de `Settings`
+- `src/models/monedero.rs` — `Cotizacion` ahora incluye `monedero_potencial` y `porcentaje_monedero`
+- `src/db/monedero.rs` — `cotizacion()` calcula `total × tasa` y lo pasa al modelo
+- `templates/monedero/cotizacion.html` — caja verde con cashback estimado; mensaje diferente si ya tiene o no monedero; ícono descarga `fa-file-pdf` → `fa-download`
+- `templates/monedero/cotizacion_print.html` — misma caja de cashback en el PDF
+
+**Qué hace el cambio:**
+
+1. En `/cotizacion/:uid` se muestra para todos (tengan o no monedero) cuánto ganarían de cashback si realizan la compra, calculado con la tasa `TIPO_CAMBIO_MONEDERO` de la BD (default 2%).
+2. El mensaje es contextual: clientes con monedero ven "se agregarán automáticamente al pagar"; los demás reciben la invitación a unirse en la papelería.
+3. El cashback estimado también aparece en el PDF de la cotización.
+4. El ícono del botón Descargar PDF cambió de `fa-file-pdf` a `fa-download` para ser consistente con el recibo.
+
+---
+
 ## UI: OG imagen homepage, botón reseña mobile, ícono PDF en recibo
 
 **Archivos a revisar:**
