@@ -52,6 +52,7 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
     // Páginas estáticas
     for (loc, priority, freq) in [
         (format!("{site}/"), "1.0", "daily"),
+        (format!("{site}/imagina"), "0.8", "monthly"),
         (format!("{site}/resena"), "0.5", "monthly"),
     ] {
         xml.push_str(&format!(
@@ -85,6 +86,18 @@ pub async fn resena(State(state): State<AppState>) -> Result<Html<String>, Statu
     })?;
     let html = tmpl.render(context!()).map_err(|e| {
         tracing::error!("Render resena: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
+pub async fn imagina(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let tmpl = state.tmpl.get_template("pages/imagina.html").map_err(|e| {
+        tracing::error!("Template imagina: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(context!(imagina_url => state.config.imagina_url)).map_err(|e| {
+        tracing::error!("Render imagina: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Html(html))

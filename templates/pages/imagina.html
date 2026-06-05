@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}imagina — Fotos carnet y hojas de impresión para papelerías{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Para papelerías e imprentas: fotos carnet, cuadrículas y hojas de fotos a medida sin Photoshop. Sin registro ni instalación — el PDF listo para imprimir en segundos.">
+<meta name="keywords" content="fotos carnet, hacer fotos carnet, herramienta para papelería, imprimir fotos carnet, cuadrícula de fotos, fotos para imprimir, generar PDF fotos, hojas de fotos, fotos tamaño carnet, software papelería gratis, fotos carnet online, fotos para trámites">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/imagina">{% endblock %}
+
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/imagina">
+<meta property="og:title" content="imagina — Fotos carnet y hojas de impresión para tu papelería, sin Photoshop">
+<meta property="og:description" content="Genera PDFs de fotos carnet, cuadrículas y hojas de fotos a medida sin Photoshop ni Word. El cliente llega con sus fotos, tú imprimes en segundos. Sin registro ni instalación.">
+<meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="imagina — Fotos carnet y hojas de impresión para tu papelería, sin Photoshop">
+<meta name="twitter:description" content="Genera PDFs de fotos carnet, cuadrículas y hojas de fotos a medida sin Photoshop ni Word. El cliente llega con sus fotos, tú imprimes en segundos.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "imagina",
+  "url": "{{ imagina_url }}",
+  "description": "Herramienta para papelerías e imprentas: genera PDFs de fotos carnet, cuadrículas y hojas de fotos a medida sin Photoshop ni Word. Sin registro ni instalación.",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Web",
+  "keywords": "fotos carnet, hacer fotos carnet, herramienta papelería, imprimir fotos carnet, cuadrícula de fotos, fotos para imprimir, generar PDF fotos, software papelería",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Dueños de papelerías e imprentas pequeñas"
+  },
+  "featureList": [
+    "Fotos carnet en cualquier tamaño",
+    "Cuadrículas de fotos para hoja carta u oficio",
+    "Layouts de fotos a medida en centímetros",
+    "Generación de PDF sin Photoshop ni Word",
+    "Sin registro ni instalación"
+  ],
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "MXN",
+    "price": "0",
+    "description": "Sin registro ni instalación; impresión disponible en papelería xplaya.com"
+  },
+  "provider": {
+    "@type": "Store",
+    "name": "Papelería xplaya.com",
+    "url": "{{ site_url }}"
+  }
+}
+</script>
+<style>
+  .imagina-hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    padding: 4rem 1.5rem;
+    color: white;
+  }
+  .imagina-hero .title,
+  .imagina-hero .subtitle {
+    color: white;
+  }
+  .imagina-hero .subtitle {
+    opacity: 0.85;
+  }
+  .tool-card {
+    height: 100%;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .tool-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+  }
+  .tool-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .step-number {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #E85D04;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    flex-shrink: 0;
+  }
+  .imagina-cta {
+    background: #f8f4ff;
+    border-top: 3px solid #7c3aed;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────────── #}
+<div class="imagina-hero" style="margin: -2.5rem -1.5rem 2.5rem; border-radius: 0.5rem;">
+  <div style="max-width: 680px; margin: 0 auto; text-align: center;">
+    <p class="is-size-7 mb-3" style="opacity: 0.6; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">
+      Para papelerías e imprentas
+    </p>
+    <h1 class="title is-1 mb-3" style="font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 900; letter-spacing: -0.02em;">
+      imagina
+    </h1>
+    <p class="subtitle is-5 mb-5">
+      El cliente llega con sus fotos. Tú generas el PDF listo para imprimir en segundos.<br>
+      Sin Photoshop, sin Word, sin perder tiempo calculando medidas.
+    </p>
+    <div class="buttons is-centered">
+      <a href="{{ imagina_url }}" target="_blank" rel="noopener"
+         class="button is-warning is-medium is-rounded"
+         style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+        <span class="icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+        <span>Probar imagina</span>
+      </a>
+    </div>
+    <p class="is-size-7 mt-3" style="opacity: 0.55;">
+      Corre en el navegador de tu mostrador · Sin instalación · Sin suscripción
+    </p>
+  </div>
+</div>
+
+{# ── Cómo funciona ────────────────────────────────────────────────────────── #}
+<section class="mb-6">
+  <h2 class="title is-4 has-text-centered mb-5">El flujo de trabajo en tu mostrador</h2>
+  <div class="columns is-mobile is-multiline is-centered">
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="step-number">1</div>
+      <p class="has-text-weight-semibold mb-1">El cliente llega con sus fotos</p>
+      <p class="is-size-7 has-text-grey">Recibe las imágenes por USB, WhatsApp o correo. Las cargas directo en imagina desde el navegador.</p>
+    </div>
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="step-number">2</div>
+      <p class="has-text-weight-semibold mb-1">Elige el formato y ajusta</p>
+      <p class="is-size-7 has-text-grey">Carnet, cuadrícula, layout libre… defines las medidas exactas, recortas y acomodas en segundos.</p>
+    </div>
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="step-number">3</div>
+      <p class="has-text-weight-semibold mb-1">Genera e imprime</p>
+      <p class="is-size-7 has-text-grey">imagina genera el PDF optimizado para impresión. Lo mandas directo a tu impresora sin pasos intermedios.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Herramientas ─────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-2">Herramientas incluidas</h2>
+  <p class="has-text-centered has-text-grey is-size-6 mb-5">Cada herramienta resuelve un tipo de pedido distinto — sin configuración previa.</p>
+
+  <div class="columns is-multiline">
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card tool-card">
+        <div class="card-content">
+          <div class="tool-icon" style="background: #fef3c7; color: #d97706;">
+            <i class="fas fa-id-card"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Fotos Carnet</p>
+          <p class="is-size-7 has-text-grey">El pedido más frecuente en cualquier papelería. Define el tamaño (2×2, 3×4 cm o cualquier medida), carga la foto y la hoja carta se llena automáticamente. Sin calculadora.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card tool-card">
+        <div class="card-content">
+          <div class="tool-icon" style="background: #ede9fe; color: #7c3aed;">
+            <i class="fas fa-clone"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Repetir Foto</p>
+          <p class="is-size-7 has-text-grey">Una imagen repetida en cuadrícula para aprovechar toda la hoja. Útil para stickers, etiquetas, invitaciones o cualquier pedido donde el cliente necesita muchas copias del mismo diseño.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card tool-card">
+        <div class="card-content">
+          <div class="tool-icon" style="background: #dcfce7; color: #16a34a;">
+            <i class="fas fa-images"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Varias Fotos</p>
+          <p class="is-size-7 has-text-grey">Múltiples imágenes distintas en una cuadrícula, todas en la misma hoja. Para cuando el cliente trae varias fotos y quiere aprovechar el papel al máximo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card tool-card">
+        <div class="card-content">
+          <div class="tool-icon" style="background: #fee2e2; color: #dc2626;">
+            <i class="fas fa-table-cells-large"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Diseñar Página</p>
+          <p class="is-size-7 has-text-grey">Layout libre con cuadrícula personalizada: tú defines filas, columnas y combinas celdas para fotos de distintos tamaños en la misma hoja. Para pedidos especiales sin formato fijo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card tool-card">
+        <div class="card-content">
+          <div class="tool-icon" style="background: #e0f2fe; color: #0284c7;">
+            <i class="fas fa-file-image"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Foto por Página</p>
+          <p class="is-size-7 has-text-grey">Una foto a sangrado completo por hoja. Para retratos, diplomas o cualquier impresión donde la imagen ocupa toda la hoja carta u oficio.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card tool-card">
+        <div class="card-content">
+          <div class="tool-icon" style="background: #fce7f3; color: #db2777;">
+            <i class="fas fa-ruler-combined"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Fotos a Medida</p>
+          <p class="is-size-7 has-text-grey">Especifica el tamaño exacto en centímetros de cada imagen. Para pedidos con medidas precisas: marcos, álbumes, formatos institucionales o cualquier especificación que el cliente traiga por escrito.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+{# ── Por qué imagina ──────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-5">Diseñado para el trabajo diario en papelería</h2>
+  <div class="columns is-multiline">
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large has-text-warning mb-2" style="font-size: 2rem;"><i class="fas fa-ban"></i></span>
+      <p class="has-text-weight-semibold mb-1">Sin Photoshop ni Word</p>
+      <p class="is-size-7 has-text-grey">No necesitas software de diseño. imagina hace los cálculos de medidas y rellena la hoja — tú solo subes la foto y das clic.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large has-text-success mb-2" style="font-size: 2rem;"><i class="fas fa-bolt"></i></span>
+      <p class="has-text-weight-semibold mb-1">30 segundos por pedido</p>
+      <p class="is-size-7 has-text-grey">Desde que el cliente te pasa la foto hasta que tienes el PDF listo para imprimir, en menos de un minuto.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #7c3aed;"><i class="fas fa-ruler"></i></span>
+      <p class="has-text-weight-semibold mb-1">Medidas exactas, sin errores</p>
+      <p class="is-size-7 has-text-grey">Define el tamaño en centímetros y imagina calcula cuántas fotos caben, el espaciado y los márgenes. Sin desperdiciar papel.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #0284c7;"><i class="fas fa-desktop"></i></span>
+      <p class="has-text-weight-semibold mb-1">Corre en tu mostrador</p>
+      <p class="is-size-7 has-text-grey">Sin instalación, sin cuenta, sin suscripción. Abre el navegador que ya tienes y empieza a usarlo hoy.</p>
+    </div>
+  </div>
+</section>
+
+{# ── CTA final ────────────────────────────────────────────────────────────── #}
+<div class="imagina-cta" style="margin: 0 -1.5rem -2.5rem; padding: 3rem 1.5rem; border-radius: 0 0 0.5rem 0.5rem; text-align: center;">
+  <h2 class="title is-4 mb-2">Pruébalo en el próximo pedido que llegue</h2>
+  <p class="has-text-grey mb-5">Sin registro, sin instalación. Abre imagina, carga la foto del cliente y genera el PDF — así de simple.</p>
+  <div class="buttons is-centered">
+    <a href="{{ imagina_url }}" target="_blank" rel="noopener"
+       class="button is-medium is-rounded"
+       style="background: #7c3aed; color: white; font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+      <span class="icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+      <span>Abrir imagina</span>
+    </a>
+  </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    Una herramienta de <a href="{{ site_url }}" style="color: #E85D04;">Papelería xplaya.com</a> · Playa del Carmen, Q.Roo
+  </p>
+</div>
+
+{% endblock %}

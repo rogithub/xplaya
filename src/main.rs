@@ -34,6 +34,7 @@ async fn main() {
     let mut tmpl = Environment::new();
     tmpl.set_loader(path_loader("templates"));
     tmpl.add_global("site_url", minijinja::Value::from_safe_string(cfg.site_url.clone()));
+    tmpl.add_global("imagina_url", minijinja::Value::from_safe_string(cfg.imagina_url.clone()));
 
     let http = reqwest::Client::new();
     let state = AppState { tmpl, config: cfg, pool, http };
@@ -47,6 +48,7 @@ async fn main() {
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))
         .route("/resena", get(routes::pages::resena))
+        .route("/imagina", get(routes::pages::imagina))
         .route("/terminos", get(routes::monedero::terminos))
         .route("/saldo", get(routes::monedero::saldo_get))
         .route("/saldo", post(routes::monedero::saldo_post))

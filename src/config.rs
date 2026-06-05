@@ -5,6 +5,7 @@ pub struct Config {
     pub content_base_url: String,
     pub site_url: String,
     pub gotenberg_url: String,
+    pub imagina_url: String,
 }
 
 impl Config {
@@ -22,6 +23,8 @@ impl Config {
                 .unwrap_or_else(|_| "https://xplaya.com".to_string()),
             gotenberg_url: std::env::var("GOTENBERG_URL")
                 .unwrap_or_else(|_| "http://gotenberg-service.gotenberg.svc.cluster.local:3000".to_string()),
+            imagina_url: std::env::var("IMAGINA_URL")
+                .unwrap_or_else(|_| "https://imagina.xplaya.com".to_string()),
         }
     }
 }
