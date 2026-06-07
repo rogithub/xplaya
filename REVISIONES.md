@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Página `/cortinas` — anuncio elaboración de cortinas
+
+**Archivos a revisar:**
+- `templates/pages/cortinas.html` — página nueva con hero, galería, sección "todo incluido", paleta de colores, pasos y CTA a WhatsApp
+- `src/routes/pages.rs` — handler `cortinas()` agregado al final
+- `src/main.rs` — ruta `GET /cortinas` registrada
+- `templates/base.html` — ítem "Cortinas" en navbar y en footer bajo Servicios
+- Sitemap actualizado con `/cortinas` (priority 0.8, monthly)
+
+**Qué hace:** Landing estática para el servicio de cortinas a medida. Muestra galería con las 6 imágenes de `static/img/cortinas/`. Destaca los 4 componentes incluidos (confección, bases, tornillería, bastón), flujo en 3 pasos, envíos a toda la república y CTAs a WhatsApp. SEO con meta description, OG tags, canonical y schema `Service`.
+
+---
+
 ## Cotización: cashback potencial + ícono descarga
 
 **Archivos a revisar:**

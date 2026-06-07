@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Cortinas a medida con bastón y herrajes incluidos — xplaya.com{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Elaboramos tus cortinas a medida: confección, bases, tornillería y bastón incluidos. Tú solo las instalas. Elige el color de tela y el acabado de la madera. Envíos a toda la república mexicana.">
+<meta name="keywords" content="cortinas a medida, cortinas personalizadas, cortinas con bastón, confección de cortinas, cortinas México, cortinas envío a domicilio, cortinas tela, bastón para cortinas, cortinas Playa del Carmen, cortinas herrajes incluidos">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/cortinas">{% endblock %}
+
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/cortinas">
+<meta property="og:title" content="Cortinas a medida con bastón y herrajes incluidos — xplaya.com">
+<meta property="og:description" content="Elaboramos tus cortinas: confección, bases, tornillería y bastón incluidos. Tú solo las instalas. Elige tu color de tela y acabado de madera. Envíos a toda la república.">
+<meta property="og:image" content="{{ site_url }}/static/img/cortinas/a.webp">
+<meta property="og:image:alt" content="Cortinas a medida elaboradas por xplaya.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cortinas a medida con bastón y herrajes incluidos — xplaya.com">
+<meta name="twitter:description" content="Confección, bases, tornillería y bastón incluidos. Solo instálalas. Envíos a toda la república mexicana.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/cortinas/a.webp">
+{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Cortinas a medida",
+  "description": "Elaboración de cortinas a medida con confección, bases, tornillería y bastón incluidos. El cliente elige el color de tela y el acabado de la madera. Envíos a toda la república mexicana.",
+  "image": "{{ site_url }}/static/img/cortinas/a.webp",
+  "provider": {
+    "@type": "Store",
+    "name": "Papelería xplaya.com",
+    "url": "{{ site_url }}",
+    "telephone": "+52-452-201-8336",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Playa del Carmen",
+      "addressRegion": "Quintana Roo",
+      "addressCountry": "MX"
+    }
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "México"
+  },
+  "serviceOutput": "Cortina confeccionada lista para instalar, incluye bastón, bases y tornillería"
+}
+</script>
+<style>
+  .cortinas-hero {
+    background: linear-gradient(135deg, #2c1810 0%, #5c3317 50%, #7a4a28 100%);
+    padding: 4rem 1.5rem;
+    color: white;
+  }
+  .cortinas-hero .title,
+  .cortinas-hero .subtitle { color: white; }
+  .cortinas-hero .subtitle { opacity: 0.85; }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.625rem;
+  }
+  @media (max-width: 768px) {
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .gallery-img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .gallery-img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+
+  .feature-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin: 0 auto 1rem;
+    flex-shrink: 0;
+  }
+  .step-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #E85D04;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+  }
+  .cortinas-cta {
+    background: linear-gradient(135deg, #fff8f3, #fff1e6);
+    border-top: 3px solid #E85D04;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────────── #}
+<div class="cortinas-hero" style="margin: -2.5rem -1.5rem 2.5rem; border-radius: 0.5rem;">
+  <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+    <p class="is-size-7 mb-3" style="opacity: 0.6; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">
+      Confección a medida · Envíos a toda la república
+    </p>
+    <h1 class="title mb-3" style="font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 900; letter-spacing: -0.02em;">
+      Cortinas listas para instalar
+    </h1>
+    <p class="subtitle is-5 mb-5">
+      Nosotros entregamos todo — confección, bases, tornillería y bastón.<br>
+      Tú solo las cuelgas. Elige el color de tela y el acabado de la madera.
+    </p>
+    <div class="buttons is-centered">
+      <a href="https://wa.me/524522018336?text=Hola%2C%20me%20interesan%20las%20cortinas%20a%20medida"
+         target="_blank" rel="noopener"
+         class="button is-success is-medium is-rounded"
+         style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+        <span class="icon"><i class="fab fa-whatsapp"></i></span>
+        <span>Pedir cotización por WhatsApp</span>
+      </a>
+    </div>
+    <p class="is-size-7 mt-3" style="opacity: 0.5;">
+      Sin vueltas a la ferretería · Fábrica propia · Precio justo
+    </p>
+  </div>
+</div>
+
+{# ── Galería ──────────────────────────────────────────────────────────────── #}
+<section class="mb-6">
+  <h2 class="title is-4 has-text-centered mb-5">Nuestros trabajos</h2>
+  <div class="gallery-grid">
+    <img src="/static/img/cortinas/a.webp" alt="Cortina a medida con bastón de madera" class="gallery-img" loading="lazy">
+    <img src="/static/img/cortinas/b.webp" alt="Cortina confeccionada lista para instalar" class="gallery-img" loading="lazy">
+    <img src="/static/img/cortinas/c.webp" alt="Detalle de tela y acabado de cortina" class="gallery-img" loading="lazy">
+    <img src="/static/img/cortinas/d.webp" alt="Bastón de madera con herrajes incluidos" class="gallery-img" loading="lazy">
+    <img src="/static/img/cortinas/e.webp" alt="Cortina instalada en ventana" class="gallery-img" loading="lazy">
+    <img src="/static/img/cortinas/f.webp" alt="Variedad de colores de tela disponibles" class="gallery-img" loading="lazy">
+  </div>
+</section>
+
+<hr>
+
+{# ── Qué incluye ──────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-2">Todo incluido — cero sorpresas</h2>
+  <p class="has-text-centered has-text-grey is-size-6 mb-5">
+    Un paquete. Todo listo para montar. Sin buscar nada más.
+  </p>
+  <div class="columns is-multiline is-centered">
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <div class="feature-icon" style="background: #fef3c7; color: #d97706;">
+        <i class="fas fa-scissors"></i>
+      </div>
+      <p class="has-text-weight-bold mb-1">Confección</p>
+      <p class="is-size-7 has-text-grey">Cosida a tus medidas exactas. Dobladillos reforzados y acabado profesional en cada pieza.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <div class="feature-icon" style="background: #dcfce7; color: #16a34a;">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <p class="has-text-weight-bold mb-1">Bases</p>
+      <p class="is-size-7 has-text-grey">Soportes para fijar el bastón a la pared, calibrados para sostener tu cortina sin problema.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <div class="feature-icon" style="background: #e0f2fe; color: #0284c7;">
+        <i class="fas fa-screwdriver-wrench"></i>
+      </div>
+      <p class="has-text-weight-bold mb-1">Tornillería</p>
+      <p class="is-size-7 has-text-grey">Tornillos y taquetes incluidos. No necesitas ir a la ferretería ni adivinar qué comprar.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <div class="feature-icon" style="background: #ffe4e6; color: #be123c;">
+        <i class="fas fa-wand-sparkles"></i>
+      </div>
+      <p class="has-text-weight-bold mb-1">Bastón de madera</p>
+      <p class="is-size-7 has-text-grey">Torneado a la medida del vano. Elige entre acabados naturales, teñidos o pintados.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Elige tu estilo ──────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <div class="columns is-vcentered">
+    <div class="column is-5">
+      <h2 class="title is-4 mb-3">Elige el color de tu cortina</h2>
+      <p class="has-text-grey mb-4">
+        Amplio catálogo de telas en distintos colores y texturas. Desde tonos neutros
+        para ambientes minimalistas hasta colores que dan personalidad a cualquier habitación.
+      </p>
+      <h2 class="title is-5 mb-2">Y el acabado del bastón</h2>
+      <p class="has-text-grey mb-4">
+        Madera natural, teñida o pintada. El bastón es parte de la decoración,
+        no solo un soporte. Lo combinamos con tu tela para que todo armonice.
+      </p>
+      <a href="https://wa.me/524522018336?text=Hola%2C%20quiero%20ver%20las%20opciones%20de%20tela%20y%20bast%C3%B3n"
+         target="_blank" rel="noopener"
+         class="button is-rounded"
+         style="background: #E85D04; color: white; font-weight: 600;">
+        <span class="icon"><i class="fab fa-whatsapp"></i></span>
+        <span>Ver catálogo de colores</span>
+      </a>
+    </div>
+    <div class="column is-7">
+      <div class="columns is-multiline is-mobile">
+        <div class="column is-6">
+          <img src="/static/img/cortinas/b.webp" alt="Detalle de bastón y tela de cortina"
+               style="width:100%; border-radius:0.5rem; object-fit:cover; max-height:260px;" loading="lazy">
+        </div>
+        <div class="column is-6">
+          <img src="/static/img/cortinas/c.webp" alt="Variedad de acabados disponibles"
+               style="width:100%; border-radius:0.5rem; object-fit:cover; max-height:260px;" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Cómo funciona ────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-5">De tu medida a tu puerta</h2>
+  <div class="columns is-mobile is-multiline is-centered">
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="step-badge">1</div>
+      <p class="has-text-weight-semibold mb-1">Mide tu ventana</p>
+      <p class="is-size-7 has-text-grey">
+        Ancho y alto del vano. Te explicamos cómo hacerlo si tienes dudas — te guiamos por WhatsApp paso a paso.
+      </p>
+    </div>
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="step-badge">2</div>
+      <p class="has-text-weight-semibold mb-1">Elige tela y acabado</p>
+      <p class="is-size-7 has-text-grey">
+        Escoge el color de la cortina y el acabado del bastón. Te mandamos fotos del catálogo completo.
+      </p>
+    </div>
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="step-badge">3</div>
+      <p class="has-text-weight-semibold mb-1">Recibes e instalas</p>
+      <p class="is-size-7 has-text-grey">
+        El paquete llega con todo incluido. Solo coloca, atornilla y cuelga. Sin vueltas, sin imprevistos.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Envíos ───────────────────────────────────────────────────────────────── #}
+<section class="my-6 has-text-centered">
+  <span class="icon is-large" style="font-size: 3rem; color: #E85D04; display:block; margin-bottom: 1rem;">
+    <i class="fas fa-truck-fast"></i>
+  </span>
+  <h2 class="title is-4 mb-2">Enviamos a toda la república mexicana</h2>
+  <p class="has-text-grey is-size-6 mb-5" style="max-width: 540px; margin: 0 auto 1.5rem;">
+    Empacamos con cuidado para que llegue perfecto: el bastón protegido,
+    la tela sin arrugas. Enviamos por paquetería con número de rastreo.
+  </p>
+  <a href="https://wa.me/524522018336?text=Hola%2C%20me%20interesan%20las%20cortinas%2C%20%C2%BFhacen%20env%C3%ADos%3F"
+     target="_blank" rel="noopener"
+     class="button is-success is-rounded is-medium"
+     style="font-weight: 700;">
+    <span class="icon"><i class="fab fa-whatsapp"></i></span>
+    <span>Preguntar por envíos</span>
+  </a>
+</section>
+
+{# ── CTA final ────────────────────────────────────────────────────────────── #}
+<div class="cortinas-cta" style="margin: 0 -1.5rem -2.5rem; padding: 3rem 1.5rem; border-radius: 0 0 0.5rem 0.5rem; text-align: center;">
+  <h2 class="title is-4 mb-2">¿Listo para transformar tus ventanas?</h2>
+  <p class="has-text-grey mb-5">
+    Cotización sin compromiso. Manda tus medidas por WhatsApp y te respondemos rápido.
+  </p>
+  <div class="buttons is-centered">
+    <a href="https://wa.me/524522018336?text=Hola%2C%20quiero%20una%20cotizaci%C3%B3n%20de%20cortinas%20a%20medida"
+       target="_blank" rel="noopener"
+       class="button is-success is-medium is-rounded"
+       style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+      <span class="icon"><i class="fab fa-whatsapp"></i></span>
+      <span>Cotizar ahora</span>
+    </a>
+  </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    <a href="{{ site_url }}" style="color: #E85D04;">Papelería xplaya.com</a> · Playa del Carmen, Q.Roo · Envíos a toda la república
+  </p>
+</div>
+
+{% endblock %}
