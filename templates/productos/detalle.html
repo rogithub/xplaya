@@ -128,14 +128,16 @@
                 {# Opción base: unidad individual al precio unitario #}
                 <button type="button" class="button is-small"
                         :class="selectedKey === null ? 'is-success' : 'is-light'"
-                        @click="seleccionar(null, '{{ producto.precio_venta }}', {{ producto.unidad_medida | tojson }})">
+                        @click="seleccionar(null)">
                     {{ producto.unidad_medida }} — ${{ producto.precio_venta }}
                 </button>
                 {# Una opción por cada presentación (caja, paquete, etc.) #}
+                {# Solo se pasa el UUID — nombre y precio se leen del array JS para evitar #}
+                {# que las comillas dobles de tojson rompan el atributo HTML.              #}
                 {% for pres in producto.presentaciones %}
                 <button type="button" class="button is-small"
                         :class="selectedKey === '{{ pres.id }}' ? 'is-success' : 'is-light'"
-                        @click="seleccionar('{{ pres.id }}', '{{ pres.precio_venta }}', {{ pres.nombre | tojson }})">
+                        @click="seleccionar('{{ pres.id }}')">
                     {{ pres.nombre }} — ${{ pres.precio_venta }}
                 </button>
                 {% endfor %}
@@ -175,20 +177,35 @@
 
 <script>
 function carritoDetalle() {
+    // Las presentaciones se cargan aquí (en <script>) donde tojson es seguro.
+    // Los @click de los botones solo pasan el UUID; nombre y precio se leen de este array.
+    const _presentaciones = {{ producto.presentaciones | tojson }};
+    const _precioBase     = '{{ producto.precio_venta }}';
+    const _unidadBase     = {{ producto.unidad_medida | tojson }};
+
     return {
-        // null = precio/etiqueta base del producto; string = id de la presentación seleccionada
         selectedKey: null,
-        precioMostrado: '{{ producto.precio_venta }}',
-        etiquetaMostrada: {{ producto.unidad_medida | tojson }},
+        precioMostrado: _precioBase,
+        etiquetaMostrada: _unidadBase,
         presentacionId: null,
         agregado: false,
         compartido: false,
 
-        seleccionar(key, precio, etiqueta) {
-            this.selectedKey = key;
-            this.precioMostrado = precio;
-            this.etiquetaMostrada = etiqueta;
-            this.presentacionId = key;
+        seleccionar(key) {
+            if (key === null) {
+                this.selectedKey = null;
+                this.precioMostrado = _precioBase;
+                this.etiquetaMostrada = _unidadBase;
+                this.presentacionId = null;
+            } else {
+                const pres = _presentaciones.find(p => p.id === key);
+                if (pres) {
+                    this.selectedKey = key;
+                    this.precioMostrado = pres.precio_venta;
+                    this.etiquetaMostrada = pres.nombre;
+                    this.presentacionId = key;
+                }
+            }
             this.agregado = false;
         },
 
