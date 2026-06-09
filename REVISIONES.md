@@ -4,6 +4,35 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Cotización: soporte de presentaciones en PedidoItems
+
+**Archivo:** `src/db/monedero.rs` → función `cotizacion()`
+
+La consulta de `PedidoItems` ahora hace `LEFT JOIN productopresentaciones pres ON pres.id = pi.presentacionid`. Cuando existe presentación se usa `pres.precioventa` como precio y se muestra `"Producto — Caja de 12"` como nombre. La cantidad en `PedidoItems` ya viene en unidades de presentación (el usuario seleccionó "2 cajas"), por lo que no hay factor que ajustar — a diferencia del recibo que sí divide por `factor` porque `AjustesProductos.cantidad` está en unidades base.
+
+---
+
+## Presentaciones de producto (unidad / caja / paquete)
+
+Soporte para la tabla `ProductoPresentaciones` que agregó `inventario_papeleria`.
+
+**Archivos a revisar:**
+- `inventario_papeleria/dbchanges/updates.sql` — agrega `PresentacionId` a `PedidoItems` (ya estaba en `AjustesProductos`)
+- `src/models/producto.rs` — nuevo struct `Presentacion`; campo `presentaciones: Vec<Presentacion>` en `ProductoDetalle`
+- `src/db/productos.rs` — query a `productopresentaciones` en `detalle()`, ordenado por precio
+- `src/models/pedido.rs` — campo `presentacion_id: Option<Uuid>` en `PedidoItemRequest`
+- `src/db/pedidos.rs` — INSERT en `pedidoitems` ahora incluye `presentacionid`
+- `static/js/cart.js` — clave de item cambiada de `nid` a `_key` (`nid` o `nid_presentacionId`); migración automática de localStorage antiguo
+- `templates/productos/detalle.html` — botones de presentación con Alpine: actualiza precio y etiqueta al seleccionar; pasa `presentacion_id` al carrito
+- `templates/carrito/index.html` — usa `item._key` en `quitar`/`cambiarCantidad`; envía `presentacion_id` al API
+
+**Comportamiento:**
+- Producto sin presentaciones: UI idéntica a antes.
+- Producto con presentaciones: aparecen botones "Pieza — $X" / "Caja de 12 — $Y". Seleccionar uno actualiza el precio visible y lo que se agrega al carrito.
+- El mismo producto puede estar en el carrito como unidad y como caja al mismo tiempo (claves distintas).
+
+---
+
 ## Página `/cortinas` — anuncio elaboración de cortinas
 
 **Archivos a revisar:**

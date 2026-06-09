@@ -48,6 +48,8 @@ struct ProductoAjusteRow {
     cantidad: Decimal,
     preciounitarioventa: Option<Decimal>,
     esingresotrasladado: bool,
+    factor: Option<Decimal>,
+    nombrepresentacion: Option<String>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -62,6 +64,8 @@ struct PedidoItemRow {
     nombre: String,
     cantidad: Decimal,
     precioventa: Option<Decimal>,
+    presentacion_nombre: Option<String>,
+    presentacion_precio: Option<Decimal>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -107,9 +111,12 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
                 COALESCE(ap.preciounitarioventa, 0) AS preciounitarioventa,
                 EXISTS(
                     SELECT 1 FROM v_ingresos_trasladados v WHERE v.id = p.id
-                ) AS esingresotrasladado
+                ) AS esingresotrasladado,
+                pp.factor,
+                pp.nombre AS nombrepresentacion
          FROM ajustesproductos ap
          JOIN productos p ON p.id = ap.productoid
+         LEFT JOIN productopresentaciones pp ON pp.id = ap.presentacionid
          WHERE ap.ajusteid = $1
          ORDER BY ap.datestamp",
     )
@@ -175,13 +182,31 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
     let productos = productos_rows
         .into_iter()
         .map(|p| {
-            let precio = p.preciounitarioventa.unwrap_or(Decimal::ZERO);
-            let subtotal = precio * p.cantidad;
+            let precio_base = p.preciounitarioventa.unwrap_or(Decimal::ZERO);
+            let (nombre, cantidad, precio_unitario, subtotal) =
+                match (p.factor, p.nombrepresentacion.as_deref()) {
+                    (Some(factor), Some(nombre_pres)) if !factor.is_zero() => {
+                        let display_cantidad = p.cantidad / factor;
+                        let display_precio = precio_base * factor;
+                        (
+                            format!("{} — {}", p.nombre, nombre_pres),
+                            format!("{}", display_cantidad.normalize()),
+                            mxn(display_precio),
+                            mxn(display_precio * display_cantidad),
+                        )
+                    }
+                    _ => (
+                        p.nombre.clone(),
+                        format!("{:.2}", p.cantidad),
+                        mxn(precio_base),
+                        mxn(precio_base * p.cantidad),
+                    ),
+                };
             ProductoRecibo {
-                nombre: p.nombre,
-                cantidad: format!("{:.2}", p.cantidad),
-                precio_unitario: mxn(precio),
-                subtotal: mxn(subtotal),
+                nombre,
+                cantidad,
+                precio_unitario,
+                subtotal,
                 es_ingreso_trasladado: p.esingresotrasladado,
             }
         })
@@ -222,14 +247,17 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
 
     let items = sqlx::query_as::<_, PedidoItemRow>(
         "SELECT p.nombre, pi.cantidad,
-                COALESCE(pp.precioventa, 0) AS precioventa
+                COALESCE(hist.precioventa, 0) AS precioventa,
+                pres.nombre AS presentacion_nombre,
+                pres.precioventa AS presentacion_precio
          FROM pedidoitems pi
          JOIN productos p ON p.id = pi.productoid
          LEFT JOIN LATERAL (
              SELECT precioventa FROM preciosproductos
              WHERE productoid = pi.productoid
              ORDER BY fechacreado DESC LIMIT 1
-         ) pp ON true
+         ) hist ON true
+         LEFT JOIN productopresentaciones pres ON pres.id = pi.presentacionid
          WHERE pi.pedidoid = $1
          ORDER BY pi.id",
     )
@@ -241,12 +269,21 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
     let productos: Vec<ProductoCotizacion> = items
         .into_iter()
         .map(|it| {
-            let precio = it.precioventa.unwrap_or(Decimal::ZERO);
+            // Cuando el item tiene presentación (caja, paquete…) se usa su precio y nombre.
+            // La cantidad en PedidoItems ya está en unidades de presentación (el usuario
+            // seleccionó "2 cajas"), por lo que no hay que dividir por factor.
+            let (nombre, precio) = match (it.presentacion_nombre.as_deref(), it.presentacion_precio) {
+                (Some(nombre_pres), Some(precio_pres)) => (
+                    format!("{} — {}", it.nombre, nombre_pres),
+                    precio_pres,
+                ),
+                _ => (it.nombre.clone(), it.precioventa.unwrap_or(Decimal::ZERO)),
+            };
             let subtotal = precio * it.cantidad;
             total += subtotal;
             ProductoCotizacion {
-                nombre: it.nombre,
-                cantidad: format!("{:.2}", it.cantidad),
+                nombre,
+                cantidad: format!("{}", it.cantidad.normalize()),
                 precio: mxn(precio),
                 subtotal: mxn(subtotal),
             }

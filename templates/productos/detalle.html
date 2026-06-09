@@ -116,61 +116,51 @@
     </div>
 
     {# Columna de info del producto #}
-    <div class="column">
+    <div class="column" x-data="carritoDetalle()">
         <p class="is-size-7 has-text-grey mb-1">{{ producto.categoria }}</p>
         <h1 class="title is-4">{{ producto.nombre }}</h1>
-        <p class="is-size-2 has-text-success has-text-weight-bold">${{ producto.precio_venta }}</p>
-        <p class="has-text-grey mb-4">por {{ producto.unidad_medida }}</p>
 
-        <div x-data="carritoDetalle()">
-            <button class="button is-fullwidth"
-                    :class="agregado ? 'is-success is-light' : 'is-success'"
-                    @click="$store.carrito.agregar(p); agregado = true">
-                <span x-show="!agregado">Agregar al carrito</span>
-                <span x-show="agregado">✓ Agregado al carrito</span>
-            </button>
-            <button class="button is-light is-fullwidth mt-2"
-                    :class="{ 'is-success': compartido }"
-                    @click="compartir()">
-                <span class="icon"><i class="fas fa-share-nodes"></i></span>
-                <span x-text="compartido ? '¡Enlace copiado!' : 'Compartir producto'"></span>
-            </button>
+        {# Selector de presentación — solo aparece si hay presentaciones configuradas #}
+        {% if producto.presentaciones %}
+        <div class="field mb-3">
+            <label class="label is-small has-text-grey mb-2">Presentación</label>
+            <div class="buttons">
+                {# Opción base: unidad individual al precio unitario #}
+                <button type="button" class="button is-small"
+                        :class="selectedKey === null ? 'is-success' : 'is-light'"
+                        @click="seleccionar(null, '{{ producto.precio_venta }}', {{ producto.unidad_medida | tojson }})">
+                    {{ producto.unidad_medida }} — ${{ producto.precio_venta }}
+                </button>
+                {# Una opción por cada presentación (caja, paquete, etc.) #}
+                {% for pres in producto.presentaciones %}
+                <button type="button" class="button is-small"
+                        :class="selectedKey === '{{ pres.id }}' ? 'is-success' : 'is-light'"
+                        @click="seleccionar('{{ pres.id }}', '{{ pres.precio_venta }}', {{ pres.nombre | tojson }})">
+                    {{ pres.nombre }} — ${{ pres.precio_venta }}
+                </button>
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
 
-        <script>
-        function carritoDetalle() {
-            return {
-                p: {
-                    id: '{{ producto.id }}',
-                    nid: {{ producto.nid }},
-                    nombre: {{ producto.nombre | tojson }},
-                    precio: {{ producto.precio_venta | tojson }},
-                    unidad_medida: {{ producto.unidad_medida | tojson }}
-                },
-                agregado: false,
-                compartido: false,
-                compartir() {
-                    const url = window.location.href;
-                    if (navigator.share) {
-                        navigator.share({
-                            title: this.p.nombre,
-                            text: `${this.p.nombre} - $${this.p.precio}`,
-                            url
-                        }).catch(() => {});
-                    } else if (navigator.clipboard) {
-                        navigator.clipboard.writeText(url)
-                            .then(() => {
-                                this.compartido = true;
-                                setTimeout(() => { this.compartido = false; }, 2500);
-                            })
-                            .catch(() => prompt('Copia este enlace para compartir:', url));
-                    } else {
-                        prompt('Copia este enlace para compartir:', url);
-                    }
-                }
-            };
-        }
-        </script>
+        {# Precio: contenido estático para SSR/SEO; Alpine lo reactiva al seleccionar presentación #}
+        <p class="is-size-2 has-text-success has-text-weight-bold"
+           x-text="'$' + precioMostrado">${{ producto.precio_venta }}</p>
+        <p class="has-text-grey mb-4"
+           x-text="'por ' + etiquetaMostrada">por {{ producto.unidad_medida }}</p>
+
+        <button class="button is-fullwidth"
+                :class="agregado ? 'is-success is-light' : 'is-success'"
+                @click="agregar(); agregado = true">
+            <span x-show="!agregado">Agregar al carrito</span>
+            <span x-show="agregado">✓ Agregado al carrito</span>
+        </button>
+        <button class="button is-light is-fullwidth mt-2"
+                :class="{ 'is-success': compartido }"
+                @click="compartir()">
+            <span class="icon"><i class="fas fa-share-nodes"></i></span>
+            <span x-text="compartido ? '¡Enlace copiado!' : 'Compartir producto'"></span>
+        </button>
 
         {% if producto.videos %}
         <div class="mt-4">
@@ -182,5 +172,56 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function carritoDetalle() {
+    return {
+        // null = precio/etiqueta base del producto; string = id de la presentación seleccionada
+        selectedKey: null,
+        precioMostrado: '{{ producto.precio_venta }}',
+        etiquetaMostrada: {{ producto.unidad_medida | tojson }},
+        presentacionId: null,
+        agregado: false,
+        compartido: false,
+
+        seleccionar(key, precio, etiqueta) {
+            this.selectedKey = key;
+            this.precioMostrado = precio;
+            this.etiquetaMostrada = etiqueta;
+            this.presentacionId = key;
+            this.agregado = false;
+        },
+
+        agregar() {
+            this.$store.carrito.agregar({
+                id: '{{ producto.id }}',
+                nid: {{ producto.nid }},
+                nombre: {{ producto.nombre | tojson }},
+                precio: this.precioMostrado,
+                unidad_medida: this.etiquetaMostrada,
+                presentacion_id: this.presentacionId,
+            });
+        },
+
+        compartir() {
+            const url = window.location.href;
+            const nombre = {{ producto.nombre | tojson }};
+            if (navigator.share) {
+                navigator.share({ title: nombre, text: `${nombre} - $${this.precioMostrado}`, url })
+                    .catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(url)
+                    .then(() => {
+                        this.compartido = true;
+                        setTimeout(() => { this.compartido = false; }, 2500);
+                    })
+                    .catch(() => prompt('Copia este enlace para compartir:', url));
+            } else {
+                prompt('Copia este enlace para compartir:', url);
+            }
+        },
+    };
+}
+</script>
 
 {% endblock %}

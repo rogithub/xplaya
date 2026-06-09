@@ -1,6 +1,8 @@
 document.addEventListener('alpine:init', () => {
     Alpine.store('carrito', {
-        items: JSON.parse(localStorage.getItem('xplaya_carrito') || '[]'),
+        // Migración: items viejos en localStorage no tienen _key — los calculamos al cargar.
+        items: JSON.parse(localStorage.getItem('xplaya_carrito') || '[]')
+            .map(i => ({ ...i, _key: i._key || String(i.nid) })),
 
         // Número total de artículos (suma de cantidades) — para el badge
         get total() {
@@ -15,26 +17,30 @@ document.addEventListener('alpine:init', () => {
         },
 
         agregar(producto) {
-            const idx = this.items.findIndex(i => i.nid === producto.nid);
+            // Mismo producto con diferente presentación = línea separada en el carrito.
+            const key = producto.presentacion_id
+                ? `${producto.nid}_${producto.presentacion_id}`
+                : String(producto.nid);
+            const idx = this.items.findIndex(i => i._key === key);
             if (idx >= 0) {
                 this.items[idx].cantidad++;
             } else {
-                this.items.push({ ...producto, cantidad: 1 });
+                this.items.push({ ...producto, _key: key, cantidad: 1 });
             }
             this._guardar();
         },
 
-        quitar(nid) {
-            this.items = this.items.filter(i => i.nid !== nid);
+        quitar(key) {
+            this.items = this.items.filter(i => i._key !== key);
             this._guardar();
         },
 
-        cambiarCantidad(nid, cantidad) {
+        cambiarCantidad(key, cantidad) {
             const n = parseInt(cantidad, 10);
             if (n <= 0) {
-                this.quitar(nid);
+                this.quitar(key);
             } else {
-                const idx = this.items.findIndex(i => i.nid === nid);
+                const idx = this.items.findIndex(i => i._key === key);
                 if (idx >= 0) {
                     this.items[idx].cantidad = n;
                     this._guardar();

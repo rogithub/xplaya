@@ -61,12 +61,13 @@ pub async fn crear(
 
     for item in items {
         sqlx::query(
-            "INSERT INTO pedidoitems (pedidoid, productoid, cantidad)
-             VALUES ($1, $2, $3)",
+            "INSERT INTO pedidoitems (pedidoid, productoid, cantidad, presentacionid)
+             VALUES ($1, $2, $3, $4)",
         )
         .bind(pedido_uid)
         .bind(item.producto_id)
         .bind(item.cantidad)
+        .bind(item.presentacion_id)
         .execute(&mut *tx)
         .await?;
     }

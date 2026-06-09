@@ -39,7 +39,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="item in $store.carrito.items" :key="item.nid">
+                        <template x-for="item in $store.carrito.items" :key="item._key">
                             <tr>
                                 <td>
                                     <p x-text="item.nombre" class="has-text-weight-semibold"></p>
@@ -51,12 +51,12 @@
                                            style="width: 4rem;"
                                            type="number" min="1"
                                            :value="item.cantidad"
-                                           @change="$store.carrito.cambiarCantidad(item.nid, $event.target.value)">
+                                           @change="$store.carrito.cambiarCantidad(item._key, $event.target.value)">
                                 </td>
                                 <td class="has-text-right"
                                     x-text="'$' + (parseFloat(item.precio) * item.cantidad).toFixed(2)"></td>
                                 <td>
-                                    <button class="delete" @click="$store.carrito.quitar(item.nid)"
+                                    <button class="delete" @click="$store.carrito.quitar(item._key)"
                                             aria-label="Quitar"></button>
                                 </td>
                             </tr>
@@ -142,6 +142,7 @@ function paginaCarrito() {
             const items = this.$store.carrito.items.map(i => ({
                 producto_id: i.id,
                 cantidad: i.cantidad,
+                presentacion_id: i.presentacion_id || null,
             }));
 
             try {

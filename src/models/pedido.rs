@@ -13,6 +13,7 @@ pub struct CrearPedidoRequest {
 pub struct PedidoItemRequest {
     pub producto_id: Uuid,
     pub cantidad: Decimal,
+    pub presentacion_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]

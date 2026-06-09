@@ -1,6 +1,14 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
+pub struct Presentacion {
+    pub id: uuid::Uuid,
+    pub nombre: String,
+    pub factor: String,
+    pub precio_venta: String,
+}
+
+#[derive(Serialize)]
 pub struct ProductoCard {
     pub nid: i32,
     pub nombre: String,
@@ -8,6 +16,7 @@ pub struct ProductoCard {
     pub precio_venta: String,
     pub unidad_medida: String,
     pub foto_url: Option<String>,
+    pub presentaciones: Vec<Presentacion>,
 }
 
 #[derive(Serialize)]
@@ -65,4 +74,5 @@ pub struct ProductoDetalle {
     pub stock: String,
     pub fotos: Vec<String>,
     pub videos: Vec<String>,
+    pub presentaciones: Vec<Presentacion>,
 }

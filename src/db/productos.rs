@@ -2,7 +2,7 @@ use rust_decimal::Decimal;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::producto::{Paginacion, ProductoCard, ProductoDetalle};
+use crate::models::producto::{Paginacion, Presentacion, ProductoCard, ProductoDetalle};
 
 #[derive(sqlx::FromRow)]
 struct SitemapRow {
@@ -60,6 +60,24 @@ struct InventarioRow {
     stock: Decimal,
 }
 
+#[derive(sqlx::FromRow)]
+struct PresentacionRow {
+    id: Uuid,
+    nombre: String,
+    factor: Decimal,
+    precioventa: Decimal,
+}
+
+// Para el catálogo necesitamos el nid para agrupar por producto
+#[derive(sqlx::FromRow)]
+struct PresentacionCatalogoRow {
+    nid: i32,
+    id: Uuid,
+    nombre: String,
+    factor: Decimal,
+    precioventa: Decimal,
+}
+
 pub async fn busqueda(
     pool: &PgPool,
     busqueda: Option<&str>,
@@ -87,7 +105,7 @@ pub async fn busqueda(
         rows[0].total_paginas,
     );
 
-    let productos = rows
+    let mut productos: Vec<ProductoCard> = rows
         .into_iter()
         .map(|r| ProductoCard {
             nid: r.nid,
@@ -98,8 +116,40 @@ pub async fn busqueda(
             foto_url: r.foto.map(|f| {
                 format!("{}/papeleria-fotos-productos/{}", content_base_url, f)
             }),
+            presentaciones: vec![],
         })
         .collect();
+
+    // Un solo query batch para todas las presentaciones de los productos de esta página.
+    let nids: Vec<i32> = productos.iter().map(|p| p.nid).collect();
+    let pres_rows = sqlx::query_as::<_, PresentacionCatalogoRow>(
+        "SELECT vi.nid, pp.id, pp.nombre, pp.factor, pp.precioventa
+         FROM productopresentaciones pp
+         JOIN v_inventario vi ON vi.id = pp.productoid
+         WHERE vi.nid = ANY($1)
+         ORDER BY vi.nid, pp.precioventa",
+    )
+    .bind(&nids[..])
+    .fetch_all(pool)
+    .await?;
+
+    if !pres_rows.is_empty() {
+        let mut mapa: std::collections::HashMap<i32, Vec<Presentacion>> =
+            std::collections::HashMap::new();
+        for row in pres_rows {
+            mapa.entry(row.nid).or_default().push(Presentacion {
+                id: row.id,
+                nombre: row.nombre,
+                factor: format!("{:.2}", row.factor),
+                precio_venta: format!("{:.2}", row.precioventa),
+            });
+        }
+        for p in &mut productos {
+            if let Some(pres) = mapa.remove(&p.nid) {
+                p.presentaciones = pres;
+            }
+        }
+    }
 
     Ok((productos, paginacion))
 }
@@ -139,6 +189,24 @@ pub async fn detalle(
     .fetch_all(pool)
     .await?;
 
+    let presentaciones = sqlx::query_as::<_, PresentacionRow>(
+        "SELECT id, nombre, factor, precioventa
+         FROM productopresentaciones
+         WHERE productoid = $1
+         ORDER BY precioventa",
+    )
+    .bind(row.id)
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|p| Presentacion {
+        id: p.id,
+        nombre: p.nombre,
+        factor: format!("{:.2}", p.factor),
+        precio_venta: format!("{:.2}", p.precioventa),
+    })
+    .collect();
+
     Ok(Some(ProductoDetalle {
         nid: row.nid,
         id: row.id,
@@ -149,5 +217,6 @@ pub async fn detalle(
         stock: format!("{:.2}", row.stock),
         fotos,
         videos,
+        presentaciones,
     }))
 }

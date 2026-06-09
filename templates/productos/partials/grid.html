@@ -25,6 +25,13 @@
                     <p class="has-text-weight-semibold">{{ p.nombre }}</p>
                     <p class="has-text-success is-size-5 mt-1">${{ p.precio_venta }}</p>
                     <p class="is-size-7 has-text-grey">por {{ p.unidad_medida }}</p>
+                    {% if p.presentaciones %}
+                    <div class="tags mt-2 mb-0">
+                        {% for pres in p.presentaciones %}
+                        <span class="tag is-info is-light is-small">{{ pres.nombre }} · ${{ pres.precio_venta }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </a>
