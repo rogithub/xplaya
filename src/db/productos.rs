@@ -2,7 +2,7 @@ use rust_decimal::Decimal;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::producto::{Paginacion, Presentacion, ProductoCard, ProductoDetalle};
+use crate::models::producto::{ComponenteKit, Paginacion, Presentacion, ProductoCard, ProductoDetalle};
 
 #[derive(sqlx::FromRow)]
 struct SitemapRow {
@@ -15,7 +15,7 @@ pub async fn sitemap_productos(pool: &PgPool) -> Result<Vec<(i32, Vec<String>)>,
         "SELECT vi.nid, fp.filename
          FROM v_inventario vi
          LEFT JOIN fotosproductos fp ON fp.productoid = vi.id
-         WHERE vi.stock > 0
+         WHERE vi.stock > 0 OR vi.escompuesto = true
          ORDER BY vi.nid, fp.filename",
     )
     .fetch_all(pool)
@@ -58,6 +58,13 @@ struct InventarioRow {
     unidadmedida: String,
     ultimoprecioventa: Decimal,
     stock: Decimal,
+    escompuesto: bool,
+}
+
+#[derive(sqlx::FromRow)]
+struct ComponenteRow {
+    nombre: String,
+    cantidad: Decimal,
 }
 
 #[derive(sqlx::FromRow)]
@@ -160,7 +167,7 @@ pub async fn detalle(
     content_base_url: &str,
 ) -> Result<Option<ProductoDetalle>, sqlx::Error> {
     let row = sqlx::query_as::<_, InventarioRow>(
-        "SELECT nid, id, nombre, categoria, unidadmedida, ultimoprecioventa, stock
+        "SELECT nid, id, nombre, categoria, unidadmedida, ultimoprecioventa, stock, escompuesto
          FROM v_inventario WHERE nid = $1",
     )
     .bind(nid)
@@ -188,6 +195,29 @@ pub async fn detalle(
     .bind(row.id)
     .fetch_all(pool)
     .await?;
+
+    // Los kits no tienen stock propio: se listan sus componentes para que el
+    // cliente vea qué incluye. El POS expande el kit al momento de la venta.
+    let componentes: Vec<ComponenteKit> = if row.escompuesto {
+        sqlx::query_as::<_, ComponenteRow>(
+            "SELECT p.nombre, pc.cantidad
+             FROM productocomponentes pc
+             JOIN productos p ON p.id = pc.componenteid
+             WHERE pc.productopadreid = $1
+             ORDER BY p.nombre",
+        )
+        .bind(row.id)
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .map(|c| ComponenteKit {
+            nombre: c.nombre,
+            cantidad: format!("{}", c.cantidad.normalize()),
+        })
+        .collect()
+    } else {
+        vec![]
+    };
 
     let presentaciones = sqlx::query_as::<_, PresentacionRow>(
         "SELECT id, nombre, factor, precioventa
@@ -218,5 +248,6 @@ pub async fn detalle(
         fotos,
         videos,
         presentaciones,
+        componentes,
     }))
 }

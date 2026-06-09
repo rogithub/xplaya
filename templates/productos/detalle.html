@@ -120,6 +120,18 @@
         <p class="is-size-7 has-text-grey mb-1">{{ producto.categoria }}</p>
         <h1 class="title is-4">{{ producto.nombre }}</h1>
 
+        {# Componentes del kit — solo productos compuestos #}
+        {% if producto.componentes %}
+        <div class="notification is-light py-3 px-4 mb-4">
+            <p class="is-size-7 has-text-weight-semibold mb-2">📦 Este kit incluye:</p>
+            <ul class="is-size-7" style="list-style: none;">
+                {% for c in producto.componentes %}
+                <li>✓ {{ c.cantidad }} × {{ c.nombre }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         {# Selector de presentación — solo aparece si hay presentaciones configuradas #}
         {% if producto.presentaciones %}
         <div class="field mb-3">

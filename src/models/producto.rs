@@ -64,6 +64,12 @@ impl Paginacion {
 }
 
 #[derive(Serialize)]
+pub struct ComponenteKit {
+    pub nombre: String,
+    pub cantidad: String,
+}
+
+#[derive(Serialize)]
 pub struct ProductoDetalle {
     pub nid: i32,
     pub id: uuid::Uuid,
@@ -75,4 +81,5 @@ pub struct ProductoDetalle {
     pub fotos: Vec<String>,
     pub videos: Vec<String>,
     pub presentaciones: Vec<Presentacion>,
+    pub componentes: Vec<ComponenteKit>,
 }

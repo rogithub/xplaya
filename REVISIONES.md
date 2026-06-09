@@ -4,6 +4,24 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Productos kit (compuestos) — recibo, catálogo y detalle
+
+Soporte para los kits que agregó `inventario_papeleria` (`Productos.EsCompuesto`, tabla `ProductoComponentes`, `AjustesProductos.KitProductoId`).
+
+**Archivos a revisar:**
+- `src/db/monedero.rs` → `recibo()` — la query de líneas ahora filtra `AND ap.kitproductoid IS NULL`. Al vender un kit, el POS inserta una línea por componente con precio $0 (solo para deducir stock); sin el filtro aparecían en el ticket como productos de $0.00. Mismo comportamiento que el recibo del POS.
+- `src/models/producto.rs` — nuevo struct `ComponenteKit`; campo `componentes: Vec<ComponenteKit>` en `ProductoDetalle`
+- `src/db/productos.rs` → `detalle()` — lee `escompuesto` de `v_inventario` y, si es kit, consulta `productocomponentes` para listar qué incluye
+- `src/db/productos.rs` → `sitemap_productos()` — `WHERE vi.stock > 0 OR vi.escompuesto = true` (los kits no tienen compras, su stock es 0)
+- `templates/productos/detalle.html` — bloque "📦 Este kit incluye:" con los componentes
+- `inventario_papeleria/dbscripts/reportes.sql` y `dbchanges/updates.sql` — `v_galeria_principal` ahora incluye kits: `(Stock > 0 OR EsCompuesto = true)`; sin esto los kits nunca aparecen en el catálogo público
+
+**Sin cambios:** cotización y carrito. Los kits no se expanden en `PedidoItems` (la expansión ocurre en el POS al convertir a venta) y su precio sale de `PreciosProductos`, así que la cotización ya los muestra bien; el carrito los trata como cualquier producto.
+
+**Requiere BD:** correr `dbscripts/reportes.sql` (recrea las vistas con `EsCompuesto`). El código de `detalle()` falla si `v_inventario` no tiene la columna `escompuesto`.
+
+---
+
 ## Cotización: soporte de presentaciones en PedidoItems
 
 **Archivo:** `src/db/monedero.rs` → función `cotizacion()`

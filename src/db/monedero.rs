@@ -118,6 +118,7 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
          JOIN productos p ON p.id = ap.productoid
          LEFT JOIN productopresentaciones pp ON pp.id = ap.presentacionid
          WHERE ap.ajusteid = $1
+           AND ap.kitproductoid IS NULL
          ORDER BY ap.datestamp",
     )
     .bind(id)
