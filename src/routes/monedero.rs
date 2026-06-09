@@ -168,6 +168,20 @@ pub async fn recibo(
     Ok(Html(html))
 }
 
+// ── QR de validación ──────────────────────────────────────────────────────────
+
+/// SVG inline de un QR que apunta a `url`. El cliente lo escanea y llega a la
+/// versión en vivo del recibo/cotización en xplaya.com — eso valida que el
+/// papel sea auténtico.
+fn qr_svg(url: &str) -> Option<String> {
+    let code = qrcode::QrCode::new(url.as_bytes()).ok()?;
+    Some(
+        code.render::<qrcode::render::svg::Color>()
+            .min_dimensions(140, 140)
+            .build(),
+    )
+}
+
 // ── /recibo/:id/print ─────────────────────────────────────────────────────────
 
 pub async fn recibo_print(
@@ -179,11 +193,13 @@ pub async fn recibo_print(
         .map_err(|e| { tracing::error!("DB recibo {id}: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
+    let qr = qr_svg(&format!("{}/recibo/{}", state.config.site_url, id));
+
     let tmpl = state.tmpl.get_template("monedero/recibo_print.html").map_err(|e| {
         tracing::error!("Template recibo_print: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
-    let html = tmpl.render(minijinja::context! { venta => venta }).map_err(|e| {
+    let html = tmpl.render(minijinja::context! { venta => venta, qr_svg => qr }).map_err(|e| {
         tracing::error!("Render recibo_print: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
@@ -238,11 +254,13 @@ pub async fn cotizacion_print(
         .map_err(|e| { tracing::error!("DB cotizacion {uid}: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
+    let qr = qr_svg(&format!("{}/cotizacion/{}", state.config.site_url, uid));
+
     let tmpl = state.tmpl.get_template("monedero/cotizacion_print.html").map_err(|e| {
         tracing::error!("Template cotizacion_print: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
-    let html = tmpl.render(minijinja::context! { cotizacion => cot }).map_err(|e| {
+    let html = tmpl.render(minijinja::context! { cotizacion => cot, qr_svg => qr }).map_err(|e| {
         tracing::error!("Render cotizacion_print: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;

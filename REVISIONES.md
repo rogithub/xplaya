@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## QR de validación en recibos y cotizaciones impresas
+
+Las vistas `/recibo/{id}/print` y `/cotizacion/{uid}/print` ahora incluyen un código QR que apunta a la versión en vivo en xplaya.com (`{SITE_URL}/recibo/{id}` o `/cotizacion/{uid}`). Como el PDF se genera desde la vista `/print`, el QR aparece tanto en papel como en PDF sin cambio adicional. El cliente escanea y compara contra los datos vivos de la BD — un papel falsificado no puede hacer que xplaya.com muestre datos que no existen.
+
+**Archivos a revisar:**
+- `Cargo.toml` — nuevo crate `qrcode` (solo feature `svg`, sin `image`)
+- `src/routes/monedero.rs` — helper `qr_svg()` que genera el SVG inline; `recibo_print` y `cotizacion_print` lo pasan al template como `qr_svg`
+- `templates/monedero/recibo_print.html` y `cotizacion_print.html` — bloque `{% if qr_svg %}` con el SVG (`| safe`) y la leyenda "Escanea para validar..."
+
+**Pendiente relacionado:** cuando el POS empiece a insertar en `ShortUrls`, el QR puede apuntar a `xplaya.com/r/{code}` para un código más pequeño (mejor para térmica de 58mm).
+
+---
+
 ## Productos kit (compuestos) — recibo, catálogo y detalle
 
 Soporte para los kits que agregó `inventario_papeleria` (`Productos.EsCompuesto`, tabla `ProductoComponentes`, `AjustesProductos.KitProductoId`).

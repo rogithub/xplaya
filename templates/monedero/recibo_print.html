@@ -111,6 +111,13 @@
     </div>
     {% endif %}
 
+    {% if qr_svg %}
+    <div class="has-text-centered mt-5">
+        {{ qr_svg | safe }}
+        <p class="is-size-7 has-text-grey mt-1">Escanea para validar este ticket en xplaya.com</p>
+    </div>
+    {% endif %}
+
     <p class="has-text-centered has-text-grey is-size-7 mt-5">
         xplaya.com — Papelería y Mercería · Playa del Carmen
     </p>
