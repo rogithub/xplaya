@@ -53,6 +53,7 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
     for (loc, priority, freq) in [
         (format!("{site}/"), "1.0", "daily"),
         (format!("{site}/imagina"), "0.8", "monthly"),
+        (format!("{site}/futbol"), "0.8", "daily"),
         (format!("{site}/resena"), "0.5", "monthly"),
     ] {
         xml.push_str(&format!(

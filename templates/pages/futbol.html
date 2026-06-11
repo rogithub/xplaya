@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}¿A qué hora juegan hoy? Mundial 2026 en hora de Playa del Carmen{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="{{ meta_descripcion }}">
+<meta name="keywords" content="a que hora juega hoy la seleccion, a que hora juega mexico hoy, horario playa del carmen, mundial 2026 horarios, partidos de hoy mundial 2026, mundial 2026 hora local playa del carmen, calendario mundial 2026, donde ver el mundial playa del carmen">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/futbol">{% endblock %}
+
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/futbol">
+<meta property="og:title" content="¿A qué hora juegan hoy? Mundial 2026 en hora de Playa del Carmen">
+<meta property="og:description" content="{{ meta_descripcion }}">
+<meta property="og:image" content="{{ site_url }}/static/img/og_futbol.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="800">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="¿A qué hora juegan hoy? Mundial 2026 en hora de Playa del Carmen">
+<meta name="twitter:description" content="{{ meta_descripcion }}">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_futbol.jpeg">
+{% endblock %}
+
+{% block head %}
+<style>
+  .futbol-hero {
+    background: linear-gradient(135deg, #064e3b 0%, #047857 55%, #15803d 100%);
+    padding: 3rem 1.5rem;
+    color: white;
+    margin: -2.5rem -1.5rem 2.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+  .futbol-hero .title { color: white; }
+  .partido-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #ededed;
+    flex-wrap: wrap;
+  }
+  .partido-row:last-child { border-bottom: none; }
+  .partido-hora { flex: 0 0 4.5rem; }
+  .partido-equipos {
+    flex: 1 1 14rem;
+    text-align: center;
+    font-weight: 600;
+  }
+  .partido-info {
+    flex: 1 1 10rem;
+    text-align: right;
+    font-size: 0.8rem;
+    color: #7a7a7a;
+  }
+  @media (max-width: 480px) {
+    .partido-info { text-align: left; flex-basis: 100%; padding-left: 5.25rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="futbol-hero">
+  <p class="is-size-7 mb-3" style="opacity: 0.65; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">
+    Mundial Canadá · Estados Unidos · México
+  </p>
+  <h1 class="title is-1 mb-3" style="font-size: clamp(2rem, 6vw, 3rem); font-weight: 900;">
+    <span class="icon mr-2"><i class="fas fa-futbol"></i></span>Fútbol 2026
+  </h1>
+  <p class="subtitle is-6 mb-0" style="color: white; opacity: 0.85;">
+    Todos los horarios en hora local de Playa del Carmen
+  </p>
+</div>
+
+{% if error %}
+<div class="notification is-warning">
+  No se pudo cargar la información de los partidos. Intenta de nuevo en unos minutos.
+</div>
+{% else %}
+
+{# ── Partidos de hoy ──────────────────────────────────────────────────────── #}
+<section class="mb-6">
+  <h2 class="title is-4 mb-1">
+    <span class="icon has-text-success mr-1"><i class="fas fa-calendar-day"></i></span>
+    Hoy
+  </h2>
+  <p class="has-text-grey is-size-7 mb-4">{{ hoy_fecha }}</p>
+
+  {% if hoy %}
+  <div class="box p-3">
+    {% for p in hoy %}
+    <div class="partido-row">
+      <div class="partido-hora">
+        <span class="tag is-dark">{{ p.hora }}</span>
+      </div>
+      <div class="partido-equipos">
+        {{ p.equipo1 }}
+        {% if p.marcador %}
+        <span class="tag is-success mx-2">{{ p.marcador }}</span>
+        {% else %}
+        <span class="has-text-grey has-text-weight-normal mx-2">vs</span>
+        {% endif %}
+        {{ p.equipo2 }}
+        {% if p.penales %}
+        <span class="is-size-7 has-text-grey ml-2">({{ p.penales }})</span>
+        {% endif %}
+      </div>
+      <div class="partido-info">
+        {{ p.etiqueta }} · {{ p.sede }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="notification is-light">
+    Hoy no hay partidos programados.
+  </div>
+  {% endif %}
+</section>
+
+{# ── Próximos partidos ────────────────────────────────────────────────────── #}
+{% if proximos %}
+<section class="mb-6">
+  <h2 class="title is-4 mb-4">
+    <span class="icon has-text-success mr-1"><i class="fas fa-calendar-days"></i></span>
+    Próximos partidos
+  </h2>
+
+  {% for dia in proximos %}
+  <h3 class="title is-6 mb-2 mt-5">{{ dia.titulo }}</h3>
+  <div class="box p-3">
+    {% for p in dia.partidos %}
+    <div class="partido-row">
+      <div class="partido-hora">
+        <span class="tag">{{ p.hora }}</span>
+      </div>
+      <div class="partido-equipos">
+        {{ p.equipo1 }}
+        <span class="has-text-grey has-text-weight-normal mx-2">vs</span>
+        {{ p.equipo2 }}
+      </div>
+      <div class="partido-info">
+        {{ p.etiqueta }} · {{ p.sede }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<p class="is-size-7 has-text-grey has-text-centered">
+  Datos de <a href="https://github.com/openfootball/worldcup.json" target="_blank" rel="noopener">openfootball</a> —
+  los resultados pueden tardar en actualizarse.
+</p>
+
+{% endif %}
+
+{% endblock %}
