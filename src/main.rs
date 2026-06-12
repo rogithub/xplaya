@@ -48,6 +48,7 @@ async fn main() {
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))
         .route("/resena", get(routes::pages::resena))
+        .route("/fotos", get(routes::pages::fotos))
         .route("/imagina", get(routes::pages::imagina))
         .route("/futbol", get(routes::futbol::pagina))
         .route("/terminos", get(routes::monedero::terminos))

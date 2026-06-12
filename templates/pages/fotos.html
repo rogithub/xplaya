@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Impresión de fotos en Playa del Carmen — carnet, polaroid y a medida{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Imprime tus fotos en Playa del Carmen: tamaño carnet e infantil para trámites, estilo polaroid, ampliaciones y medidas exactas. Mándalas por WhatsApp o tráelas en USB — listas en minutos.">
+<meta name="keywords" content="imprimir fotos playa del carmen, fotos carnet playa del carmen, fotos infantil, fotos para trámites, imprimir fotos polaroid, fotos a medida, ampliación de fotos, donde imprimir fotos, fotos para visa, fotos para pasaporte, impresión de fotos cerca de mí">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/fotos">{% endblock %}
+
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/fotos">
+<meta property="og:title" content="Imprime tus fotos en Playa del Carmen — carnet, polaroid y a medida">
+<meta property="og:description" content="Manda tus fotos por WhatsApp o tráelas en USB. Carnet e infantil para trámites, polaroid, ampliaciones y medidas exactas — listas en minutos, desde una sola hoja.">
+<meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Imprime tus fotos en Playa del Carmen — carnet, polaroid y a medida">
+<meta name="twitter:description" content="Manda tus fotos por WhatsApp o tráelas en USB. Carnet, polaroid, ampliaciones y medidas exactas — listas en minutos.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Impresión de fotos",
+  "serviceType": "Impresión de fotografías",
+  "description": "Impresión de fotos tamaño carnet e infantil para trámites, fotos estilo polaroid, ampliaciones y fotos a medida exacta en centímetros. Sin mínimo de compra.",
+  "areaServed": {
+    "@type": "City",
+    "name": "Playa del Carmen"
+  },
+  "provider": {
+    "@type": "Store",
+    "name": "Papelería xplaya.com",
+    "url": "{{ site_url }}",
+    "telephone": "+52-452-201-8336",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Playa del Carmen",
+      "addressRegion": "Quintana Roo",
+      "addressCountry": "MX"
+    }
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+  .fotos-hero {
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 110%, rgba(253, 186, 116, 0.25), transparent),
+      linear-gradient(150deg, #431407 0%, #7c2d12 45%, #c2410c 100%);
+    padding: 4rem 1.5rem 3.5rem;
+    color: white;
+    overflow: hidden;
+  }
+  .fotos-hero .title { color: white; }
+  .fotos-hero .subtitle { color: white; opacity: 0.88; }
+
+  /* Polaroids en CSS puro — el motivo visual de la página */
+  .polaroid-fan {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin: 2.25rem auto 0.5rem;
+    min-height: 11rem;
+  }
+  .polaroid {
+    background: #fdfdfb;
+    padding: 0.45rem 0.45rem 1.9rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    width: 8.5rem;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+  }
+  .polaroid:hover { transform: translateY(-8px) rotate(0deg) !important; z-index: 3; }
+  .polaroid:nth-child(1) { transform: rotate(-7deg) translateY(0.8rem); z-index: 1; }
+  .polaroid:nth-child(2) { transform: rotate(2deg) translateY(-0.4rem); z-index: 2; }
+  .polaroid:nth-child(3) { transform: rotate(8deg) translateY(0.9rem); z-index: 1; }
+  .polaroid-foto {
+    height: 7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .polaroid-caption {
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: #44403c;
+    text-align: center;
+    margin-top: 0.3rem;
+    line-height: 1;
+  }
+  @media (max-width: 480px) {
+    .polaroid { width: 6.2rem; padding-bottom: 1.5rem; }
+    .polaroid-foto { height: 5.2rem; font-size: 1.2rem; }
+    .polaroid-caption { font-size: 0.95rem; }
+  }
+
+  .fotos-step-number {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #E85D04;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    flex-shrink: 0;
+  }
+  .fotos-card {
+    height: 100%;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .fotos-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+  .fotos-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .fotos-cta {
+    background: #fff7ed;
+    border-top: 3px solid #E85D04;
+  }
+  .fotos-b2b {
+    background: #f8f4ff;
+    border-left: 3px solid #7c3aed;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────────── #}
+<div class="fotos-hero" style="margin: -2.5rem -1.5rem 2.5rem; border-radius: 0.5rem;">
+  <div style="max-width: 680px; margin: 0 auto; text-align: center;">
+    <p class="is-size-7 mb-3" style="opacity: 0.65; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">
+      Papelería xplaya.com · Playa del Carmen
+    </p>
+    <h1 class="title is-1 mb-3" style="font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 900; letter-spacing: -0.02em;">
+      Imprime tus fotos
+    </h1>
+    <p class="subtitle is-5 mb-4">
+      Mándalas por WhatsApp o tráelas en USB.<br>
+      Nosotros las acomodamos al tamaño que necesites y te las imprimimos en minutos.
+    </p>
+    <div class="buttons is-centered">
+      <a href="https://wa.me/524522018336?text=Hola,%20quiero%20imprimir%20unas%20fotos"
+         target="_blank" rel="noopener"
+         class="button is-success is-medium is-rounded"
+         style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+        <span class="icon"><i class="fab fa-whatsapp"></i></span>
+        <span>Mandar mis fotos</span>
+      </a>
+    </div>
+    <div class="polaroid-fan">
+      <div class="polaroid">
+        <div class="polaroid-foto" style="background: linear-gradient(160deg, #0ea5e9, #6366f1);">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <p class="polaroid-caption">tamaño carnet</p>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-foto" style="background: linear-gradient(160deg, #f59e0b, #ef4444);">
+          <i class="fas fa-camera-retro"></i>
+        </div>
+        <p class="polaroid-caption">estilo polaroid</p>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-foto" style="background: linear-gradient(160deg, #10b981, #0d9488);">
+          <i class="fas fa-ruler-combined"></i>
+        </div>
+        <p class="polaroid-caption">a la medida</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Cómo funciona ────────────────────────────────────────────────────────── #}
+<section class="mb-6">
+  <h2 class="title is-4 has-text-centered mb-5">Así de fácil</h2>
+  <div class="columns is-mobile is-multiline is-centered">
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="fotos-step-number">1</div>
+      <p class="has-text-weight-semibold mb-1">Manda tus fotos</p>
+      <p class="is-size-7 has-text-grey">Por <a href="https://wa.me/524522018336" target="_blank" rel="noopener">WhatsApp</a>, por correo o tráelas en tu USB o celular directamente a la tienda.</p>
+    </div>
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="fotos-step-number">2</div>
+      <p class="has-text-weight-semibold mb-1">Dinos cómo las quieres</p>
+      <p class="is-size-7 has-text-grey">¿Carnet para un trámite? ¿Polaroid para regalar? ¿Una medida exacta para un marco? Nosotros las acomodamos — tú no haces nada.</p>
+    </div>
+    <div class="column is-4-tablet is-12-mobile has-text-centered">
+      <div class="fotos-step-number">3</div>
+      <p class="has-text-weight-semibold mb-1">Recógelas en minutos</p>
+      <p class="is-size-7 has-text-grey">Imprimimos al momento. Sin mínimo de compra — desde una sola hoja.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Lo que imprimimos ────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-2">Lo que podemos imprimirte</h2>
+  <p class="has-text-centered has-text-grey is-size-6 mb-5">Cualquier foto, en el tamaño y arreglo que necesites.</p>
+
+  <div class="columns is-multiline">
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fotos-card">
+        <div class="card-content">
+          <div class="fotos-icon" style="background: #fef3c7; color: #d97706;">
+            <i class="fas fa-id-card"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Fotos carnet e infantil</p>
+          <p class="is-size-7 has-text-grey">Para escuela, trabajo, visa, pasaporte o cualquier trámite. En el tamaño exacto que te pidan — 2×2, 3×4 cm o el que sea. Te llevas la hoja completa con varias copias.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fotos-card">
+        <div class="card-content">
+          <div class="fotos-icon" style="background: #ffedd5; color: #ea580c;">
+            <i class="fas fa-camera-retro"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Fotos estilo polaroid</p>
+          <p class="is-size-7 has-text-grey">Con su borde blanco clásico, más grueso abajo para escribir una dedicatoria. Perfectas para regalos, álbumes, decorar tu cuarto o un detalle con tus amigos.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fotos-card">
+        <div class="card-content">
+          <div class="fotos-icon" style="background: #fce7f3; color: #db2777;">
+            <i class="fas fa-ruler-combined"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Fotos a la medida</p>
+          <p class="is-size-7 has-text-grey">¿Necesitas una foto de un tamaño exacto en centímetros? Para un marco, un álbum o un formato que te pidieron por escrito — la imprimimos a la medida, sin sorpresas.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fotos-card">
+        <div class="card-content">
+          <div class="fotos-icon" style="background: #e0f2fe; color: #0284c7;">
+            <i class="fas fa-file-image"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Ampliaciones</p>
+          <p class="is-size-7 has-text-grey">Tu foto ocupando toda la hoja carta u oficio. Para retratos, recuerdos, fotos de mascotas o ese momento que quieres ver en grande.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fotos-card">
+        <div class="card-content">
+          <div class="fotos-icon" style="background: #dcfce7; color: #16a34a;">
+            <i class="fas fa-images"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Varias fotos en una hoja</p>
+          <p class="is-size-7 has-text-grey">¿Traes muchas fotos? Las acomodamos juntas en la misma hoja para que aproveches el papel y pagues menos.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fotos-card">
+        <div class="card-content">
+          <div class="fotos-icon" style="background: #ede9fe; color: #7c3aed;">
+            <i class="fas fa-clone"></i>
+          </div>
+          <p class="has-text-weight-bold mb-1">Stickers y repeticiones</p>
+          <p class="is-size-7 has-text-grey">La misma imagen repetida por toda la hoja: etiquetas para la escuela, stickers, invitaciones o recuerditos de fiesta.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+{# ── Por qué con nosotros ─────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-5">Por qué imprimir aquí</h2>
+  <div class="columns is-multiline">
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large has-text-success mb-2" style="font-size: 2rem;"><i class="fas fa-bolt"></i></span>
+      <p class="has-text-weight-semibold mb-1">Al momento</p>
+      <p class="is-size-7 has-text-grey">No dejas tus fotos "para mañana". Las imprimimos mientras esperas, en minutos.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large has-text-warning mb-2" style="font-size: 2rem;"><i class="fas fa-hand-holding-dollar"></i></span>
+      <p class="has-text-weight-semibold mb-1">Sin mínimo</p>
+      <p class="is-size-7 has-text-grey">Desde una sola hoja. No necesitas pedir un paquete completo ni cantidades grandes.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #db2777;"><i class="fas fa-ruler"></i></span>
+      <p class="has-text-weight-semibold mb-1">Medidas exactas</p>
+      <p class="is-size-7 has-text-grey">Si tu trámite pide un tamaño específico, sale en ese tamaño. Verificamos las medidas antes de imprimir.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #0284c7;"><i class="fas fa-comments"></i></span>
+      <p class="has-text-weight-semibold mb-1">Te asesoramos</p>
+      <p class="is-size-7 has-text-grey">¿No sabes qué tamaño necesitas? Dinos para qué es la foto y nosotros te decimos qué te conviene.</p>
+    </div>
+  </div>
+</section>
+
+{# ── CTA final ────────────────────────────────────────────────────────────── #}
+<div class="fotos-cta" style="margin: 0 -1.5rem; padding: 3rem 1.5rem; text-align: center;">
+  <h2 class="title is-4 mb-2">¿Tienes las fotos en tu celular?</h2>
+  <p class="has-text-grey mb-5">Mándalas ahora mismo por WhatsApp y dinos cómo las quieres — te avisamos cuando estén listas.</p>
+  <div class="buttons is-centered">
+    <a href="https://wa.me/524522018336?text=Hola,%20quiero%20imprimir%20unas%20fotos"
+       target="_blank" rel="noopener"
+       class="button is-success is-medium is-rounded"
+       style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+      <span class="icon"><i class="fab fa-whatsapp"></i></span>
+      <span>452-201-8336</span>
+    </a>
+  </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    O visítanos: Villas del Sol, junto a Palmas Turquesa · Playa del Carmen, Q.Roo
+  </p>
+</div>
+
+{# ── Enlace cruzado B2B ───────────────────────────────────────────────────── #}
+<div class="fotos-b2b" style="margin: 0 -1.5rem -2.5rem; padding: 1.25rem 1.5rem; border-radius: 0 0 0.5rem 0.5rem;">
+  <p class="is-size-7 has-text-grey">
+    <span class="icon is-small mr-1" style="color: #7c3aed;"><i class="fas fa-wand-magic-sparkles"></i></span>
+    ¿Tienes una papelería o imprenta? Conoce <a href="/imagina"><strong>imagina</strong></a>,
+    la herramienta gratuita con la que preparamos estas impresiones.
+  </p>
+</div>
+
+{% endblock %}

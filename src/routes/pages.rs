@@ -52,6 +52,7 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
     // Páginas estáticas
     for (loc, priority, freq) in [
         (format!("{site}/"), "1.0", "daily"),
+        (format!("{site}/fotos"), "0.8", "monthly"),
         (format!("{site}/imagina"), "0.8", "monthly"),
         (format!("{site}/futbol"), "0.8", "daily"),
         (format!("{site}/resena"), "0.5", "monthly"),
@@ -87,6 +88,18 @@ pub async fn resena(State(state): State<AppState>) -> Result<Html<String>, Statu
     })?;
     let html = tmpl.render(context!()).map_err(|e| {
         tracing::error!("Render resena: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
+pub async fn fotos(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let tmpl = state.tmpl.get_template("pages/fotos.html").map_err(|e| {
+        tracing::error!("Template fotos: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(context!()).map_err(|e| {
+        tracing::error!("Render fotos: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Html(html))
