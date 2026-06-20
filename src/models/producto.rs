@@ -82,4 +82,7 @@ pub struct ProductoDetalle {
     pub videos: Vec<String>,
     pub presentaciones: Vec<Presentacion>,
     pub componentes: Vec<ComponenteKit>,
+    pub marca: Option<String>,
+    pub modelo: Option<String>,
+    pub descripcion: Option<String>,
 }

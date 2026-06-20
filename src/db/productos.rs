@@ -62,6 +62,13 @@ struct InventarioRow {
 }
 
 #[derive(sqlx::FromRow)]
+struct ProductoMetaRow {
+    marca: Option<String>,
+    modelo: Option<String>,
+    descripcion: Option<String>,
+}
+
+#[derive(sqlx::FromRow)]
 struct ComponenteRow {
     nombre: String,
     cantidad: Decimal,
@@ -179,6 +186,14 @@ pub async fn detalle(
         None => return Ok(None),
     };
 
+    let meta = sqlx::query_as::<_, ProductoMetaRow>(
+        "SELECT marca, modelo, descripcion FROM productos WHERE id = $1",
+    )
+    .bind(row.id)
+    .fetch_optional(pool)
+    .await?
+    .unwrap_or(ProductoMetaRow { marca: None, modelo: None, descripcion: None });
+
     let fotos = sqlx::query_scalar::<_, String>(
         "SELECT filename FROM fotosproductos WHERE productoid = $1 ORDER BY filename",
     )
@@ -249,5 +264,8 @@ pub async fn detalle(
         videos,
         presentaciones,
         componentes,
+        marca: meta.marca,
+        modelo: meta.modelo,
+        descripcion: meta.descripcion,
     }))
 }

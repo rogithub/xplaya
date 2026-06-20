@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% block title %}{{ producto.nombre }}{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/productos/{{ producto.nid }}">{% endblock %}
-{% block meta_description %}<meta name="description" content="Compra {{ producto.nombre }} en Papelería xplaya.com · ${{ producto.precio_venta }} MXN por {{ producto.unidad_medida }} · Playa del Carmen.">{% endblock %}
+{% block meta_description %}
+{% if producto.descripcion %}<meta name="description" content="{{ producto.descripcion | truncate(155) }}">
+{% else %}<meta name="description" content="Compra {{ producto.nombre }} en Papelería xplaya.com · ${{ producto.precio_venta }} MXN por {{ producto.unidad_medida }} · Playa del Carmen.">
+{% endif %}{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
 <meta property="og:locale" content="es_MX">
 <meta property="og:type" content="product">
 <meta property="og:url" content="{{ site_url }}/productos/{{ producto.nid }}">
 <meta property="og:title" content="{{ producto.nombre }}">
-<meta property="og:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
+<meta property="og:description" content="{% if producto.descripcion %}{{ producto.descripcion | truncate(120) }}{% else %}${{ producto.precio_venta }} | {{ producto.categoria }}{% endif %}">
 {% if producto.fotos %}
 <meta property="og:image" content="{{ producto.fotos[0] | safe }}">
 <meta property="og:image:alt" content="{{ producto.nombre }}">
@@ -27,7 +30,7 @@
 <meta name="twitter:image:alt" content="Papelería xplaya.com">
 {% endif %}
 <meta name="twitter:title" content="{{ producto.nombre }}">
-<meta name="twitter:description" content="${{ producto.precio_venta }} | {{ producto.categoria }}">
+<meta name="twitter:description" content="{% if producto.descripcion %}{{ producto.descripcion | truncate(120) }}{% else %}${{ producto.precio_venta }} | {{ producto.categoria }}{% endif %}">
 {% endblock %}
 {% block head %}
 <script type="application/ld+json">
@@ -37,6 +40,9 @@
   "name": {{ producto.nombre | tojson }},
   "url": "{{ site_url }}/productos/{{ producto.nid }}",
   {% if producto.fotos %}"image": {{ producto.fotos[0] | tojson }},{% endif %}
+  {% if producto.descripcion %}"description": {{ producto.descripcion | tojson }},{% endif %}
+  {% if producto.marca %}"brand": { "@type": "Brand", "name": {{ producto.marca | tojson }} },{% endif %}
+  {% if producto.modelo %}"model": {{ producto.modelo | tojson }},{% endif %}
   "offers": {
     "@type": "Offer",
     "price": "{{ producto.precio_venta }}",
@@ -120,6 +126,14 @@
         <p class="is-size-7 has-text-grey mb-1">{{ producto.categoria }}</p>
         <h1 class="title is-4">{{ producto.nombre }}</h1>
 
+        {% if producto.marca or producto.modelo %}
+        <p class="is-size-7 has-text-grey-dark mb-3">
+            {%- if producto.marca %}{{ producto.marca }}{% endif -%}
+            {%- if producto.marca and producto.modelo %} · {% endif -%}
+            {%- if producto.modelo %}{{ producto.modelo }}{% endif -%}
+        </p>
+        {% endif %}
+
         {# Componentes del kit — solo productos compuestos #}
         {% if producto.componentes %}
         <div class="notification is-light py-3 px-4 mb-4">
@@ -186,6 +200,13 @@
         {% endif %}
     </div>
 </div>
+
+{% if producto.descripcion %}
+<div class="content mt-5">
+    <p class="is-size-7 has-text-grey has-text-weight-semibold mb-1" style="text-transform: uppercase; letter-spacing: 0.05em;">Descripción</p>
+    <p>{{ producto.descripcion }}</p>
+</div>
+{% endif %}
 
 <script>
 function carritoDetalle() {
