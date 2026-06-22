@@ -3,8 +3,8 @@
 {% block title %}Impresión de fotos en Playa del Carmen — carnet, polaroid y a medida{% endblock %}
 
 {% block meta_description %}
-<meta name="description" content="Imprime tus fotos en Playa del Carmen: tamaño carnet e infantil para trámites, estilo polaroid, ampliaciones y medidas exactas. Mándalas por WhatsApp o tráelas en USB — listas en minutos.">
-<meta name="keywords" content="imprimir fotos playa del carmen, fotos carnet playa del carmen, fotos infantil, fotos para trámites, imprimir fotos polaroid, fotos a medida, ampliación de fotos, donde imprimir fotos, fotos para visa, fotos para pasaporte, impresión de fotos cerca de mí">
+<meta name="description" content="Imprime tus fotos en Playa del Carmen: polaroid, carnet, ampliaciones y medidas exactas. Arma tus polaroids desde el celular — elige el formato, sube tus fotos, ponles texto y pide por WhatsApp. Listas en minutos.">
+<meta name="keywords" content="imprimir fotos playa del carmen, fotos carnet playa del carmen, fotos infantil, fotos para trámites, imprimir fotos polaroid, fotos a medida, ampliación de fotos, donde imprimir fotos, fotos para visa, fotos para pasaporte, impresión de fotos cerca de mí, armar fotos polaroid, pedir fotos desde el celular, polaroid desde el celular, kiosko de fotos, subir fotos para imprimir, fotos polaroid personalizadas, polaroid con dedicatoria">
 {% endblock %}
 
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/fotos">{% endblock %}
@@ -15,13 +15,13 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ site_url }}/fotos">
 <meta property="og:title" content="Imprime tus fotos en Playa del Carmen — carnet, polaroid y a medida">
-<meta property="og:description" content="Manda tus fotos por WhatsApp o tráelas en USB. Carnet e infantil para trámites, polaroid, ampliaciones y medidas exactas — listas en minutos, desde una sola hoja.">
+<meta property="og:description" content="Arma tus polaroids desde el celular: elige el formato, sube tus fotos y ponles una dedicatoria. También hacemos carnet, ampliaciones y fotos a medida — todo listo en minutos.">
 <meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Imprime tus fotos en Playa del Carmen — carnet, polaroid y a medida">
-<meta name="twitter:description" content="Manda tus fotos por WhatsApp o tráelas en USB. Carnet, polaroid, ampliaciones y medidas exactas — listas en minutos.">
+<meta name="twitter:description" content="Arma tus polaroids desde el celular: elige el formato, sube tus fotos, ponles texto y pide por WhatsApp. Listas en minutos en Playa del Carmen.">
 <meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
 {% endblock %}
 
@@ -32,7 +32,7 @@
   "@type": "Service",
   "name": "Impresión de fotos",
   "serviceType": "Impresión de fotografías",
-  "description": "Impresión de fotos tamaño carnet e infantil para trámites, fotos estilo polaroid, ampliaciones y fotos a medida exacta en centímetros. Sin mínimo de compra.",
+  "description": "Impresión de fotos tamaño carnet e infantil para trámites, fotos estilo polaroid con dedicatoria, ampliaciones y fotos a medida exacta en centímetros. Pide tus polaroids directamente desde tu celular. Sin mínimo de compra.",
   "areaServed": {
     "@type": "City",
     "name": "Playa del Carmen"
@@ -148,6 +148,37 @@
     background: #f8f4ff;
     border-left: 3px solid #7c3aed;
   }
+  .kiosko-feature {
+    background: linear-gradient(135deg, #fff8f0 0%, #fef3c7 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 1rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+  .kiosko-badge {
+    display: inline-block;
+    background: #f59e0b;
+    color: #1c1917;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+  }
+  .kiosko-step-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: #fef3c7;
+    color: #d97706;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin: 0 auto 0.6rem;
+  }
 </style>
 {% endblock %}
 
@@ -248,7 +279,7 @@
             <i class="fas fa-camera-retro"></i>
           </div>
           <p class="has-text-weight-bold mb-1">Fotos estilo polaroid</p>
-          <p class="is-size-7 has-text-grey">Con su borde blanco clásico, más grueso abajo para escribir una dedicatoria. Perfectas para regalos, álbumes, decorar tu cuarto o un detalle con tus amigos.</p>
+          <p class="is-size-7 has-text-grey">Con su borde blanco clásico, más grueso abajo para una dedicatoria. Puedes <a href="{{ imagina_url }}/kiosko">armarlas desde tu celular</a> — elige el encuadre y el texto antes de imprimir.</p>
         </div>
       </div>
     </div>
@@ -301,6 +332,55 @@
       </div>
     </div>
 
+  </div>
+</section>
+
+<hr>
+
+{# ── Kiosko — Arma tus polaroids desde el celular ──────────────────────── #}
+<section class="my-6">
+  <div class="kiosko-feature">
+    <div style="max-width: 620px; margin: 0 auto;">
+      <div class="kiosko-badge">Nuevo</div>
+      <h2 class="title is-3 mb-3" style="font-size: clamp(1.6rem, 5vw, 2.2rem);">
+        Arma tus polaroids<br>desde tu celular
+      </h2>
+      <p class="has-text-grey mb-1 is-size-6">
+        Entra al link, elige tu formato, sube tus fotos y ponles una dedicatoria con la fuente que más te guste.
+        Tu pedido nos llega por WhatsApp — lo imprimimos y te avisamos.
+      </p>
+      <p class="has-text-grey is-size-7 mb-5">Sin instalar nada · Funciona directo en el navegador de tu celular.</p>
+
+      <div class="columns is-mobile is-multiline is-centered mb-5" style="max-width: 480px; margin-left: auto; margin-right: auto;">
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="kiosko-step-icon"><i class="fas fa-border-all"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Elige formato</p>
+          <p class="is-size-7 has-text-grey">Classic, Large<br>o Strip</p>
+        </div>
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="kiosko-step-icon"><i class="fas fa-crop-alt"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Sube y recorta</p>
+          <p class="is-size-7 has-text-grey">Ajusta el encuadre<br>a tu gusto</p>
+        </div>
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="kiosko-step-icon"><i class="fas fa-pen"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Ponles texto</p>
+          <p class="is-size-7 has-text-grey">Dedicatorias con<br>tu fuente favorita</p>
+        </div>
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="kiosko-step-icon" style="background: #dcfce7; color: #16a34a;"><i class="fab fa-whatsapp"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Pide por WhatsApp</p>
+          <p class="is-size-7 has-text-grey">Listas<br>en minutos</p>
+        </div>
+      </div>
+
+      <a href="{{ imagina_url }}/kiosko" target="_blank" rel="noopener"
+         class="button is-medium is-rounded"
+         style="font-weight: 700; padding-left: 2rem; padding-right: 2rem; background: #f59e0b; border-color: #d97706; color: #1c1917;">
+        <span class="icon"><i class="fas fa-mobile-alt"></i></span>
+        <span>Armar mis polaroids</span>
+      </a>
+    </div>
   </div>
 </section>
 
