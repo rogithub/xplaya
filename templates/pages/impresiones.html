@@ -1,0 +1,702 @@
+{% extends "base.html" %}
+
+{% block title %}Centro de Copiado en Playa del Carmen — Copias, Impresiones, Enmicados{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Centro de copiado en Playa del Carmen: copias e impresiones desde $1, papel especial (fotográfico, opalina, couché, adhesivo), enmicados desde $12, engargolados y WiFi gratis para enviar tus archivos. Villas del Sol, junto a Palmas Turquesa.">
+<meta name="keywords" content="centro de copiado playa del carmen, copias playa del carmen, impresiones color playa del carmen, enmicados playa del carmen, engargolados playa del carmen, copias 1 peso, wifi para imprimir, papel fotografico playa del carmen, impresiones papel especial, impresiones tabloide playa del carmen, opalina, couche, papel adhesivo">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/impresiones">{% endblock %}
+
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/impresiones">
+<meta property="og:title" content="Centro de Copiado en Playa del Carmen — desde $1">
+<meta property="og:description" content="Copias e impresiones desde $1, papel especial, enmicados y engargolados. WiFi gratis para enviar tus archivos. Sin cobro por transferencia.">
+<meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Centro de Copiado en Playa del Carmen — desde $1">
+<meta name="twitter:description" content="Copias e impresiones desde $1, papel especial, enmicados y engargolados. WiFi gratis.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Centro de Copiado",
+  "serviceType": "Copias e impresiones",
+  "description": "Copias e impresiones desde $1, papel especial (fotográfico, opalina, couché, adhesivo), enmicados, engargolados y WiFi gratis. Sin cobro por transferencia de archivos.",
+  "url": "{{ site_url }}/impresiones",
+  "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+  "provider": {
+    "@type": "Store",
+    "name": "Papelería xplaya.com",
+    "url": "{{ site_url }}",
+    "telephone": "+52-452-201-8336",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Villas del Sol, a un costado de Palmas Turquesa",
+      "addressLocality": "Playa del Carmen",
+      "addressRegion": "Quintana Roo",
+      "postalCode": "77726",
+      "addressCountry": "MX"
+    }
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Copia / Impresión Blanco y Negro",
+      "price": "1.00",
+      "priceCurrency": "MXN",
+      "description": "Tamaño carta. Mismo precio para copia o impresión."
+    },
+    {
+      "@type": "Offer",
+      "name": "Impresión a Color Carta",
+      "price": "12.00",
+      "priceCurrency": "MXN",
+      "description": "Hoja completa tamaño carta en papel bond."
+    },
+    {
+      "@type": "Offer",
+      "name": "Enmicado Carta 5.5 milésimas",
+      "price": "34.00",
+      "priceCurrency": "MXN",
+      "description": "Material + servicio incluidos."
+    },
+    {
+      "@type": "Offer",
+      "name": "Enmicado Carta Quantum 10 milésimas",
+      "price": "40.00",
+      "priceCurrency": "MXN",
+      "description": "Material + servicio incluidos. Acabado rígido premium."
+    }
+  ]
+}
+</script>
+<style>
+  .impresiones-hero {
+    background: linear-gradient(150deg, #0f172a 0%, #1e293b 55%, #0f4c75 100%);
+    padding: 4rem 1.5rem 3.5rem;
+    color: white;
+    overflow: hidden;
+  }
+
+  .precio-hero-grande {
+    display: inline-flex;
+    align-items: baseline;
+    background: #E85D04;
+    color: white;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1.25rem 0.5rem 1rem;
+    font-weight: 900;
+    line-height: 1;
+    margin: 0.25rem;
+  }
+  .precio-hero-grande .monto { font-size: 2.5rem; }
+  .precio-hero-grande .etiqueta { font-size: 0.8rem; opacity: 0.92; margin-left: 0.4rem; }
+
+  .precio-hero-chico {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
+    border-radius: 0.75rem;
+    padding: 0.45rem 1rem;
+    font-weight: 700;
+    margin: 0.25rem;
+    font-size: 0.95rem;
+  }
+
+  .badge-exclusivo {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.12rem 0.55rem;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+    letter-spacing: 0.04em;
+  }
+
+  .material-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: white;
+    height: 100%;
+    transition: box-shadow 0.15s;
+  }
+  .material-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
+
+  .enmicar-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    font-weight: 700;
+  }
+  .enmicar-table td, .enmicar-table th { padding: 0.5rem 0.75rem; }
+  .enmicar-table tr:last-child td { border-bottom: none; }
+
+  .proximo-banner {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    border-radius: 1rem;
+    padding: 2.5rem 1.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .proximo-banner::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -8%;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%);
+    pointer-events: none;
+  }
+  .proximo-badge {
+    display: inline-block;
+    background: #f59e0b;
+    color: #1c1917;
+    font-weight: 800;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+  }
+  .proximo-spec {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.82rem;
+    margin: 0.2rem;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .wifi-bloque {
+    background: #f0f9ff;
+    border: 2px solid #bae6fd;
+    border-radius: 1rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  .impresiones-cta {
+    background: #fff7ed;
+    border-top: 3px solid #E85D04;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────────── #}
+<div class="impresiones-hero" style="margin: -2.5rem -1.5rem 2.5rem; border-radius: 0.5rem;">
+  <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+    <p class="is-size-7 mb-3" style="opacity: 0.5; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">
+      Papelería xplaya.com · Playa del Carmen
+    </p>
+    <h1 class="title mb-3" style="font-size: clamp(2rem, 6vw, 3rem); font-weight: 900; letter-spacing: -0.02em; color: white;">
+      Centro de Copiado
+    </h1>
+    <p class="is-size-5 mb-5" style="color: rgba(255,255,255,0.82);">
+      Copias, impresiones en papel especial, enmicados y engargolados.<br>
+      Sin cobro extra por pasarte los archivos — trae tu celular o USB.
+    </p>
+    <div style="margin-bottom: 1.75rem;">
+      <span class="precio-hero-grande">
+        <span class="monto">$1</span>
+        <span class="etiqueta">copia o impresión B&amp;N</span>
+      </span>
+      <span class="precio-hero-chico">$12 color carta</span>
+      <span class="precio-hero-chico">
+        WiFi gratis
+        <span class="badge-exclusivo">exclusivo</span>
+      </span>
+    </div>
+    <div class="buttons is-centered">
+      <a href="https://wa.me/524522018336?text=Hola,%20quiero%20información%20sobre%20sus%20servicios%20de%20copiado"
+         target="_blank" rel="noopener"
+         class="button is-success is-medium is-rounded"
+         style="font-weight: 700;">
+        <span class="icon"><i class="fab fa-whatsapp"></i></span>
+        <span>Preguntar por WhatsApp</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+{# ── Copias e impresiones ─────────────────────────────────────────────────── #}
+<section class="mb-6">
+  <h2 class="title is-4 mb-1">Copias e impresiones</h2>
+  <p class="has-text-grey is-size-6 mb-5">
+    El mismo precio para copia o impresión — sin distinción.
+    INE por los dos lados: $1.
+    <span class="badge-exclusivo" style="font-size: 0.73rem;">único en la zona</span>
+  </p>
+  <div class="columns is-multiline is-variable is-3">
+    <div class="column is-6-tablet is-3-desktop">
+      <div class="box has-text-centered" style="border-top: 4px solid #1f2937;">
+        <p class="is-size-2 has-text-weight-black mb-1" style="color: #1f2937; line-height: 1;">$1</p>
+        <p class="has-text-weight-bold mb-1">Blanco y negro</p>
+        <p class="is-size-7 has-text-grey">Carta · copia o impresión</p>
+        <p class="is-size-7 mt-2" style="background: #f0fdf4; border-radius: 0.4rem; padding: 0.3rem 0.5rem; color: #15803d; font-weight: 600;">
+          <span class="icon is-small"><i class="fas fa-id-card"></i></span>
+          INE ambos lados: $1
+        </p>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-3-desktop">
+      <div class="box has-text-centered" style="border-top: 4px solid #E85D04;">
+        <p class="is-size-2 has-text-weight-black mb-1" style="color: #E85D04; line-height: 1;">$12</p>
+        <p class="has-text-weight-bold mb-1">Color carta</p>
+        <p class="is-size-7 has-text-grey">Hoja completa · papel bond</p>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-3-desktop">
+      <div class="box has-text-centered" style="border-top: 4px solid #E85D04;">
+        <p class="is-size-2 has-text-weight-black mb-1" style="color: #E85D04; line-height: 1;">$6</p>
+        <p class="has-text-weight-bold mb-1">Color media carta</p>
+        <p class="is-size-7 has-text-grey">Media hoja · papel bond</p>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-3-desktop">
+      <div class="box has-text-centered" style="border-top: 4px solid #E85D04;">
+        <p class="is-size-2 has-text-weight-black mb-1" style="color: #E85D04; line-height: 1;">$3<span style="font-size: 1.1rem;">+</span></p>
+        <p class="has-text-weight-bold mb-1">Color pequeño</p>
+        <p class="is-size-7 has-text-grey">Credencial, sticker, formatos menores</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="columns mt-2">
+    <div class="column is-6-tablet">
+      <div class="notification is-light" style="border-left: 4px solid #6b7280; padding: 0.85rem 1.1rem;">
+        <span class="icon is-small mr-1 has-text-grey"><i class="fas fa-file-lines"></i></span>
+        <strong>Tamaño oficio</strong> — también disponible en copias e impresiones. Consulta precio en tienda.
+      </div>
+    </div>
+    <div class="column is-6-tablet">
+      <div class="notification is-info is-light" style="border-left: 4px solid #0284c7; padding: 0.85rem 1.1rem;">
+        <span class="icon is-small mr-1" style="color: #0284c7;"><i class="fas fa-file-magnifying-glass"></i></span>
+        <strong>Escáner:</strong> $3 por página · Digitalizamos documentos, fotografías, credenciales y más.
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Papel especial ───────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 mb-1">Papel especial</h2>
+  <p class="has-text-grey is-size-6 mb-5">
+    Precio base de impresión ($12) + costo del material. Sin cargos ocultos.
+  </p>
+  <div class="columns is-multiline">
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+          <p class="has-text-weight-bold">Opalina</p>
+          <span class="tag is-light is-medium" style="font-weight: 700;">+$4</span>
+        </div>
+        <p class="is-size-7 has-text-grey">120 gr y 225 gr · tamaño carta</p>
+        <p class="is-size-7 has-text-grey mt-1">Total: <strong>$16</strong> por hoja</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+          <p class="has-text-weight-bold">Couché 250 gr</p>
+          <span class="tag is-light is-medium" style="font-weight: 700;">+$4</span>
+        </div>
+        <p class="is-size-7 has-text-grey">Acabado satinado · tamaño carta</p>
+        <p class="is-size-7 has-text-grey mt-1">Total: <strong>$16</strong> por hoja</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+          <p class="has-text-weight-bold">Fotográfico mate</p>
+          <span class="tag is-light is-medium" style="font-weight: 700;">+$5</span>
+        </div>
+        <p class="is-size-7 has-text-grey">230 gr · acabado mate · tamaño carta</p>
+        <p class="is-size-7 has-text-grey mt-1">Total: <strong>$17</strong> por hoja</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+          <p class="has-text-weight-bold">Fotográfico glossy</p>
+          <span class="tag is-light is-medium" style="font-weight: 700;">+$6</span>
+        </div>
+        <p class="is-size-7 has-text-grey">Acabado brillante · tamaño carta</p>
+        <p class="is-size-7 has-text-grey mt-1">Total: <strong>$18</strong> por hoja</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+          <p class="has-text-weight-bold">Fotográfico A4</p>
+          <span class="tag is-light is-medium" style="font-weight: 700;">+$4 / +$6</span>
+        </div>
+        <p class="is-size-7 has-text-grey">115 gr glossy (+$4) · 260 gr glossy (+$6)</p>
+        <p class="is-size-7 has-text-grey mt-1">Tamaño A4 — 21 × 29.7 cm</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+          <p class="has-text-weight-bold">Adhesivo</p>
+          <span class="tag is-light is-medium" style="font-weight: 700;">+$5 / +$15</span>
+        </div>
+        <p class="is-size-7 has-text-grey">Fotográfico mate o brillante A4: +$5</p>
+        <p class="is-size-7 has-text-grey">Adhesivo carta: +$15</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+{# ── Acabados ─────────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 mb-5">Acabados</h2>
+  <div class="columns">
+
+    <div class="column is-7">
+      <h3 class="title is-5 mb-2">
+        <span class="icon mr-1" style="color: #0284c7;"><i class="fas fa-layer-group"></i></span>
+        Enmicado
+      </h3>
+      <p class="is-size-7 has-text-grey mb-4">Precio todo incluido: material + servicio. Tres grosores disponibles.</p>
+      <div class="table-container">
+        <table class="table is-fullwidth is-size-7 enmicar-table is-bordered">
+          <thead>
+            <tr>
+              <th>Tamaño</th>
+              <th class="has-text-centered">5.5 mils</th>
+              <th class="has-text-centered">8.0 mils</th>
+              <th class="has-text-centered">10 mils Quantum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>≈ Credencial / carnet</td>
+              <td class="has-text-centered">$12</td>
+              <td class="has-text-centered">$12</td>
+              <td class="has-text-centered">$18</td>
+            </tr>
+            <tr>
+              <td>≈ Foto 4R (11 × 16 cm)</td>
+              <td class="has-text-centered">$20</td>
+              <td class="has-text-centered">$20</td>
+              <td class="has-text-centered">$22</td>
+            </tr>
+            <tr>
+              <td>≈ Foto 6R (16 × 22.5 cm)</td>
+              <td class="has-text-centered">$30</td>
+              <td class="has-text-centered">—</td>
+              <td class="has-text-centered">—</td>
+            </tr>
+            <tr>
+              <td><strong>Carta</strong></td>
+              <td class="has-text-centered has-text-weight-bold">$34</td>
+              <td class="has-text-centered">—</td>
+              <td class="has-text-centered has-text-weight-bold">$40</td>
+            </tr>
+            <tr>
+              <td><strong>Oficio</strong></td>
+              <td class="has-text-centered">—</td>
+              <td class="has-text-centered">—</td>
+              <td class="has-text-centered has-text-weight-bold">$45</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="is-size-7 has-text-grey">Otros tamaños disponibles — pregunta en tienda o por WhatsApp.</p>
+    </div>
+
+    <div class="column is-5">
+      <h3 class="title is-5 mb-2">
+        <span class="icon mr-1" style="color: #d97706;"><i class="fas fa-book"></i></span>
+        Engargolado
+      </h3>
+      <p class="is-size-6 has-text-grey mb-4">
+        El precio depende del número de hojas, tipo de pasta y argolla. Pídenos presupuesto — es sin costo y sin compromiso.
+      </p>
+      <a href="https://wa.me/524522018336?text=Hola,%20quisiera%20un%20presupuesto%20para%20engargolado"
+         target="_blank" rel="noopener"
+         class="button is-warning is-light is-rounded"
+         style="font-weight: 700; border-color: #d97706; color: #92400e;">
+        <span class="icon"><i class="fab fa-whatsapp"></i></span>
+        <span>Pedir presupuesto gratis</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+{# ── Fotos ────────────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 mb-5">Impresión de fotos</h2>
+  <div class="columns is-multiline">
+
+    <div class="column is-6-tablet">
+      <div class="card" style="height: 100%;">
+        <div class="card-content">
+          <p class="has-text-weight-bold is-size-5 mb-2">
+            <span class="icon mr-1" style="color: #0284c7;"><i class="fas fa-id-card"></i></span>
+            Fotos carnet y trámites
+          </p>
+          <p class="is-size-7 has-text-grey mb-3">
+            Credencial, infantil, pasaporte, visa USA, Schengen, Canadá, licencia, título profesional y tamaño libre. La misma foto repetida en la hoja al tamaño exacto — te la llevás con varias copias listas para recortar.
+          </p>
+          <p class="is-size-7"><strong>Desde $17 la hoja</strong> en papel fotográfico.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet">
+      <div class="card" style="height: 100%; border: 2px solid #fcd34d;">
+        <div class="card-content">
+          <p class="has-text-weight-bold is-size-5 mb-2">
+            <span class="icon mr-1" style="color: #d97706;"><i class="fas fa-camera-retro"></i></span>
+            Fotos estilo polaroid
+          </p>
+          <p class="is-size-7 has-text-grey mb-3">
+            Mini, Classic, Large o Strip. Las armás desde tu celular: elegís el encuadre y les ponés una dedicatoria. Las entregamos ya recortadas.
+          </p>
+          <p class="is-size-7 mb-3">
+            <strong>$40 el paquete</strong> — papel, recorte y sistema incluidos.
+          </p>
+          <a href="/fotos" class="is-size-7 has-text-weight-semibold" style="color: #E85D04;">
+            Ver formatos y armar mis polaroids →
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+{# ── Trae tu diseño ───────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 mb-2">Trae tu diseño, nosotros lo imprimimos</h2>
+  <p class="has-text-grey is-size-6 mb-5">
+    Si ya tienes tu diseño listo — de Canva, de tu celular, de donde sea — nosotros lo imprimimos en el material que elijas y lo acomodamos para que aproveches bien el papel.
+  </p>
+  <div class="columns is-multiline">
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <p class="has-text-weight-bold mb-1">
+          <span class="icon is-small mr-1" style="color: #db2777;"><i class="fas fa-cake-candles"></i></span>
+          Cake toppers
+        </p>
+        <p class="is-size-7 has-text-grey">Mándanos el diseño y los imprimimos en papel fotográfico, couché o adhesivo — el que aguante mejor lo que necesitas.</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <p class="has-text-weight-bold mb-1">
+          <span class="icon is-small mr-1" style="color: #7c3aed;"><i class="fas fa-envelope-open-text"></i></span>
+          Invitaciones
+        </p>
+        <p class="is-size-7 has-text-grey">Media carta, cuarto de carta o el tamaño que diseñaste. Las acomodamos para que entren varias por hoja y no desperdicies papel.</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <p class="has-text-weight-bold mb-1">
+          <span class="icon is-small mr-1" style="color: #0284c7;"><i class="fas fa-tag"></i></span>
+          Etiquetas y stickers
+        </p>
+        <p class="is-size-7 has-text-grey">En papel adhesivo mate o brillante. Tu logo, tu marca, tus productos — repetidos y organizados en la hoja para que salgan lo más posible.</p>
+      </div>
+    </div>
+
+  </div>
+  <p class="is-size-7 has-text-grey mt-4">
+    <span class="icon is-small mr-1"><i class="fas fa-circle-info"></i></span>
+    Mandamos el archivo por WhatsApp o lo traes en USB o desde tu celular. Aceptamos PDF, JPG, PNG y archivos de Canva exportados.
+  </p>
+</section>
+
+<hr>
+
+{# ── Conectividad ─────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <div class="wifi-bloque">
+    <span class="icon is-large mb-3" style="font-size: 2.5rem; color: #0284c7;">
+      <i class="fas fa-tower-broadcast"></i>
+    </span>
+    <h2 class="title is-4 mb-2">Mandas el archivo como quieras — lo recibimos sin costo</h2>
+    <p class="is-size-6 has-text-grey mb-4" style="max-width: 560px; margin: 0 auto 1.25rem;">
+      Por WiFi, WhatsApp, USB, CD o correo. No cobramos por recibir tu archivo — ni por mandarte el resultado. Si escaneamos algo, te enviamos el PDF por donde prefieras para que lo tengas en digital y puedas reimprimirlo cuando quieras.
+    </p>
+    <div class="columns is-mobile is-multiline is-centered" style="max-width: 560px; margin: 0 auto 0.5rem;">
+      <div class="column is-6-mobile is-narrow-tablet has-text-centered">
+        <span class="icon is-medium mb-1" style="color: #0284c7;"><i class="fas fa-wifi"></i></span>
+        <p class="is-size-7 has-text-weight-semibold">WiFi gratis</p>
+      </div>
+      <div class="column is-6-mobile is-narrow-tablet has-text-centered">
+        <span class="icon is-medium mb-1" style="color: #16a34a;"><i class="fab fa-whatsapp"></i></span>
+        <p class="is-size-7 has-text-weight-semibold">WhatsApp</p>
+      </div>
+      <div class="column is-6-mobile is-narrow-tablet has-text-centered">
+        <span class="icon is-medium mb-1" style="color: #7c3aed;"><i class="fas fa-usb"></i></span>
+        <p class="is-size-7 has-text-weight-semibold">USB / CD</p>
+      </div>
+      <div class="column is-6-mobile is-narrow-tablet has-text-centered">
+        <span class="icon is-medium mb-1" style="color: #d97706;"><i class="fas fa-envelope"></i></span>
+        <p class="is-size-7 has-text-weight-semibold">Correo electrónico</p>
+      </div>
+    </div>
+    <p class="is-size-7 has-text-grey mt-3">Sin costo por recibir ni por enviar · PDF · Word · JPG · lo que traigas</p>
+  </div>
+</section>
+
+<hr>
+
+{# ── Trámites ─────────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 mb-2">Trámites en línea</h2>
+  <p class="has-text-grey is-size-6 mb-5">
+    Te ayudamos a obtener tus documentos oficiales — sin filas, sin complicaciones. Y siempre te mandamos tu PDF para que puedas reimprimir las veces que necesites sin volver a pagar.
+  </p>
+  <div class="columns is-multiline">
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <p class="has-text-weight-bold mb-1">
+          <span class="icon is-small mr-1" style="color: #E85D04;"><i class="fas fa-baby"></i></span>
+          Acta de nacimiento
+        </p>
+        <p class="is-size-7 has-text-grey">Obtención del acta oficial en línea. Te entregamos la impresión y te mandamos el PDF por WhatsApp o correo.</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <p class="has-text-weight-bold mb-1">
+          <span class="icon is-small mr-1" style="color: #0284c7;"><i class="fas fa-fingerprint"></i></span>
+          CURP
+        </p>
+        <p class="is-size-7 has-text-grey">Impresión y descarga de tu CURP actualizada. Guarda el PDF — si la necesitas de nuevo, ya la tienes sin pagar otra vez.</p>
+      </div>
+    </div>
+
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="material-card">
+        <p class="has-text-weight-bold mb-1">
+          <span class="icon is-small mr-1" style="color: #16a34a;"><i class="fas fa-file-circle-check"></i></span>
+          Otros documentos oficiales
+        </p>
+        <p class="is-size-7 has-text-grey">¿Necesitas otro trámite en línea? Pregúntanos — si está disponible en portales de gobierno, te ayudamos a gestionarlo.</p>
+      </div>
+    </div>
+
+  </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    <span class="icon is-small mr-1"><i class="fas fa-circle-info"></i></span>
+    En todos los trámites te mandamos el PDF resultante por WhatsApp o correo para que lo tengas guardado y puedas imprimirlo cuantas veces quieras.
+  </p>
+</section>
+
+<hr>
+
+{# ── Próximamente: Tabloide Ricoh IM C3000 ───────────────────────────────── #}
+<section class="my-6">
+  <div class="proximo-banner">
+    <div style="max-width: 640px; margin: 0 auto; text-align: center; position: relative;">
+      <div class="proximo-badge">Próximamente</div>
+      <h2 class="title is-3 mb-3" style="color: white; font-size: clamp(1.6rem, 5vw, 2.2rem);">
+        Impresión color en tabloide
+      </h2>
+      <p style="color: rgba(255,255,255,0.8); margin-bottom: 1.5rem; font-size: 1rem;">
+        Estamos incorporando la Ricoh IM C3000 — impresión color en tamaño tabloide (28 × 43 cm) en papeles de hasta 300 g/m². Flyers, menús, portafolios, cartulinas gruesas: todo en color de alta calidad.
+      </p>
+      <div style="margin-bottom: 2rem;">
+        <span class="proximo-spec">
+          <i class="fas fa-expand"></i> Tabloide 28 × 43 cm
+        </span>
+        <span class="proximo-spec">
+          <i class="fas fa-weight-hanging"></i> Hasta 300 g/m²
+        </span>
+        <span class="proximo-spec">
+          <i class="fas fa-palette"></i> Color de alta calidad
+        </span>
+      </div>
+      <div class="mb-4">
+        <span class="tag is-warning is-medium mr-2" style="font-weight: 800; font-size: 1.05rem; padding: 0.6rem 1rem;">$25 — color</span>
+        <span class="tag is-medium" style="font-weight: 800; font-size: 1.05rem; padding: 0.6rem 1rem; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">$20 — B&amp;N</span>
+      </div>
+      <a href="https://wa.me/524522018336?text=Hola,%20me%20interesa%20la%20impresión%20tabloide%20color%20que%20están%20por%20tener"
+         target="_blank" rel="noopener"
+         class="button is-warning is-rounded"
+         style="font-weight: 700;">
+        <span class="icon"><i class="fab fa-whatsapp"></i></span>
+        <span>Avisarme cuando esté disponible</span>
+      </a>
+      <p style="color: rgba(255,255,255,0.4); font-size: 0.72rem; margin-top: 1rem;">
+        ¿Tienes un proyecto que necesita tabloide? Escríbenos ya para platicar.
+      </p>
+    </div>
+  </div>
+</section>
+
+{# ── CTA final ────────────────────────────────────────────────────────────── #}
+<div class="impresiones-cta" style="margin: 2rem -1.5rem -2.5rem; padding: 3rem 1.5rem; text-align: center;">
+  <h2 class="title is-4 mb-2">¿Tienes algo que imprimir?</h2>
+  <p class="has-text-grey mb-5">
+    Mándanos el archivo por WhatsApp o tráelo en tu celular.<br>
+    Lunes a viernes 6:30–18:00 · Sábado 9:00–14:00
+  </p>
+  <div class="buttons is-centered">
+    <a href="https://wa.me/524522018336?text=Hola,%20quiero%20imprimir%20algo"
+       target="_blank" rel="noopener"
+       class="button is-success is-medium is-rounded"
+       style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+      <span class="icon"><i class="fab fa-whatsapp"></i></span>
+      <span>452-201-8336</span>
+    </a>
+  </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    Villas del Sol, junto a Palmas Turquesa · Playa del Carmen, Q.Roo
+  </p>
+</div>
+
+{% endblock %}
