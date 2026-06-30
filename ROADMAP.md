@@ -40,7 +40,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 ### En progreso / siguiente
 
 - ✅ **EMBEDDINGS Fase 0** — BD: `CREATE EXTENSION vector`, columnas `embedding`/`EmbeddingGeneratedAt`/`FamiliaSemanticaId`, tabla `FamiliasSemanticas`, trigger de invalidación → ver sección [Embeddings](#embeddings)
-- ⬜ **EMBEDDINGS Fase 1** — repo `inventario-embeddings-job`, `ingest.py`, CronJob k3s → ver [Embeddings Fase 1](#embeddings-fase-1)
+- ✅ **EMBEDDINGS Fase 1** — repo `inventario-embeddings-job`, `ingest.py`, CronJob k3s → ver [Embeddings Fase 1](#embeddings-fase-1)
 - ⬜ **KIOSKO Fase 1** — ruta `/kiosko`, layout táctil, query baja-venta, branding → ver [Kiosko Fase 1](#kiosko-fase-1)
 - ⬜ **KIOSKO Fase 2** — detalle táctil, carrito con botones +/− → ver [Kiosko Fase 2](#kiosko-fase-2)
 - ⬜ **KIOSKO Fase 3** — `POST /kiosko/pedidos` con token, `Origen=0`, confirmación → ver [Kiosko Fase 3](#kiosko-fase-3)
