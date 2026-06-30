@@ -48,7 +48,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ### Semana 2 — Categorías antes de que llegue el hardware
 
-- ⬜ **EMBEDDINGS Fase 2** — clustering k=40, reporte de familias → ver [Embeddings Fase 2](#embeddings-fase-2)
+- ✅ **EMBEDDINGS Fase 2** — clustering k=40, 40 familias renombradas → ver [Embeddings Fase 2](#embeddings-fase-2)
 - ⬜ **CATEGORIAS Fase 1** — revisar reporte: definir 6-8 MacroCategorias con nombre e ícono _(requiere decisión del dueño)_ → ver [Categorías Fase 1](#categorias-fase-1)
 - ⬜ **CATEGORIAS Fase 2** — tabla `MacroCategorias` en BD, mapeo familias → ver [Categorías Fase 2](#categorias-fase-2)
 - ⬜ **KIOSKO Fase 5** — consulta de monedero desde el kiosko → ver [Kiosko Fase 5](#kiosko-fase-5)
@@ -72,6 +72,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 _Entradas más recientes arriba._
 
+- **2026-06-30** — EMBEDDINGS Fase 2 completada: clustering k=40 corrido con `COMMIT=1` (2,262 productos asignados a 40 `FamiliasSemanticas`), nombres legibles asignados vía SQL. 4 familias quedaron `(mixta)` — catch-all sin tema de negocio claro, revisar antes de usarlas en `MacroCategorias` o reportes. Bug corregido en `cluster.py` (identificadores entre comillas dobles no calzaban con las tablas creadas sin comillas → `relation does not exist`). Desbloquea **CATEGORIAS Fase 1**. Pendiente en `inventario_papeleria`: construir el reporte de costos/ventas/margen por familia (ver `EMBEDDINGS_PLAN.md`).
 - **2026-06-30** — Fases 0 y 1 completadas. 2,262 productos con embedding al 100%. cluster.py listo, embeddings-cluster CronJob desplegado en ArgoCD. Siguiente: dry run del clustering y revisar reporte de familias semánticas.
 - **2026-06-30** — Embeddings Fase 0 completada: pgvector, columnas, trigger aplicados en producción. bge-m3 movido de itzamna a k3s (kukulkan, namespace `ai`), imagen pública `ghcr.io/rogithub/bge-embeddings:latest`. Manifests en `k3s-manifests/workloads/bge-embeddings/`. Siguiente: verificar `/readyz` y arrancar Fase 1.
 - **2026-06-30** — Planes de kiosko y categorías definidos. Hardware en camino desde EE.UU. PLAN_DE_DESARROLLO.md, PLAN_KIOSKO.md, CATEGORIAS_PLAN.md eliminados; todo consolidado aquí. EMBEDDINGS_PLAN.md de inventario_papeleria incorporado.
