@@ -72,6 +72,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 _Entradas más recientes arriba._
 
+- **2026-06-30** — Fases 0 y 1 completadas. 2,262 productos con embedding al 100%. cluster.py listo, embeddings-cluster CronJob desplegado en ArgoCD. Siguiente: dry run del clustering y revisar reporte de familias semánticas.
 - **2026-06-30** — Embeddings Fase 0 completada: pgvector, columnas, trigger aplicados en producción. bge-m3 movido de itzamna a k3s (kukulkan, namespace `ai`), imagen pública `ghcr.io/rogithub/bge-embeddings:latest`. Manifests en `k3s-manifests/workloads/bge-embeddings/`. Siguiente: verificar `/readyz` y arrancar Fase 1.
 - **2026-06-30** — Planes de kiosko y categorías definidos. Hardware en camino desde EE.UU. PLAN_DE_DESARROLLO.md, PLAN_KIOSKO.md, CATEGORIAS_PLAN.md eliminados; todo consolidado aquí. EMBEDDINGS_PLAN.md de inventario_papeleria incorporado.
 
