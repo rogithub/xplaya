@@ -39,7 +39,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ### En progreso / siguiente
 
-- ⬜ **EMBEDDINGS Fase 0** — BD: `CREATE EXTENSION vector`, columnas `embedding`/`EmbeddingGeneratedAt`/`FamiliaSemanticaId`, tabla `FamiliasSemanticas`, trigger de invalidación → ver sección [Embeddings](#embeddings)
+- ✅ **EMBEDDINGS Fase 0** — BD: `CREATE EXTENSION vector`, columnas `embedding`/`EmbeddingGeneratedAt`/`FamiliaSemanticaId`, tabla `FamiliasSemanticas`, trigger de invalidación → ver sección [Embeddings](#embeddings)
 - ⬜ **EMBEDDINGS Fase 1** — repo `inventario-embeddings-job`, `ingest.py`, CronJob k3s → ver [Embeddings Fase 1](#embeddings-fase-1)
 - ⬜ **KIOSKO Fase 1** — ruta `/kiosko`, layout táctil, query baja-venta, branding → ver [Kiosko Fase 1](#kiosko-fase-1)
 - ⬜ **KIOSKO Fase 2** — detalle táctil, carrito con botones +/− → ver [Kiosko Fase 2](#kiosko-fase-2)
@@ -72,6 +72,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 _Entradas más recientes arriba._
 
+- **2026-06-30** — Embeddings Fase 0 completada: pgvector, columnas, trigger aplicados en producción. bge-m3 movido de itzamna a k3s (kukulkan, namespace `ai`), imagen pública `ghcr.io/rogithub/bge-embeddings:latest`. Manifests en `k3s-manifests/workloads/bge-embeddings/`. Siguiente: verificar `/readyz` y arrancar Fase 1.
 - **2026-06-30** — Planes de kiosko y categorías definidos. Hardware en camino desde EE.UU. PLAN_DE_DESARROLLO.md, PLAN_KIOSKO.md, CATEGORIAS_PLAN.md eliminados; todo consolidado aquí. EMBEDDINGS_PLAN.md de inventario_papeleria incorporado.
 
 ---
@@ -88,9 +89,9 @@ _Entradas más recientes arriba._
 
 | Componente | Estado |
 |---|---|
-| Servicio bge-m3 en itzamna (Oracle VM ARM64, Tailscale) | ✅ Desplegado, endpoints `/embed` y `/embed-batch` funcionando |
+| Servicio bge-m3 | ✅ Desplegado en k3s (kukulkan, namespace `ai`) — `http://bge-embeddings.ai.svc.cluster.local:8000` |
 | PostgreSQL 18.3 | ✅ Disponible |
-| pgvector | ✅ Instalado en cluster — solo falta `CREATE EXTENSION` |
+| pgvector | ✅ Extension creada en producción (Fase 0 completa) |
 | ArgoCD + k3s para CronJobs | ✅ Disponible |
 
 **Escala:** 2,256 productos. Vectores: ~9 MB. Ingest inicial: ~1 min. Búsqueda HNSW: <5ms.
@@ -216,7 +217,7 @@ pub async fn search_semantic(pool: &PgPool, query_vector: Vec<f32>, limit: i64) 
 
 En `src/routes/productos.rs`: si tsvector devuelve 0 resultados y `BGE_EMBEDDINGS_URL` está definida → llamar a bge-m3 con reqwest (timeout 2s) → `search_semantic` → filtrar `similitud > 0.5`.
 
-Variable de entorno: `BGE_EMBEDDINGS_URL` (ej: `http://bge-embeddings.papeleria.svc.cluster.local`). Si no está → skip silencioso.
+Variable de entorno: `BGE_EMBEDDINGS_URL` (ej: `http://bge-embeddings.ai.svc.cluster.local:8000`). Si no está → skip silencioso.
 
 ### Arquitectura de resiliencia
 
