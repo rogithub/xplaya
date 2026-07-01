@@ -70,6 +70,8 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ## Notas de sesiones
 
+- **2026-07-01** — Incidente de producción en `inventario_papeleria`: `cluster.py` usaba `TRUNCATE FamiliasSemanticas CASCADE`, que en Postgres ignora el `ON DELETE SET NULL` real de la FK y trunca en cascada cualquier tabla que referencie `Productos` — vació `Productos` y 13 tablas más (ventas, compras, fotos, monedero, etc.) en producción. Recuperado restaurando el backup diario de R2 (18:00 del 2026-06-30) sin pérdida de ventas/compras reales. Fix: `cluster.py` ahora usa `DELETE FROM FamiliasSemanticas`. Clustering re-corrido (2,262 productos, cobertura completa) y las 40 familias renombradas de nuevo (11 quedaron `(mixta)` esta vez). **EMBEDDINGS Fase 2 queda completa**: se agregó la vista `v_ventas_por_familia` en `dbscripts/reportes.sql` (grano por línea de venta, costo al momento de la venta) — se consume desde **Superset**, no desde la app. Detalle completo en `inventario_papeleria/EMBEDDINGS_PLAN.md`.
+
 _Entradas más recientes arriba._
 
 - **2026-06-30** — EMBEDDINGS Fase 2 completada: clustering k=40 corrido con `COMMIT=1` (2,262 productos asignados a 40 `FamiliasSemanticas`), nombres legibles asignados vía SQL. 4 familias quedaron `(mixta)` — catch-all sin tema de negocio claro, revisar antes de usarlas en `MacroCategorias` o reportes. Bug corregido en `cluster.py` (identificadores entre comillas dobles no calzaban con las tablas creadas sin comillas → `relation does not exist`). Desbloquea **CATEGORIAS Fase 1**. Pendiente en `inventario_papeleria`: construir el reporte de costos/ventas/margen por familia (ver `EMBEDDINGS_PLAN.md`).
