@@ -48,7 +48,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ### Semana 2 — Categorías antes de que llegue el hardware
 
-- ✅ **EMBEDDINGS Fase 2** — clustering k=40, 40 familias renombradas → ver [Embeddings Fase 2](#embeddings-fase-2)
+- ✅ **EMBEDDINGS Fase 2 COMPLETA** — clustering k=40, 40 familias renombradas, vista de costos/margen por familia (Superset) → ver [Embeddings Fase 2](#embeddings-fase-2)
 - ⬜ **CATEGORIAS Fase 1** — revisar reporte: definir 6-8 MacroCategorias con nombre e ícono _(requiere decisión del dueño)_ → ver [Categorías Fase 1](#categorias-fase-1)
 - ⬜ **CATEGORIAS Fase 2** — tabla `MacroCategorias` en BD, mapeo familias → ver [Categorías Fase 2](#categorias-fase-2)
 - ⬜ **KIOSKO Fase 5** — consulta de monedero desde el kiosko → ver [Kiosko Fase 5](#kiosko-fase-5)
