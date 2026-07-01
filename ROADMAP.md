@@ -64,6 +64,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 - ⬜ **ANALYTICS** — middleware que inserta en `Visitas`, gestión `SessionId` en cookie, excluir `/static/*`
 - ⬜ **EMBEDDINGS Fase 4** — búsqueda semántica en xplaya + kiosko (fallback tsvector→vector) → ver [Embeddings Fase 4](#embeddings-fase-4)
 - ⬜ **CATEGORIAS Fase 4** — filtros por categoría en xplaya.com _(hacerlo solo si los datos del kiosko muestran que los tiles se usan)_ → ver [Categorías Fase 4](#categorias-fase-4)
+- ⬜ **DATOS** — revisar la familia "Servicios de Copiado / Impresión" en el POS: aparece tercera en los tiles del kiosko con muchos productos, o sea que gran parte de sus artículos NO están marcados `EsServicio` y son visibles/vendibles desde kiosko y web. Confirmar si es intencional o falta marcar servicios.
 
 ---
 
