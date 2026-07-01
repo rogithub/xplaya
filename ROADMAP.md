@@ -48,14 +48,13 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ### Semana 2 — Categorías antes de que llegue el hardware
 
-- ✅ **EMBEDDINGS Fase 2 COMPLETA** — clustering k=40, 40 familias renombradas, vista de costos/margen por familia (Superset) → ver [Embeddings Fase 2](#embeddings-fase-2)
-- ⬜ **CATEGORIAS Fase 1** — revisar reporte: definir 6-8 MacroCategorias con nombre e ícono _(requiere decisión del dueño)_ → ver [Categorías Fase 1](#categorias-fase-1)
-- ⬜ **CATEGORIAS Fase 2** — tabla `MacroCategorias` en BD, mapeo familias → ver [Categorías Fase 2](#categorias-fase-2)
+- ✅ **EMBEDDINGS Fase 2 COMPLETA** — clustering k=40 (bootstrap), vista de costos/margen por familia (Superset) → ver [Embeddings Fase 2](#embeddings-fase-2)
+- ✅ **CATEGORIAS Fase 1 COMPLETA** — curación manual de las 2,262 productos, 37 `FamiliasSemanticas` finales, sin capa `MacroCategorias` → ver [Categorías Fase 1](#categorias-fase-1)
 - ⬜ **KIOSKO Fase 5** — consulta de monedero desde el kiosko → ver [Kiosko Fase 5](#kiosko-fase-5)
 
 ### Cuando llegue el hardware
 
-- ⬜ **CATEGORIAS Fase 3** — tiles de categorías en el landing del kiosko → ver [Categorías Fase 3](#categorias-fase-3)
+- ⬜ **CATEGORIAS Fase 3** — tiles de las 37 familias en el landing del kiosko → ver [Categorías Fase 3](#categorias-fase-3)
 - ⬜ **KIOSKO Fase 6** — configurar Raspberry Pi: Chromium kiosk mode, autostart, touch → ver [Kiosko Fase 6](#kiosko-fase-6)
 - ⬜ **KIOSKO Fase 7** — deploy en k3s, SealedSecret `KIOSKO_TOKEN`, prueba end-to-end → ver [Kiosko Fase 7](#kiosko-fase-7)
 
@@ -70,6 +69,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ## Notas de sesiones
 
+- **2026-07-01** — **CATEGORIAS Fase 1 completada**: revisión manual del catálogo completo (2,262 productos) contra la BD real, no solo el reporte de clustering. Se descartó la capa `MacroCategorias` (6-8 tiles) de la propuesta original — el dueño prefirió 37 `FamiliasSemanticas` curadas a mano como taxonomía final del kiosko, sin agrupar. 9 familias nuevas (Monografías, Mercería, Bisutería/Joyería infantil, Escolar-Geometría y Cálculo, Trámites/Gestoría, Láminas Educativas, Maquillaje, Juegos Didácticos, Bolsos y Confección), 3 familias "Temas Escolares" disueltas por contaminación (mezclaban trámites de gobierno, monografías y temas ajenos agrupados por casualidad léxica del embedding), catch-all final "Varios de Papelería" (535 productos, antes disperso en 10 familias "mixta"). Script en `inventario_papeleria/dbchanges/2026-07-01_recategorizar_familias_semanticas.sql` (idempotente, sin `TRUNCATE`), probado en dev y aplicado en producción por el dueño. **`embeddings-cluster` CronJob retirado** (manifest borrado de `k3s-manifests/workloads/papeleria/`) — ya no debe volver a correrse, destruiría la curación manual; ver detalle en sección [Categorías Fase 1](#categorias-fase-1). También se corrigió un rollback obsoleto en `EMBEDDINGS_PLAN.md` que todavía usaba `TRUNCATE ... CASCADE` (el mismo comando del incidente de más abajo).
 - **2026-07-01** — Incidente de producción en `inventario_papeleria`: `cluster.py` usaba `TRUNCATE FamiliasSemanticas CASCADE`, que en Postgres ignora el `ON DELETE SET NULL` real de la FK y trunca en cascada cualquier tabla que referencie `Productos` — vació `Productos` y 13 tablas más (ventas, compras, fotos, monedero, etc.) en producción. Recuperado restaurando el backup diario de R2 (18:00 del 2026-06-30) sin pérdida de ventas/compras reales. Fix: `cluster.py` ahora usa `DELETE FROM FamiliasSemanticas`. Clustering re-corrido (2,262 productos, cobertura completa) y las 40 familias renombradas de nuevo (11 quedaron `(mixta)` esta vez). **EMBEDDINGS Fase 2 queda completa**: se agregó la vista `v_ventas_por_familia` en `dbscripts/reportes.sql` (grano por línea de venta, costo al momento de la venta) — se consume desde **Superset**, no desde la app. Detalle completo en `inventario_papeleria/EMBEDDINGS_PLAN.md`.
 
 _Entradas más recientes arriba._
@@ -423,111 +423,76 @@ resetIdle();
 
 ## Categorías {#categorias}
 
-Transforma las 273 "categorías" caóticas del POS en 6-8 `MacroCategorias` navegables para el cliente.
-Depende de `FamiliasSemanticas` generadas por el pipeline de embeddings.
+Transforma las 273 "categorías" caóticas del POS en `FamiliasSemanticas` navegables para el cliente.
+Depende del pipeline de embeddings, pero ya **no** pasa por una capa `MacroCategorias` — ver decisión 2026-07-01 más abajo.
 
-**Situación actual:** categorías del POS son etiquetas de SKU escritas a mano — duplicados, typos, granularidad de producto no de navegación. No se tocan (siguen existiendo para el POS interno); este plan crea una capa paralela.
+**Situación actual:** categorías del POS son etiquetas de SKU escritas a mano — duplicados, typos, granularidad de producto no de navegación. No se tocan (siguen existiendo para el POS interno); `FamiliasSemanticas` es la capa paralela que sí navega el kiosko.
 
 **Camino crítico:**
 ```
-Embeddings Fase 0+1 → Embeddings Fase 2 (FamiliasSemanticas)
+Embeddings Fase 0+1 → Embeddings Fase 2 (clustering k=40, bootstrap)
                               ↓
-                    Categorías Fase 1 (revisión humana → definir MacroCategorias)
+                    Categorías Fase 1 (revisión y curación manual → 37 FamiliasSemanticas) ✅
                               ↓
-                    Categorías Fase 2 (BD: tabla + mapeo)
+                    Categorías Fase 3 (tiles en kiosko, consumen FamiliasSemanticas directo)
                               ↓
-                    Categorías Fase 3 (tiles en kiosko)    → Categorías Fase 4 (xplaya, después)
+                    Categorías Fase 4 (xplaya, después)
 ```
 
 **Mientras tanto, en paralelo:** Kiosko Fases 1-3 no necesitan categorías.
 
-### Fase 1 — Revisión del clustering y diseño de macro-categorías {#categorias-fase-1}
+### Fase 1 — Curación manual de FamiliasSemanticas ✅ COMPLETADA (2026-07-01) {#categorias-fase-1}
 
-Tras correr **Embeddings Fase 2**, el reporte tiene esta forma:
-```
-Familia 1 (87 productos): CUADERNO PROFESIONAL 100H | LIBRETA PASTA DURA | BLOCK PROFESIONAL ...
-Familia 2 (64 productos): PLUMA PUNTO FINO AZUL | BOLIGRAFO BIC | LAPICERO GEL ...
-...
-```
+**Decisión de diseño:** se descartó la capa `MacroCategorias` (6-8 tiles) de la propuesta original. En vez de eso, `FamiliasSemanticas` **es** la taxonomía de navegación del kiosko — sin agrupar. Motivo: el dueño conoce el catálogo a detalle (líneas de mercería, maquillaje, trámites de gobierno, bolsos hechos a mano por su esposa) y prefirió una revisión producto por producto en vez de forzar 2,262 SKUs en 6-8 cajones gruesos. El resultado son **37 tiles**, no 6-8.
 
-Pregunta por familia: **¿un cliente del kiosko tocaría este tile buscando estos productos?**
+El clustering k=40 (Embeddings Fase 2) sirvió como bootstrap, no como resultado final: 10 de las 40 familias salieron `(mixta)` — catch-alls sin tema de negocio — y varias de las "Temas Escolares" resultaron ser mezclas (trámites gubernamentales agrupados por nombre de estado, monografías dispersas en 4 familias distintas, maquillaje/mercería/bisutería puestos ahí por similitud léxica casual del embedding, no por negocio real).
 
-Propuesta inicial (las ~40 familias colapsan en 6-8):
+Trabajo hecho: revisión manual completa de los 2,262 productos, contra la BD real (no solo el reporte de clustering). Resultado — 9 familias nuevas, 3 disueltas por contaminación, 2 renombradas, un catch-all honesto para lo que de verdad no tiene tema:
 
-| Macro-categoría | Familias semánticas esperadas |
-|---|---|
-| ✏️ Escritura | plumas, lápices, marcadores, plumones, colores, gomas, sacapuntas |
-| 📄 Papel | cuadernos, libretas, hojas, cartulinas, blocks, monografías |
-| 📐 Escolar | juegos geométricos, mapas, calculadoras, reglas, compases |
-| 📁 Oficina | folders, clips, engrapadoras, perforadoras, cinta, pegamento, tijeras |
-| 🎨 Arte | foamy, pintura, pinceles, plastilina, diamantina, washi tape |
-| 🧵 Mercería | hilos, cierres, listones, broches, agujas, bisutería |
-| 🎈 Fiestas | globos, moños, bolsas de regalo, confetti |
-| 🖨️ Servicios | copias, impresiones, trámites, engargolado, enmicado |
+| Familia | Productos | Nota |
+|---|---:|---|
+| Varios de Papelería | 535 | Catch-all final (antes disperso en 10 familias "mixta") |
+| Monografías 🆕 | 192 | Folletos de un tema escolar, antes dispersos en 4 familias |
+| Servicios de Copiado / Impresión | 169 | Renombrada (ya no dice "mixta") |
+| Mercería 🆕 | 48 | Agujas, botones, cierres, listones, estambre, velcro |
+| Escolar — Geometría y Cálculo 🆕 | 39 | Calculadoras, compases, juegos geométricos |
+| Bisutería / Joyería infantil 🆕 | 36 | Aretes, collares, anillos |
+| Trámites / Gestoría 🆕 | 30 | Actas de nacimiento por estado, CURP, SAT, IMSS |
+| Láminas Educativas 🆕 | 20 | Mapas y sistemas del cuerpo, formato carta |
+| Maquillaje 🆕 | 18 | Labiales, rubores, sombras |
+| Juegos Didácticos 🆕 | 15 | Dominó, lotería, memorama, rompecabezas |
+| Bolsos y Confección 🆕 | 9 | Bolsos/mochilas/alforjas/carrieles hechos a mano |
+| *(resto: 25 familias sin cambio o con limpieza menor de contaminación cruzada)* | 951 | — |
 
-Los nombres e íconos finales los define la revisión del clustering real.
+Script aplicado (idempotente, sin `TRUNCATE`): `inventario_papeleria/dbchanges/2026-07-01_recategorizar_familias_semanticas.sql`. Corrido en dev para validar y luego en producción por el dueño directamente.
 
-**Verificación:**
-- [ ] Reporte de clustering generado y revisado
-- [ ] 6-8 macro-categorías definidas con nombre e ícono (Font Awesome)
-- [ ] Cada `FamiliaSemantica` asignada a una `MacroCategoria`
-
-### Fase 2 — Esquema en BD + mapeo {#categorias-fase-2}
-
-```sql
-CREATE TABLE IF NOT EXISTS MacroCategorias (
-    Id      UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    Nombre  VARCHAR(100) NOT NULL,
-    Icono   VARCHAR(50)  NOT NULL,   -- clase Font Awesome: "fa-pen", "fa-file"...
-    Orden   SMALLINT     NOT NULL DEFAULT 0
-);
-
-ALTER TABLE FamiliasSemanticas
-    ADD COLUMN IF NOT EXISTS MacroCategoriaId UUID
-    REFERENCES MacroCategorias(Id) ON DELETE SET NULL;
--- Cadena: Productos.FamiliaSemanticaId → FamiliasSemanticas.MacroCategoriaId → MacroCategorias
-```
-
-Inserts con UUIDs fijos (ajustar nombres e íconos tras Fase 1):
-```sql
-INSERT INTO MacroCategorias (Id, Nombre, Icono, Orden) VALUES
-    (gen_random_uuid(), 'Escritura', 'fa-pen',      1),
-    (gen_random_uuid(), 'Papel',     'fa-file',     2),
-    (gen_random_uuid(), 'Escolar',   'fa-ruler',    3),
-    (gen_random_uuid(), 'Oficina',   'fa-folder',   4),
-    (gen_random_uuid(), 'Arte',      'fa-palette',  5),
-    (gen_random_uuid(), 'Mercería',  'fa-scissors', 6),
-    (gen_random_uuid(), 'Fiestas',   'fa-gift',     7),
-    (gen_random_uuid(), 'Servicios', 'fa-print',    8);
-```
-
-Reflejar en `Ro.Inventario.Core/dbscripts/postgresql_inventario.sql`.
+**Consecuencia para el job de clustering:** `embeddings-cluster` CronJob **retirado** (manifest borrado de `k3s-manifests/workloads/papeleria/`). Ya no aplica volver a correrlo — `FamiliasSemanticas` es ahora una taxonomía curada a mano, no un resultado de clustering reproducible; re-clusterizar la destruiría. Productos nuevos quedan con `FamiliaSemanticaId = NULL` hasta que se clasifiquen a mano o se construya **EMBEDDINGS Fase 5** (`sugerir-categoría`, ver `inventario_papeleria/EMBEDDINGS_PLAN.md`) — ese es el mecanismo de crecimiento hacia adelante, no el re-clustering.
 
 **Verificación:**
-- [ ] `MacroCategorias` creada con 6-8 filas
-- [ ] Columna `MacroCategoriaId` en `FamiliasSemanticas`
-- [ ] Todas las familias mapean a una macro-categoría (ningún NULL)
-- [ ] Script de init actualizado
+- [x] Catálogo completo (2,262 productos) revisado contra la BD real
+- [x] 37 `FamiliasSemanticas` finales, ninguna `NULL`
+- [x] Script de migración escrito, probado en dev, aplicado en producción
+- [x] `embeddings-cluster` CronJob retirado
 
 ### Fase 3 — Tiles de navegación en kiosko {#categorias-fase-3}
 
-**Query:**
+**Query** (directo sobre `FamiliasSemanticas`, sin `MacroCategorias`):
 ```sql
-SELECT mc.id, mc.nombre, mc.icono, mc.orden,
+SELECT fs.id, fs.nombre,
        COUNT(DISTINCT p.nid) AS total_productos
-FROM macrocategorias mc
-JOIN familiassemanticas fs ON fs.macrocategoriaid = mc.id
-JOIN productos p ON p.familiaSemanticaid = fs.id
+FROM familiassemanticas fs
+JOIN productos p ON p.familiasemanticaid = fs.id
 WHERE p.activo = true
-GROUP BY mc.id, mc.nombre, mc.icono, mc.orden
-ORDER BY mc.orden;
+GROUP BY fs.id, fs.nombre
+ORDER BY total_productos DESC;
 ```
+Nota: son 37 tiles, no 6-8 — el layout del kiosko debe soportar scroll/grid denso, no una franja de una sola fila. Sin columna `Icono` (no existe en `FamiliasSemanticas`); si se quiere ícono por tile, agregarlo como columna nueva en `FamiliasSemanticas` vía `dbchanges/updates.sql`, no revivir `MacroCategorias`.
 
 **Archivos nuevos en xplaya:**
-- `src/db/kiosko.rs` — agregar `macro_categorias(pool)` y `kiosko_lista_por_categoria(pool, macro_categoria_id, busqueda, pagina, content_base_url)`
+- `src/db/kiosko.rs` — agregar `familias_semanticas(pool)` y `kiosko_lista_por_familia(pool, familia_semantica_id, busqueda, pagina, content_base_url)`
 - `src/routes/kiosko.rs` — handler `GET /kiosko/categoria/{id}`
-- `templates/kiosko/lista.html` — franja de tiles táctiles entre buscador y low-sellers
-- `templates/kiosko/partials/tiles_categorias.html` — grilla de tiles (ícono grande + nombre + cuenta)
+- `templates/kiosko/lista.html` — franja/grid de tiles táctiles entre buscador y low-sellers
+- `templates/kiosko/partials/tiles_categorias.html` — grilla de tiles (nombre + cuenta; sin ícono hasta que se agregue la columna)
 
 UX: tap en tile → `/kiosko/categoria/{id}` → grid filtrado. Buscador permanece visible. Botón "← Todas" para volver.
 
@@ -542,8 +507,8 @@ UX: tap en tile → `/kiosko/categoria/{id}` → grid filtrado. Buscador permane
 
 _(Hacer solo después de observar el uso real de tiles en el kiosko)_
 
-- Barra horizontal de chips/tags sobre el grid: "Todos | Escritura | Papel | ..."
-- Tap/click → HTMX recarga `#catalogo` con `?categoria={id}`
+- Barra horizontal de chips/tags sobre el grid, o un `<select>` dado que son 37 opciones (no 6-8) — evaluar cuál calza mejor en `xplaya.com`
+- Tap/click → HTMX recarga `#catalogo` con `?categoria={id}` (id de `FamiliaSemantica`)
 - `src/db/productos.rs` — extender `busqueda()` para aceptar `categoria_id: Option<Uuid>`
 - `src/routes/productos.rs` — leer `?categoria=` del query string
 
