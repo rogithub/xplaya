@@ -181,7 +181,7 @@ Proceso (idempotente):
 1. `SELECT Id, Nombre, embedding FROM Productos WHERE embedding IS NOT NULL`
 2. k-means con k configurable
 3. Para cada cluster: 5 nombres más cercanos al centroide → nombre tentativo
-4. `BEGIN; TRUNCATE FamiliasSemanticas CASCADE; INSERT ...; UPDATE Productos SET FamiliaSemanticaId = ...; COMMIT;`
+4. `BEGIN; DELETE FROM FamiliasSemanticas; INSERT ...; UPDATE Productos SET FamiliaSemanticaId = ...; COMMIT;` (nunca `TRUNCATE ... CASCADE` — en Postgres eso ignora el `ON DELETE SET NULL` real de la FK y trunca en cascada cualquier tabla que referencie `Productos`; causó un incidente de producción el 2026-07-01, ver notas de sesión)
 5. Generar reporte con 10 productos representativos por cluster
 6. **Revisión manual** del propietario antes de considerar válido
 7. `UPDATE FamiliasSemanticas SET Nombre = '...' WHERE Id = ...` — nombres legibles
