@@ -41,7 +41,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 - ✅ **EMBEDDINGS Fase 0** — BD: `CREATE EXTENSION vector`, columnas `embedding`/`EmbeddingGeneratedAt`/`FamiliaSemanticaId`, tabla `FamiliasSemanticas`, trigger de invalidación → ver sección [Embeddings](#embeddings)
 - ✅ **EMBEDDINGS Fase 1** — repo `inventario-embeddings-job`, `ingest.py`, CronJob k3s → ver [Embeddings Fase 1](#embeddings-fase-1)
-- ⬜ **KIOSKO Fase 1** — ruta `/kiosko`, layout táctil, query baja-venta, branding → ver [Kiosko Fase 1](#kiosko-fase-1)
+- ✅ **KIOSKO Fase 1** — ruta `/kiosko`, layout táctil, query baja-venta, branding → ver [Kiosko Fase 1](#kiosko-fase-1)
 - ⬜ **KIOSKO Fase 2** — detalle táctil, carrito con botones +/− → ver [Kiosko Fase 2](#kiosko-fase-2)
 - ⬜ **KIOSKO Fase 3** — `POST /kiosko/pedidos` con token, `Origen=0`, confirmación → ver [Kiosko Fase 3](#kiosko-fase-3)
 - ⬜ **KIOSKO Fase 4** — eventos Umami → ver [Kiosko Fase 4](#kiosko-fase-4)
@@ -54,7 +54,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ### Cuando llegue el hardware
 
-- ⬜ **CATEGORIAS Fase 3** — tiles de las 37 familias en el landing del kiosko → ver [Categorías Fase 3](#categorias-fase-3)
+- ✅ **CATEGORIAS Fase 3** — tiles de las 37 familias en el landing del kiosko → ver [Categorías Fase 3](#categorias-fase-3) _(adelantada — era solo código, no dependía del hardware)_
 - ⬜ **KIOSKO Fase 6** — configurar Raspberry Pi: Chromium kiosk mode, autostart, touch → ver [Kiosko Fase 6](#kiosko-fase-6)
 - ⬜ **KIOSKO Fase 7** — deploy en k3s, SealedSecret `KIOSKO_TOKEN`, prueba end-to-end → ver [Kiosko Fase 7](#kiosko-fase-7)
 
@@ -69,6 +69,9 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ## Notas de sesiones
 
+- **2026-07-01** — **Teclado en pantalla del kiosko** (`templates/kiosko/partials/teclado.html`): Chromium/Linux no trae teclado virtual — se dibujó uno propio (Alpine, mayúsculas+números, dispara eventos `input` que HTMX ve como tipeo normal, `inputmode="none"` en el buscador). Verificado end-to-end con Playwright headless. Para Fase 2/3: reutilizarlo con layout numérico en el formulario nombre/teléfono (la nota vieja de "teclado automático" era falsa, ya corregida). También: tiles de categorías movidos debajo del grid y su paginación, bajo el título "Explora por categoría".
+- **2026-07-01** — **CATEGORIAS Fase 3 completada (adelantada)**: los tiles no dependían del hardware — las 37 `FamiliasSemanticas` ya estaban curadas y era puro código. `kiosko_lista()` ahora acepta `familia_id: Option<Uuid>` (una sola función, sin duplicar la query); nuevas `familias_semanticas()` y `familia_nombre()` en `src/db/kiosko.rs`; handler `GET /kiosko/categoria/{id}`; tiles como botones flex-wrap entre el buscador y el grid (solo en el landing); dentro de una categoría hay encabezado con nombre + botón "← Todas". Los templates usan `base_url` (`/kiosko` o `/kiosko/categoria/{id}`) para que búsqueda y paginación respeten el filtro. El conteo de cada tile aplica los mismos filtros de visibilidad que el grid — verificado: tile 487 = 40×12+7 páginas. Siguiente: **KIOSKO Fase 2**.
+- **2026-07-01** — **KIOSKO Fase 1 completada**: `GET /kiosko` con layout táctil (sin navbar/footer, fuente 20px, targets ≥48px, `noindex`), query de baja venta en `src/db/kiosko.rs` (CTE de ventas 30 días sobre `AjustesProductos` + filtros de `v_galeria_principal`; ojo — la columna real es `Ajustes.FechaAjuste`, no `FechaCreado` como decía el borrador de la sección Kiosko Fase 1), búsqueda `unaccent+ILIKE`, paginación 12/página. `KIOSKO_TOKEN` ya está en `config.rs`/`.env.example` para Fase 3. Verificado local contra BD real: última página = más vendidos. Siguiente: **KIOSKO Fase 2** (detalle táctil + carrito con stepper).
 - **2026-07-01** — **CATEGORIAS Fase 1 completada**: revisión manual del catálogo completo (2,262 productos) contra la BD real, no solo el reporte de clustering. Se descartó la capa `MacroCategorias` (6-8 tiles) de la propuesta original — el dueño prefirió 37 `FamiliasSemanticas` curadas a mano como taxonomía final del kiosko, sin agrupar. 9 familias nuevas (Monografías, Mercería, Bisutería/Joyería infantil, Escolar-Geometría y Cálculo, Trámites/Gestoría, Láminas Educativas, Maquillaje, Juegos Didácticos, Bolsos y Confección), 3 familias "Temas Escolares" disueltas por contaminación (mezclaban trámites de gobierno, monografías y temas ajenos agrupados por casualidad léxica del embedding), catch-all final "Varios de Papelería" (535 productos, antes disperso en 10 familias "mixta"). Script en `inventario_papeleria/dbchanges/2026-07-01_recategorizar_familias_semanticas.sql` (idempotente, sin `TRUNCATE`), probado en dev y aplicado en producción por el dueño. **`embeddings-cluster` CronJob retirado** (manifest borrado de `k3s-manifests/workloads/papeleria/`) — ya no debe volver a correrse, destruiría la curación manual; ver detalle en sección [Categorías Fase 1](#categorias-fase-1). También se corrigió un rollback obsoleto en `EMBEDDINGS_PLAN.md` que todavía usaba `TRUNCATE ... CASCADE` (el mismo comando del incidente de más abajo).
 - **2026-07-01** — Incidente de producción en `inventario_papeleria`: `cluster.py` usaba `TRUNCATE FamiliasSemanticas CASCADE`, que en Postgres ignora el `ON DELETE SET NULL` real de la FK y trunca en cascada cualquier tabla que referencie `Productos` — vació `Productos` y 13 tablas más (ventas, compras, fotos, monedero, etc.) en producción. Recuperado restaurando el backup diario de R2 (18:00 del 2026-06-30) sin pérdida de ventas/compras reales. Fix: `cluster.py` ahora usa `DELETE FROM FamiliasSemanticas`. Clustering re-corrido (2,262 productos, cobertura completa) y las 40 familias renombradas de nuevo (11 quedaron `(mixta)` esta vez). **EMBEDDINGS Fase 2 queda completa**: se agregó la vista `v_ventas_por_familia` en `dbscripts/reportes.sql` (grano por línea de venta, costo al momento de la venta) — se consume desde **Superset**, no desde la app. Detalle completo en `inventario_papeleria/EMBEDDINGS_PLAN.md`.
 
@@ -280,12 +283,12 @@ _(Suma `ap.cantidad`, no `a.pago` — no aplica la trampa del JOIN multiplicador
 - `src/config.rs` + `.env.example` — agregar `kiosko_token` (se usa en Fase 3)
 
 **Verificación:**
-- [ ] `GET /kiosko` devuelve catálogo completo
-- [ ] Productos con menos ventas recientes aparecen primero
-- [ ] Búsqueda por texto funciona (reemplaza `#catalogo` vía HTMX)
-- [ ] Cards visualmente más grandes que en `/`
-- [ ] No hay navbar ni footer; logo `xplaya.com` visible
-- [ ] `cargo clippy` sin warnings
+- [x] `GET /kiosko` devuelve catálogo completo
+- [x] Productos con menos ventas recientes aparecen primero (última página = hojas sueltas, listón, clips — los top sellers)
+- [x] Búsqueda por texto funciona (reemplaza `#catalogo` vía HTMX)
+- [x] Cards visualmente más grandes que en `/` (3 columnas fijas, precio `is-size-3`, fuente base 20px)
+- [x] No hay navbar ni footer; logo `xplaya.com` visible
+- [x] `cargo clippy` sin warnings
 
 ### Fase 2 — Carrito en modo kiosko {#kiosko-fase-2}
 
@@ -299,7 +302,7 @@ Reutiliza `$store.carrito` de Alpine.js (mismo localStorage). Sin conflicto — 
 - `src/routes/kiosko.rs` — handlers `GET /kiosko/productos/{nid}` y `GET /kiosko/carrito`
 - `src/main.rs` — registrar rutas nuevas
 
-**UX táctil:** botones `−`/`+` separados ≥48×48px; botón "Quitar" rojo explícito; el formulario abre teclado virtual automáticamente (Chromium + Elo).
+**UX táctil:** botones `−`/`+` separados ≥48×48px; botón "Quitar" rojo explícito. **Ojo:** Chromium en Linux NO trae teclado virtual (eso es de ChromeOS) — para nombre/teléfono reutilizar `templates/kiosko/partials/teclado.html` (ya existe, hecho para la búsqueda), agregándole un layout numérico para el teléfono.
 
 **Verificación:**
 - [ ] Tocar card navega al detalle
@@ -497,11 +500,11 @@ Nota: son 37 tiles, no 6-8 — el layout del kiosko debe soportar scroll/grid de
 UX: tap en tile → `/kiosko/categoria/{id}` → grid filtrado. Buscador permanece visible. Botón "← Todas" para volver.
 
 **Verificación:**
-- [ ] Tiles aparecen en el landing del kiosko
-- [ ] Tap en tile filtra correctamente
-- [ ] Número de productos por categoría es coherente
-- [ ] Buscador sigue funcionando dentro de una categoría
-- [ ] `cargo clippy` sin warnings
+- [x] Tiles aparecen en el landing del kiosko (37, orden por total de productos DESC)
+- [x] Tap en tile filtra correctamente (`/kiosko/categoria/{id}`, 404 si el UUID no existe)
+- [x] Número de productos por categoría es coherente (tile "Varios de Papelería" = 487 = 40 páginas × 12 + 7 del grid filtrado; el conteo usa los mismos filtros de visibilidad que el grid)
+- [x] Buscador sigue funcionando dentro de una categoría (búsqueda y paginación apuntan a `base_url` de la categoría)
+- [x] `cargo clippy` sin warnings
 
 ### Fase 4 — Filtros por categoría en xplaya.com {#categorias-fase-4}
 

@@ -1,0 +1,46 @@
+{% extends "kiosko/base.html" %}
+{% block content %}
+
+{% if familia %}
+<div class="is-flex is-align-items-center mb-4" style="gap: 1rem;">
+    <a class="button is-medium" href="/kiosko">
+        <span class="icon"><i class="fas fa-arrow-left"></i></span>
+        <span>Todas</span>
+    </a>
+    <h1 class="title is-4 mb-0">{{ familia.nombre }}</h1>
+</div>
+{% endif %}
+
+<div class="field mb-5">
+    <div class="control has-icons-left">
+        {# input is-large en Bulma mide ~56px de alto — cumple el target táctil de 48px #}
+        <input class="input is-large"
+               id="busqueda-kiosko"
+               type="search"
+               name="busqueda"
+               value="{{ busqueda }}"
+               placeholder="Toca aquí para buscar..."
+               inputmode="none"
+               onfocus="window.dispatchEvent(new CustomEvent('teclado-abrir'))"
+               hx-get="{{ base_url | safe }}"
+               hx-target="#catalogo"
+               hx-trigger="input changed delay:400ms, search">
+        <span class="icon is-left is-large">
+            <i class="fas fa-magnifying-glass"></i>
+        </span>
+    </div>
+</div>
+
+<div id="catalogo">
+    {% include "kiosko/partials/grid.html" %}
+</div>
+
+{% if not familia %}
+<hr>
+<h2 class="title is-5 mb-3">Explora por categoría</h2>
+{% include "kiosko/partials/tiles_categorias.html" %}
+{% endif %}
+
+{% include "kiosko/partials/teclado.html" %}
+
+{% endblock %}

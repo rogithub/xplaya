@@ -1,0 +1,9 @@
+{# 37 tiles — grid denso con scroll natural, no una franja de una fila #}
+<div class="is-flex is-flex-wrap-wrap mb-5" style="gap: .5rem;">
+    {% for f in familias %}
+    <a class="button is-medium" href="/kiosko/categoria/{{ f.id }}">
+        <span>{{ f.nombre }}</span>
+        <span class="tag is-light is-rounded ml-2">{{ f.total_productos }}</span>
+    </a>
+    {% endfor %}
+</div>

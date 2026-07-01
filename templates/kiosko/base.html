@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {# El kiosko es una pantalla en tienda — no debe aparecer en buscadores #}
+    <meta name="robots" content="noindex">
+    <title>{% block title %}Kiosko — xplaya.com{% endblock %}</title>
+    <link rel="icon" href="/static/img/favicon/favicon.ico" sizes="any">
+    <link rel="icon" href="/static/img/favicon/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/fontawesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/solid.min.css">
+    <link rel="stylesheet" href="/static/css/main.css?v=2">
+    {# defer mantiene el orden: cart.js registra alpine:init antes de que Alpine lo dispare #}
+    <script defer src="/static/js/cart.js?v=2"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js"></script>
+    <script defer src="https://analytics.xplaya.com/script.js"
+            data-website-id="8ca14307-e98c-4366-8d28-4560b42a8546"></script>
+    <style>
+        /* Pantalla táctil 22" a 1080p: fuente base más grande que la web pública */
+        html { font-size: 20px; }
+        /* Targets táctiles mínimos de 48×48px en toda la navegación */
+        .pagination-link, .pagination-previous, .pagination-next, .button {
+            min-width: 48px;
+            min-height: 48px;
+        }
+        /* Teclado en pantalla — fijo al fondo, sobre el contenido */
+        .teclado-kiosko {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 40;
+            background: #fff;
+            border-top: 1px solid #dbdbdb;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, .15);
+            padding: .75rem;
+        }
+        .teclado-fila {
+            display: flex;
+            justify-content: center;
+            gap: .4rem;
+            margin-bottom: .4rem;
+        }
+        .teclado-tecla {
+            min-width: 64px;
+            height: 60px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .teclado-espacio {
+            min-width: 420px;
+        }
+    </style>
+</head>
+<body>
+    <header class="px-4 pt-3 has-text-centered">
+        <img src="/static/img/favicon/web-app-manifest-192x192.png" alt="xplaya.com"
+             style="max-height: 2rem; width: auto; vertical-align: middle; margin-right: .5rem;">
+        <span class="has-text-weight-bold is-size-5" style="color: #E85D04; vertical-align: middle;">xplaya.com</span>
+    </header>
+
+    <main class="section pt-4">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

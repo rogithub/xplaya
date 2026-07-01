@@ -1,0 +1,64 @@
+{# Teclado en pantalla del kiosko — Chromium en Linux NO trae teclado virtual
+   propio (eso es de ChromeOS), así que lo dibujamos nosotros. Escribe directo
+   en el input indicado y dispara un evento 'input' para que el hx-trigger de
+   búsqueda funcione igual que con teclado físico. Solo mayúsculas y números:
+   la búsqueda es case-insensitive y unaccent resuelve los acentos. #}
+<div class="teclado-kiosko"
+     x-data="tecladoKiosko('busqueda-kiosko')"
+     x-show="visible"
+     x-transition.opacity
+     @teclado-abrir.window="visible = true"
+     style="display: none;">
+
+    {% for fila in ["1234567890", "QWERTYUIOP", "ASDFGHJKLÑ"] %}
+    <div class="teclado-fila">
+        {% for c in fila %}
+        <button type="button" class="button teclado-tecla" @click="tecla('{{ c }}')">{{ c }}</button>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="teclado-fila">
+        {% for c in "ZXCVBNM" %}
+        <button type="button" class="button teclado-tecla" @click="tecla('{{ c }}')">{{ c }}</button>
+        {% endfor %}
+        <button type="button" class="button teclado-tecla is-warning" @click="borrar()" aria-label="borrar">
+            <span class="icon"><i class="fas fa-delete-left"></i></span>
+        </button>
+    </div>
+
+    <div class="teclado-fila">
+        <button type="button" class="button teclado-tecla teclado-espacio" @click="tecla(' ')">ESPACIO</button>
+        <button type="button" class="button teclado-tecla is-warning is-light" @click="limpiar()">Limpiar</button>
+        <button type="button" class="button teclado-tecla is-dark" @click="visible = false">
+            <span class="icon"><i class="fas fa-keyboard"></i></span>
+            <span>Cerrar</span>
+        </button>
+    </div>
+</div>
+
+<script>
+function tecladoKiosko(inputId) {
+    // Cada tecla modifica el input y dispara 'input' (burbujeante) para que
+    // HTMX vea el cambio exactamente como si viniera de un teclado físico.
+    const notificar = (input) => input.dispatchEvent(new Event('input', { bubbles: true }));
+    return {
+        visible: false,
+        tecla(c) {
+            const input = document.getElementById(inputId);
+            input.value += c;
+            notificar(input);
+        },
+        borrar() {
+            const input = document.getElementById(inputId);
+            input.value = input.value.slice(0, -1);
+            notificar(input);
+        },
+        limpiar() {
+            const input = document.getElementById(inputId);
+            input.value = '';
+            notificar(input);
+        },
+    };
+}
+</script>

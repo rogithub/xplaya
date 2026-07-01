@@ -4,6 +4,56 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko — teclado en pantalla + tiles reubicados
+
+Dos ajustes de UX del kiosko. Primero: Chromium en Linux **no** trae teclado virtual (eso es de ChromeOS, no de Chromium a secas), así que sin esto la búsqueda por texto sería inusable en la pantalla táctil. Se dibuja un teclado propio en la página en vez de instalar uno a nivel de OS en la Pi (`onboard`/`matchbox`): teclas del tamaño que queremos, se prueba en local sin hardware, y cero configuración en la Raspberry. Segundo: los tiles de categorías se movieron debajo del grid de productos y su paginación, con encabezado "Explora por categoría".
+
+**Archivos a revisar:**
+- `templates/kiosko/partials/teclado.html` — nuevo. Componente Alpine autocontenido (markup + script en el mismo archivo). Solo mayúsculas y números — la búsqueda es case-insensitive y `unaccent` resuelve los acentos, así que no hacen falta shift ni tildes. Las filas se generan con `{% for c in "QWERTYUIOP" %}` (Minijinja itera strings por carácter). Cada tecla escribe en el input y dispara `new Event('input', {bubbles: true})` — HTMX lo ve idéntico a un teclado físico, sin tocar la mecánica de búsqueda. Abre con el evento window `teclado-abrir`; cierra con su botón.
+- `templates/kiosko/lista.html` — el input gana `id="busqueda-kiosko"`, `inputmode="none"` (suprime cualquier teclado del sistema) y `onfocus` que dispara `teclado-abrir`. Tiles movidos después de `#catalogo`. Incluye el teclado en ambas vistas (landing y categoría).
+- `templates/kiosko/base.html` — estilos `.teclado-kiosko` (fijo al fondo, z-index sobre el contenido, teclas 64×60px).
+
+**Verificado con Chromium headless (Playwright):** teclado oculto al inicio → tocar el buscador lo abre → teclear L-A-P-I-Z escribe en el input → HTMX dispara `?busqueda=LAPIZ` y el grid se filtra → backspace borra → Cerrar lo oculta. Captura visual revisada.
+
+**Pendiente relacionado (Fase 2/3):** reutilizar este teclado para el formulario nombre/teléfono del carrito, con layout numérico — el ROADMAP asumía teclado automático del navegador y se corrigió.
+
+---
+
+## Categorías Fase 3 — tiles de las 37 familias en el kiosko (adelantada)
+
+Navegación por categoría en el kiosko usando las `FamiliasSemanticas` curadas a mano. Se adelantó respecto al plan ("cuando llegue el hardware") porque no tenía dependencia real del hardware: los datos ya estaban en producción y todo es código de este repo.
+
+**Archivos a revisar:**
+- `src/db/kiosko.rs` — `kiosko_lista()` gana el parámetro `familia_id: Option<Uuid>` (filtro con `EXISTS` sobre `productos.familiasemanticaid`; una sola función en vez de duplicar la query). Nuevas `familias_semanticas()` (tiles con conteo — aplica los mismos filtros de visibilidad que el grid para que el número del tile coincida con lo que se ve al filtrar) y `familia_nombre()` (para el encabezado y el 404).
+- `src/models/kiosko.rs` — nuevo, struct `FamiliaTile { id, nombre, total_productos }`.
+- `src/routes/kiosko.rs` — handler `categoria` (`GET /kiosko/categoria/{id}`); ambos handlers pasan `base_url` al template (`/kiosko` o `/kiosko/categoria/{id}`) para que búsqueda y paginación HTMX respeten el contexto. El landing solo consulta las familias en la carga completa, no en cada partial HTMX.
+- `templates/kiosko/partials/tiles_categorias.html` — nuevo, botones flex-wrap (37 tiles, grid denso con scroll — no una franja de una fila) con nombre + tag de conteo.
+- `templates/kiosko/lista.html` — tiles entre buscador y grid solo en el landing; dentro de una categoría muestra encabezado con el nombre y botón "← Todas". El `hx-get` del buscador usa `{{ base_url | safe }}`.
+- `templates/kiosko/partials/grid.html` — paginación parametrizada con `base_url`.
+- `templates/kiosko/base.html` — `.button` entra a la regla de targets táctiles ≥48px.
+- `src/main.rs`, `src/models/mod.rs` — registro de ruta y módulo.
+
+**Verificado local:** 37 tiles en el landing; tile "Varios de Papelería" = 487 = 40 páginas × 12 + 7 del grid filtrado; búsqueda "papel" dentro de la categoría filtra bien; la paginación del grid filtrado apunta a `/kiosko/categoria/{id}?pagina=...`. `cargo clippy` limpio.
+
+---
+
+## Kiosko Fase 1 — layout táctil y catálogo de baja venta
+
+Nueva ruta `GET /kiosko` para la pantalla táctil de la tienda (Elo 2270L + Raspberry Pi). Catálogo con orden invertido al de la web pública: los productos con **menos** ventas en los últimos 30 días aparecen primero — el objetivo es rotar inventario estancado.
+
+**Archivos a revisar:**
+- `src/db/kiosko.rs` — `kiosko_lista()`: CTE `ventas` agrupa `ajustesproductos` por producto (suma `cantidad`, sin la trampa del JOIN multiplicador) y ordena `COALESCE(ventas, 0) ASC, nombre ASC`. Mismos filtros de visibilidad que `v_galeria_principal` (sin servicios, con stock o kit, precio > 0). Búsqueda simple con `unaccent + ILIKE` sobre nombre y categoría. Paginación con `COUNT(*) OVER ()`, 12 items por página (grid de 3). Nota: la columna real es `Ajustes.FechaAjuste`, no `FechaCreado` como decía el borrador del ROADMAP.
+- `src/routes/kiosko.rs` — handler `lista` con detección `hx-request` (partial vs página completa), mismo patrón que `routes/productos.rs`. Reutiliza `CatalogoParams` y `ProductoCard`.
+- `templates/kiosko/base.html` — layout fullscreen sin navbar/footer, logo pequeño centrado, `font-size: 20px`, targets táctiles ≥48px, `noindex`. Carga cart.js/Alpine/HTMX (el carrito se usa desde Fase 2) y Umami (Fase 4).
+- `templates/kiosko/lista.html` — buscador `is-large` + `#catalogo`.
+- `templates/kiosko/partials/grid.html` — grid fijo de 3 columnas (pantalla siempre 1080p horizontal), precio prominente `is-size-3`, paginación `is-large` sin `hx-push-url` (el kiosko no tiene barra de URL). Las cards aún no navegan — el detalle llega en Fase 2.
+- `src/config.rs` / `.env.example` — `KIOSKO_TOKEN` (se usa hasta Fase 3, default vacío).
+- `src/main.rs`, `src/db/mod.rs`, `src/routes/mod.rs` — registro de ruta y módulos.
+
+**Verificado local:** página completa 200, partial HTMX sin `<html>`, búsqueda "lapiz" filtra bien, última página (169) trae los más vendidos (hojas sueltas, listón por metro, clips a menudeo). `cargo clippy` limpio.
+
+---
+
 ## QR de validación en recibos y cotizaciones impresas
 
 Las vistas `/recibo/{id}/print` y `/cotizacion/{uid}/print` ahora incluyen un código QR que apunta a la versión en vivo en xplaya.com (`{SITE_URL}/recibo/{id}` o `/cotizacion/{uid}`). Como el PDF se genera desde la vista `/print`, el QR aparece tanto en papel como en PDF sin cambio adicional. El cliente escanea y compara contra los datos vivos de la BD — un papel falsificado no puede hacer que xplaya.com muestre datos que no existen.

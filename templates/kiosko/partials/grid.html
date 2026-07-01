@@ -1,0 +1,89 @@
+{% if productos %}
+
+{# Grid fijo de 3 columnas — la pantalla del kiosko siempre es 1080p horizontal #}
+<div class="columns is-multiline">
+    {% for p in productos %}
+    <div class="column is-one-third">
+        {# En Fase 2 la card completa navega a /kiosko/productos/{nid} #}
+        <div class="card" style="height: 100%;">
+            <div class="card-image">
+                {% if p.foto_url %}
+                <figure class="image is-4by3">
+                    <img src="{{ p.foto_url | safe }}" alt="{{ p.nombre }}" loading="lazy"
+                         style="object-fit: contain;">
+                </figure>
+                {% else %}
+                <figure class="image is-4by3">
+                    <div class="has-background-light is-flex is-align-items-center is-justify-content-center"
+                         style="height: 100%; min-height: 220px;">
+                        <span class="has-text-grey-light is-size-1">📦</span>
+                    </div>
+                </figure>
+                {% endif %}
+            </div>
+            <div class="card-content">
+                <p class="is-size-7 has-text-grey">{{ p.categoria }}</p>
+                <p class="has-text-weight-semibold is-size-5">{{ p.nombre }}</p>
+                <p class="has-text-success has-text-weight-bold is-size-3 mt-1">${{ p.precio_venta }}</p>
+                <p class="is-size-7 has-text-grey">por {{ p.unidad_medida }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if paginacion.paginas %}
+<nav class="pagination is-centered is-large mt-5" role="navigation" aria-label="paginación">
+
+    {# Botón Anterior #}
+    {% if paginacion.pagina_actual > 1 %}
+    <a class="pagination-previous"
+       hx-get="{{ base_url | safe }}?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda }}"
+       hx-target="#catalogo">
+        <span class="icon is-small"><i class="fas fa-chevron-left"></i></span>
+    </a>
+    {% else %}
+    <a class="pagination-previous" disabled>
+        <span class="icon is-small"><i class="fas fa-chevron-left"></i></span>
+    </a>
+    {% endif %}
+
+    {# Botón Siguiente #}
+    {% if paginacion.pagina_actual < paginacion.total_paginas %}
+    <a class="pagination-next"
+       hx-get="{{ base_url | safe }}?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda }}"
+       hx-target="#catalogo">
+        <span class="icon is-small"><i class="fas fa-chevron-right"></i></span>
+    </a>
+    {% else %}
+    <a class="pagination-next" disabled>
+        <span class="icon is-small"><i class="fas fa-chevron-right"></i></span>
+    </a>
+    {% endif %}
+
+    {# Números de página — None serializa como null (falsy) = puntos suspensivos #}
+    <ul class="pagination-list">
+        {% for p in paginacion.paginas %}
+        {% if p %}
+        <li>
+            <a class="pagination-link {% if p == paginacion.pagina_actual %}is-current{% endif %}"
+               hx-get="{{ base_url | safe }}?pagina={{ p }}&busqueda={{ busqueda }}"
+               hx-target="#catalogo">{{ p }}</a>
+        </li>
+        {% else %}
+        <li><span class="pagination-ellipsis">&hellip;</span></li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<p class="has-text-grey has-text-centered py-6 is-size-4">
+    {% if busqueda %}
+        No se encontraron productos para "<strong>{{ busqueda }}</strong>".
+    {% else %}
+        No hay productos disponibles.
+    {% endif %}
+</p>
+{% endif %}

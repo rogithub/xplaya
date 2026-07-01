@@ -1,4 +1,5 @@
 pub mod productos;
+pub mod kiosko;
 pub mod pedidos;
 pub mod monedero;
 pub mod settings;
