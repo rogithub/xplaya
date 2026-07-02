@@ -56,6 +56,8 @@ async fn main() {
         .route("/kiosko/categoria/{id}", get(routes::kiosko::categoria))
         .route("/kiosko/productos/{nid}", get(routes::kiosko::detalle))
         .route("/kiosko/carrito", get(routes::kiosko::carrito))
+        .route("/kiosko/activar", get(routes::kiosko::activar))
+        .route("/kiosko/pedidos", post(routes::kiosko::crear_pedido))
         .route("/terminos", get(routes::monedero::terminos))
         .route("/saldo", get(routes::monedero::saldo_get))
         .route("/saldo", post(routes::monedero::saldo_post))

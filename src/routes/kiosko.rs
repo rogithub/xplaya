@@ -1,16 +1,102 @@
 use axum::{
+    Json,
     extract::{Path, Query, State},
-    http::{HeaderMap, StatusCode},
-    response::Html,
+    http::{HeaderMap, StatusCode, header},
+    response::{Html, IntoResponse, Redirect, Response},
 };
 use minijinja::context;
+use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
     AppState,
-    db::{kiosko as db, productos as db_productos},
+    db::{kiosko as db, pedidos as db_pedidos, productos as db_productos},
+    models::pedido::{KioskoPedidoRequest, KioskoPedidoResponse},
     routes::productos::CatalogoParams,
 };
+
+const COOKIE_TOKEN: &str = "kiosko_token";
+
+/// Lee el token de la cookie del request. El token nunca aparece en el HTML de
+/// las páginas (son públicas) — solo viaja en esta cookie HttpOnly, sembrada
+/// por GET /kiosko/activar en el navegador del kiosko físico.
+fn token_de_cookie(headers: &HeaderMap) -> Option<&str> {
+    headers
+        .get(header::COOKIE)?
+        .to_str()
+        .ok()?
+        .split(';')
+        .map(str::trim)
+        .find_map(|c| c.strip_prefix(COOKIE_TOKEN).and_then(|r| r.strip_prefix('=')))
+}
+
+#[derive(Deserialize)]
+pub struct ActivarParams {
+    t: Option<String>,
+}
+
+/// Habilita el navegador del kiosko físico: siembra la cookie HttpOnly con el
+/// token y redirige al catálogo. La URL con `?t=` solo vive en la configuración
+/// de autostart de la Raspberry — nunca en páginas ni en el repo.
+pub async fn activar(
+    State(state): State<AppState>,
+    Query(params): Query<ActivarParams>,
+) -> Response {
+    let esperado = &state.config.kiosko_token;
+
+    // Fail-closed: sin token configurado no se habilita nada.
+    if esperado.is_empty() || params.t.as_deref() != Some(esperado.as_str()) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+
+    // Max-Age 1 año; Path=/kiosko limita la cookie a las rutas del kiosko.
+    let cookie = format!(
+        "{}={}; Path=/kiosko; HttpOnly; SameSite=Lax; Max-Age=31536000",
+        COOKIE_TOKEN, esperado
+    );
+    ([(header::SET_COOKIE, cookie)], Redirect::to("/kiosko")).into_response()
+}
+
+/// Crea el pedido del kiosko. Sin datos del cliente: llega al POS a nombre del
+/// cliente de sistema "Kiosko en tienda" (ID_CLIENTE_KIOSKO) con Origen=0 y el
+/// vendedor captura o verifica al cliente real al cobrar.
+pub async fn crear_pedido(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<KioskoPedidoRequest>,
+) -> Result<Json<KioskoPedidoResponse>, (StatusCode, String)> {
+    let esperado = &state.config.kiosko_token;
+    let autorizado =
+        !esperado.is_empty() && token_de_cookie(&headers) == Some(esperado.as_str());
+
+    if !autorizado {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Este navegador no está habilitado como kiosko.".into(),
+        ));
+    }
+    if req.items.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "El carrito está vacío.".into()));
+    }
+
+    match db_pedidos::crear_kiosko(&state.pool, &req.items).await {
+        Ok(Some(pedido_uid)) => Ok(Json(KioskoPedidoResponse { pedido_uid })),
+        Ok(None) => {
+            tracing::error!("Falta la setting ID_CLIENTE_KIOSKO en la BD");
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "El kiosko no está configurado en el sistema.".into(),
+            ))
+        }
+        Err(e) => {
+            tracing::error!("Error creando pedido de kiosko: {}", e);
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Error interno del servidor.".into(),
+            ))
+        }
+    }
+}
 
 pub async fn lista(
     State(state): State<AppState>,

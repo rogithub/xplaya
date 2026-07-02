@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko Fase 3 — envío de pedido al POS, sin capturar datos del cliente
+
+Cierra el flujo del kiosko: el pedido llega al POS con `Origen=0` (Tienda) para atenderse como mostrador. Dos rediseños sobre el plan original del ROADMAP, ambos documentados en la sección [Kiosko Fase 3] con su razonamiento completo:
+
+1. **Fricción cero.** Se eliminó el formulario nombre/teléfono (y con él la dependencia del teclado en pantalla en el carrito). El vendedor pide o verifica el teléfono al cobrar — la pantalla de venta del POS ya permite cambiar el cliente al cargar un pedido, y el cashback se genera sobre la venta, no el pedido. El pedido llega a nombre del cliente de sistema **"Kiosko en tienda"** (`Settings.ID_CLIENTE_KIOSKO`); no se usó `ClienteId NULL` porque `PedidosController` del POS truena con cliente nulo. Cero cambios de código en el POS.
+2. **Cookie HttpOnly en vez de campo oculto.** El token en el HTML de una página pública habría sido visible para cualquiera. `GET /kiosko/activar?t=<token>` (la URL de autostart de la Pi) siembra la cookie `HttpOnly; SameSite=Lax; Path=/kiosko`; `POST /kiosko/pedidos` la valida. Fail-closed si `KIOSKO_TOKEN` no está configurado.
+
+**Archivos a revisar:**
+- `inventario_papeleria/dbchanges/2026-07-02_cliente_kiosko.sql` — nuevo, idempotente: cliente "Kiosko en tienda" + setting `ID_CLIENTE_KIOSKO` (también en `dbscripts/inserts.sql`). Aplicado en dev; **pendiente aplicar en producción antes del deploy**.
+- `src/db/pedidos.rs` — refactor: `insertar_pedido()` común con parámetro `origen`; `crear()` público (origen=1) y `crear_kiosko()` (origen=0, cliente desde Settings, devuelve `None` si falta la setting → 500 con log claro).
+- `src/routes/kiosko.rs` — `activar` (valida `?t=`, Set-Cookie, redirect) y `crear_pedido` (valida cookie → 403; carrito vacío → 400); `token_de_cookie()` parsea el header Cookie a mano — sin dependencia nueva.
+- `src/models/pedido.rs` — `KioskoPedidoRequest { items }` (sin token en el body — viaja en la cookie) y `KioskoPedidoResponse`.
+- `templates/kiosko/carrito.html` — sin formulario ni teclado; botón único "Enviar pedido al mostrador" con nota "Pagas al recogerlo en el mostrador"; el `fetch` ya no manda datos del cliente.
+- `src/main.rs` — rutas nuevas; `.env.example` — comentario actualizado del token.
+
+**Verificado (Playwright 8/8 + curl + BD dev):** visitante sin activar → 403 con mensaje claro; activar con token malo/ausente → 403; con token bueno → cookie HttpOnly + redirect; pedido creado con `Origen=0` a nombre de "Kiosko en tienda"; token ausente del HTML de todas las páginas `/kiosko*` e ilegible desde JS; `POST /pedidos` público sigue con `Origen=1`; `cargo clippy` limpio. Pendiente de humo: ver el pedido en el POS real.
+
+---
+
 ## Kiosko Fase 2 — detalle táctil y carrito con stepper
 
 El flujo de compra completo del kiosko: tocar una card abre el detalle, "Agregar" alimenta el carrito (mismo store de Alpine/localStorage que la web pública), y el carrito tiene steppers +/− en vez de `<input type="number">`. El envío del pedido usa **temporalmente** el `POST /pedidos` público (`Origen=EnLinea`) — en Fase 3 cambia a `POST /kiosko/pedidos` con `KIOSKO_TOKEN` y `Origen=0`; el `fetch` está marcado con un comentario `TEMPORAL Fase 2`.

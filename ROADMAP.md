@@ -43,7 +43,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 - ✅ **EMBEDDINGS Fase 1** — repo `inventario-embeddings-job`, `ingest.py`, CronJob k3s → ver [Embeddings Fase 1](#embeddings-fase-1)
 - ✅ **KIOSKO Fase 1** — ruta `/kiosko`, layout táctil, query baja-venta, branding → ver [Kiosko Fase 1](#kiosko-fase-1)
 - ✅ **KIOSKO Fase 2** — detalle táctil, carrito con botones +/− → ver [Kiosko Fase 2](#kiosko-fase-2)
-- ⬜ **KIOSKO Fase 3** — `POST /kiosko/pedidos` con token, `Origen=0`, confirmación → ver [Kiosko Fase 3](#kiosko-fase-3)
+- ✅ **KIOSKO Fase 3** — `POST /kiosko/pedidos` con cookie de kiosko, `Origen=0`, cliente "Kiosko en tienda", sin captura de datos → ver [Kiosko Fase 3](#kiosko-fase-3)
 - ⬜ **KIOSKO Fase 4** — eventos Umami → ver [Kiosko Fase 4](#kiosko-fase-4)
 
 ### Semana 2 — Categorías antes de que llegue el hardware
@@ -70,6 +70,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ## Notas de sesiones
 
+- **2026-07-02** — **KIOSKO Fase 3 completada, con dos rediseños sobre el plan original.** (1) **Fricción cero**: se eliminó el formulario nombre/teléfono del kiosko — decisión del dueño: el vendedor pide/verifica el teléfono al cobrar en el POS (muchos clientes ya capturados allá; el monedero se genera sobre la venta, no el pedido, así que no se pierde nada). El pedido llega a nombre del cliente de sistema "Kiosko en tienda" (`Settings.ID_CLIENTE_KIOSKO`, script en `inventario_papeleria/dbchanges/2026-07-02_cliente_kiosko.sql` — aplicado en dev, **pendiente en producción antes del deploy**); no se usó `ClienteId NULL` porque la vista de pedidos del POS truena con cliente nulo. **Cero cambios de código en el POS** — cargar pedido → cambiar cliente → cobrar ya existe. (2) **Token por cookie HttpOnly, no campo oculto**: el plan original embebía el token en el HTML de `/kiosko/carrito`, que es página pública — cualquiera lo habría copiado. Ahora `GET /kiosko/activar?t=TOKEN` siembra cookie `HttpOnly; Path=/kiosko` y la URL con token solo vive en el autostart de la Pi (sección Fase 6 actualizada). Verificado con Playwright 8/8 + curl + BD dev (pedidos `Origen=0`, 403 sin cookie, token ausente del HTML, regresión de `/pedidos` público OK). Pendiente de humo: ver el pedido aparecer en el POS real. Siguiente: **KIOSKO Fase 4** (eventos Umami).
 - **2026-07-02** — **KIOSKO Fase 2 completada**: detalle táctil (`templates/kiosko/detalle.html`, reutiliza `db::productos::detalle()`; sin SEO/compartir/videos — el kiosko no abre sitios externos) y carrito con stepper (`templates/kiosko/carrito.html`: `−` deshabilitado en cantidad 1, quitar siempre explícito con botón rojo). Teclado en pantalla generalizado: `teclado-abrir` acepta `detail { input, modo }` con layout numérico tipo pad para el teléfono; fix encontrado en pruebas — el teclado fijo tapaba el campo teléfono, ahora agrega `body.teclado-abierto` (padding inferior) y hace `scrollIntoView` del input activo. Botón flotante de carrito con badge en `kiosko/base.html`; cards del grid navegan a `/kiosko/productos/{nid}`. **Ojo:** el envío del pedido usa temporalmente `POST /pedidos` público (`Origen=EnLinea`) — cambiarlo en Fase 3 a `/kiosko/pedidos` con token y `Origen=0` (el `fetch` en `carrito.html` tiene comentario `TEMPORAL Fase 2`). Verificado end-to-end con Playwright headless (16/16 checks). Siguiente: **KIOSKO Fase 3**.
 - **2026-07-01** — **Teclado en pantalla del kiosko** (`templates/kiosko/partials/teclado.html`): Chromium/Linux no trae teclado virtual — se dibujó uno propio (Alpine, mayúsculas+números, dispara eventos `input` que HTMX ve como tipeo normal, `inputmode="none"` en el buscador). Verificado end-to-end con Playwright headless. Para Fase 2/3: reutilizarlo con layout numérico en el formulario nombre/teléfono (la nota vieja de "teclado automático" era falsa, ya corregida). También: tiles de categorías movidos debajo del grid y su paginación, bajo el título "Explora por categoría".
 - **2026-07-01** — **CATEGORIAS Fase 3 completada (adelantada)**: los tiles no dependían del hardware — las 37 `FamiliasSemanticas` ya estaban curadas y era puro código. `kiosko_lista()` ahora acepta `familia_id: Option<Uuid>` (una sola función, sin duplicar la query); nuevas `familias_semanticas()` y `familia_nombre()` en `src/db/kiosko.rs`; handler `GET /kiosko/categoria/{id}`; tiles como botones flex-wrap entre el buscador y el grid (solo en el landing); dentro de una categoría hay encabezado con nombre + botón "← Todas". Los templates usan `base_url` (`/kiosko` o `/kiosko/categoria/{id}`) para que búsqueda y paginación respeten el filtro. El conteo de cada tile aplica los mismos filtros de visibilidad que el grid — verificado: tile 487 = 40×12+7 páginas. Siguiente: **KIOSKO Fase 2**.
@@ -313,32 +314,36 @@ Reutiliza `$store.carrito` de Alpine.js (mismo localStorage). Sin conflicto — 
 - [x] Botones +/− actualizan cantidad y total en tiempo real
 - [x] `cargo clippy` sin warnings
 
-### Fase 3 — Envío de pedido al POS {#kiosko-fase-3}
+### Fase 3 — Envío de pedido al POS ✅ COMPLETADA (2026-07-02) {#kiosko-fase-3}
 
 **`Origen=0`** (Tienda) — el kiosko está en la tienda; el POS lo atiende igual que un pedido de mostrador. Sin migración de BD.
 
-**Modelo del token:**
-- `KIOSKO_TOKEN` en `config.rs` / variable de entorno
-- `GET /kiosko/carrito` pasa el token al template como variable de contexto
-- Template lo embebe en campo oculto
-- `POST /kiosko/pedidos` valida con `==` en Rust (tiempo constante) — si no coincide → 403
+**Decisión de diseño — fricción cero (2026-07-02):** el kiosko **no captura ningún dato del cliente** — se eliminó el formulario nombre/teléfono planeado originalmente. Razonamiento del dueño: el vendedor puede pedir y verificar el teléfono al cobrar en el POS (con el cliente enfrente), y muchos clientes ya están capturados allá — teclear 10 dígitos en un pad en pantalla era la mayor fricción del flujo y generaba riesgo de registros basura en `Clientes` (teléfonos inventados para brincarse el paso). El cashback no se pierde: `MonederoGenerados` se genera sobre la **venta**, no sobre el pedido, así que ligar al cliente real en el mostrador llega a tiempo.
 
-**Archivos nuevos:**
-- `templates/kiosko/confirmacion.html` — "¡Pedido recibido! El personal te atenderá en un momento." + botón "Nueva consulta" (limpia carrito, vuelve a `/kiosko`). Sin QR ni referencias a xplaya.com — observar primero, agregar después si los datos lo justifican.
-- En `src/models/pedido.rs` — `KioskoPedidoRequest { nombre, telefono, items, kiosko_token }`
+**Cómo funciona:** el pedido llega al POS a nombre del cliente de sistema **"Kiosko en tienda"** (`Clientes` fijo, resuelto vía `Settings.ID_CLIENTE_KIOSKO` — mismo patrón que `ID_CLIENTE_GENERICO`, pero dedicado para distinguir los pedidos del kiosko en el calendario del POS y medir el piloto). El vendedor carga el pedido en la pantalla de venta y ahí cambia el cliente al real — **flujo ya existente en el POS, cero cambios de código allá** (verificado: `PedidosController` muestra el nombre del cliente, `cargarPedido()` en `ventas.js` hace `loadClient()` y la pantalla permite quitar/buscar/crear cliente antes de cobrar). No se usó `ClienteId NULL` porque la vista de pedidos del POS truena con cliente nulo (`GetOne(ClienteId)!.Nombre`).
 
-**Cambios en existentes:**
-- `src/db/pedidos.rs` — agregar parámetro `origen: i16`; actualizar INSERT; actualizar llamado existente en `routes/carrito.rs` para pasar `1`
-- `src/routes/kiosko.rs` — handler `POST /kiosko/pedidos`: validar token → normalizar teléfono → `db::pedidos::crear(..., 0)` → devolver JSON
-- `src/main.rs` — `.route("/kiosko/pedidos", post(routes::kiosko::crear_pedido))`
+**Modelo del token — cookie HttpOnly, no campo oculto:** el plan original ("embeber el token en campo oculto del template") se descartó porque `/kiosko/carrito` es una página pública — cualquiera vería el token en el HTML y quedaría inútil. En su lugar:
+- `GET /kiosko/activar?t=<KIOSKO_TOKEN>` valida el token y siembra una cookie `HttpOnly; SameSite=Lax; Path=/kiosko; Max-Age=1año`, luego redirige a `/kiosko`. Fail-closed: sin `KIOSKO_TOKEN` configurado → 403 siempre.
+- La URL con `?t=` solo vive en el autostart de la Raspberry (Fase 6) — nunca en páginas ni en el repo.
+- `POST /kiosko/pedidos` valida la cookie → si no coincide → 403. El `fetch` del carrito la manda solo (same-origin); JS no puede leerla.
 
-**Verificación:**
-- [ ] `POST /kiosko/pedidos` con token correcto → crea pedido con `Origen=0`
-- [ ] `POST /kiosko/pedidos` con token incorrecto → 403
-- [ ] El POS muestra el pedido nuevo
-- [ ] Confirmación NO menciona xplaya.com
-- [ ] `POST /pedidos` (ruta pública) sigue funcionando con `Origen=1`
-- [ ] `cargo clippy` sin warnings
+**Archivos:**
+- `inventario_papeleria/dbchanges/2026-07-02_cliente_kiosko.sql` — INSERT idempotente del cliente "Kiosko en tienda" + setting `ID_CLIENTE_KIOSKO` (reflejado en `dbscripts/inserts.sql`). Aplicado en dev; **pendiente aplicar en producción antes del deploy**.
+- `src/db/pedidos.rs` — `insertar_pedido()` común (pedido + items, con `origen`); `crear()` público lo usa con `1`; `crear_kiosko()` resuelve `ID_CLIENTE_KIOSKO` y usa `0`.
+- `src/routes/kiosko.rs` — handlers `activar` y `crear_pedido`; parsing manual de la cookie.
+- `src/models/pedido.rs` — `KioskoPedidoRequest { items }` / `KioskoPedidoResponse { pedido_uid }`.
+- `templates/kiosko/carrito.html` — sin formulario; botón "Enviar pedido al mostrador" + nota "Pagas al recogerlo"; confirmación inline (no hizo falta `confirmacion.html` separado).
+- `src/main.rs` — rutas `GET /kiosko/activar` y `POST /kiosko/pedidos`.
+
+**Verificación (Playwright 8/8 + curl + BD dev):**
+- [x] `POST /kiosko/pedidos` con cookie correcta → crea pedido con `Origen=0` a nombre de "Kiosko en tienda"
+- [x] `POST /kiosko/pedidos` sin cookie o con cookie incorrecta → 403 (visitante ve "Este navegador no está habilitado como kiosko.")
+- [x] `/kiosko/activar` con token malo o ausente → 403; con token bueno → Set-Cookie + redirect
+- [x] El token no aparece en el HTML de ninguna página `/kiosko*` ni es legible desde JS
+- [x] Confirmación NO menciona xplaya.com; "Nueva consulta" limpia el carrito
+- [x] `POST /pedidos` (ruta pública) sigue funcionando con `Origen=1`
+- [x] `cargo clippy` sin warnings
+- [ ] El POS muestra el pedido nuevo _(pendiente — probarlo el dueño en su ambiente con el POS corriendo)_
 
 ### Fase 4 — Analítica de comportamiento {#kiosko-fase-4}
 
@@ -384,8 +389,10 @@ chromium-browser \
   --kiosk --noerrdialogs --disable-infobars --disable-pinch \
   --overscroll-history-navigation=0 --touch-events=enabled \
   --no-first-run --disable-session-crashed-bubble \
-  "https://xplaya.com/kiosko" &
+  "https://xplaya.com/kiosko/activar?t=<KIOSKO_TOKEN>" &
 ```
+
+La URL de arranque usa `/kiosko/activar?t=` (Fase 3): siembra la cookie HttpOnly que autoriza `POST /kiosko/pedidos` y redirige al catálogo. Es idempotente — re-activar en cada boot renueva la cookie. El token real solo vive en este archivo de la Pi y en el SealedSecret del cluster.
 
 **Pantalla Elo 2270L:** driver táctil HID estándar en Linux, conectar por USB. Si la imagen sale girada, en `/boot/config.txt`: `display_rotate=0` (0=normal, 1=90°, 2=180°, 3=270°).
 

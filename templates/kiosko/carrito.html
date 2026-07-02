@@ -73,66 +73,30 @@
                       x-text="'$' + $store.carrito.subtotal"></span>
             </div>
 
-            {# Formulario de contacto — inputmode="none" suprime cualquier teclado
-               nativo; el teclado en pantalla escribe vía eventos 'input' #}
-            <div class="columns">
-                <div class="column is-two-thirds">
-                    <h2 class="subtitle is-4">¿A quién le avisamos?</h2>
+            {# Sin formulario: el kiosko no captura datos del cliente. El pedido
+               llega al POS a nombre de "Kiosko en tienda" y el vendedor pide o
+               verifica el teléfono al cobrar — ahí se liga el cliente real. #}
+            <div x-show="error" class="notification is-danger is-light mb-4">
+                <span x-text="error"></span>
+            </div>
 
-                    <div x-show="error" class="notification is-danger is-light mb-4">
-                        <span x-text="error"></span>
-                    </div>
-
-                    <form @submit.prevent="enviar()">
-                        <div class="field">
-                            <label class="label is-size-5" for="kiosko-nombre">Nombre</label>
-                            <div class="control">
-                                <input class="input is-large" type="text"
-                                       id="kiosko-nombre"
-                                       placeholder="Toca aquí para escribir tu nombre"
-                                       inputmode="none"
-                                       onfocus="window.dispatchEvent(new CustomEvent('teclado-abrir', { detail: { input: 'kiosko-nombre', modo: 'texto' } }))"
-                                       x-model="nombre"
-                                       required>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label class="label is-size-5" for="kiosko-telefono">Teléfono (10 dígitos)</label>
-                            <div class="control">
-                                <input class="input is-large" type="tel"
-                                       id="kiosko-telefono"
-                                       placeholder="9991234567"
-                                       inputmode="none"
-                                       onfocus="window.dispatchEvent(new CustomEvent('teclado-abrir', { detail: { input: 'kiosko-telefono', modo: 'numerico' } }))"
-                                       x-model="telefono"
-                                       maxlength="10"
-                                       required>
-                            </div>
-                        </div>
-                        <div class="field mt-5">
-                            <div class="control">
-                                <button class="button is-success is-large is-fullwidth"
-                                        type="submit"
-                                        :class="{ 'is-loading': enviando }">
-                                    Enviar pedido
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+            <div class="has-text-centered">
+                <button class="button is-success is-large px-6"
+                        :class="{ 'is-loading': enviando }"
+                        @click="enviar()">
+                    <span class="icon"><i class="fas fa-paper-plane"></i></span>
+                    <span>Enviar pedido al mostrador</span>
+                </button>
+                <p class="is-size-6 has-text-grey mt-3">Pagas al recogerlo en el mostrador.</p>
             </div>
         </div>
     </template>
 
 </div>
 
-{% include "kiosko/partials/teclado.html" %}
-
 <script>
 function kioskoCarrito() {
     return {
-        nombre: '',
-        telefono: '',
         enviando: false,
         confirmado: false,
         error: null,
@@ -140,14 +104,6 @@ function kioskoCarrito() {
         async enviar() {
             this.error = null;
             this.enviando = true;
-            window.dispatchEvent(new CustomEvent('teclado-cerrar'));
-
-            const tel = this.telefono.replace(/\D/g, '').slice(-10);
-            if (tel.length !== 10) {
-                this.error = 'Ingresa un número de teléfono de 10 dígitos.';
-                this.enviando = false;
-                return;
-            }
 
             const items = this.$store.carrito.items.map(i => ({
                 producto_id: i.id,
@@ -156,16 +112,12 @@ function kioskoCarrito() {
             }));
 
             try {
-                // TEMPORAL Fase 2: usa el endpoint público (Origen=EnLinea).
-                // En Fase 3 cambia a POST /kiosko/pedidos con KIOSKO_TOKEN y Origen=0.
-                const res = await fetch('/pedidos', {
+                // La autorización viaja en la cookie HttpOnly del kiosko
+                // (sembrada por /kiosko/activar) — el fetch la manda solo.
+                const res = await fetch('/kiosko/pedidos', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nombre: this.nombre.trim(),
-                        telefono: tel,
-                        items,
-                    }),
+                    body: JSON.stringify({ items }),
                 });
 
                 if (!res.ok) {

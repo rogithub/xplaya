@@ -21,3 +21,15 @@ pub struct PedidoCreadoResponse {
     pub pedido_uid: Uuid,
     pub cliente_id: Uuid,
 }
+
+/// Pedido desde el kiosko — sin datos del cliente: el vendedor los captura al
+/// cobrar en el POS. La autorización viaja en la cookie HttpOnly, no en el body.
+#[derive(Deserialize)]
+pub struct KioskoPedidoRequest {
+    pub items: Vec<PedidoItemRequest>,
+}
+
+#[derive(Serialize)]
+pub struct KioskoPedidoResponse {
+    pub pedido_uid: Uuid,
+}
