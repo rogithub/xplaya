@@ -12,7 +12,8 @@ Cierra el flujo del kiosko: el pedido llega al POS con `Origen=0` (Tienda) para 
 2. **Cookie HttpOnly en vez de campo oculto.** El token en el HTML de una página pública habría sido visible para cualquiera. `GET /kiosko/activar?t=<token>` (la URL de autostart de la Pi) siembra la cookie `HttpOnly; SameSite=Lax; Path=/kiosko`; `POST /kiosko/pedidos` la valida. Fail-closed si `KIOSKO_TOKEN` no está configurado.
 
 **Archivos a revisar:**
-- `inventario_papeleria/dbchanges/2026-07-02_cliente_kiosko.sql` — nuevo, idempotente: cliente "Kiosko en tienda" + setting `ID_CLIENTE_KIOSKO` (también en `dbscripts/inserts.sql`). Aplicado en dev; **pendiente aplicar en producción antes del deploy**.
+- `inventario_papeleria/dbchanges/2026-07-02_cliente_kiosko.sql` — nuevo, idempotente: cliente "Kiosko en tienda" + setting `ID_CLIENTE_KIOSKO` (también en `dbscripts/inserts.sql`). Aplicado en dev y en producción (2026-07-02).
+- `k3s-manifests/workloads/papeleria/xplaya-deployment.yaml` — env `KIOSKO_TOKEN` desde el SealedSecret nuevo `papeleria-kiosko-secret` (key `KIOSKO_TOKEN`, creado por el dueño con kubeseal). Sin `optional`: si falta la key el pod no arranca — sealed y deployment se commitean juntos.
 - `src/db/pedidos.rs` — refactor: `insertar_pedido()` común con parámetro `origen`; `crear()` público (origen=1) y `crear_kiosko()` (origen=0, cliente desde Settings, devuelve `None` si falta la setting → 500 con log claro).
 - `src/routes/kiosko.rs` — `activar` (valida `?t=`, Set-Cookie, redirect) y `crear_pedido` (valida cookie → 403; carrito vacío → 400); `token_de_cookie()` parsea el header Cookie a mano — sin dependencia nueva.
 - `src/models/pedido.rs` — `KioskoPedidoRequest { items }` (sin token en el body — viaja en la cookie) y `KioskoPedidoResponse`.
