@@ -1,0 +1,188 @@
+{% extends "kiosko/base.html" %}
+{% block title %}Carrito — Kiosko xplaya.com{% endblock %}
+{% block content %}
+
+<div x-data="kioskoCarrito()">
+
+    <div class="is-flex is-align-items-center mb-5" style="gap: 1rem;">
+        <a class="button is-medium" href="/kiosko" x-show="!confirmado">
+            <span class="icon"><i class="fas fa-arrow-left"></i></span>
+            <span>Seguir viendo</span>
+        </a>
+        <h1 class="title is-3 mb-0">Tu carrito</h1>
+    </div>
+
+    {# Carrito vacío #}
+    <template x-if="$store.carrito.items.length === 0 && !confirmado">
+        <div class="has-text-centered py-6">
+            <p class="is-size-4 has-text-grey mb-5">Tu carrito está vacío.</p>
+            <a href="/kiosko" class="button is-success is-large">Ver catálogo</a>
+        </div>
+    </template>
+
+    {# Confirmación de pedido #}
+    <template x-if="confirmado">
+        <div class="notification is-success has-text-centered py-6">
+            <h2 class="title is-3">¡Pedido recibido!</h2>
+            <p class="is-size-5">El personal te atenderá en un momento.</p>
+            <a href="/kiosko" class="button is-white is-large mt-5">Nueva consulta</a>
+        </div>
+    </template>
+
+    {# Carrito con items #}
+    <template x-if="$store.carrito.items.length > 0 && !confirmado">
+        <div>
+            <template x-for="item in $store.carrito.items" :key="item._key">
+                <div class="box is-flex is-align-items-center" style="gap: 1.25rem;">
+                    <div style="flex: 1;">
+                        <p class="has-text-weight-semibold is-size-5" x-text="item.nombre"></p>
+                        <p class="is-size-6 has-text-grey"
+                           x-text="'$' + item.precio + ' por ' + item.unidad_medida"></p>
+                    </div>
+
+                    {# Stepper táctil: − no baja de 1; quitar es siempre acción explícita #}
+                    <div class="is-flex is-align-items-center" style="gap: .5rem;">
+                        <button class="button is-large" aria-label="menos"
+                                :disabled="item.cantidad <= 1"
+                                @click="$store.carrito.cambiarCantidad(item._key, item.cantidad - 1)">
+                            <span class="icon"><i class="fas fa-minus"></i></span>
+                        </button>
+                        <span class="is-size-4 has-text-weight-bold has-text-centered"
+                              style="min-width: 3rem;" x-text="item.cantidad"></span>
+                        <button class="button is-large" aria-label="más"
+                                @click="$store.carrito.cambiarCantidad(item._key, item.cantidad + 1)">
+                            <span class="icon"><i class="fas fa-plus"></i></span>
+                        </button>
+                    </div>
+
+                    <p class="is-size-4 has-text-weight-bold has-text-success has-text-right"
+                       style="min-width: 7rem;"
+                       x-text="'$' + (parseFloat(item.precio) * item.cantidad).toFixed(2)"></p>
+
+                    <button class="button is-danger is-medium"
+                            @click="$store.carrito.quitar(item._key)">
+                        <span class="icon"><i class="fas fa-trash-can"></i></span>
+                        <span>Quitar</span>
+                    </button>
+                </div>
+            </template>
+
+            <div class="is-flex is-justify-content-space-between is-align-items-center px-4 mb-5">
+                <span class="is-size-4">Total estimado</span>
+                <span class="is-size-2 has-text-weight-bold has-text-success"
+                      x-text="'$' + $store.carrito.subtotal"></span>
+            </div>
+
+            {# Formulario de contacto — inputmode="none" suprime cualquier teclado
+               nativo; el teclado en pantalla escribe vía eventos 'input' #}
+            <div class="columns">
+                <div class="column is-two-thirds">
+                    <h2 class="subtitle is-4">¿A quién le avisamos?</h2>
+
+                    <div x-show="error" class="notification is-danger is-light mb-4">
+                        <span x-text="error"></span>
+                    </div>
+
+                    <form @submit.prevent="enviar()">
+                        <div class="field">
+                            <label class="label is-size-5" for="kiosko-nombre">Nombre</label>
+                            <div class="control">
+                                <input class="input is-large" type="text"
+                                       id="kiosko-nombre"
+                                       placeholder="Toca aquí para escribir tu nombre"
+                                       inputmode="none"
+                                       onfocus="window.dispatchEvent(new CustomEvent('teclado-abrir', { detail: { input: 'kiosko-nombre', modo: 'texto' } }))"
+                                       x-model="nombre"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label is-size-5" for="kiosko-telefono">Teléfono (10 dígitos)</label>
+                            <div class="control">
+                                <input class="input is-large" type="tel"
+                                       id="kiosko-telefono"
+                                       placeholder="9991234567"
+                                       inputmode="none"
+                                       onfocus="window.dispatchEvent(new CustomEvent('teclado-abrir', { detail: { input: 'kiosko-telefono', modo: 'numerico' } }))"
+                                       x-model="telefono"
+                                       maxlength="10"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="field mt-5">
+                            <div class="control">
+                                <button class="button is-success is-large is-fullwidth"
+                                        type="submit"
+                                        :class="{ 'is-loading': enviando }">
+                                    Enviar pedido
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</div>
+
+{% include "kiosko/partials/teclado.html" %}
+
+<script>
+function kioskoCarrito() {
+    return {
+        nombre: '',
+        telefono: '',
+        enviando: false,
+        confirmado: false,
+        error: null,
+
+        async enviar() {
+            this.error = null;
+            this.enviando = true;
+            window.dispatchEvent(new CustomEvent('teclado-cerrar'));
+
+            const tel = this.telefono.replace(/\D/g, '').slice(-10);
+            if (tel.length !== 10) {
+                this.error = 'Ingresa un número de teléfono de 10 dígitos.';
+                this.enviando = false;
+                return;
+            }
+
+            const items = this.$store.carrito.items.map(i => ({
+                producto_id: i.id,
+                cantidad: i.cantidad,
+                presentacion_id: i.presentacion_id || null,
+            }));
+
+            try {
+                // TEMPORAL Fase 2: usa el endpoint público (Origen=EnLinea).
+                // En Fase 3 cambia a POST /kiosko/pedidos con KIOSKO_TOKEN y Origen=0.
+                const res = await fetch('/pedidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre: this.nombre.trim(),
+                        telefono: tel,
+                        items,
+                    }),
+                });
+
+                if (!res.ok) {
+                    this.error = await res.text() || 'Error al enviar el pedido.';
+                    return;
+                }
+
+                this.$store.carrito.vaciar();
+                this.confirmado = true;
+            } catch {
+                this.error = 'Error de conexión. Intenta de nuevo.';
+            } finally {
+                this.enviando = false;
+            }
+        },
+    };
+}
+</script>
+
+{% endblock %}

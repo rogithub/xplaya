@@ -42,7 +42,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 - ✅ **EMBEDDINGS Fase 0** — BD: `CREATE EXTENSION vector`, columnas `embedding`/`EmbeddingGeneratedAt`/`FamiliaSemanticaId`, tabla `FamiliasSemanticas`, trigger de invalidación → ver sección [Embeddings](#embeddings)
 - ✅ **EMBEDDINGS Fase 1** — repo `inventario-embeddings-job`, `ingest.py`, CronJob k3s → ver [Embeddings Fase 1](#embeddings-fase-1)
 - ✅ **KIOSKO Fase 1** — ruta `/kiosko`, layout táctil, query baja-venta, branding → ver [Kiosko Fase 1](#kiosko-fase-1)
-- ⬜ **KIOSKO Fase 2** — detalle táctil, carrito con botones +/− → ver [Kiosko Fase 2](#kiosko-fase-2)
+- ✅ **KIOSKO Fase 2** — detalle táctil, carrito con botones +/− → ver [Kiosko Fase 2](#kiosko-fase-2)
 - ⬜ **KIOSKO Fase 3** — `POST /kiosko/pedidos` con token, `Origen=0`, confirmación → ver [Kiosko Fase 3](#kiosko-fase-3)
 - ⬜ **KIOSKO Fase 4** — eventos Umami → ver [Kiosko Fase 4](#kiosko-fase-4)
 
@@ -70,6 +70,7 @@ La web pública (`xplaya.com`) ya está en producción. El foco ahora es el kios
 
 ## Notas de sesiones
 
+- **2026-07-02** — **KIOSKO Fase 2 completada**: detalle táctil (`templates/kiosko/detalle.html`, reutiliza `db::productos::detalle()`; sin SEO/compartir/videos — el kiosko no abre sitios externos) y carrito con stepper (`templates/kiosko/carrito.html`: `−` deshabilitado en cantidad 1, quitar siempre explícito con botón rojo). Teclado en pantalla generalizado: `teclado-abrir` acepta `detail { input, modo }` con layout numérico tipo pad para el teléfono; fix encontrado en pruebas — el teclado fijo tapaba el campo teléfono, ahora agrega `body.teclado-abierto` (padding inferior) y hace `scrollIntoView` del input activo. Botón flotante de carrito con badge en `kiosko/base.html`; cards del grid navegan a `/kiosko/productos/{nid}`. **Ojo:** el envío del pedido usa temporalmente `POST /pedidos` público (`Origen=EnLinea`) — cambiarlo en Fase 3 a `/kiosko/pedidos` con token y `Origen=0` (el `fetch` en `carrito.html` tiene comentario `TEMPORAL Fase 2`). Verificado end-to-end con Playwright headless (16/16 checks). Siguiente: **KIOSKO Fase 3**.
 - **2026-07-01** — **Teclado en pantalla del kiosko** (`templates/kiosko/partials/teclado.html`): Chromium/Linux no trae teclado virtual — se dibujó uno propio (Alpine, mayúsculas+números, dispara eventos `input` que HTMX ve como tipeo normal, `inputmode="none"` en el buscador). Verificado end-to-end con Playwright headless. Para Fase 2/3: reutilizarlo con layout numérico en el formulario nombre/teléfono (la nota vieja de "teclado automático" era falsa, ya corregida). También: tiles de categorías movidos debajo del grid y su paginación, bajo el título "Explora por categoría".
 - **2026-07-01** — **CATEGORIAS Fase 3 completada (adelantada)**: los tiles no dependían del hardware — las 37 `FamiliasSemanticas` ya estaban curadas y era puro código. `kiosko_lista()` ahora acepta `familia_id: Option<Uuid>` (una sola función, sin duplicar la query); nuevas `familias_semanticas()` y `familia_nombre()` en `src/db/kiosko.rs`; handler `GET /kiosko/categoria/{id}`; tiles como botones flex-wrap entre el buscador y el grid (solo en el landing); dentro de una categoría hay encabezado con nombre + botón "← Todas". Los templates usan `base_url` (`/kiosko` o `/kiosko/categoria/{id}`) para que búsqueda y paginación respeten el filtro. El conteo de cada tile aplica los mismos filtros de visibilidad que el grid — verificado: tile 487 = 40×12+7 páginas. Siguiente: **KIOSKO Fase 2**.
 - **2026-07-01** — **KIOSKO Fase 1 completada**: `GET /kiosko` con layout táctil (sin navbar/footer, fuente 20px, targets ≥48px, `noindex`), query de baja venta en `src/db/kiosko.rs` (CTE de ventas 30 días sobre `AjustesProductos` + filtros de `v_galeria_principal`; ojo — la columna real es `Ajustes.FechaAjuste`, no `FechaCreado` como decía el borrador de la sección Kiosko Fase 1), búsqueda `unaccent+ILIKE`, paginación 12/página. `KIOSKO_TOKEN` ya está en `config.rs`/`.env.example` para Fase 3. Verificado local contra BD real: última página = más vendidos. Siguiente: **KIOSKO Fase 2** (detalle táctil + carrito con stepper).
@@ -306,11 +307,11 @@ Reutiliza `$store.carrito` de Alpine.js (mismo localStorage). Sin conflicto — 
 **UX táctil:** botones `−`/`+` separados ≥48×48px; botón "Quitar" rojo explícito. **Ojo:** Chromium en Linux NO trae teclado virtual (eso es de ChromeOS) — para nombre/teléfono reutilizar `templates/kiosko/partials/teclado.html` (ya existe, hecho para la búsqueda), agregándole un layout numérico para el teléfono.
 
 **Verificación:**
-- [ ] Tocar card navega al detalle
-- [ ] "Agregar" incrementa badge
-- [ ] `GET /kiosko/carrito` muestra lista correcta
-- [ ] Botones +/− actualizan cantidad y total en tiempo real
-- [ ] `cargo clippy` sin warnings
+- [x] Tocar card navega al detalle
+- [x] "Agregar" incrementa badge
+- [x] `GET /kiosko/carrito` muestra lista correcta
+- [x] Botones +/− actualizan cantidad y total en tiempo real
+- [x] `cargo clippy` sin warnings
 
 ### Fase 3 — Envío de pedido al POS {#kiosko-fase-3}
 

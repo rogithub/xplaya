@@ -6,7 +6,11 @@ use axum::{
 use minijinja::context;
 use uuid::Uuid;
 
-use crate::{AppState, db::kiosko as db, routes::productos::CatalogoParams};
+use crate::{
+    AppState,
+    db::{kiosko as db, productos as db_productos},
+    routes::productos::CatalogoParams,
+};
 
 pub async fn lista(
     State(state): State<AppState>,
@@ -58,6 +62,47 @@ pub async fn lista(
         })
         .map_err(|e| {
             tracing::error!("Error de template kiosko: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    Ok(Html(html))
+}
+
+/// Detalle táctil — misma query que /productos/{nid}, template propio del kiosko
+/// (sin SEO/OG/compartir; botones y tipografía a escala táctil).
+pub async fn detalle(
+    State(state): State<AppState>,
+    Path(nid): Path<i32>,
+) -> Result<Html<String>, StatusCode> {
+    let producto = db_productos::detalle(&state.pool, nid, &state.config.content_base_url)
+        .await
+        .map_err(|e| {
+            tracing::error!("Error en detalle kiosko {}: {}", nid, e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let html = state
+        .tmpl
+        .get_template("kiosko/detalle.html")
+        .and_then(|t| t.render(context! { producto }))
+        .map_err(|e| {
+            tracing::error!("Error de template detalle kiosko: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    Ok(Html(html))
+}
+
+/// Carrito táctil — el estado vive en localStorage (store de Alpine);
+/// el servidor solo entrega el template.
+pub async fn carrito(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let html = state
+        .tmpl
+        .get_template("kiosko/carrito.html")
+        .and_then(|t| t.render(context! {}))
+        .map_err(|e| {
+            tracing::error!("Error de template carrito kiosko: {}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 

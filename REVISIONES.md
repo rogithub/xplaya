@@ -4,6 +4,23 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko Fase 2 — detalle táctil y carrito con stepper
+
+El flujo de compra completo del kiosko: tocar una card abre el detalle, "Agregar" alimenta el carrito (mismo store de Alpine/localStorage que la web pública), y el carrito tiene steppers +/− en vez de `<input type="number">`. El envío del pedido usa **temporalmente** el `POST /pedidos` público (`Origen=EnLinea`) — en Fase 3 cambia a `POST /kiosko/pedidos` con `KIOSKO_TOKEN` y `Origen=0`; el `fetch` está marcado con un comentario `TEMPORAL Fase 2`.
+
+**Archivos a revisar:**
+- `templates/kiosko/detalle.html` — nuevo. Misma estructura que `productos/detalle.html` pero sin SEO/OG/compartir/videos (el kiosko no debe abrir sitios externos): galería Alpine con miniaturas de 96px, presentaciones con botones `is-medium`, precio `is-size-1`, botón "Agregar" `is-large`. Tras agregar aparece un atajo "Ver carrito". "Volver" usa `history.back()` para conservar búsqueda/categoría/página del grid, con fallback a `/kiosko`.
+- `templates/kiosko/carrito.html` — nuevo. Una box por línea con stepper: `−` se deshabilita en cantidad 1 (quitar es siempre acción explícita con el botón rojo "Quitar"), `+` sin tope. Formulario nombre/teléfono con `inputmode="none"` y `onfocus` que abre el teclado en pantalla — texto para el nombre, pad numérico para el teléfono (`maxlength=10`).
+- `templates/kiosko/partials/teclado.html` — generalizado (era exclusivo del buscador): el evento `teclado-abrir` acepta `detail { input, modo }` con `modo: 'texto' | 'numerico'`; sin detail se comporta igual que antes (búsqueda). Nuevo layout numérico tipo pad telefónico. `tecla()` respeta el `maxlength` del input destino. **Fix de UX encontrado con el test end-to-end:** el teclado fijo tapaba el campo de teléfono — al abrir agrega `body.teclado-abierto` (padding inferior de 420px) y hace `scrollIntoView` del input activo; al cerrar lo quita.
+- `templates/kiosko/base.html` — botón flotante de carrito (88px, esquina inferior derecha, z-index bajo el teclado) con badge alimentado por `$store.carrito.total`; CSS nuevo (`.kiosko-card-link`, `.carrito-flotante`, `.carrito-badge`, `.teclado-numero`, `body.teclado-abierto`).
+- `templates/kiosko/partials/grid.html` — cada card envuelta en `<a href="/kiosko/productos/{nid}">`.
+- `src/routes/kiosko.rs` — handlers `detalle` (reutiliza `db::productos::detalle()`, 404 si no existe) y `carrito` (solo renderiza; el estado vive en localStorage).
+- `src/main.rs` — rutas `/kiosko/productos/{nid}` y `/kiosko/carrito`.
+
+**Verificado con Chromium headless (Playwright), 16/16 checks:** card → detalle → agregar (badge 1) → volver → segundo producto (badge 2) → carrito con 2 líneas → `+` actualiza cantidad y total en tiempo real ($95→$130) → `−` deshabilitado en 1 → "Quitar" elimina línea → teclado texto escribe el nombre → teléfono abre pad numérico (sin ESPACIO) → 10 dígitos completos → `maxlength` respetado → `x-model` sincronizado. Capturas visuales revisadas. `cargo clippy` limpio.
+
+---
+
 ## Kiosko — teclado en pantalla + tiles reubicados
 
 Dos ajustes de UX del kiosko. Primero: Chromium en Linux **no** trae teclado virtual (eso es de ChromeOS, no de Chromium a secas), así que sin esto la búsqueda por texto sería inusable en la pantalla táctil. Se dibuja un teclado propio en la página en vez de instalar uno a nivel de OS en la Pi (`onboard`/`matchbox`): teclas del tamaño que queremos, se prueba en local sin hardware, y cero configuración en la Raspberry. Segundo: los tiles de categorías se movieron debajo del grid de productos y su paginación, con encabezado "Explora por categoría".

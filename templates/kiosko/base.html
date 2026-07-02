@@ -53,6 +53,35 @@
         .teclado-espacio {
             min-width: 420px;
         }
+        .teclado-numero {
+            min-width: 110px;
+        }
+        /* Con el teclado abierto el contenido puede scrollear por encima de él */
+        body.teclado-abierto {
+            padding-bottom: 420px;
+        }
+        /* La card completa es el target táctil — hereda colores del card */
+        .kiosko-card-link {
+            display: block;
+            height: 100%;
+            color: inherit;
+        }
+        /* Botón flotante del carrito — z-index bajo el teclado (40) */
+        .carrito-flotante {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 30;
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+        }
+        .carrito-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+        }
     </style>
 </head>
 <body>
@@ -67,5 +96,13 @@
             {% block content %}{% endblock %}
         </div>
     </main>
+
+    {# Botón flotante del carrito — visible en todo el kiosko; el badge lo alimenta el store de Alpine #}
+    <a href="/kiosko/carrito" class="button is-success carrito-flotante" aria-label="Ver carrito">
+        <span class="icon is-large"><i class="fas fa-cart-shopping fa-lg"></i></span>
+        <span class="carrito-badge tag is-warning is-rounded has-text-weight-bold is-size-6"
+              x-data x-show="$store.carrito.total > 0" x-text="$store.carrito.total"
+              style="display: none;"></span>
+    </a>
 </body>
 </html>

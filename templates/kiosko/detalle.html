@@ -1,0 +1,172 @@
+{% extends "kiosko/base.html" %}
+{% block title %}{{ producto.nombre }} — Kiosko xplaya.com{% endblock %}
+{% block content %}
+
+{# history.back() conserva búsqueda/categoría/página del grid; fallback a /kiosko
+   si se llegó directo (p. ej. tras recargar) #}
+<a class="button is-medium mb-4" href="/kiosko"
+   onclick="if (history.length > 1) { history.back(); return false; }">
+    <span class="icon"><i class="fas fa-arrow-left"></i></span>
+    <span>Volver</span>
+</a>
+
+<div class="columns">
+    {# Columna de fotos — Alpine cambia la foto principal sin recargar #}
+    <div class="column is-half"
+         x-data="{ principal: '{{ producto.fotos[0] | safe if producto.fotos else "" }}' }">
+
+        {% if producto.fotos %}
+        <figure class="image mb-3">
+            <img :src="principal" alt="{{ producto.nombre }}"
+                 style="object-fit: contain; max-height: 420px; width: 100%;">
+        </figure>
+        {% if producto.fotos | length > 1 %}
+        <div class="columns is-mobile is-multiline">
+            {% for foto in producto.fotos %}
+            <div class="column is-narrow">
+                {# Miniaturas de 96px — target táctil suficiente para dedos #}
+                <img src="{{ foto | safe }}" alt="foto {{ loop.index }}"
+                     @click="principal = '{{ foto | safe }}'"
+                     class="is-clickable"
+                     style="width: 96px; height: 96px; object-fit: cover;
+                            border: 3px solid transparent; border-radius: 6px;"
+                     :style="principal === '{{ foto | safe }}' ? 'border-color: #48c774' : ''">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="has-background-light has-text-centered py-6"
+             style="border-radius: 8px; min-height: 320px; display: flex;
+                    align-items: center; justify-content: center;">
+            <span class="has-text-grey-light is-size-1">📦</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Columna de info del producto #}
+    <div class="column" x-data="kioskoDetalle()">
+        <p class="is-size-6 has-text-grey mb-1">{{ producto.categoria }}</p>
+        <h1 class="title is-3">{{ producto.nombre }}</h1>
+
+        {% if producto.marca or producto.modelo %}
+        <p class="is-size-6 has-text-grey-dark mb-3">
+            {%- if producto.marca %}{{ producto.marca }}{% endif -%}
+            {%- if producto.marca and producto.modelo %} · {% endif -%}
+            {%- if producto.modelo %}{{ producto.modelo }}{% endif -%}
+        </p>
+        {% endif %}
+
+        {# Componentes del kit — solo productos compuestos #}
+        {% if producto.componentes %}
+        <div class="notification is-light py-3 px-4 mb-4">
+            <p class="is-size-6 has-text-weight-semibold mb-2">📦 Este kit incluye:</p>
+            <ul class="is-size-6" style="list-style: none;">
+                {% for c in producto.componentes %}
+                <li>✓ {{ c.cantidad }} × {{ c.nombre }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Selector de presentación — solo aparece si hay presentaciones configuradas #}
+        {% if producto.presentaciones %}
+        <div class="field mb-3">
+            <label class="label is-size-6 has-text-grey mb-2">Presentación</label>
+            <div class="buttons">
+                <button type="button" class="button is-medium"
+                        :class="selectedKey === null ? 'is-success' : 'is-light'"
+                        @click="seleccionar(null)">
+                    {{ producto.unidad_medida }} — ${{ producto.precio_venta }}
+                </button>
+                {# Solo se pasa el UUID — nombre y precio se leen del array JS para evitar #}
+                {# que las comillas dobles de tojson rompan el atributo HTML.              #}
+                {% for pres in producto.presentaciones %}
+                <button type="button" class="button is-medium"
+                        :class="selectedKey === '{{ pres.id }}' ? 'is-success' : 'is-light'"
+                        @click="seleccionar('{{ pres.id }}')">
+                    {{ pres.nombre }} — ${{ pres.precio_venta }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Precio: contenido estático de arranque; Alpine lo reactiva al seleccionar presentación #}
+        <p class="is-size-1 has-text-success has-text-weight-bold"
+           x-text="'$' + precioMostrado">${{ producto.precio_venta }}</p>
+        <p class="has-text-grey is-size-5 mb-5"
+           x-text="'por ' + etiquetaMostrada">por {{ producto.unidad_medida }}</p>
+
+        <button class="button is-large is-fullwidth"
+                :class="agregado ? 'is-success is-light' : 'is-success'"
+                @click="agregar(); agregado = true">
+            <span class="icon"><i class="fas fa-cart-plus"></i></span>
+            <span x-show="!agregado">Agregar al carrito</span>
+            <span x-show="agregado" style="display: none;">✓ Agregado al carrito</span>
+        </button>
+        <a class="button is-light is-large is-fullwidth mt-3" href="/kiosko/carrito"
+           x-show="agregado" x-transition.opacity style="display: none;">
+            <span class="icon"><i class="fas fa-cart-shopping"></i></span>
+            <span>Ver carrito</span>
+        </a>
+    </div>
+</div>
+
+{% if producto.descripcion %}
+<div class="content mt-5">
+    <p class="is-size-6 has-text-grey has-text-weight-semibold mb-1"
+       style="text-transform: uppercase; letter-spacing: 0.05em;">Descripción</p>
+    <p>{{ producto.descripcion }}</p>
+</div>
+{% endif %}
+
+<script>
+function kioskoDetalle() {
+    // Mismo patrón que productos/detalle.html: las presentaciones se cargan aquí
+    // (en <script>) donde tojson es seguro; los @click solo pasan el UUID.
+    const _presentaciones = {{ producto.presentaciones | tojson }};
+    const _precioBase     = '{{ producto.precio_venta }}';
+    const _unidadBase     = {{ producto.unidad_medida | tojson }};
+
+    return {
+        selectedKey: null,
+        precioMostrado: _precioBase,
+        etiquetaMostrada: _unidadBase,
+        presentacionId: null,
+        agregado: false,
+
+        seleccionar(key) {
+            if (key === null) {
+                this.selectedKey = null;
+                this.precioMostrado = _precioBase;
+                this.etiquetaMostrada = _unidadBase;
+                this.presentacionId = null;
+            } else {
+                const pres = _presentaciones.find(p => p.id === key);
+                if (pres) {
+                    this.selectedKey = key;
+                    this.precioMostrado = pres.precio_venta;
+                    this.etiquetaMostrada = pres.nombre;
+                    this.presentacionId = key;
+                }
+            }
+            this.agregado = false;
+        },
+
+        agregar() {
+            this.$store.carrito.agregar({
+                id: '{{ producto.id }}',
+                nid: {{ producto.nid }},
+                nombre: {{ producto.nombre | tojson }},
+                precio: this.precioMostrado,
+                unidad_medida: this.etiquetaMostrada,
+                presentacion_id: this.presentacionId,
+            });
+        },
+    };
+}
+</script>
+
+{% endblock %}

@@ -4,7 +4,7 @@
 <div class="columns is-multiline">
     {% for p in productos %}
     <div class="column is-one-third">
-        {# En Fase 2 la card completa navega a /kiosko/productos/{nid} #}
+        <a class="kiosko-card-link" href="/kiosko/productos/{{ p.nid }}">
         <div class="card" style="height: 100%;">
             <div class="card-image">
                 {% if p.foto_url %}
@@ -28,6 +28,7 @@
                 <p class="is-size-7 has-text-grey">por {{ p.unidad_medida }}</p>
             </div>
         </div>
+        </a>
     </div>
     {% endfor %}
 </div>
