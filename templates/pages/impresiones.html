@@ -164,37 +164,6 @@
   .enmicar-table td, .enmicar-table th { padding: 0.5rem 0.75rem; }
   .enmicar-table tr:last-child td { border-bottom: none; }
 
-  .proximo-banner {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-    border-radius: 1rem;
-    padding: 2.5rem 1.5rem;
-    color: white;
-    position: relative;
-    overflow: hidden;
-  }
-  .proximo-banner::before {
-    content: '';
-    position: absolute;
-    top: -40%;
-    right: -8%;
-    width: 320px;
-    height: 320px;
-    background: radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%);
-    pointer-events: none;
-  }
-  .proximo-spec {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 0.5rem;
-    padding: 0.35rem 0.8rem;
-    font-size: 0.82rem;
-    margin: 0.2rem;
-    color: rgba(255,255,255,0.9);
-  }
-
   .wifi-bloque {
     background: #f0f9ff;
     border: 2px solid #bae6fd;
@@ -290,14 +259,20 @@
     </div>
   </div>
 
-  <div class="columns mt-2">
-    <div class="column is-6-tablet">
+  <div class="columns mt-2 is-multiline">
+    <div class="column is-4-tablet">
       <div class="notification is-light" style="border-left: 4px solid #6b7280; padding: 0.85rem 1.1rem;">
         <span class="icon is-small mr-1 has-text-grey"><i class="fas fa-file-lines"></i></span>
         <strong>Tamaño oficio</strong> — B&amp;N $4 · Color $18
       </div>
     </div>
-    <div class="column is-6-tablet">
+    <div class="column is-4-tablet">
+      <div class="notification is-warning is-light" style="border-left: 4px solid #E85D04; padding: 0.85rem 1.1rem;">
+        <span class="icon is-small mr-1" style="color: #E85D04;"><i class="fas fa-expand"></i></span>
+        <strong>Tamaño tabloide</strong> (28 × 43 cm) — B&amp;N $12 · Color $25 · papel bond 75 g/m²
+      </div>
+    </div>
+    <div class="column is-4-tablet">
       <div class="notification is-info is-light" style="border-left: 4px solid #0284c7; padding: 0.85rem 1.1rem;">
         <span class="icon is-small mr-1" style="color: #0284c7;"><i class="fas fa-file-magnifying-glass"></i></span>
         <strong>Escáner:</strong> $3 por página · Digitalizamos documentos, fotografías, credenciales y más.
@@ -640,39 +615,6 @@
 </section>
 
 <hr>
-
-{# ── Tabloide ─────────────────────────────────────────────────────────────── #}
-<section class="my-6">
-  <div class="proximo-banner">
-    <div style="max-width: 640px; margin: 0 auto; text-align: center; position: relative;">
-      <h2 class="title is-3 mb-3" style="color: white; font-size: clamp(1.6rem, 5vw, 2.2rem);">
-        Impresión en tabloide
-      </h2>
-      <p style="color: rgba(255,255,255,0.8); margin-bottom: 1.5rem; font-size: 1rem;">
-        Impresión en tamaño tabloide (28 × 43 cm), papel bond normal 75 g/m². Flyers, menús, portafolios, cartulinas: todo en blanco y negro o color de alta calidad.
-      </p>
-      <div style="margin-bottom: 2rem;">
-        <span class="proximo-spec">
-          <i class="fas fa-expand"></i> Tabloide 28 × 43 cm
-        </span>
-        <span class="proximo-spec">
-          <i class="fas fa-weight-hanging"></i> Papel bond normal 75 g/m²
-        </span>
-      </div>
-      <div class="mb-4">
-        <span class="tag is-medium mr-2" style="font-weight: 800; font-size: 1.05rem; padding: 0.6rem 1rem; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">$12 — B&amp;N</span>
-        <span class="tag is-warning is-medium" style="font-weight: 800; font-size: 1.05rem; padding: 0.6rem 1rem;">$25 — color</span>
-      </div>
-      <a href="https://wa.me/524522018336?text=Hola,%20me%20interesa%20la%20impresión%20tabloide"
-         target="_blank" rel="noopener"
-         class="button is-warning is-rounded"
-         style="font-weight: 700;">
-        <span class="icon"><i class="fab fa-whatsapp"></i></span>
-        <span>Preguntar por WhatsApp</span>
-      </a>
-    </div>
-  </div>
-</section>
 
 {# ── Negocios ─────────────────────────────────────────────────────────────── #}
 <section class="my-6">
