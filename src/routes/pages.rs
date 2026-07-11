@@ -32,6 +32,47 @@ pub async fn robots_txt(State(state): State<AppState>) -> Response {
     ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], body).into_response()
 }
 
+pub async fn llms_txt(State(state): State<AppState>) -> Response {
+    let site = &state.config.site_url;
+    let body = format!(
+        r#"# xplaya.com
+
+> Papelería y Mercería "El Gordo" — tienda de artículos de papelería en Playa del Carmen,
+> Quintana Roo, México. Venta de productos con precio, foto y descripción, más servicios de
+> copiado, impresión, trámites y fotografía.
+
+## Catálogo
+
+- [Catálogo de productos]({site}/): productos de papelería con precio, foto, descripción y
+  disponibilidad. Paginado y con búsqueda.
+- [Sitemap]({site}/sitemap.xml): índice completo de productos y páginas del sitio.
+
+## Servicios
+
+- [Centro de copiado]({site}/impresiones): precios de copias, impresiones, papel especial,
+  enmicados, engargolados, escáner y trámites oficiales (CURP, acta de nacimiento).
+- [Impresión de fotos]({site}/fotos): fotos carnet, de trámites y estilo polaroid.
+
+## Información
+
+- [Preguntas frecuentes]({site}/preguntas-frecuentes): horarios, ubicación, precios, envíos,
+  formas de pago y Monedero Electrónico.
+- [Monedero Electrónico — Términos]({site}/terminos): programa de cashback para clientes.
+- [Reseñas]({site}/resena): enlace para dejar reseña en Google.
+
+## Datos del negocio
+
+- Ubicación: Villas del Sol, a un costado de Palmas Turquesa, Playa del Carmen, Quintana Roo,
+  C.P. 77726, México.
+- Horario: lunes a viernes 6:30–18:00, sábados 9:00–14:00.
+- Contacto: WhatsApp +52 452 201 8336 · papeleria@xplaya.com
+- Google Maps: https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x
+"#,
+        site = site
+    );
+    ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], body).into_response()
+}
+
 pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
     let productos = match db::productos::sitemap_productos(&state.pool).await {
         Ok(p) => p,

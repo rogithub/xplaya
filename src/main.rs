@@ -43,6 +43,7 @@ async fn main() {
         .route("/", get(routes::productos::lista))
         .route("/productos", get(|| async { Redirect::permanent("/") }))
         .route("/robots.txt", get(routes::pages::robots_txt))
+        .route("/llms.txt", get(routes::pages::llms_txt))
         .route("/sitemap.xml", get(routes::pages::sitemap_xml))
         .route("/productos/{nid}", get(routes::productos::detalle))
         .route("/carrito", get(routes::carrito::pagina))
