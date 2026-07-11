@@ -43,6 +43,8 @@
   {% if producto.descripcion %}"description": {{ producto.descripcion | tojson }},{% endif %}
   {% if producto.marca %}"brand": { "@type": "Brand", "name": {{ producto.marca | tojson }} },{% endif %}
   {% if producto.modelo %}"model": {{ producto.modelo | tojson }},{% endif %}
+  {% if producto.gtin %}"gtin": {{ producto.gtin | tojson }},{% endif %}
+  {% if producto.sku %}"sku": {{ producto.sku | tojson }},{% endif %}
   "offers": {
     "@type": "Offer",
     "price": "{{ producto.precio_venta }}",

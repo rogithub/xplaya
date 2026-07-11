@@ -85,4 +85,8 @@ pub struct ProductoDetalle {
     pub marca: Option<String>,
     pub modelo: Option<String>,
     pub descripcion: Option<String>,
+    /// GTIN válido (EAN-13/UPC-A/etc.) — solo si CodigoBarrasItem tiene forma de código de barras real.
+    pub gtin: Option<String>,
+    /// Código interno cuando CodigoBarrasItem no tiene forma de GTIN válido.
+    pub sku: Option<String>,
 }

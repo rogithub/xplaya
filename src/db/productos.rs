@@ -66,6 +66,20 @@ struct ProductoMetaRow {
     marca: Option<String>,
     modelo: Option<String>,
     descripcion: Option<String>,
+    codigobarrasitem: Option<String>,
+}
+
+/// GTIN válido = solo dígitos y longitud de un formato de barcode real
+/// (GTIN-8/12/13/14). Si no cumple, se trata como código interno (sku)
+/// en vez de arriesgar un "gtin" inválido en el JSON-LD.
+fn clasificar_codigo_barras(raw: Option<String>) -> (Option<String>, Option<String>) {
+    match raw.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()) {
+        Some(c) if matches!(c.len(), 8 | 12 | 13 | 14) && c.chars().all(|ch| ch.is_ascii_digit()) => {
+            (Some(c), None)
+        }
+        Some(c) => (None, Some(c)),
+        None => (None, None),
+    }
 }
 
 #[derive(sqlx::FromRow)]
@@ -187,12 +201,14 @@ pub async fn detalle(
     };
 
     let meta = sqlx::query_as::<_, ProductoMetaRow>(
-        "SELECT marca, modelo, descripcion FROM productos WHERE id = $1",
+        "SELECT marca, modelo, descripcion, codigobarrasitem FROM productos WHERE id = $1",
     )
     .bind(row.id)
     .fetch_optional(pool)
     .await?
-    .unwrap_or(ProductoMetaRow { marca: None, modelo: None, descripcion: None });
+    .unwrap_or(ProductoMetaRow { marca: None, modelo: None, descripcion: None, codigobarrasitem: None });
+
+    let (gtin, sku) = clasificar_codigo_barras(meta.codigobarrasitem);
 
     let fotos = sqlx::query_scalar::<_, String>(
         "SELECT filename FROM fotosproductos WHERE productoid = $1 ORDER BY filename",
@@ -267,5 +283,7 @@ pub async fn detalle(
         marca: meta.marca,
         modelo: meta.modelo,
         descripcion: meta.descripcion,
+        gtin,
+        sku,
     }))
 }
