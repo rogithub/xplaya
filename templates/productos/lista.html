@@ -1,7 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Catálogo — Papelería xplaya.com | Villas del Sol, Playa del Carmen{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/">{% endblock %}
-{% block head %}{% if productos and productos[0].foto_url %}<link rel="preload" as="image" href="{{ productos[0].foto_url | safe }}" fetchpriority="high">{% endif %}{% endblock %}
+{% block head %}{% if productos and productos[0].foto_url %}<link rel="preload" as="image" href="{{ productos[0].foto_url | safe }}" fetchpriority="high">{% endif %}
+{% if productos %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {% for p in productos %}
+    {
+      "@type": "ListItem",
+      "position": {{ loop.index }},
+      "url": "{{ site_url }}/productos/{{ p.nid }}",
+      "item": {
+        "@type": "Product",
+        "name": {{ p.nombre | tojson }},
+        "url": "{{ site_url }}/productos/{{ p.nid }}",
+        {% if p.foto_url %}"image": {{ p.foto_url | tojson }},{% endif %}
+        "offers": {
+          "@type": "Offer",
+          "price": "{{ p.precio_venta }}",
+          "priceCurrency": "MXN",
+          "availability": "https://schema.org/InStock"
+        }
+      }
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
 <meta property="og:locale" content="es_MX">
