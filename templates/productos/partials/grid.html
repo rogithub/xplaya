@@ -1,5 +1,11 @@
 {% if productos %}
 
+{% if semantica %}
+<p class="notification is-warning is-light">
+    No encontramos coincidencias exactas para "<strong>{{ busqueda }}</strong>" — esto es lo más parecido:
+</p>
+{% endif %}
+
 <div class="columns is-multiline">
     {% for p in productos %}
     <div class="column is-full-mobile is-one-third-tablet is-one-quarter-desktop">

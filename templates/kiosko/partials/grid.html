@@ -1,5 +1,11 @@
 {% if productos %}
 
+{% if semantica %}
+<p class="notification is-warning is-light is-size-4">
+    No encontramos coincidencias exactas para "<strong>{{ busqueda }}</strong>" — esto es lo más parecido:
+</p>
+{% endif %}
+
 {# Grid fijo de 3 columnas — la pantalla del kiosko siempre es 1080p horizontal #}
 <div class="columns is-multiline">
     {% for p in productos %}

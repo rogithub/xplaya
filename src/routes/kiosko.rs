@@ -11,7 +11,9 @@ use uuid::Uuid;
 use crate::{
     AppState,
     db::{kiosko as db, pedidos as db_pedidos, productos as db_productos},
+    embeddings,
     models::pedido::{KioskoPedidoRequest, KioskoPedidoResponse},
+    models::producto::Paginacion,
     routes::productos::CatalogoParams,
 };
 
@@ -106,7 +108,7 @@ pub async fn lista(
     let pagina = params.pagina.unwrap_or(1);
     let busqueda = params.busqueda.as_deref().filter(|s| !s.is_empty());
 
-    let (productos, paginacion) = db::kiosko_lista(
+    let (mut productos, mut paginacion) = db::kiosko_lista(
         &state.pool,
         None,
         busqueda,
@@ -118,6 +120,27 @@ pub async fn lista(
         tracing::error!("Error en catálogo kiosko: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
+
+    // Embeddings Fase 4: mismo fallback semántico que /productos. Aquí importa
+    // más — el cliente en la pantalla táctil escribe "plumón" y el catálogo
+    // dice "MARCADOR". Solo en el landing sin filtro de familia; dentro de una
+    // categoría un fallback global sería confuso.
+    let mut semantica = false;
+    if productos.is_empty()
+        && let Some(q) = busqueda
+        && let Some(url) = &state.config.bge_embeddings_url
+        && let Some(vector) = embeddings::embed_query(&state.http, url, q).await
+    {
+        match db_productos::busqueda_semantica(&state.pool, &vector, &state.config.content_base_url).await {
+            Ok(similares) if !similares.is_empty() => {
+                paginacion = Paginacion::new(similares.len() as i64, 1, 1);
+                productos = similares;
+                semantica = true;
+            }
+            Ok(_) => {}
+            Err(e) => tracing::warn!("Error en búsqueda semántica kiosko: {}", e),
+        }
+    }
 
     // Igual que en /: HTMX (búsqueda o paginación) recibe solo el grid,
     // una carga normal del navegador recibe la página completa.
@@ -142,6 +165,7 @@ pub async fn lista(
                 productos,
                 paginacion,
                 familias,
+                semantica,
                 busqueda => busqueda.unwrap_or(""),
                 base_url => "/kiosko",
             })

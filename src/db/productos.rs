@@ -148,7 +148,20 @@ pub async fn busqueda(
         })
         .collect();
 
-    // Un solo query batch para todas las presentaciones de los productos de esta página.
+    cargar_presentaciones(pool, &mut productos).await?;
+
+    Ok((productos, paginacion))
+}
+
+/// Un solo query batch para todas las presentaciones de los productos de una página.
+async fn cargar_presentaciones(
+    pool: &PgPool,
+    productos: &mut [ProductoCard],
+) -> Result<(), sqlx::Error> {
+    if productos.is_empty() {
+        return Ok(());
+    }
+
     let nids: Vec<i32> = productos.iter().map(|p| p.nid).collect();
     let pres_rows = sqlx::query_as::<_, PresentacionCatalogoRow>(
         "SELECT vi.nid, pp.id, pp.nombre, pp.factor, pp.precioventa
@@ -172,14 +185,89 @@ pub async fn busqueda(
                 precio_venta: format!("{:.2}", row.precioventa),
             });
         }
-        for p in &mut productos {
+        for p in productos.iter_mut() {
             if let Some(pres) = mapa.remove(&p.nid) {
                 p.presentaciones = pres;
             }
         }
     }
 
-    Ok((productos, paginacion))
+    Ok(())
+}
+
+#[derive(sqlx::FromRow)]
+struct SemanticaRow {
+    nid: i32,
+    nombre: String,
+    categoria: String,
+    unidadmedida: String,
+    precioventa: Decimal,
+    foto: Option<String>,
+}
+
+/// Formatea el vector como literal pgvector ("[0.1,0.2,...]") — sqlx no conoce
+/// el tipo vector, así que se bindea como texto y se castea con ::vector en SQL.
+fn vector_literal(v: &[f32]) -> String {
+    let mut s = String::with_capacity(v.len() * 10);
+    s.push('[');
+    for (i, x) in v.iter().enumerate() {
+        if i > 0 {
+            s.push(',');
+        }
+        s.push_str(&x.to_string());
+    }
+    s.push(']');
+    s
+}
+
+/// Búsqueda semántica (Embeddings Fase 4): top-N por distancia coseno contra
+/// Productos.embedding, con los mismos filtros de visibilidad que el catálogo.
+/// Corre solo como fallback cuando la búsqueda normal devolvió 0 resultados —
+/// entrega una sola página, sin paginación. El umbral 0.5 de similitud evita
+/// devolver basura ante consultas sin relación con el catálogo.
+pub async fn busqueda_semantica(
+    pool: &PgPool,
+    query_vector: &[f32],
+    content_base_url: &str,
+) -> Result<Vec<ProductoCard>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, SemanticaRow>(
+        "SELECT vi.nid, vi.nombre, vi.categoria, vi.unidadmedida,
+                vi.ultimoprecioventa AS precioventa,
+                (SELECT fp.filename FROM fotosproductos fp
+                 WHERE fp.productoid = vi.id
+                 ORDER BY fp.filename LIMIT 1) AS foto
+         FROM v_inventario vi
+         JOIN productos p ON p.id = vi.id
+         WHERE p.embedding IS NOT NULL
+           AND vi.esservicio = false
+           AND (vi.stock > 0 OR vi.escompuesto = true)
+           AND vi.ultimoprecioventa > 0
+           AND 1 - (p.embedding <=> $1::vector) > 0.5
+         ORDER BY p.embedding <=> $1::vector
+         LIMIT 12",
+    )
+    .bind(vector_literal(query_vector))
+    .fetch_all(pool)
+    .await?;
+
+    let mut productos: Vec<ProductoCard> = rows
+        .into_iter()
+        .map(|r| ProductoCard {
+            nid: r.nid,
+            nombre: r.nombre,
+            categoria: r.categoria,
+            precio_venta: format!("{:.2}", r.precioventa),
+            unidad_medida: r.unidadmedida,
+            foto_url: r.foto.map(|f| {
+                format!("{}/papeleria-fotos-productos/{}", content_base_url, f)
+            }),
+            presentaciones: vec![],
+        })
+        .collect();
+
+    cargar_presentaciones(pool, &mut productos).await?;
+
+    Ok(productos)
 }
 
 pub async fn detalle(

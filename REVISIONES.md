@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Embeddings Fase 4 — búsqueda semántica como fallback en /productos y /kiosko
+
+Cuando la búsqueda exacta (tsvector/ILIKE/trigram) devuelve 0 resultados, la consulta se embebe vía bge-m3 y se buscan los 12 productos más cercanos por distancia coseno contra `Productos.embedding` (umbral de similitud > 0.5, mismos filtros de visibilidad que el catálogo). "plumón rojo" ahora encuentra "MARCADOR…" aunque no compartan ni una letra. Fail-open en todos los caminos: si `BGE_EMBEDDINGS_URL` no está definida, bge-m3 no responde en 2 s, o la query vectorial falla, el usuario ve el "sin resultados" de siempre — nunca un error.
+
+**Archivos a revisar:**
+- `src/embeddings.rs` — nuevo: `embed_query()`, POST `/embed` con reqwest (ya era dependencia), timeout 2 s, devuelve `Option` y loguea `warn` en fallas.
+- `src/db/productos.rs` — `busqueda_semantica()`: el vector se serializa como literal pgvector (`[0.1,…]`) y se bindea como texto con cast `::vector` (sqlx no conoce el tipo); `ORDER BY embedding <=>` + `JOIN v_inventario` con los filtros de `v_galeria_principal`. La carga batch de presentaciones se extrajo a `cargar_presentaciones()` (la usan `busqueda` y `busqueda_semantica`).
+- `src/routes/productos.rs` y `src/routes/kiosko.rs` (`lista`) — el bloque de fallback con let-chains; `Paginacion::new(n, 1, 1)` = una sola página sin nav. En kiosko solo aplica en el landing — dentro de una categoría un fallback global sería confuso.
+- `templates/productos/partials/grid.html` y `templates/kiosko/partials/grid.html` — aviso `{% if semantica %}` "esto es lo más parecido".
+- `src/config.rs` / `.env.example` — `BGE_EMBEDDINGS_URL: Option<String>` (vacía o ausente → apagado).
+- `k3s-manifests/workloads/papeleria/xplaya-deployment.yaml` — env apuntando a `http://bge-embeddings.ai.svc.cluster.local:8000`; quitar la variable es el botón de pánico.
+
+**Verificado (local, BD dev con 2,262/2,262 embeddings + mock de bge-m3 con un embedding real de la BD):** query sin hits léxicos → aviso + marcadores ordenados por similitud en `/productos` y `/kiosko`; búsqueda exacta intacta (sin aviso, paginación normal); con bge caído → 200 y "No se encontraron productos" normal; `cargo clippy` limpio.
+
+---
+
 ## Kiosko Fase 3 — envío de pedido al POS, sin capturar datos del cliente
 
 Cierra el flujo del kiosko: el pedido llega al POS con `Origen=0` (Tienda) para atenderse como mostrador. Dos rediseños sobre el plan original del ROADMAP, ambos documentados en la sección [Kiosko Fase 3] con su razonamiento completo:

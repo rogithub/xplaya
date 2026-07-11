@@ -6,7 +6,7 @@ use axum::{
 use minijinja::context;
 use serde::Deserialize;
 
-use crate::{AppState, db::productos as db};
+use crate::{AppState, db::productos as db, embeddings, models::producto::Paginacion};
 
 #[derive(Deserialize, Default)]
 pub struct CatalogoParams {
@@ -22,7 +22,7 @@ pub async fn lista(
     let pagina = params.pagina.unwrap_or(1);
     let busqueda = params.busqueda.as_deref().filter(|s| !s.is_empty());
 
-    let (productos, paginacion) = db::busqueda(
+    let (mut productos, mut paginacion) = db::busqueda(
         &state.pool,
         busqueda,
         pagina,
@@ -33,6 +33,26 @@ pub async fn lista(
         tracing::error!("Error en catálogo: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
+
+    // Embeddings Fase 4: si la búsqueda exacta no encontró nada, intentar por
+    // similitud semántica. Fail-open — si bge-m3 no responde o la búsqueda
+    // vectorial falla, se muestra el "sin resultados" de siempre.
+    let mut semantica = false;
+    if productos.is_empty()
+        && let Some(q) = busqueda
+        && let Some(url) = &state.config.bge_embeddings_url
+        && let Some(vector) = embeddings::embed_query(&state.http, url, q).await
+    {
+        match db::busqueda_semantica(&state.pool, &vector, &state.config.content_base_url).await {
+            Ok(similares) if !similares.is_empty() => {
+                paginacion = Paginacion::new(similares.len() as i64, 1, 1);
+                productos = similares;
+                semantica = true;
+            }
+            Ok(_) => {}
+            Err(e) => tracing::warn!("Error en búsqueda semántica: {}", e),
+        }
+    }
 
     // Si HTMX hace el request (búsqueda o paginación), devuelve solo el grid.
     // Si es una carga normal del navegador, devuelve la página completa.
@@ -46,6 +66,7 @@ pub async fn lista(
             t.render(context! {
                 productos,
                 paginacion,
+                semantica,
                 busqueda => busqueda.unwrap_or(""),
             })
         })

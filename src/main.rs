@@ -7,6 +7,7 @@ use tower_http::set_header::SetResponseHeaderLayer;
 
 mod config;
 mod db;
+mod embeddings;
 mod middleware;
 mod models;
 mod routes;
