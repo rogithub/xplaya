@@ -56,6 +56,7 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
         (format!("{site}/fotos"), "0.8", "monthly"),
         (format!("{site}/imagina"), "0.8", "monthly"),
         (format!("{site}/futbol"), "0.8", "daily"),
+        (format!("{site}/preguntas-frecuentes"), "0.7", "monthly"),
         (format!("{site}/resena"), "0.5", "monthly"),
     ] {
         xml.push_str(&format!(
@@ -89,6 +90,18 @@ pub async fn resena(State(state): State<AppState>) -> Result<Html<String>, Statu
     })?;
     let html = tmpl.render(context!()).map_err(|e| {
         tracing::error!("Render resena: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
+pub async fn faq(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let tmpl = state.tmpl.get_template("pages/faq.html").map_err(|e| {
+        tracing::error!("Template faq: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(context!()).map_err(|e| {
+        tracing::error!("Render faq: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Html(html))

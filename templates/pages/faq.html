@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Preguntas Frecuentes — Papelería xplaya.com{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/preguntas-frecuentes">{% endblock %}
+{% block meta_description %}
+<meta name="description" content="Horarios, ubicación, precios de copias e impresiones, envíos, formas de pago y Monedero Electrónico — respuestas rápidas sobre Papelería xplaya.com en Playa del Carmen.">
+{% endblock %}
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/preguntas-frecuentes">
+<meta property="og:title" content="Preguntas Frecuentes — Papelería xplaya.com">
+<meta property="og:description" content="Horarios, ubicación, precios, envíos, formas de pago y Monedero Electrónico.">
+<meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Preguntas Frecuentes — Papelería xplaya.com">
+<meta name="twitter:description" content="Horarios, ubicación, precios, envíos, formas de pago y Monedero Electrónico.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Dónde está ubicada la papelería?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Estamos en Villas del Sol, a un costado de Palmas Turquesa, Playa del Carmen, Quintana Roo, C.P. 77726."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuáles son sus horarios de atención?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Lunes a viernes de 6:30 a 18:00. Sábados de 9:00 a 14:00."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuánto cuesta una copia o impresión?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Copia o impresión blanco y negro tamaño carta: $1 (mismo precio para copia o impresión, incluye INE por ambos lados). Impresión a color carta: $12."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Tienen WiFi gratis para enviar archivos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. El WiFi es gratuito para enviar tus archivos a imprimir, sin costo por recibir el archivo ni por entregarte el resultado."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Hacen envíos a domicilio o a otras partes de México?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí, hacemos envíos a todo México por paquetería."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué formas de pago aceptan?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Aceptamos efectivo y tarjeta."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué es el Monedero Electrónico y cómo me registro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Es nuestro programa de cashback: acumulas saldo en cada compra y lo usas como descuento después. Te registras por WhatsApp mandando '#monedero TuNombre'. Consulta los términos completos en xplaya.com/terminos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Hacen trámites como CURP o acta de nacimiento?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí, tramitamos documentos oficiales en línea como acta de nacimiento y CURP. Te entregamos la impresión y te mandamos el PDF por WhatsApp o correo para que lo reimprimas cuando lo necesites."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Tienen fotos carnet o fotos estilo polaroid?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Fotos carnet y de trámites (credencial, pasaporte, visas, licencia) desde $17 la hoja, y fotos estilo polaroid armadas desde tu celular desde $40 el paquete."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo los contacto?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Por WhatsApp al 452-201-8336, o visítanos directamente en tienda."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+<div class="column" style="max-width: 720px;">
+
+    <div class="has-text-centered mb-6">
+        <h1 class="title is-4 mb-1">Preguntas Frecuentes</h1>
+        <p class="has-text-grey is-size-7">Papelería xplaya.com — Playa del Carmen</p>
+    </div>
+
+    <details class="box mb-3" open>
+        <summary class="has-text-weight-bold is-clickable">¿Dónde está ubicada la papelería?</summary>
+        <p class="is-size-7 mt-3">
+            Estamos en Villas del Sol, a un costado de Palmas Turquesa, Playa del Carmen, Quintana Roo, C.P. 77726.
+            <a href="https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x"
+               target="_blank" rel="noopener">Ver en Google Maps</a>.
+        </p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Cuáles son sus horarios de atención?</summary>
+        <p class="is-size-7 mt-3">Lunes a viernes de 6:30 a 18:00. Sábados de 9:00 a 14:00.</p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Cuánto cuesta una copia o impresión?</summary>
+        <p class="is-size-7 mt-3">
+            Copia o impresión blanco y negro tamaño carta: <strong>$1</strong> (mismo precio para copia o
+            impresión, incluye INE por ambos lados). Impresión a color carta: <strong>$12</strong>.
+            Ve el resto de precios en <a href="/impresiones">Centro de Copiado</a>.
+        </p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Tienen WiFi gratis para enviar archivos?</summary>
+        <p class="is-size-7 mt-3">
+            Sí, el WiFi es gratuito para enviar tus archivos a imprimir — sin costo por recibir el archivo
+            ni por entregarte el resultado.
+        </p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Hacen envíos a domicilio o a otras partes de México?</summary>
+        <p class="is-size-7 mt-3">Sí, hacemos envíos a todo México por paquetería.</p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Qué formas de pago aceptan?</summary>
+        <p class="is-size-7 mt-3">Aceptamos efectivo y tarjeta.</p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Qué es el Monedero Electrónico y cómo me registro?</summary>
+        <p class="is-size-7 mt-3">
+            Es nuestro programa de cashback: acumulas saldo en cada compra y lo usas como descuento después.
+            Te registras por WhatsApp mandando <strong>#monedero TuNombre</strong>.
+            Consulta los <a href="/terminos">términos completos del Monedero</a>.
+        </p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Hacen trámites como CURP o acta de nacimiento?</summary>
+        <p class="is-size-7 mt-3">
+            Sí, tramitamos documentos oficiales en línea como acta de nacimiento y CURP. Te entregamos la
+            impresión y te mandamos el PDF por WhatsApp o correo para que lo reimprimas cuando lo necesites.
+        </p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Tienen fotos carnet o fotos estilo polaroid?</summary>
+        <p class="is-size-7 mt-3">
+            Sí. Fotos carnet y de trámites (credencial, pasaporte, visas, licencia) desde $17 la hoja, y
+            <a href="/fotos">fotos estilo polaroid</a> armadas desde tu celular desde $40 el paquete.
+        </p>
+    </details>
+
+    <details class="box mb-3">
+        <summary class="has-text-weight-bold is-clickable">¿Cómo los contacto?</summary>
+        <p class="is-size-7 mt-3">
+            Por WhatsApp al
+            <a href="https://wa.me/524522018336" target="_blank" rel="noopener">452-201-8336</a>,
+            o visítanos directamente en tienda.
+        </p>
+    </details>
+
+    <div class="has-text-centered mt-6">
+        <a href="https://wa.me/524522018336?text=Hola,%20tengo%20una%20pregunta"
+           target="_blank" rel="noopener"
+           class="button is-success is-rounded">
+            <span class="icon"><i class="fab fa-whatsapp"></i></span>
+            <span>¿No encontraste tu respuesta? Pregúntanos</span>
+        </a>
+    </div>
+
+</div>
+</div>
+
+{% endblock %}
