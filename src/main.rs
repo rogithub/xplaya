@@ -54,7 +54,6 @@ async fn main() {
         .route("/impresiones", get(routes::pages::impresiones))
         .route("/fotos", get(routes::pages::fotos))
         .route("/imagina", get(routes::pages::imagina))
-        .route("/futbol", get(routes::futbol::pagina))
         .route("/kiosko", get(routes::kiosko::lista))
         .route("/kiosko/categoria/{id}", get(routes::kiosko::categoria))
         .route("/kiosko/productos/{nid}", get(routes::kiosko::detalle))

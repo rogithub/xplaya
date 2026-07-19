@@ -96,7 +96,6 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
         (format!("{site}/impresiones"), "0.9", "monthly"),
         (format!("{site}/fotos"), "0.8", "monthly"),
         (format!("{site}/imagina"), "0.8", "monthly"),
-        (format!("{site}/futbol"), "0.8", "daily"),
         (format!("{site}/preguntas-frecuentes"), "0.7", "monthly"),
         (format!("{site}/resena"), "0.5", "monthly"),
     ] {
