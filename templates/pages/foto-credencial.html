@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block title %}Foto para credencial escolar desde casa — Playa del Carmen{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Tómate la foto tamaño credencial, infantil o de título desde tu casa con el celular y nosotros la imprimimos en Playa del Carmen. Para la escuela, el gafete del trabajo o trámites internos — lista el mismo día, sin instalar nada.">
+<meta name="keywords" content="foto para credencial playa del carmen, foto tamaño infantil, foto escolar, foto para gafete, foto tamaño credencial, foto de credencial desde el celular, tomarse la foto de credencial en casa, foto para título profesional, impresión de fotos de credencial playa del carmen, foto 3x4 cm, foto tamaño credencial 3.5 x 4.5, fotos para la escuela, foto de identificación, dónde imprimir fotos de credencial, foto infantil 2.5 x 3, estudio fotográfico en casa">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/foto-credencial">{% endblock %}
+
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/foto-credencial">
+<meta property="og:title" content="Foto para credencial desde casa — te la tomas tú, nosotros la imprimimos">
+<meta property="og:description" content="Herramienta gratis para tomarte la foto tamaño credencial, infantil o de título desde el celular. La imprimimos el mismo día en Playa del Carmen. Para escuela, gafetes y trámites internos.">
+<meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Foto para credencial desde casa — Playa del Carmen">
+<meta name="twitter:description" content="Te tomas la foto tamaño credencial o infantil con el celular y nosotros la imprimimos el mismo día. Sin instalar nada, sin cuenta.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg">
+{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Foto para credencial desde casa",
+  "serviceType": "Fotografía para credenciales e identificaciones",
+  "description": "El cliente se toma la foto tamaño credencial, infantil o de título desde su celular con una herramienta web gratuita y la papelería la imprime a la medida exacta. Para credencial escolar, gafete de trabajo, título profesional y formatos internos. No aplica para pasaporte ni visa.",
+  "areaServed": {
+    "@type": "City",
+    "name": "Playa del Carmen"
+  },
+  "provider": {
+    "@type": "Store",
+    "name": "Papelería xplaya.com",
+    "url": "{{ site_url }}",
+    "telephone": "+52-452-201-8336",
+    "email": "papeleria@xplaya.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Villas del Sol, a un costado de Palmas Turquesa",
+      "addressLocality": "Playa del Carmen",
+      "addressRegion": "Quintana Roo",
+      "postalCode": "77726",
+      "addressCountry": "MX"
+    }
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "MXN",
+    "priceSpecification": {
+      "@type": "PriceSpecification",
+      "priceCurrency": "MXN",
+      "description": "Se cobra en el mostrador al recoger, según el tamaño y la cantidad de copias por hoja."
+    }
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Cómo tomarte la foto de credencial en casa e imprimirla",
+  "description": "Pasos para tomarte una foto tamaño credencial o infantil desde el celular y recogerla impresa en la papelería.",
+  "totalTime": "PT5M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "Celular o computadora con cámara"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Abre la herramienta y elige el tamaño",
+      "text": "Entra al link desde el celular y elige el tamaño que te piden: infantil 2.5×3 cm, credencial 3.5×4.5 cm, título profesional o una medida libre en centímetros.",
+      "url": "{{ site_url }}/foto-credencial"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Tómate la foto",
+      "text": "Párate frente a una pared de color claro y liso, con luz de día de frente. La cámara ya te muestra el recuadro al tamaño correcto con guías para la cara. Dispara y ajusta el encuadre."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Envía la foto y guarda tu código",
+      "text": "Al confirmar, la foto nos llega lista para imprimir y recibes un código. No necesitas cuenta ni datos personales."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Recoge tus fotos impresas",
+      "text": "Pásate a la papelería en Playa del Carmen con tu código. Te entregamos la hoja con tus fotos el mismo día y pagas en el mostrador."
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Sirve para pasaporte o visa americana?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Para pasaporte y visa los requisitos de fondo, luz y medidas los revisa el consulado y una foto de celular casi siempre se rechaza. Para esos trámites pásate a la papelería y te la tomamos nosotros. Esta herramienta es para credencial escolar, gafete de trabajo, título profesional y formatos parecidos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué necesito para tomarme la foto en casa?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Un celular con cámara, una pared de color claro y liso de fondo, y luz de día de frente (no a contraluz). Nada que instalar: la herramienta abre directo en el navegador."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuánto tardan en imprimirla?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "El mismo día. Tu foto nos llega con un código; la imprimimos y te avisamos por WhatsApp para que la recojas en la papelería."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuánto cuesta?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Se cobra en el mostrador al recoger, según el tamaño y cuántas copias caben en la hoja. Pregunta el precio por WhatsApp al 452-201-8336."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo elegir el tamaño exacto?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Están los tamaños más pedidos (infantil 2.5×3 cm, credencial 3.5×4.5 cm, credencial grande 4×5 cm, título profesional) y también puedes escribir una medida libre en centímetros."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Necesito crear una cuenta?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. La herramienta no pide registro ni datos personales, solo tu foto y el tamaño."
+      }
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "{{ site_url }}/" },
+    { "@type": "ListItem", "position": 2, "name": "Impresión de fotos", "item": "{{ site_url }}/fotos" },
+    { "@type": "ListItem", "position": 3, "name": "Foto para credencial desde casa", "item": "{{ site_url }}/foto-credencial" }
+  ]
+}
+</script>
+<style>
+  .fc-hero {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 110%, rgba(129, 140, 248, 0.28), transparent),
+      linear-gradient(150deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    padding: 4rem 1.5rem 3.5rem;
+    color: white;
+  }
+  .fc-hero .title { color: white; }
+  .fc-hero .subtitle { color: white; opacity: 0.88; }
+
+  .fc-phone {
+    width: 8.5rem;
+    aspect-ratio: 9 / 16;
+    margin: 2.25rem auto 0;
+    background: #0f172a;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    border-radius: 1.4rem;
+    padding: 0.6rem;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fc-phone-frame {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.9rem;
+    background: linear-gradient(160deg, #6366f1, #0ea5e9);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fc-phone-mask {
+    width: 62%;
+    aspect-ratio: 35 / 45;
+    border: 2px dashed rgba(255, 255, 255, 0.9);
+    border-radius: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 1.4rem;
+  }
+
+  .fc-step-number {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #4f46e5;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    flex-shrink: 0;
+  }
+  .fc-card {
+    height: 100%;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .fc-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+  .fc-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .fc-tool {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border: 2px solid #6366f1;
+    border-radius: 1rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+  .fc-tool-badge {
+    display: inline-block;
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+  }
+  .fc-tool-step {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: #e0e7ff;
+    color: #4338ca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin: 0 auto 0.6rem;
+  }
+  .fc-note {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 0.4rem;
+    padding: 1.1rem 1.25rem;
+  }
+  .fc-sizes td, .fc-sizes th { vertical-align: middle; }
+  .fc-cta {
+    background: #eef2ff;
+    border-top: 3px solid #6366f1;
+  }
+  .fc-b2b {
+    background: #fff7ed;
+    border-left: 3px solid #E85D04;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────────── #}
+<div class="fc-hero" style="margin: -2.5rem -1.5rem 2.5rem; border-radius: 0.5rem;">
+  <div style="max-width: 680px; margin: 0 auto; text-align: center;">
+    <p class="is-size-7 mb-3" style="opacity: 0.65; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">
+      Papelería xplaya.com · Playa del Carmen
+    </p>
+    <h1 class="title is-1 mb-3" style="font-size: clamp(1.9rem, 6vw, 3.1rem); font-weight: 900; letter-spacing: -0.02em;">
+      Tómate la foto de credencial<br>en tu casa
+    </h1>
+    <p class="subtitle is-5 mb-4">
+      Tú te tomas la foto con el celular, nosotros la imprimimos.<br>
+      Para la escuela, el gafete del trabajo o tu título — lista el mismo día.
+    </p>
+    <div class="buttons is-centered">
+      <a href="{{ imagina_url }}/kiosko/carnet" target="_blank" rel="noopener"
+         class="button is-medium is-rounded"
+         style="font-weight: 700; padding-left: 2rem; padding-right: 2rem; background: #f59e0b; border-color: #d97706; color: #1c1917;">
+        <span class="icon"><i class="fas fa-camera"></i></span>
+        <span>Tomar mi foto ahora</span>
+      </a>
+    </div>
+    <p class="is-size-7 mt-2" style="opacity: 0.6;">
+      Abre en el navegador de tu celular · Sin instalar nada · Sin cuenta
+    </p>
+    <div class="fc-phone">
+      <div class="fc-phone-frame">
+        <div class="fc-phone-mask"><i class="fas fa-user"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Cómo funciona ────────────────────────────────────────────────────────── #}
+<section class="mb-6">
+  <h2 class="title is-4 has-text-centered mb-5">Cómo funciona</h2>
+  <div class="columns is-mobile is-multiline is-centered">
+    <div class="column is-3-tablet is-6-mobile has-text-centered">
+      <div class="fc-step-number">1</div>
+      <p class="has-text-weight-semibold mb-1">Elige el tamaño</p>
+      <p class="is-size-7 has-text-grey">Infantil, credencial, título o la medida exacta en centímetros que te pidieron.</p>
+    </div>
+    <div class="column is-3-tablet is-6-mobile has-text-centered">
+      <div class="fc-step-number">2</div>
+      <p class="has-text-weight-semibold mb-1">Tómate la foto</p>
+      <p class="is-size-7 has-text-grey">La cámara ya te muestra el recuadro al tamaño correcto, con guías para centrar la cara.</p>
+    </div>
+    <div class="column is-3-tablet is-6-mobile has-text-centered">
+      <div class="fc-step-number">3</div>
+      <p class="has-text-weight-semibold mb-1">Envía y guarda tu código</p>
+      <p class="is-size-7 has-text-grey">La foto nos llega lista para imprimir. Recibes un código — sin registro ni datos personales.</p>
+    </div>
+    <div class="column is-3-tablet is-6-mobile has-text-centered">
+      <div class="fc-step-number">4</div>
+      <p class="has-text-weight-semibold mb-1">Recógela impresa</p>
+      <p class="is-size-7 has-text-grey">Pásate a la papelería con tu código. Lista el mismo día; pagas en el mostrador.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Para qué sirve ───────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-2">¿Para qué credenciales sirve?</h2>
+  <p class="has-text-centered has-text-grey is-size-6 mb-5">Trámites donde piden una foto tamaño credencial o infantil con fondo claro.</p>
+
+  <div class="columns is-multiline">
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fc-card">
+        <div class="card-content">
+          <div class="fc-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fas fa-graduation-cap"></i></div>
+          <p class="has-text-weight-bold mb-1">Credencial escolar</p>
+          <p class="is-size-7 has-text-grey">Inscripciones, credencial de la escuela, formatos para maestros y padres de familia, tareas y proyectos.</p>
+        </div>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fc-card">
+        <div class="card-content">
+          <div class="fc-icon" style="background: #dcfce7; color: #16a34a;"><i class="fas fa-id-badge"></i></div>
+          <p class="has-text-weight-bold mb-1">Gafete de trabajo</p>
+          <p class="is-size-7 has-text-grey">Gafete de empleado, credencial de la empresa, alta de personal y controles de acceso internos.</p>
+        </div>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fc-card">
+        <div class="card-content">
+          <div class="fc-icon" style="background: #fef3c7; color: #d97706;"><i class="fas fa-scroll"></i></div>
+          <p class="has-text-weight-bold mb-1">Título profesional y cédula</p>
+          <p class="is-size-7 has-text-grey">Fotos tamaño título (3.5×4.5 cm) para el trámite del título y la cédula profesional.</p>
+        </div>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fc-card">
+        <div class="card-content">
+          <div class="fc-icon" style="background: #fce7f3; color: #db2777;"><i class="fas fa-users"></i></div>
+          <p class="has-text-weight-bold mb-1">Credencial de socio o club</p>
+          <p class="is-size-7 has-text-grey">Membresías, clubes deportivos, asociaciones y cualquier credencial que hagan en el lugar.</p>
+        </div>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fc-card">
+        <div class="card-content">
+          <div class="fc-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fas fa-file-signature"></i></div>
+          <p class="has-text-weight-bold mb-1">Formatos y solicitudes</p>
+          <p class="is-size-7 has-text-grey">Solicitudes de empleo, expedientes, formatos que piden una foto pegada tamaño infantil.</p>
+        </div>
+      </div>
+    </div>
+    <div class="column is-6-tablet is-4-desktop">
+      <div class="card fc-card">
+        <div class="card-content">
+          <div class="fc-icon" style="background: #ede9fe; color: #7c3aed;"><i class="fas fa-ruler-combined"></i></div>
+          <p class="has-text-weight-bold mb-1">Medida libre</p>
+          <p class="is-size-7 has-text-grey">¿Te pidieron una medida rara en centímetros? Escríbela y la foto sale a ese tamaño exacto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fc-note mt-5">
+    <p class="is-size-7">
+      <span class="icon is-small mr-1" style="color: #d97706;"><i class="fas fa-triangle-exclamation"></i></span>
+      <strong>Para pasaporte y visa, no.</strong> Esos trámites revisan el fondo, la luz y las medidas con lupa,
+      y una foto de celular casi siempre la rechazan. Para pasaporte o visa
+      <a href="/fotos">pásate a la papelería</a> y te la tomamos nosotros.
+    </p>
+  </div>
+</section>
+
+<hr>
+
+{# ── Herramienta ──────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <div class="fc-tool">
+    <div style="max-width: 620px; margin: 0 auto;">
+      <div class="fc-tool-badge">Gratis</div>
+      <h2 class="title is-3 mb-3" style="font-size: clamp(1.6rem, 5vw, 2.2rem);">
+        Tu estudio fotográfico<br>en la mesa de tu casa
+      </h2>
+      <p class="has-text-grey mb-1 is-size-6">
+        Abre el link, elige el tamaño y la cámara te muestra el recuadro exacto con guías para la cara.
+        Que otra persona te tome la foto frente a una pared clara — nosotros la imprimimos.
+      </p>
+      <p class="has-text-grey is-size-7 mb-5">Sin instalar nada · Funciona directo en el navegador del celular.</p>
+
+      <div class="columns is-mobile is-multiline is-centered mb-5" style="max-width: 480px; margin-left: auto; margin-right: auto;">
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="fc-tool-step"><i class="fas fa-crop-simple"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Elige tamaño</p>
+          <p class="is-size-7 has-text-grey">Infantil, credencial<br>o medida libre</p>
+        </div>
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="fc-tool-step"><i class="fas fa-camera"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Toma la foto</p>
+          <p class="is-size-7 has-text-grey">Recuadro y guías<br>al ratio correcto</p>
+        </div>
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="fc-tool-step"><i class="fas fa-paper-plane"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Envía</p>
+          <p class="is-size-7 has-text-grey">Recibes un<br>código de pedido</p>
+        </div>
+        <div class="column is-6-mobile is-3-tablet has-text-centered">
+          <div class="fc-tool-step" style="background: #dcfce7; color: #16a34a;"><i class="fas fa-store"></i></div>
+          <p class="is-size-7 has-text-weight-semibold mb-1">Recoge</p>
+          <p class="is-size-7 has-text-grey">Impresa el<br>mismo día</p>
+        </div>
+      </div>
+
+      <a href="{{ imagina_url }}/kiosko/carnet" target="_blank" rel="noopener"
+         class="button is-medium is-rounded"
+         style="font-weight: 700; padding-left: 2rem; padding-right: 2rem; background: #4f46e5; border-color: #4338ca; color: white;">
+        <span class="icon"><i class="fas fa-mobile-screen-button"></i></span>
+        <span>Abrir la herramienta</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Para que salga bien ──────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-5">Para que la foto salga bien a la primera</h2>
+  <div class="columns is-multiline">
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #4f46e5;"><i class="fas fa-square-full"></i></span>
+      <p class="has-text-weight-semibold mb-1">Pared clara y lisa</p>
+      <p class="is-size-7 has-text-grey">Ponte frente a una pared blanca o de color claro, sin cuadros, sin muebles y sin sombras detrás.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #f59e0b;"><i class="fas fa-sun"></i></span>
+      <p class="has-text-weight-semibold mb-1">Luz de frente</p>
+      <p class="is-size-7 has-text-grey">Luz de día de frente, nunca a contraluz ni con una ventana atrás. Nada de flash directo.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #16a34a;"><i class="fas fa-face-smile"></i></span>
+      <p class="has-text-weight-semibold mb-1">Cara despejada</p>
+      <p class="is-size-7 has-text-grey">Sin gorra ni lentes oscuros, cabello fuera de la cara, expresión neutra y hombros rectos.</p>
+    </div>
+    <div class="column is-6-tablet is-3-desktop has-text-centered">
+      <span class="icon is-large mb-2" style="font-size: 2rem; color: #0284c7;"><i class="fas fa-user-group"></i></span>
+      <p class="has-text-weight-semibold mb-1">Que te la tomen</p>
+      <p class="is-size-7 has-text-grey">Mejor que otra persona dispare a un brazo de distancia; sale más derecha que una selfie.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+{# ── Tamaños ──────────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-2">Tamaños disponibles</h2>
+  <p class="has-text-centered has-text-grey is-size-6 mb-5">Los más pedidos ya están listos; también puedes poner una medida libre.</p>
+  <div class="table-container">
+    <table class="table is-fullwidth is-striped fc-sizes">
+      <thead>
+        <tr><th>Tamaño</th><th>Medida</th><th>Se usa para</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Infantil</strong></td><td>2.5 × 3 cm</td><td>Formatos escolares, solicitudes, expedientes</td></tr>
+        <tr><td><strong>Credencial</strong></td><td>3.5 × 4.5 cm</td><td>Credencial escolar, gafete de trabajo, membresías</td></tr>
+        <tr><td><strong>Credencial grande</strong></td><td>4 × 5 cm</td><td>Algunas credenciales y formatos institucionales</td></tr>
+        <tr><td><strong>Título profesional</strong></td><td>3.5 × 4.5 cm</td><td>Trámite de título y cédula profesional</td></tr>
+        <tr><td><strong>Licencia</strong></td><td>5.4 × 8.6 cm</td><td>Formato tipo tarjeta, credenciales grandes</td></tr>
+        <tr><td><strong>Medida libre</strong></td><td>La que necesites</td><td>Cualquier tamaño exacto en centímetros</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+{# ── FAQ ──────────────────────────────────────────────────────────────────── #}
+<section class="my-6">
+  <h2 class="title is-4 has-text-centered mb-5">Preguntas frecuentes</h2>
+  <div style="max-width: 720px; margin: 0 auto;">
+    <div class="mb-4">
+      <p class="has-text-weight-bold mb-1">¿Sirve para pasaporte o visa americana?</p>
+      <p class="is-size-7 has-text-grey">No. Para pasaporte y visa los requisitos de fondo, luz y medidas los revisa el consulado y una foto de celular casi siempre se rechaza. Para esos trámites pásate a la papelería y te la tomamos nosotros. Esta herramienta es para credencial escolar, gafete de trabajo, título profesional y formatos parecidos.</p>
+    </div>
+    <div class="mb-4">
+      <p class="has-text-weight-bold mb-1">¿Qué necesito para tomarme la foto en casa?</p>
+      <p class="is-size-7 has-text-grey">Un celular con cámara, una pared de color claro y liso de fondo, y luz de día de frente (no a contraluz). Nada que instalar: la herramienta abre directo en el navegador.</p>
+    </div>
+    <div class="mb-4">
+      <p class="has-text-weight-bold mb-1">¿Cuánto tardan en imprimirla?</p>
+      <p class="is-size-7 has-text-grey">El mismo día. Tu foto nos llega con un código; la imprimimos y te avisamos por WhatsApp para que la recojas en la papelería.</p>
+    </div>
+    <div class="mb-4">
+      <p class="has-text-weight-bold mb-1">¿Cuánto cuesta?</p>
+      <p class="is-size-7 has-text-grey">Se cobra en el mostrador al recoger, según el tamaño y cuántas copias caben en la hoja. Pregunta el precio por WhatsApp al 452-201-8336.</p>
+    </div>
+    <div class="mb-4">
+      <p class="has-text-weight-bold mb-1">¿Puedo elegir el tamaño exacto?</p>
+      <p class="is-size-7 has-text-grey">Sí. Están los tamaños más pedidos (infantil 2.5×3 cm, credencial 3.5×4.5 cm, credencial grande 4×5 cm, título profesional) y también puedes escribir una medida libre en centímetros.</p>
+    </div>
+    <div class="mb-4">
+      <p class="has-text-weight-bold mb-1">¿Necesito crear una cuenta?</p>
+      <p class="is-size-7 has-text-grey">No. La herramienta no pide registro ni datos personales, solo tu foto y el tamaño.</p>
+    </div>
+  </div>
+</section>
+
+{# ── CTA final ────────────────────────────────────────────────────────────── #}
+<div class="fc-cta" style="margin: 0 -1.5rem; padding: 3rem 1.5rem; text-align: center;">
+  <h2 class="title is-4 mb-2">¿Listo para tomarte la foto?</h2>
+  <p class="has-text-grey mb-5">Ábrela desde el celular, tómate la foto frente a una pared clara y nosotros la imprimimos el mismo día.</p>
+  <div class="buttons is-centered">
+    <a href="{{ imagina_url }}/kiosko/carnet" target="_blank" rel="noopener"
+       class="button is-medium is-rounded"
+       style="font-weight: 700; padding-left: 2rem; padding-right: 2rem; background: #4f46e5; border-color: #4338ca; color: white;">
+      <span class="icon"><i class="fas fa-camera"></i></span>
+      <span>Tomar mi foto</span>
+    </a>
+    <a href="https://wa.me/524522018336?text=Hola,%20me%20tomé%20una%20foto%20de%20credencial%20y%20quiero%20imprimirla"
+       target="_blank" rel="noopener"
+       class="button is-success is-medium is-rounded"
+       style="font-weight: 700; padding-left: 2rem; padding-right: 2rem;">
+      <span class="icon"><i class="fab fa-whatsapp"></i></span>
+      <span>452-201-8336</span>
+    </a>
+  </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    Recoge en: Villas del Sol, junto a Palmas Turquesa · Playa del Carmen, Q.Roo
+  </p>
+</div>
+
+{# ── Enlaces cruzados ─────────────────────────────────────────────────────── #}
+<div class="fc-b2b" style="margin: 0 -1.5rem -2.5rem; padding: 1.25rem 1.5rem; border-radius: 0 0 0.5rem 0.5rem;">
+  <p class="is-size-7 has-text-grey">
+    <span class="icon is-small mr-1" style="color: #E85D04;"><i class="fas fa-camera-retro"></i></span>
+    ¿Buscas otro tipo de impresión? Mira todo lo que hacemos en <a href="/fotos"><strong>impresión de fotos</strong></a>
+    — carnet en mostrador, estilo polaroid, ampliaciones y fotos a medida. ¿Tienes una papelería?
+    Conoce <a href="/imagina"><strong>imagina</strong></a>, la herramienta con la que preparamos estas impresiones.
+  </p>
+</div>
+
+{% endblock %}

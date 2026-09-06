@@ -52,6 +52,9 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 - [Centro de copiado]({site}/impresiones): precios de copias, impresiones, papel especial,
   enmicados, engargolados, escáner y trámites oficiales (CURP, acta de nacimiento).
 - [Impresión de fotos]({site}/fotos): fotos carnet, de trámites y estilo polaroid.
+- [Foto para credencial desde casa]({site}/foto-credencial): herramienta web gratuita para tomarte la
+  foto tamaño credencial, infantil o de título con el celular y recogerla impresa el mismo día. Para
+  credencial escolar, gafete de trabajo y título profesional. No aplica para pasaporte ni visa.
 
 ## Información
 
@@ -95,6 +98,7 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
         (format!("{site}/"), "1.0", "daily"),
         (format!("{site}/impresiones"), "0.9", "monthly"),
         (format!("{site}/fotos"), "0.8", "monthly"),
+        (format!("{site}/foto-credencial"), "0.8", "monthly"),
         (format!("{site}/imagina"), "0.8", "monthly"),
         (format!("{site}/preguntas-frecuentes"), "0.7", "monthly"),
         (format!("{site}/resena"), "0.5", "monthly"),
@@ -154,6 +158,18 @@ pub async fn fotos(State(state): State<AppState>) -> Result<Html<String>, Status
     })?;
     let html = tmpl.render(context!()).map_err(|e| {
         tracing::error!("Render fotos: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
+pub async fn foto_credencial(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let tmpl = state.tmpl.get_template("pages/foto-credencial.html").map_err(|e| {
+        tracing::error!("Template foto-credencial: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(context!()).map_err(|e| {
+        tracing::error!("Render foto-credencial: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Html(html))

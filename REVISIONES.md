@@ -4,6 +4,44 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Página `/foto-credencial` — anuncio del kiosko carnet self-service
+
+Landing pública que promociona tomarse la foto de credencial en casa con la herramienta
+`imagina.xplaya.com/kiosko/carnet` y recogerla impresa. Enfoque honesto: credencial escolar,
+gafete, título y medida libre — **no** pasaporte ni visa (callout explícito + FAQ, porque una
+foto de celular sin fondo/luz controlados se rechaza en esos trámites).
+
+**Archivos a mirar:**
+- `templates/pages/foto-credencial.html` — **nuevo**. Extiende `base.html`. SEO completo:
+  `{% block title %}` / `meta_description` + `keywords` / `canonical` / `meta_social` (OG + Twitter,
+  reusa `og_xplaya.jpeg`). Cuatro bloques JSON-LD en `{% block head %}`: `Service`
+  (serviceType, areaServed Playa del Carmen, provider Store con dirección, offers sin precio
+  fijo), `HowTo` (4 pasos = misma narrativa que la sección visible), `FAQPage` (6 Q&A, la
+  primera es el disclaimer de pasaporte/visa), `BreadcrumbList` (Inicio → Fotos → esta página).
+  CTAs a `{{ imagina_url }}/kiosko/carnet`. Estilos propios con prefijo `.fc-` en un `<style>`
+  del head (mismo patrón que `fotos.html` / `imagina.html`). Secciones: hero, cómo funciona,
+  para qué credenciales sirve (+ callout amarillo "pasaporte/visa no"), bloque de la herramienta,
+  tips de fondo/luz, tabla de tamaños, FAQ visible (espejo del `FAQPage`), CTA final con WhatsApp,
+  enlaces cruzados a `/fotos` e `/imagina`.
+- `src/routes/pages.rs` — handler `foto_credencial` (idéntico a `fotos`, sin contexto extra:
+  `imagina_url` y `site_url` ya son globales de minijinja). Añadido a la lista de páginas
+  estáticas de `sitemap_xml` (prioridad 0.8) y a `llms_txt` bajo "Servicios".
+- `src/main.rs` — ruta `GET /foto-credencial`.
+- `templates/pages/fotos.html` — 2 enlaces internos nuevos a `/foto-credencial` (en la tarjeta
+  "Fotos carnet e infantil" y bajo la sección del kiosko polaroid).
+- `templates/base.html` — enlace en la lista de Servicios del footer (aparece en todo el sitio) +
+  el item "Fotos" del navbar se convirtió en desplegable Bulma (`navbar-item has-dropdown
+  is-hoverable`): "Impresión de fotos" (`/fotos`) y "Foto para credencial en casa"
+  (`/foto-credencial`). El link padre sigue yendo a `/fotos`; sin JS (Bulma abre en hover en
+  desktop y muestra los sub-items indentados en el menú móvil). No agrega slots al navbar.
+
+**Verificado (local, `./target/debug/xplaya` contra la BD dev):** `GET /foto-credencial` → 200;
+`<title>`, `description`, `canonical` y `og:url` correctos; los 6 bloques JSON-LD de la página
+(4 propios + Store/WebSite heredados) parsean como JSON válido; `/sitemap.xml` y `/llms.txt`
+incluyen la ruta; `/fotos` renderiza los enlaces cruzados. `cargo clippy` limpio.
+
+---
+
 ## Embeddings Fase 4 — búsqueda semántica como fallback en /productos y /kiosko
 
 Cuando la búsqueda exacta (tsvector/ILIKE/trigram) devuelve 0 resultados, la consulta se embebe vía bge-m3 y se buscan los 12 productos más cercanos por distancia coseno contra `Productos.embedding` (umbral de similitud > 0.5, mismos filtros de visibilidad que el catálogo). "plumón rojo" ahora encuentra "MARCADOR…" aunque no compartan ni una letra. Fail-open en todos los caminos: si `BGE_EMBEDDINGS_URL` no está definida, bge-m3 no responde en 2 s, o la query vectorial falla, el usuario ve el "sin resultados" de siempre — nunca un error.

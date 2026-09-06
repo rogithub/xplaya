@@ -53,6 +53,7 @@ async fn main() {
         .route("/preguntas-frecuentes", get(routes::pages::faq))
         .route("/impresiones", get(routes::pages::impresiones))
         .route("/fotos", get(routes::pages::fotos))
+        .route("/foto-credencial", get(routes::pages::foto_credencial))
         .route("/imagina", get(routes::pages::imagina))
         .route("/kiosko", get(routes::kiosko::lista))
         .route("/kiosko/categoria/{id}", get(routes::kiosko::categoria))
