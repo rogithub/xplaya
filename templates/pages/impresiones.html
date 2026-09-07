@@ -30,25 +30,13 @@
 {
   "@context": "https://schema.org",
   "@type": "Service",
+  "@id": "{{ site_url }}/impresiones#service",
   "name": "Centro de Copiado",
   "serviceType": "Copias e impresiones",
   "description": "Copias e impresiones desde $1, papel especial (fotográfico, opalina, couché, adhesivo), enmicados, engargolados y WiFi gratis. Sin cobro por transferencia de archivos.",
   "url": "{{ site_url }}/impresiones",
   "areaServed": { "@type": "City", "name": "Playa del Carmen" },
-  "provider": {
-    "@type": "Store",
-    "name": "Papelería xplaya.com",
-    "url": "{{ site_url }}",
-    "telephone": "+52-452-201-8336",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Villas del Sol, a un costado de Palmas Turquesa",
-      "addressLocality": "Playa del Carmen",
-      "addressRegion": "Quintana Roo",
-      "postalCode": "77726",
-      "addressCountry": "MX"
-    }
-  },
+  "provider": { "@id": "{{ site_url }}/#store" },
   "offers": [
     {
       "@type": "Offer",

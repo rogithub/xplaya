@@ -30,28 +30,16 @@
 {
   "@context": "https://schema.org",
   "@type": "Service",
+  "@id": "{{ site_url }}/foto-credencial#service",
   "name": "Foto para credencial desde casa",
   "serviceType": "Fotografía para credenciales e identificaciones",
   "description": "El cliente se toma la foto tamaño credencial, infantil o de título desde su celular con una herramienta web gratuita y la papelería la imprime a la medida exacta. Para credencial escolar, gafete de trabajo, título profesional y formatos internos. No aplica para pasaporte ni visa.",
+  "url": "{{ site_url }}/foto-credencial",
   "areaServed": {
     "@type": "City",
     "name": "Playa del Carmen"
   },
-  "provider": {
-    "@type": "Store",
-    "name": "Papelería xplaya.com",
-    "url": "{{ site_url }}",
-    "telephone": "+52-452-201-8336",
-    "email": "papeleria@xplaya.com",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Villas del Sol, a un costado de Palmas Turquesa",
-      "addressLocality": "Playa del Carmen",
-      "addressRegion": "Quintana Roo",
-      "postalCode": "77726",
-      "addressCountry": "MX"
-    }
-  },
+  "provider": { "@id": "{{ site_url }}/#store" },
   "offers": {
     "@type": "Offer",
     "priceCurrency": "MXN",

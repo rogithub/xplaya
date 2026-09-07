@@ -58,8 +58,10 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Store",
+      "@type": ["Store", "LocalBusiness"],
+      "@id": "{{ site_url }}/#store",
       "name": "Papelería xplaya.com",
+      "alternateName": ["Papelería y Mercería El Gordo", "Papelería El Gordo"],
       "image": "{{ site_url }}/static/img/papeleria.png",
       "logo": "{{ site_url }}/static/img/favicon/web-app-manifest-192x192.png",
       "url": "{{ site_url }}",
@@ -67,6 +69,7 @@
       "email": "papeleria@xplaya.com",
       "priceRange": "$",
       "currenciesAccepted": "MXN",
+      "hasMap": "https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x",
       "sameAs": [
         "https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x",
         "https://www.tiktok.com/@papeleria.xplaya.com"
@@ -97,7 +100,113 @@
           "opens": "09:00",
           "closes": "14:00"
         }
-      ]
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Servicios de la papelería",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "url": "{{ site_url }}/impresiones",
+            "itemOffered": {
+              "@type": "Service",
+              "@id": "{{ site_url }}/impresiones#service",
+              "name": "Centro de copiado",
+              "serviceType": "Copias e impresiones",
+              "url": "{{ site_url }}/impresiones",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "url": "{{ site_url }}/fotos",
+            "itemOffered": {
+              "@type": "Service",
+              "@id": "{{ site_url }}/fotos#service",
+              "name": "Impresión de fotos y fotos carnet",
+              "serviceType": "Impresión de fotografías",
+              "url": "{{ site_url }}/fotos",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "url": "{{ site_url }}/foto-credencial",
+            "itemOffered": {
+              "@type": "Service",
+              "@id": "{{ site_url }}/foto-credencial#service",
+              "name": "Foto para credencial desde casa",
+              "serviceType": "Fotografía para credenciales e identificaciones",
+              "url": "{{ site_url }}/foto-credencial",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Engargolados",
+              "serviceType": "Encuadernación y engargolado",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Enmicados",
+              "serviceType": "Enmicado y plastificado de documentos",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Escáner de documentos",
+              "serviceType": "Digitalización y escaneo de documentos",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "url": "{{ site_url }}/impresiones",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Trámites oficiales (CURP, acta de nacimiento)",
+              "serviceType": "Impresión de documentos oficiales",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Envíos por paquetería",
+              "serviceType": "Envío de paquetes a todo México",
+              "areaServed": { "@type": "Country", "name": "México" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Arreglos de ropa",
+              "serviceType": "Costura y arreglos de ropa",
+              "areaServed": { "@type": "City", "name": "Playa del Carmen" },
+              "provider": { "@id": "{{ site_url }}/#store" }
+            }
+          }
+        ]
+      }
     }
     </script>
     <script type="application/ld+json">

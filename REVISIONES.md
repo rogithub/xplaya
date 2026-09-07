@@ -4,6 +4,41 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## JSON-LD: entidad única `Store` + catálogo de servicios
+
+Los servicios (engargolado, enmicado, escáner, trámites, envíos, arreglos de ropa) solo
+existían como `<li>` de texto en el footer y prosa en `llms.txt` — sin datos estructurados.
+Además el sitio describía la papelería como 4 entidades sueltas: el `Store` del `base.html`,
+un `Store` inline duplicado en cada página de servicio (`provider`) y un `Organization` con
+otro nombre en el `seller` de cada `Product`. Ahora hay **un solo nodo canónico**.
+
+**Archivos a mirar:**
+- `templates/base.html` — nodo `Store` (en todas las páginas):
+  - `"@type": ["Store", "LocalBusiness"]` y `"@id": "{{ site_url }}/#store"` (ancla de la entidad).
+  - `"alternateName": ["Papelería y Mercería El Gordo", "Papelería El Gordo"]` — enlaza el
+    nombre con que Google conoce el negocio al nombre del sitio.
+  - `"hasMap"` con la URL de Google Maps que ya estaba en `sameAs`.
+  - `"hasOfferCatalog"` → `OfferCatalog` con 9 `Offer` → `Service`: copiado, fotos y
+    foto-credencial referencian su página (`url` + `@id` del `Service` de esa página);
+    engargolados, enmicados, escáner, trámites, envíos y arreglos de ropa son `Service`
+    ligeros sin página. Todos con `provider: { "@id": ".../#store" }` y `areaServed`
+    (ciudad, salvo envíos que es país México).
+- `templates/pages/impresiones.html`, `fotos.html`, `foto-credencial.html` — el `Service`
+  de cada página: se le puso `"@id"` (`.../<ruta>#service`, el mismo que referencia el
+  catálogo) y `"url"`; el `provider` pasó de `Store` inline duplicado a
+  `{ "@id": "{{ site_url }}/#store" }`. Se resuelve dentro del mismo DOM porque `base.html`
+  ya trae el nodo completo del `Store` en cada página.
+- `templates/productos/detalle.html` — `offers.seller` pasó de `Organization` suelto a
+  `{ "@id": "{{ site_url }}/#store" }`.
+
+**Verificado (local):** `cargo build` OK; los 2 bloques JSON-LD de `base.html` parsean como
+JSON válido tras neutralizar jinja; el resto de páginas sin cambios de sintaxis jinja.
+**Pendiente de decisión del usuario:** `aggregateRating` (requiere el conteo y promedio
+reales de reseñas de Google — no se inventa); `HowTo` en `/impresiones` (Google retiró el
+rich result de HowTo en 2023; `/foto-credencial` ya tiene `HowTo` para consumo de LLMs).
+
+---
+
 ## Página `/foto-credencial` — anuncio del kiosko carnet self-service
 
 Landing pública que promociona tomarse la foto de credencial en casa con la herramienta

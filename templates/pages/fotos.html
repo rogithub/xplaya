@@ -30,25 +30,16 @@
 {
   "@context": "https://schema.org",
   "@type": "Service",
+  "@id": "{{ site_url }}/fotos#service",
   "name": "Impresión de fotos",
   "serviceType": "Impresión de fotografías",
   "description": "Impresión de fotos tamaño carnet e infantil para trámites, fotos estilo polaroid con dedicatoria, ampliaciones y fotos a medida exacta en centímetros. Pide tus polaroids directamente desde tu celular. Sin mínimo de compra.",
+  "url": "{{ site_url }}/fotos",
   "areaServed": {
     "@type": "City",
     "name": "Playa del Carmen"
   },
-  "provider": {
-    "@type": "Store",
-    "name": "Papelería xplaya.com",
-    "url": "{{ site_url }}",
-    "telephone": "+52-452-201-8336",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Playa del Carmen",
-      "addressRegion": "Quintana Roo",
-      "addressCountry": "MX"
-    }
-  }
+  "provider": { "@id": "{{ site_url }}/#store" }
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
