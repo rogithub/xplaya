@@ -131,6 +131,7 @@ Un archivo por tema en `db/` y un archivo por grupo de rutas en `routes/`.
 | `/productos/:id` | Detalle de producto |
 | `/carrito` | Carrito de compras — envía pedido sin auth |
 | `/resena` | Página de reseñas/testimonios |
+| `/logo-oficial` | Logos oficiales (3 versiones en SVG) con descargas y pruebas de color. Página autocontenida y `noindex`; la genera el skill `logo-designer`, no se edita a mano |
 
 ### Nuevas — vistas públicas del POS (migradas fuera del POS)
 

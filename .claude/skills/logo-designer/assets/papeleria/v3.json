@@ -1,0 +1,55 @@
+{
+  "slug": "papeleria",
+  "title": "Papelería",
+  "cssPrefix": "papeleria",
+  "classPrefix": "pap",
+  "roles": [
+    "teal",
+    "yellow",
+    "orange",
+    "teal",
+    "yellow",
+    "orange",
+    "teal",
+    "yellow",
+    "teal"
+  ],
+  "colors": {
+    "teal": "#7DC5C3",
+    "yellow": "#EBB728",
+    "orange": "#EC652A"
+  },
+  "ringColor": "#A0603E",
+  "label": "Logo Papelería v3",
+  "note": "Fredoka SemiBold en mayúsculas, con la I de barras.",
+  "font": "fredoka-latin-600-normal.woff",
+  "letters": "PAPELERIA",
+  "lines": [
+    "PAPE",
+    "LERIA"
+  ],
+  "slab": {
+    "w": 365,
+    "b": 93,
+    "r": 46
+  },
+  "spacing": {
+    "T": 0,
+    "depth": 110,
+    "minGap": 79,
+    "minGapWith": {
+      "A": 74
+    },
+    "pad": 74,
+    "lineGap": 79
+  },
+  "layout": {
+    "extents": "cap",
+    "stacking": "columns",
+    "center": "ink"
+  },
+  "ring": {
+    "margin": 84,
+    "widthPct": 100
+  }
+}

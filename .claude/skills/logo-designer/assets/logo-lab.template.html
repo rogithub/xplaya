@@ -1,0 +1,476 @@
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #EEF2F1;
+    --surface: #FFFFFF;
+    --ink: #18211F;
+    --muted: #56635F;
+    --line: #D3DCD9;
+    --chip: #E3EAE8;
+    --accent: #1F7A76;
+    --accent-ink: #FFFFFF;
+    --sel: #2F6BFF;
+    --warn: #A8431A;
+    --ok: #1F7A76;
+    --checkA: #FFFFFF;
+    --checkB: #DDE4E2;
+    --font-display: "Fredoka", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141110;
+      --surface: #1F1917;
+      --ink: #F2ECE7;
+      --muted: #A99F98;
+      --line: #3A2F2A;
+      --chip: #2B2320;
+      --accent: #5CC3BE;
+      --accent-ink: #0E1A19;
+      --warn: #F08A5A;
+      --ok: #5CC3BE;
+      --checkA: #2B2523;
+      --checkB: #221C1A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141110;
+    --surface: #1F1917;
+    --ink: #F2ECE7;
+    --muted: #A99F98;
+    --line: #3A2F2A;
+    --chip: #2B2320;
+    --accent: #5CC3BE;
+    --accent-ink: #0E1A19;
+    --warn: #F08A5A;
+    --ok: #5CC3BE;
+    --checkA: #2B2523;
+    --checkB: #221C1A;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .page { max-width: 1140px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; }
+
+  header { display: grid; gap: 10px; margin-bottom: 22px; }
+  h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(28px, 4.2vw, 40px); line-height: 1.1; margin: 0; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .files { display: flex; flex-wrap: wrap; gap: 8px; }
+  .files code { font-family: var(--font-mono); font-size: 12.5px; background: var(--chip); padding: 3px 8px; border-radius: 5px; overflow-wrap: anywhere; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 20px; align-items: start; }
+  @media (max-width: 880px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Stage */
+  .stage {
+    --stage-bg: #231916; --stage-fg: #D9CFC8; --stage-rule: rgba(255, 255, 255, .22);
+    background: var(--stage-bg);
+    color: var(--stage-fg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 34px 24px 26px;
+    display: grid;
+    gap: 30px;
+    justify-items: center;
+    min-width: 0;
+  }
+  .stage[data-bg="blanco"] { --stage-bg: #FFFFFF; --stage-fg: #4A4F4E; --stage-rule: rgba(0, 0, 0, .18); }
+  .stage[data-bg="papel"] { --stage-bg: #F4ECDD; --stage-fg: #4A4238; --stage-rule: rgba(0, 0, 0, .18); }
+  .stage[data-bg="transparent"] {
+    --stage-fg: var(--muted); --stage-rule: var(--line);
+    background-color: var(--checkA);
+    background-image: conic-gradient(var(--checkB) 25%, transparent 0 50%, var(--checkB) 0 75%, transparent 0);
+    background-size: 22px 22px;
+  }
+  .mainlogos { display: grid; gap: 30px; justify-items: center; width: 100%; }
+  .pair { display: grid; gap: 16px; justify-items: center; width: 100%; }
+  .pair + .pair { border-top: 1px dashed var(--stage-rule); padding-top: 26px; }
+  .pair h3 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--stage-fg); text-align: center; }
+  .pair-logos { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 22px 34px; width: 100%; }
+  .sizes-ver { display: grid; gap: 8px; justify-items: center; width: 100%; }
+  .ver-label { font-size: 12px; color: var(--stage-fg); }
+  .logo-line { width: min(100%, var(--w, 420px)); height: auto; display: block; }
+  .logo-circle { width: min(100%, calc(var(--w, 420px) * .42)); height: auto; display: block; }
+  .mainlogos path[id*="letra-"] { cursor: pointer; }
+  .mainlogos path.is-sel { stroke: var(--sel); stroke-width: 1.7; stroke-dasharray: 3.4 2.4; stroke-linejoin: round; }
+
+  .sizes { width: 100%; border-top: 1px dashed var(--stage-rule); padding-top: 18px; display: grid; gap: 14px; justify-items: center; }
+  .sizes h2 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--stage-fg); }
+  .sizes-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 22px 28px; }
+  .sizes figure { margin: 0; display: grid; gap: 6px; justify-items: center; }
+  .sizes figcaption { font-family: var(--font-mono); font-size: 11.5px; color: var(--stage-fg); }
+  .sizes svg { display: block; height: auto; }
+
+  /* Controls */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 18px 18px; display: grid; }
+  .panel section { padding-block: 16px; border-bottom: 1px solid var(--line); display: grid; gap: 12px; }
+  .panel section:last-child { border-bottom: 0; padding-bottom: 0; }
+  .panel h2 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+  .hint { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--chip); padding: 4px; border-radius: 8px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label { text-align: center; padding: 7px 4px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .seg input:checked + label { background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .18); font-weight: 600; }
+  .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .color-row { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; }
+  .color-row label { font-weight: 500; }
+  .color-row .meta { display: grid; gap: 1px; min-width: 0; }
+  .color-row code { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  input[type="color"] { width: 44px; height: 34px; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); cursor: pointer; }
+  input[type="color"]:disabled { opacity: .4; cursor: not-allowed; }
+  .ratio { font-family: var(--font-mono); font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .ratio.ok { color: var(--ok); }
+  .ratio.low { color: var(--warn); }
+  .ratio:empty { display: none; }
+
+  .chips { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
+  .chip { display: grid; justify-items: center; gap: 4px; padding: 6px 0 5px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 7px; cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 17px; line-height: 1; }
+  .chip .dot { width: 14px; height: 6px; border-radius: 3px; }
+  .chip[aria-pressed="true"] { border-color: var(--sel); box-shadow: 0 0 0 1px var(--sel); }
+  .chip:focus-visible, button:focus-visible, input[type="color"]:focus-visible, input[type="range"]:focus-visible, input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .letter-row { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+  .letter-row[hidden] { display: none; }
+
+  button.btn { font: inherit; font-size: 13px; font-weight: 500; padding: 7px 11px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  button.btn:hover { background: var(--chip); }
+  button.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .range-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .range-head output { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+  .code-block { background: var(--chip); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+  .code-block pre { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; white-space: pre; }
+  .copy-msg { font-size: 12.5px; color: var(--muted); min-height: 1.2em; }
+  .pair-files { margin: 0; font-size: 13px; color: var(--stage-fg); text-align: center; }
+  .pair-files a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+</style>
+
+<div class="page">
+  <header>
+    <h1>{{TITLE}}</h1>
+    <p>{{INTRO}}</p>
+    <div class="files">{{FILES}}</div>
+  </header>
+
+  <div class="grid">
+    <div class="stage" id="stage" data-bg="oscuro">
+      <div class="mainlogos" id="mainlogos">
+{{PAIRS}}
+      </div>
+      <div class="sizes" id="sizesBox">
+        <h2>Tamaños de uso</h2>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Controles de pintado">
+      <section>
+        <h2>Fondo de prueba</h2>
+        <div class="seg" role="radiogroup" aria-label="Fondo de prueba">
+          <input type="radio" name="bg" id="bg-transparent" value="transparent"><label for="bg-transparent">Sin fondo</label>
+          <input type="radio" name="bg" id="bg-blanco" value="blanco"><label for="bg-blanco">Blanco</label>
+          <input type="radio" name="bg" id="bg-papel" value="papel"><label for="bg-papel">Papel</label>
+          <input type="radio" name="bg" id="bg-oscuro" value="oscuro" checked><label for="bg-oscuro">Oscuro</label>
+        </div>
+        <p class="hint" id="bgHint"></p>
+      </section>
+
+      <section>
+        <h2>Colores del logo</h2>
+        <div id="colorRows" style="display:grid;gap:12px"></div>
+        <div class="btns" id="presetBtns"></div>
+        <p class="hint">El número junto a cada color es su contraste contra el fondo de prueba. Menos de 3:1 se lee débil en letras grandes.</p>
+      </section>
+
+      <section>
+        <h2>Una sola letra</h2>
+        <div class="chips" id="chips"></div>
+        <p class="hint" id="letterHint"></p>
+        <div class="letter-row" id="letterRow" hidden>
+          <input type="color" id="c-letter" value="#000000" aria-label="Color de la letra elegida">
+          <div class="btns"><button class="btn" type="button" id="letterClear">Quitar color propio</button></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Círculo</h2>
+        <label class="check" for="ring-on"><input type="checkbox" id="ring-on" checked> Mostrar aro</label>
+        <div class="color-row"><input type="color" id="c-ring" value="#000000" aria-label="Color del aro"><div class="meta"><label for="c-ring">Aro</label><code id="h-ring"></code></div><span></span></div>
+        <div class="color-row"><input type="color" id="c-disc" value="#231916" aria-label="Color del relleno" disabled><div class="meta"><label class="check" for="disc-on"><input type="checkbox" id="disc-on"> Relleno detrás de las letras</label></div><span></span></div>
+        <div class="range-head"><label for="ringw">Grosor del aro</label><output id="ringOut" for="ringw">original</output></div>
+        <input type="range" id="ringw" min="15" max="150" step="1" value="100">
+        <div class="btns"><button class="btn" type="button" id="ringReset">Aro original</button></div>
+        <p class="hint">El aro crece hacia afuera: el espacio entre las letras y su borde interior no cambia. El 100 % es el grosor oficial, igual al trazo de la letra. Sin aro queda el bloque de dos líneas con margen parejo, listo para meterlo en un rectángulo u otra forma.</p>
+      </section>
+
+      <section>
+        <h2>Tamaño</h2>
+        <div class="range-head"><label for="size">Ancho del logo de una línea</label><output id="sizeOut" for="size">420 px</output></div>
+        <input type="range" id="size" min="160" max="720" step="10" value="420">
+      </section>
+
+      <section>
+        <h2>Variables CSS</h2>
+        <div class="code-block"><pre id="cssOut"></pre></div>
+        <div class="btns">
+          <button class="btn primary" type="button" id="copyBtn">Copiar CSS</button>
+          <button class="btn" type="button" id="resetAll">Restaurar todo</button>
+        </div>
+        <p class="copy-msg" id="copyMsg" aria-live="polite"></p>
+        <p class="hint">Estas variables solo pintan un SVG que va dentro del HTML. Cargado con una etiqueta de imagen, el logo se ve siempre con sus colores originales.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script type="application/json" id="lab-data">{{LAB_JSON}}</script>
+<script>
+(function () {
+  var LAB = JSON.parse(document.getElementById('lab-data').textContent);
+  var PREFIX = LAB.cssPrefix, CLS = LAB.classPrefix;
+  var ROLES = LAB.roles;                 /* color role of each letter, in reading order */
+  var NAMES = Array.from(LAB.letters);   /* chip labels */
+  var KEYS = LAB.colorKeys;              /* distinct roles, e.g. teal, yellow, orange */
+  var COUNT = NAMES.length;
+  var DEF = { ring: LAB.ringColor.toLowerCase(), disc: '#231916' };
+  KEYS.forEach(function (k) { DEF[k] = LAB.colors[k].toLowerCase(); });
+  var BG = { blanco: '#ffffff', papel: '#f4ecdd', oscuro: '#231916', transparent: null };
+  var BG_HINT = {
+    transparent: 'Cuadrícula: así se ve el logo sin ningún fondo detrás.',
+    blanco: 'Sobre fondo claro revisa el contraste de cada color.',
+    papel: 'Sobre papel pasa lo mismo que sobre blanco: revisa el contraste.',
+    oscuro: 'Sobre fondo oscuro los colores claros rinden mejor.'
+  };
+  var PRESETS = [{ id: 'original', label: 'Originales', colors: DEF, ring: DEF.ring }].concat(LAB.presets || []);
+
+  var stage = document.getElementById('stage');
+  var main = document.getElementById('mainlogos');
+  var state = { bg: 'oscuro', colors: {}, ring: DEF.ring, discOn: false, disc: DEF.disc, letters: {}, sel: 0, size: 420, ringPct: null, ringOn: true };
+  KEYS.forEach(function (k) { state.colors[k] = DEF[k]; });
+  var lastRing;
+
+  function $(id) { return document.getElementById(id); }
+  function varName(s) { return '--' + PREFIX + '-' + s; }
+
+  /* build the color rows, preset buttons and letter chips from the manifest */
+  KEYS.forEach(function (k) {
+    var label = (LAB.colorLabels && LAB.colorLabels[k]) || k;
+    var row = document.createElement('div'); row.className = 'color-row';
+    row.innerHTML = '<input type="color" id="c-' + k + '" aria-label="Color ' + label + '"><div class="meta"><label for="c-' + k + '">' + label + '</label><code id="h-' + k + '"></code></div><span class="ratio" id="r-' + k + '"></span>';
+    $('colorRows').appendChild(row);
+  });
+  PRESETS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn'; b.textContent = p.label; b.setAttribute('data-preset', p.id);
+    $('presetBtns').appendChild(b);
+  });
+  NAMES.forEach(function (ch, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.setAttribute('data-n', i + 1);
+    b.setAttribute('aria-label', 'Letra ' + (i + 1) + ', ' + ch);
+    b.innerHTML = '<span aria-hidden="true">' + ch + '</span><span class="dot"></span>';
+    b.addEventListener('click', function () { state.sel = state.sel === i + 1 ? 0 : i + 1; apply(); });
+    $('chips').appendChild(b);
+  });
+
+  /* ring width: grows outward, inner radius and letters stay put; the viewBox grows to hold the ring */
+  var circles = [];
+  main.querySelectorAll('.logo-circle').forEach(function (svg) {
+    var c = svg.querySelector('circle[id$="aro"], circle[id^="aro"]'), d = svg.querySelector('circle[id$="disco"], circle[id^="disco"]');
+    var half0 = svg.viewBox.baseVal.width / 2, r = +c.getAttribute('r'), sw = +c.getAttribute('stroke-width');
+    circles.push({ svg: svg, c: c, d: d, letters: svg.querySelector('g[id$="letras"], g[id^="letras"]'), padU: +svg.getAttribute('data-pad'), ctr: +c.getAttribute('cx'), inner: r - sw / 2, sw0: sw, pad: half0 - (r + sw / 2), stem: +svg.getAttribute('data-stem') });
+  });
+  function applyRing() {
+    circles.forEach(function (o) {
+      if (!state.ringOn) {
+        o.c.style.display = 'none'; if (o.d) o.d.style.display = 'none';
+        var bb = o.letters.getBBox();
+        o.svg.setAttribute('viewBox', (bb.x - o.padU).toFixed(3) + ' ' + (bb.y - o.padU).toFixed(3) + ' ' + (bb.width + 2 * o.padU).toFixed(3) + ' ' + (bb.height + 2 * o.padU).toFixed(3));
+        return;
+      }
+      o.c.style.display = ''; if (o.d) o.d.style.display = '';
+      var sw = state.ringPct == null ? o.sw0 : state.ringPct / 100 * o.stem;
+      var R = o.inner + sw / 2, half = R + sw / 2 + o.pad;
+      o.svg.setAttribute('viewBox', (o.ctr - half).toFixed(3) + ' ' + (o.ctr - half).toFixed(3) + ' ' + (2 * half).toFixed(3) + ' ' + (2 * half).toFixed(3));
+      o.c.setAttribute('r', R.toFixed(3));
+      o.c.setAttribute('stroke-width', sw.toFixed(3));
+      if (o.d) o.d.setAttribute('r', R.toFixed(3));
+    });
+  }
+  function lum(hex) {
+    var c = [1, 3, 5].map(function (i) { return parseInt(hex.substr(i, 2), 16) / 255; }).map(function (v) { return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function contrast(a, b) {
+    var la = lum(a), lb = lum(b), hi = Math.max(la, lb), lo = Math.min(la, lb);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+  function setVar(name, value, def) {
+    if (value && value !== def) stage.style.setProperty(name, value); else stage.style.removeProperty(name);
+  }
+
+  function apply() {
+    stage.setAttribute('data-bg', state.bg);
+    KEYS.forEach(function (k) { setVar(varName(k), state.colors[k], DEF[k]); });
+    setVar(varName('ring'), state.ring, DEF.ring);
+    if (state.discOn) stage.style.setProperty(varName('disc'), state.disc); else stage.style.removeProperty(varName('disc'));
+    for (var n = 1; n <= COUNT; n++) {
+      if (state.letters[n]) stage.style.setProperty(varName(n), state.letters[n]); else stage.style.removeProperty(varName(n));
+    }
+    stage.style.setProperty('--w', state.size + 'px');
+
+    KEYS.forEach(function (k) {
+      $('c-' + k).value = state.colors[k];
+      $('h-' + k).textContent = state.colors[k].toUpperCase();
+      var el = $('r-' + k), bg = BG[state.bg];
+      if (bg) {
+        var ratio = contrast(state.colors[k], bg);
+        el.textContent = ratio.toFixed(1) + ':1';
+        el.className = 'ratio ' + (ratio >= 3 ? 'ok' : 'low');
+        el.title = ratio >= 3 ? 'Contraste suficiente para letras grandes' : 'Contraste bajo para letras grandes';
+      } else { el.textContent = ''; el.className = 'ratio'; }
+    });
+    $('c-ring').value = state.ring;
+    $('h-ring').textContent = state.ring.toUpperCase();
+    $('disc-on').checked = state.discOn;
+    $('c-disc').disabled = !(state.discOn && state.ringOn);
+    $('ring-on').checked = state.ringOn;
+    ['c-ring', 'ringw', 'ringReset', 'disc-on'].forEach(function (id) { $(id).disabled = !state.ringOn; });
+    $('c-disc').value = state.disc;
+    $('sizeOut').textContent = state.size + ' px';
+    $('bgHint').textContent = BG_HINT[state.bg];
+
+    var chips = $('chips').children;
+    for (var i = 0; i < COUNT; i++) {
+      var col = state.letters[i + 1] || state.colors[ROLES[i]];
+      chips[i].querySelector('.dot').style.background = col;
+      chips[i].setAttribute('aria-pressed', state.sel === i + 1 ? 'true' : 'false');
+    }
+    main.querySelectorAll('path.is-sel').forEach(function (p) { p.classList.remove('is-sel'); });
+    if (state.sel) main.querySelectorAll('path.' + CLS + '-' + state.sel).forEach(function (p) { p.classList.add('is-sel'); });
+    $('letterRow').hidden = !state.sel;
+    if (state.sel) {
+      $('c-letter').value = state.letters[state.sel] || state.colors[ROLES[state.sel - 1]];
+      $('letterHint').textContent = 'Letra ' + state.sel + ' (' + NAMES[state.sel - 1] + '): ' + (state.letters[state.sel] ? 'con color propio.' : 'usa el color de su grupo.');
+    } else {
+      $('letterHint').textContent = 'Elige una letra aquí o toca una en el logo para darle un color propio.';
+    }
+    $('cssOut').textContent = cssText();
+    $('ringw').value = state.ringPct == null ? 100 : state.ringPct;
+    $('ringOut').textContent = state.ringPct == null ? 'oficial' : state.ringPct + ' %';
+    applyRing();
+    var ringKey = state.ringPct + '|' + state.ringOn;
+    if (lastRing !== ringKey) { lastRing = ringKey; buildStrips(); }
+  }
+
+  function cssText() {
+    var l = ['.mi-logo {'];
+    KEYS.forEach(function (k) { l.push('  ' + varName(k) + ': ' + state.colors[k] + ';'); });
+    l.push('  ' + varName('ring') + ': ' + state.ring + ';  /* solo circular */');
+    if (state.discOn) l.push('  ' + varName('disc') + ': ' + state.disc + ';  /* solo circular */');
+    Object.keys(state.letters).sort(function (a, b) { return a - b; }).forEach(function (n) {
+      l.push('  ' + varName(n) + ': ' + state.letters[n] + ';  /* letra ' + n + ' (' + NAMES[n - 1] + ') */');
+    });
+    l.push('}');
+    return l.join('\n');
+  }
+
+  /* tap a letter in the logo */
+  main.addEventListener('click', function (e) {
+    var p = e.target.closest && e.target.closest('path[id*="letra-"]');
+    if (!p) return;
+    var m = /letra-(\d+)-/.exec(p.id);
+    if (m) { state.sel = state.sel === +m[1] ? 0 : +m[1]; apply(); }
+  });
+
+  /* inputs */
+  document.querySelectorAll('input[name="bg"]').forEach(function (r) {
+    r.addEventListener('change', function () { state.bg = r.value; apply(); });
+  });
+  KEYS.forEach(function (k) {
+    $('c-' + k).addEventListener('input', function (e) { state.colors[k] = e.target.value; apply(); });
+  });
+  $('c-ring').addEventListener('input', function (e) { state.ring = e.target.value; apply(); });
+  $('disc-on').addEventListener('change', function (e) { state.discOn = e.target.checked; apply(); });
+  $('c-disc').addEventListener('input', function (e) { state.disc = e.target.value; apply(); });
+  $('c-letter').addEventListener('input', function (e) { if (state.sel) { state.letters[state.sel] = e.target.value; apply(); } });
+  $('letterClear').addEventListener('click', function () { if (state.sel) { delete state.letters[state.sel]; apply(); } });
+  $('ringw').addEventListener('input', function (e) { state.ringPct = +e.target.value; apply(); });
+  $('ring-on').addEventListener('change', function (e) { state.ringOn = e.target.checked; apply(); });
+  $('ringReset').addEventListener('click', function () { state.ringPct = null; apply(); });
+  $('size').addEventListener('input', function (e) { state.size = +e.target.value; apply(); });
+  document.querySelectorAll('[data-preset]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var p = PRESETS.filter(function (x) { return x.id === b.getAttribute('data-preset'); })[0];
+      KEYS.forEach(function (k) { state.colors[k] = (p.colors[k] || DEF[k]).toLowerCase(); });
+      state.ring = (p.ring || DEF.ring).toLowerCase();
+      state.letters = {}; apply();
+    });
+  });
+  $('resetAll').addEventListener('click', function () {
+    KEYS.forEach(function (k) { state.colors[k] = DEF[k]; });
+    state.ring = DEF.ring; state.discOn = false; state.disc = DEF.disc; state.letters = {}; state.sel = 0; state.size = 420; state.ringPct = null; state.ringOn = true;
+    $('size').value = 420; apply();
+  });
+
+  /* copy */
+  $('copyBtn').addEventListener('click', function () {
+    var pre = $('cssOut'), msg = $('copyMsg');
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(pre);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      msg.textContent = 'Texto seleccionado: cópialo con Ctrl+C.';
+    }
+    try {
+      navigator.clipboard.writeText(pre.textContent).then(function () { msg.textContent = 'CSS copiado.'; }, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  /* real-size strip: clones of each version's logos, without ids or style (the page-wide rules still apply) */
+  function clone(scope, sel, width, label, row) {
+    var src = scope.querySelector(sel).cloneNode(true);
+    src.removeAttribute('aria-labelledby'); src.removeAttribute('role'); src.setAttribute('aria-hidden', 'true');
+    src.removeAttribute('class'); src.removeAttribute('data-stem'); src.removeAttribute('data-pad');
+    src.querySelectorAll('.is-sel').forEach(function (n) { n.classList.remove('is-sel'); });
+    src.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+    var t = src.querySelector('title'); if (t) t.remove();
+    var st = src.querySelector('style'); if (st) st.remove();
+    src.style.width = width + 'px';
+    var f = document.createElement('figure');
+    f.appendChild(src);
+    var c = document.createElement('figcaption'); c.textContent = label; f.appendChild(c);
+    row.appendChild(f);
+  }
+  function buildStrips() {
+    var box = $('sizesBox');
+    box.querySelectorAll('.sizes-ver').forEach(function (n) { n.remove(); });
+    main.querySelectorAll('.pair').forEach(function (pair) {
+      var wrap = document.createElement('div'); wrap.className = 'sizes-ver';
+      var lab = document.createElement('span'); lab.className = 'ver-label'; lab.textContent = pair.getAttribute('data-short') || pair.getAttribute('data-ver');
+      var row = document.createElement('div'); row.className = 'sizes-row';
+      wrap.appendChild(lab); wrap.appendChild(row); box.appendChild(wrap);
+      clone(pair, '.logo-circle', 32, '32 px', row);
+      clone(pair, '.logo-circle', 48, '48 px', row);
+      clone(pair, '.logo-circle', 72, '72 px', row);
+      clone(pair, '.logo-line', 96, '96 px', row);
+      clone(pair, '.logo-line', 160, '160 px', row);
+    });
+  }
+
+  apply();
+})();
+</script>

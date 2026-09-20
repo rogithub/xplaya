@@ -55,6 +55,7 @@ async fn main() {
         .route("/fotos", get(routes::pages::fotos))
         .route("/foto-credencial", get(routes::pages::foto_credencial))
         .route("/imagina", get(routes::pages::imagina))
+        .route("/logo-oficial", get(routes::pages::logo_oficial))
         .route("/kiosko", get(routes::kiosko::lista))
         .route("/kiosko/categoria/{id}", get(routes::kiosko::categoria))
         .route("/kiosko/productos/{nid}", get(routes::kiosko::detalle))

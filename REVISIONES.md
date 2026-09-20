@@ -4,6 +4,61 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Skill de carteles genérico: una marca por ficha
+
+El skill `poster-designer` estaba escrito solo para la papelería. Ahora separa el **método** (que
+sirve para cualquier cartel) de la **marca**, que entra como una ficha. Sirve para dos casos:
+carteles propios (con el logo oficial y los datos reales del negocio) y carteles que se hacen
+para otros negocios (con la marca del cliente, sin mezclar nada de la nuestra).
+
+**Archivos a mirar** (`.claude/skills/poster-designer/`):
+- `SKILL.md` — el método: primero decide para quién es el cartel, carga esa marca, junta los
+  datos exactos, elige formato y estilo, construye un HTML con texto real, revisa y entrega.
+- `brands/papeleria.md` — nuestra marca: logos v1/v2/v3, paleta y contraste, datos de contacto
+  tomados del propio sitio (WhatsApp, dirección, horario), voz, tipografía sugerida, encaje de estilos.
+- `brands/_template.md` — plantilla para registrar la marca de un cliente.
+- `references/brief.md` — qué preguntar, cómo revisar el logo de un cliente (formato, resolución,
+  fondos incrustados) y dónde guardar sus archivos: **fuera de `static/` y del repo** salvo que se diga lo contrario.
+- `references/formats.md` — tamaños (tabloide, carta, WhatsApp, feed), impresión en casa contra
+  imprenta (sin sangrado en casa, 0.125 in en imprenta), QR y fuentes incrustadas, cómo exportar.
+- `references/styles.md` — menú de estilos, coherencia y cómo leer el feedback.
+- `assets/poster-starter.html` — archivo base con el tamaño en tres sitios marcados `SIZE`,
+  zona segura y guías (`#guides`).
+
+En esta máquina no hay navegador utilizable, así que los carteles se entregan como HTML que se
+abre y se exporta desde el navegador; las instrucciones de exportación no se han ejecutado aquí.
+
+---
+
+## Logos oficiales en SVG + página pública `/logo-oficial` + skill `logo-designer`
+
+Los logos de la papelería eran renders 3D en JPG/PNG (fondo incrustado, baja resolución para
+imprimir). Ahora hay **tres versiones oficiales en SVG**, transparentes y pintables letra por
+letra: v1 mayúsculas en Fredoka Bold con la I de barras, v2 "Papelería" con la tipografía del
+título (SemiBold), v3 mayúsculas SemiBold con la I de barras. Cada una en tres formatos: una
+línea, circular con aro (grosor oficial = 100 % del trazo de la letra) y dos líneas sin aro.
+
+`/logo-oficial` muestra las tres versiones, deja probarlas sobre distintos fondos, pintarlas,
+cambiar el grosor del aro, quitarlo y copiar las variables CSS, y enlaza la descarga de cada
+SVG. Es una página autocontenida (no extiende `base.html`, para que Bulma no pelee con su CSS),
+con `noindex`.
+
+**Archivos a mirar:**
+- `src/main.rs` y `src/routes/pages.rs` — la ruta `GET /logo-oficial` y su handler `logo_oficial`,
+  igual que los demás de `pages.rs` (lee la plantilla en tiempo de ejecución con Minijinja).
+- `templates/pages/logo-oficial.html` — **generada**, no se edita a mano. Todo el contenido va
+  dentro de `{% raw %}` para que Minijinja no lea llaves de CSS/JS como sintaxis; solo `site_url`
+  queda fuera. No se puede usar `include_str!` porque la `Containerfile` compila solo con `src/`
+  y copia `templates/` y `static/` después.
+- `static/img/logo/{v1,v2,v3}/` — los SVG oficiales. `/static` se sirve con caché `immutable` de
+  un año, por eso los enlaces de descarga llevan `?v=<hash del archivo>`.
+- `.claude/skills/logo-designer/` — generador, configuraciones de las tres versiones, verificador,
+  plantilla de la página y fuentes Fredoka (licencia OFL). Regenera la página con
+  `build-lab.js ... --site` **cada vez que cambie un SVG**, porque van incrustados en ella.
+- `.claude/skills/poster-designer/brands/papeleria.md` — ficha de marca de la papelería con las tres versiones oficiales.
+
+---
+
 ## JSON-LD: entidad única `Store` + catálogo de servicios
 
 Los servicios (engargolado, enmicado, escáner, trámites, envíos, arreglos de ropa) solo

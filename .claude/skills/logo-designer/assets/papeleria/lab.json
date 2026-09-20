@@ -1,0 +1,68 @@
+{
+  "title": "Logos Papelería",
+  "intro": "Los logos oficiales de la papelería, en tres versiones, una debajo de otra. Son SVG con fondo transparente: pruébalos sobre distintos fondos, pinta cada color o cada letra y copia las variables CSS. La versión 2 usa la misma tipografía que este título (Fredoka SemiBold, con mayúscula inicial); la 3 es esa letra en mayúsculas con la I de barras.",
+  "slug": "papeleria",
+  "logoDir": "static/img/logo",
+  "colorLabels": {
+    "teal": "Aqua",
+    "yellow": "Mostaza",
+    "orange": "Naranja"
+  },
+  "presets": [
+    {
+      "id": "claro",
+      "label": "Para fondo claro",
+      "colors": {
+        "teal": "#2a8783",
+        "yellow": "#b98600",
+        "orange": "#d9501a"
+      },
+      "ring": "#7a4327"
+    },
+    {
+      "id": "tinta",
+      "label": "Una tinta oscura",
+      "colors": {
+        "teal": "#231916",
+        "yellow": "#231916",
+        "orange": "#231916"
+      },
+      "ring": "#231916"
+    },
+    {
+      "id": "blanco",
+      "label": "Una tinta blanca",
+      "colors": {
+        "teal": "#ffffff",
+        "yellow": "#ffffff",
+        "orange": "#ffffff"
+      },
+      "ring": "#ffffff"
+    }
+  ],
+  "versions": [
+    {
+      "id": "v1",
+      "short": "Versión 1",
+      "label": "Versión 1 · mayúsculas, Fredoka Bold",
+      "config": "v1.json"
+    },
+    {
+      "id": "v2",
+      "short": "Versión 2",
+      "label": "Versión 2 · letra del título, Fredoka SemiBold",
+      "config": "v2.json"
+    },
+    {
+      "id": "v3",
+      "short": "Versión 3",
+      "label": "Versión 3 · mayúsculas, Fredoka SemiBold",
+      "config": "v3.json"
+    }
+  ],
+  "site": {
+    "title": "Logo oficial — xplaya.com",
+    "description": "Los logos oficiales de la papelería en SVG, con fondo transparente y pintables: una línea, circular y dos líneas, en tres versiones. Descarga los archivos y pruébalos sobre distintos fondos.",
+    "ogImage": "/static/img/og_xplaya.jpeg"
+  }
+}

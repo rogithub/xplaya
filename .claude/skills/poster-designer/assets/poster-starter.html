@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartel</title>
+<!--
+  Starter for a poster or a phone graphic. Real text, one file.
+  1. SIZE: change the three places marked SIZE together. Default is tabloid 11 x 17 in.
+       Letter 8.5 x 11 in:  @page 8.5in 11in;  --w 8.5in;  --h 11in;  --safe-x/--safe-y 0.5in
+       WhatsApp 1080 x 1920: @page 1080px 1920px;  --w 1080px;  --h 1920px;  --safe-x 80px;  --safe-y 250px
+  2. Brand: fill the --brand-* colors and the two fonts from the brand profile.
+  3. Put the layout inside .safe. Keep critical content inside it.
+  4. Add #guides to the address to see the safe area. Guides never print.
+-->
+<style>
+  /* SIZE (1 of 3): custom properties do not work inside @page, so the size is written in plain numbers */
+  @page { size: 11in 17in; margin: 0; }
+
+  :root {
+    --w: 11in;            /* SIZE (2 of 3) */
+    --h: 17in;            /* SIZE (2 of 3) */
+    --safe-x: 0.5in;      /* SIZE (3 of 3): critical content stays this far from the left and right edges */
+    --safe-y: 0.5in;      /* SIZE (3 of 3): and this far from the top and bottom (250px for WhatsApp Status) */
+
+    --paper: #ffffff;
+    --ink: #111111;
+    --brand-1: #000000;   /* primary */
+    --brand-2: #000000;   /* secondary */
+    --brand-3: #000000;   /* accent */
+
+    --font-display: system-ui, sans-serif;   /* replace with the brand's display face */
+    --font-body: system-ui, sans-serif;      /* replace with the brand's body face */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #d5d5d5; }   /* on screen: a grey desk around the poster */
+  body { padding: 24px; display: flex; justify-content: center; }
+
+  .poster {
+    position: relative;
+    flex: none;
+    width: var(--w);
+    height: var(--h);
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* everything that matters goes in here */
+  .safe {
+    position: absolute;
+    inset: var(--safe-y) var(--safe-x);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* skeleton classes, use or replace */
+  .kicker   { font: 600 24pt/1.1 var(--font-body); letter-spacing: .04em; text-transform: uppercase; }
+  .headline { font: 700 120pt/0.95 var(--font-display); margin: 0; }
+  .offer    { font: 700 48pt/1.05 var(--font-display); margin: 0; }
+  .details  { font: 500 28pt/1.25 var(--font-body); margin: 0; }
+  .cta      { font: 700 40pt/1.1 var(--font-display); margin: 0; }
+  .logo svg, .logo img { display: block; height: 1.2in; width: auto; }   /* always set the logo's size */
+
+  /* safe-area guides: on screen only, and only with #guides in the address */
+  .guides-layer { display: none; position: absolute; inset: 0; pointer-events: none; }
+  .guides-layer::after { content: ""; position: absolute; inset: var(--safe-y) var(--safe-x); outline: 2px dashed #ff2bd6; }
+  body.guides .guides-layer { display: block; }
+
+  @media print {
+    html, body { background: none; padding: 0; display: block; }
+    .guides-layer { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="poster" id="poster">
+  <div class="safe">
+    <!-- Replace this skeleton with the real hierarchy: main message, offer, details, call to action, logo. -->
+    <header class="logo"><!-- inline logo SVG here --></header>
+    <section>
+      <p class="kicker">Texto de apoyo</p>
+      <h1 class="headline">Mensaje principal</h1>
+      <p class="offer">Oferta o servicio</p>
+    </section>
+    <footer>
+      <p class="details">Fecha, hora, lugar</p>
+      <p class="cta">Contacto</p>
+    </footer>
+  </div>
+  <div class="guides-layer" aria-hidden="true"></div>
+</main>
+<script>if (location.hash === '#guides') document.body.classList.add('guides');</script>
+</body>
+</html>

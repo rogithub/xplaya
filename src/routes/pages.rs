@@ -198,3 +198,16 @@ pub async fn imagina(State(state): State<AppState>) -> Result<Html<String>, Stat
     })?;
     Ok(Html(html))
 }
+
+// Página completa y autocontenida (no extiende base.html): la genera el skill logo-designer.
+pub async fn logo_oficial(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let tmpl = state.tmpl.get_template("pages/logo-oficial.html").map_err(|e| {
+        tracing::error!("Template logo-oficial: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(context!()).map_err(|e| {
+        tracing::error!("Render logo-oficial: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
