@@ -63,7 +63,7 @@
   "site": {
     "title": "Logo oficial — xplaya.com",
     "description": "Los logos oficiales de la papelería en SVG, con fondo transparente y pintables: una línea, circular y dos líneas, en tres versiones. Descarga los archivos y pruébalos sobre distintos fondos.",
-    "ogImage": "/static/img/og_xplaya.jpeg",
+    "ogImage": "/static/img/og_xplaya.jpeg?v=2",
     "downloadNote": "PNG con fondo transparente. JPG sobre fondo oscuro (#231916): el JPG no admite transparencia y los colores del logo están hechos para fondo oscuro. SVG es vector, escala sin límite y se puede pintar. Los PNG y JPG miden 3000 px en su lado más largo."
   }
 }

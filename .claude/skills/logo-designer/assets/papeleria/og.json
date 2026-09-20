@@ -1,0 +1,196 @@
+{
+  "width": 1024,
+  "height": 541,
+  "logo": "static/img/logo/v3/papeleria-linea.svg",
+  "ink": "#231916",
+  "accent": "#D9501A",
+  "logoColors": {
+    "#7DC5C3": "#2A8783",
+    "#EBB728": "#B98600",
+    "#EC652A": "#D9501A"
+  },
+  "images": [
+    {
+      "file": "og_xplaya.jpeg",
+      "headline": [
+        "Papelería y mercería"
+      ],
+      "items": [
+        "Copias e impresiones",
+        "Fotos carnet y polaroid",
+        "Enmicados y engargolados",
+        "Escáner",
+        "Trámites en línea",
+        "WiFi gratis"
+      ],
+      "role": "Imagen por defecto del sitio",
+      "usedIn": [
+        [
+          "/",
+          "Catálogo (página principal)"
+        ],
+        [
+          "/fotos",
+          "Impresión de fotos"
+        ],
+        [
+          "/impresiones",
+          "Centro de copiado"
+        ],
+        [
+          "/foto-credencial",
+          "Foto para credencial en casa"
+        ],
+        [
+          "/imagina",
+          "imagina"
+        ],
+        [
+          "/preguntas-frecuentes",
+          "Preguntas frecuentes"
+        ],
+        [
+          "/logo-oficial",
+          "Logo oficial"
+        ],
+        [
+          "/carrito, /cortinas y la 404",
+          "Páginas sin imagen propia usan esta por defecto"
+        ]
+      ]
+    },
+    {
+      "file": "og_terminos.jpeg",
+      "headline": [
+        "Términos del",
+        "Monedero Electrónico"
+      ],
+      "items": [
+        "Programa de lealtad gratuito",
+        "Cashback en cada compra",
+        "Descuento en compras futuras",
+        "Registro por WhatsApp"
+      ],
+      "role": "Términos del Monedero",
+      "usedIn": [
+        [
+          "/terminos",
+          "Términos y condiciones del Monedero Electrónico"
+        ]
+      ]
+    },
+    {
+      "file": "og_saldo.jpeg",
+      "headline": [
+        "Consulta tu saldo"
+      ],
+      "items": [
+        "Solo necesitas tu teléfono",
+        "Saldo y cashback acumulado",
+        "Regístrate mandando #monedero"
+      ],
+      "role": "Consulta de saldo",
+      "usedIn": [
+        [
+          "/saldo",
+          "Formulario para consultar el saldo con el teléfono"
+        ]
+      ]
+    },
+    {
+      "file": "og_resena.jpeg",
+      "headline": [
+        "¿Te gustó nuestro",
+        "servicio?"
+      ],
+      "items": [
+        "Deja tu reseña en Google Maps",
+        "Tu opinión nos ayuda a seguir mejorando"
+      ],
+      "role": "Reseñas",
+      "usedIn": [
+        [
+          "/resena",
+          "Invitación a dejar una reseña en Google Maps"
+        ]
+      ]
+    },
+    {
+      "file": "og_recibo.jpeg",
+      "headline": [
+        "Tu ticket",
+        "digital"
+      ],
+      "role": "Ticket de compra",
+      "usedIn": [
+        [
+          "/recibo/{id}",
+          "Ticket digital de una venta; se comparte por WhatsApp. Un solo diseño para todos los tickets"
+        ]
+      ],
+      "layout": "ticket",
+      "caption": "Detalle de tu compra",
+      "note": "Diseño distinto al resto: un ticket ilustrado con el logo v3, en vez de titular y lista."
+    },
+    {
+      "file": "og_monedero.jpeg",
+      "headline": [
+        "Tu Monedero",
+        "Electrónico"
+      ],
+      "items": [
+        "Saldo disponible",
+        "Historial de compras",
+        "Cashback generado y usado",
+        "Vencimiento de tu saldo"
+      ],
+      "role": "Monedero de un cliente",
+      "usedIn": [
+        [
+          "/monedero/{cliente}",
+          "Monedero de cada cliente; se comparte por WhatsApp. El nombre y el saldo van en el texto del enlace, no en la imagen"
+        ]
+      ]
+    },
+    {
+      "file": "og_producto.jpeg",
+      "headline": [
+        "Disponible en",
+        "nuestro catálogo"
+      ],
+      "items": [
+        "Material escolar, de oficina y más",
+        "Compra en línea",
+        "Enviamos a todo México por paquetería"
+      ],
+      "role": "Producto sin foto",
+      "usedIn": [
+        [
+          "/productos/{id}",
+          "Solo cuando el producto no tiene foto; si la tiene, se usa su foto"
+        ]
+      ]
+    },
+    {
+      "file": "og_cotizacion.jpeg",
+      "headline": [
+        "Tu cotización"
+      ],
+      "items": [
+        "Productos, cantidades y precios",
+        "Total de tu compra",
+        "Cashback que ganarías",
+        "Descarga tu cotización en PDF"
+      ],
+      "role": "Cotización",
+      "usedIn": [
+        [
+          "/cotizacion/{id}",
+          "Cotización de un cliente; se comparte por WhatsApp. Un solo diseño para todas"
+        ]
+      ]
+    }
+  ],
+  "panel": "#7DC5C3",
+  "panelShadow": "#5EA3A1"
+}

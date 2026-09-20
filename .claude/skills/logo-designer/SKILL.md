@@ -15,13 +15,14 @@ Use the `poster-designer` skill to *use* the logos in posters (its `brands/papel
 |---|---|
 | `scripts/build-logo.js` | Config in, three SVGs out: `<slug>-linea.svg`, `<slug>-circular.svg`, `<slug>-dos-lineas.svg`. |
 | `scripts/build-rasters.js` | The official SVGs in, PNG (transparent) and JPG (on the dark brand ground) out, 3000 px on the longest side, next to each SVG. |
+| `scripts/build-og.js` | `og.json` in, the site's social preview images (`og_*.jpeg`) out, in the Swiss style with the v3 logo: headline plus a ruled list, no photos, no contact data. |
 | `scripts/build-icons.js` | Badge in, the site's icon set out: `favicon.svg`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png`, the two manifest icons and `site.webmanifest`. |
 | `scripts/verify.js` | Checks the SVGs (well-formed, no NaN, transparent corners) and renders `preview.png` on white, paper and dark. |
 | `scripts/build-lab.js` | Assembles the comparison/repaint page from the SVGs on disk. |
 | `scripts/test-lab.js` | Regression test that drives the page's controls in jsdom. Run it after touching the template. |
 | `assets/logo-lab.template.html` | The lab page template (data-driven, no brand hard-coded). |
-| `assets/papeleria/` | `v1.json`, `v2.json`, `v3.json` (one config per official version), `lab.json` (the lab manifest) and `icons.json` (the icon set). |
-| `assets/fonts/` | Fredoka SemiBold (600) and Bold (700), with its SIL OFL license. |
+| `assets/papeleria/` | `v1.json`, `v2.json`, `v3.json` (one config per official version), `lab.json` (the lab manifest), `icons.json` (the icon set) and `og.json` (the social images: text, and where each one is used). |
+| `assets/fonts/` | Fredoka SemiBold (600) and Bold (700), and Archivo Medium (500), Bold (700) and Black (900), with their SIL OFL licenses. |
 | `references/design-notes.md` | Why things are built this way, tuning ratios and every pitfall we hit. Read it before changing the algorithm or adding a font. |
 
 Official assets live in `static/img/logo/{v1,v2,v3}/`, three files each. The configs in `assets/papeleria/` reproduce them exactly (verified byte for byte when this skill was written, except the header comment).
@@ -58,6 +59,23 @@ Compare with `static/img/logo/$v/` (ignore line 2, the header comment). Look at 
 3. Ask the user which one they prefer when it is a taste call (weight, case, ring width). Show them side by side; the lab page is the best way.
 4. Install the winner in `static/img/logo/<id>/` (use `git mv` when moving tracked files), add it to `assets/papeleria/lab.json`, then rebuild the site page (see "Keeping the lab") and run `test-lab.js`.
 5. If the set of official logos changed, update the logo section of `.claude/skills/poster-designer/brands/papeleria.md`.
+
+### Social preview images (`og_*.jpeg`)
+
+The images WhatsApp and other apps show when a link is shared. `assets/papeleria/og.json` holds, for each file, its headline, the short list of what the page offers (all taken from the page itself, no contact data) and the pages that use it (`usedIn`). The generator draws them in the Swiss style: white ground, the v3 logo in its light-ground colors, an Archivo Black headline sized to fit, a thin-ruled list at the bottom. Text is converted to outlines, so the output does not depend on system fonts and can be rendered and looked at here.
+
+```bash
+cd /home/ro/code/xplaya
+node $SK/scripts/build-og.js $SK/assets/papeleria/og.json /tmp/logo-work/og --root . --png     # preview in a scratch folder
+node $SK/scripts/build-og.js $SK/assets/papeleria/og.json static/img --root .                   # replace the site's images
+```
+
+- **Layouts.** Every image uses the Swiss layout (headline plus ruled list) unless its entry in `og.json` has `"layout": "ticket"`; that one is drawn as a big illustrated receipt on a teal panel (the v3 logo on the ticket, abstract rows, a QR-like icon, a check badge) with only a two-line headline and a `caption`. `og_recibo.jpeg` is the only one that uses it. The panel color and its shadow are `panel` / `panelShadow` in `og.json`.
+- **Size:** the site's files are **1024 × 541**, not the 1200 × 630 that several templates declare in `og:image:width` / `og:image:height`. Keep the file size; correcting the declared numbers is a separate decision.
+- **The list is secondary.** WhatsApp shows the image about 300 px wide, so only the headline and the logo survive at that size. Keep headlines short and the list to 6 items at most (one column up to 3 items, two columns from 4).
+- **Cache.** Apps cache each image by URL, and `/static` is `immutable` for a year: when the images are replaced, add `?v=` to every `og:image` and `twitter:image` URL in the templates.
+- `og_producto.jpeg` is used only when a product has no photo; `og_catalogo.jpeg` and `og_futbol.jpeg` are used by no page.
+- **Status:** the new images were previewed as an Artifact and are **not yet applied** to `static/img`.
 
 ### PNG and JPG exports
 

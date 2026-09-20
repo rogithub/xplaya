@@ -300,7 +300,7 @@ async function build(cfg, outDir) {
   return { files: Object.keys(out), stemUnits: r2(ctx.STEM * ctx.K), ringPx: r2(ctx.ring.width * ctx.K) };
 }
 
-module.exports = { build, loadConfig, measure };
+module.exports = { build, loadConfig, measure, serialize };
 
 if (require.main === module) {
   const [cfgFile, outDir] = process.argv.slice(2);
