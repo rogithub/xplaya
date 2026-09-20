@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## `/logo-oficial`: descargas en SVG, PNG y JPG
+
+La página ya enlazaba los SVG; ahora cada versión trae una tabla con **las tres formas** (una
+línea, circular, dos líneas) y **tres formatos** (SVG, PNG, JPG), para bajar rápido el logo y
+usarlo en herramientas externas.
+
+**Archivos a mirar:**
+- `static/img/logo/{v1,v2,v3}/papeleria-*.png` y `*.jpg` — 18 archivos nuevos, 3000 px en el lado
+  largo (3.2 MB en total). El PNG conserva la transparencia; el **JPG lleva fondo café oscuro
+  `#231916`** porque JPG no admite transparencia y los colores del logo están hechos para fondo oscuro.
+- `.claude/skills/logo-designer/scripts/build-rasters.js` — los genera desde los SVG.
+- `.claude/skills/logo-designer/scripts/build-lab.js` (`--site`) y la plantilla — arman la tabla de
+  descargas; `templates/pages/logo-oficial.html` es la salida, **generada, no se edita a mano**.
+  Cada enlace lleva `?v=<hash del archivo>` por el caché `immutable` de `/static`.
+
+**Al cambiar un logo:** regenerar primero los PNG/JPG y después la página (está en `SKILL.md` de
+`logo-designer`), porque los enlaces llevan el hash de cada archivo.
+
+---
+
 ## Íconos y logo dentro de las páginas: de imágenes 3D a la insignia SVG v3
 
 El favicon, el ícono de iOS, los íconos del manifiesto y el logo del encabezado eran el render 3D

@@ -173,8 +173,13 @@
   .code-block { background: var(--chip); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
   .code-block pre { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; white-space: pre; }
   .copy-msg { font-size: 12.5px; color: var(--muted); min-height: 1.2em; }
-  .pair-files { margin: 0; font-size: 13px; color: var(--stage-fg); text-align: center; }
-  .pair-files a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .pair-files { display: grid; gap: 8px; justify-items: center; margin: 0; }
+  .dl-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+  .dl-name { min-width: 5.5em; text-align: right; font-size: 13px; color: var(--stage-fg); }
+  .dl-btn { display: inline-block; padding: 3px 13px; border: 1px solid currentColor; border-radius: 999px; font-size: 12.5px; font-weight: 600; letter-spacing: .04em; color: var(--stage-fg); text-decoration: none; }
+  .dl-btn:hover, .dl-btn:focus-visible { background: rgba(127, 127, 127, .3); outline: none; }
+  .dl-btn:focus-visible { box-shadow: 0 0 0 2px var(--sel); }
+  .dl-note { margin: 0; max-width: 62ch; text-align: center; font-size: 12.5px; color: var(--stage-fg); }
 </style>
 <style>body { margin: 0; }</style>
 {% endraw %}
@@ -252,7 +257,11 @@
     <path id="v1c-letra-9-A" class="pap-9" fill="#7DC5C3" d="M466.79 298.37L502.65 372.51Q504.79 376.8 504.94 379.8Q505.08 382.8 503.08 385.08Q501.08 387.37 496.65 389.65Q489.79 392.94 486.08 391.73Q482.36 390.51 479.08 383.51L472.51 369.94L437.36 369.94L430.79 383.65Q427.36 390.37 423.65 391.58Q419.94 392.8 413.22 389.51Q408.79 387.37 406.72 385.08Q404.65 382.8 404.79 379.8Q404.94 376.8 407.08 372.51L442.94 298.23Q444.65 294.8 448.01 292.73Q451.36 290.65 454.94 290.65Q457.51 290.65 459.72 291.58Q461.94 292.51 463.79 294.23Q465.65 295.94 466.79 298.37M448.08 347.65L461.51 347.65L454.79 333.8L448.08 347.65"/>
   </g>
 </svg></div>
-          <p class="pair-files">SVG: <a href="/static/img/logo/v1/papeleria-linea.svg?v=c100ce86" download>Una línea</a> · <a href="/static/img/logo/v1/papeleria-circular.svg?v=755e8fc2" download>Circular</a> · <a href="/static/img/logo/v1/papeleria-dos-lineas.svg?v=b46e14bc" download>Dos líneas</a></p>
+          <div class="pair-files">
+            <div class="dl-row"><span class="dl-name">Una línea</span><a class="dl-btn" href="/static/img/logo/v1/papeleria-linea.svg?v=c100ce86" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v1/papeleria-linea.png?v=2294761d" download title="3000 × 456 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v1/papeleria-linea.jpg?v=bb379125" download title="3000 × 456 px, sobre fondo oscuro">JPG</a></div>
+            <div class="dl-row"><span class="dl-name">Circular</span><a class="dl-btn" href="/static/img/logo/v1/papeleria-circular.svg?v=755e8fc2" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v1/papeleria-circular.png?v=28a85a44" download title="3000 × 3000 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v1/papeleria-circular.jpg?v=31491118" download title="3000 × 3000 px, sobre fondo oscuro">JPG</a></div>
+            <div class="dl-row"><span class="dl-name">Dos líneas</span><a class="dl-btn" href="/static/img/logo/v1/papeleria-dos-lineas.svg?v=b46e14bc" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v1/papeleria-dos-lineas.png?v=df25a000" download title="3000 × 1534 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v1/papeleria-dos-lineas.jpg?v=a16289e7" download title="3000 × 1534 px, sobre fondo oscuro">JPG</a></div>
+          </div>
         </div>
         <div class="pair" data-ver="v2" data-short="Versión 2">
           <h3>Versión 2 · letra del título, Fredoka SemiBold</h3>
@@ -315,7 +324,11 @@
     <path id="v2c-letra-9-a" class="pap-9" fill="#7DC5C3" d="M353.98 331.72Q348.69 331.72 346.19 329.86Q343.68 328 343.68 325.29L345.11 322.85Q344.26 324.28 341.82 326.36Q339.39 328.43 335.53 330.08Q331.67 331.72 325.94 331.72Q319.36 331.72 313.43 328.86Q307.49 326 302.91 320.92Q298.33 315.84 295.69 309.41Q293.04 302.97 293.04 295.82Q293.04 288.81 295.69 282.44Q298.33 276.07 302.98 271.14Q307.63 266.2 313.5 263.34Q319.36 260.48 325.94 260.48Q331.24 260.48 334.96 261.98Q338.68 263.48 341.18 265.49Q343.68 267.49 344.97 269.35L343.83 267.35Q343.68 263.91 346.19 262.12Q348.69 260.34 354.13 260.34Q359.28 260.34 361.49 261.91Q363.71 263.48 364.21 266.06Q364.71 268.63 364.71 271.5L364.71 320.85Q364.71 323.57 364.21 326.14Q363.71 328.72 361.49 330.22Q359.28 331.72 353.98 331.72M329.09 310.41Q332.81 310.41 335.89 308.48Q338.96 306.55 340.75 303.25Q342.54 299.96 342.54 295.96Q342.54 291.81 340.68 288.59Q338.82 285.37 335.67 283.44Q332.52 281.51 328.81 281.51Q324.66 281.51 321.44 283.51Q318.22 285.52 316.29 288.81Q314.36 292.1 314.36 296.24Q314.36 300.11 316.29 303.33Q318.22 306.55 321.58 308.48Q324.94 310.41 329.09 310.41"/>
   </g>
 </svg></div>
-          <p class="pair-files">SVG: <a href="/static/img/logo/v2/papeleria-linea.svg?v=c9b4505c" download>Una línea</a> · <a href="/static/img/logo/v2/papeleria-circular.svg?v=bdb9d5b7" download>Circular</a> · <a href="/static/img/logo/v2/papeleria-dos-lineas.svg?v=b0a0c783" download>Dos líneas</a></p>
+          <div class="pair-files">
+            <div class="dl-row"><span class="dl-name">Una línea</span><a class="dl-btn" href="/static/img/logo/v2/papeleria-linea.svg?v=c9b4505c" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v2/papeleria-linea.png?v=104ffd5c" download title="3000 × 751 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v2/papeleria-linea.jpg?v=f911c548" download title="3000 × 751 px, sobre fondo oscuro">JPG</a></div>
+            <div class="dl-row"><span class="dl-name">Circular</span><a class="dl-btn" href="/static/img/logo/v2/papeleria-circular.svg?v=bdb9d5b7" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v2/papeleria-circular.png?v=ac5696ab" download title="3000 × 3000 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v2/papeleria-circular.jpg?v=6ebfaeba" download title="3000 × 3000 px, sobre fondo oscuro">JPG</a></div>
+            <div class="dl-row"><span class="dl-name">Dos líneas</span><a class="dl-btn" href="/static/img/logo/v2/papeleria-dos-lineas.svg?v=b0a0c783" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v2/papeleria-dos-lineas.png?v=c7cf5985" download title="3000 × 2137 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v2/papeleria-dos-lineas.jpg?v=f89163b6" download title="3000 × 2137 px, sobre fondo oscuro">JPG</a></div>
+          </div>
         </div>
         <div class="pair" data-ver="v3" data-short="Versión 3">
           <h3>Versión 3 · mayúsculas, Fredoka SemiBold</h3>
@@ -378,8 +391,13 @@
     <path id="v3c-letra-9-A" class="pap-9" fill="#7DC5C3" d="M436.35 278.66L474.12 357.06Q475.84 360.63 475.98 363.14Q476.12 365.64 474.48 367.57Q472.83 369.5 469.11 371.36Q463.39 374.08 460.24 373.01Q457.1 371.94 454.38 366.21L446.08 348.9L406.74 348.9L398.44 366.21Q395.58 371.79 392.5 372.87Q389.43 373.94 383.71 371.22Q379.99 369.5 378.34 367.57Q376.7 365.64 376.84 362.99Q376.98 360.35 378.84 356.77L416.47 278.52Q417.9 275.66 420.69 273.94Q423.48 272.22 426.48 272.22Q428.63 272.22 430.49 273.01Q432.35 273.8 433.85 275.23Q435.35 276.66 436.35 278.66M415.47 330.45L437.21 330.45L426.34 307.56L415.47 330.45"/>
   </g>
 </svg></div>
-          <p class="pair-files">SVG: <a href="/static/img/logo/v3/papeleria-linea.svg?v=a4199710" download>Una línea</a> · <a href="/static/img/logo/v3/papeleria-circular.svg?v=d2c056c4" download>Circular</a> · <a href="/static/img/logo/v3/papeleria-dos-lineas.svg?v=5f899578" download>Dos líneas</a></p>
+          <div class="pair-files">
+            <div class="dl-row"><span class="dl-name">Una línea</span><a class="dl-btn" href="/static/img/logo/v3/papeleria-linea.svg?v=a4199710" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v3/papeleria-linea.png?v=e1c0d601" download title="3000 × 461 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v3/papeleria-linea.jpg?v=655eb417" download title="3000 × 461 px, sobre fondo oscuro">JPG</a></div>
+            <div class="dl-row"><span class="dl-name">Circular</span><a class="dl-btn" href="/static/img/logo/v3/papeleria-circular.svg?v=d2c056c4" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v3/papeleria-circular.png?v=a5e12a85" download title="3000 × 3000 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v3/papeleria-circular.jpg?v=b081c14e" download title="3000 × 3000 px, sobre fondo oscuro">JPG</a></div>
+            <div class="dl-row"><span class="dl-name">Dos líneas</span><a class="dl-btn" href="/static/img/logo/v3/papeleria-dos-lineas.svg?v=5f899578" download title="Vector: escala sin límite y se puede pintar">SVG</a><a class="dl-btn" href="/static/img/logo/v3/papeleria-dos-lineas.png?v=0a3fff44" download title="3000 × 1592 px, fondo transparente">PNG</a><a class="dl-btn" href="/static/img/logo/v3/papeleria-dos-lineas.jpg?v=edc430c1" download title="3000 × 1592 px, sobre fondo oscuro">JPG</a></div>
+          </div>
         </div>
+        <p class="dl-note">PNG con fondo transparente. JPG sobre fondo oscuro (#231916): el JPG no admite transparencia y los colores del logo están hechos para fondo oscuro. SVG es vector, escala sin límite y se puede pintar. Los PNG y JPG miden 3000 px en su lado más largo.</p>
       </div>
       <div class="sizes" id="sizesBox">
         <h2>Tamaños de uso</h2>

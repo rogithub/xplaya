@@ -43,6 +43,8 @@ Every folder has the same three files:
 
 **Badge (v3 only):** `static/img/logo/v3/papeleria-insignia.svg` is the circular logo on its dark disc (`#231916`). It is what the site uses for its icons and in-page logo, and it works as a small round mark on any ground, light included. It is not one of the three formats and not a fourth version.
 
+Every folder also has a **PNG** (transparent) and a **JPG** (on dark brown `#231916`, because JPG cannot be transparent) of each shape, 3000 px on the longest side, for tools that do not take SVG. Prefer the SVG in anything HTML.
+
 All three formats have a transparent background and no fixed pixel size, so they scale to any size (an 11×17 print included) with no resolution limit. Always set the size yourself (`height="48"` or CSS), because a bare `<img>` with no size stretches to its container's width.
 
 **Structure.** Each letter is its own `<path>` (`letra-1-P` … `letra-9-A`, in reading order: PAPE / Pape = 1–4, LERIA / lería = 5–9; in v2 the í is `letra-8-i`). The circular one also has `aro` (the ring, a stroke) and `disco` (a circle behind the letters, transparent by default).

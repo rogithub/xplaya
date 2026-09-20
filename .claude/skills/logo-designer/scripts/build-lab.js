@@ -3,11 +3,12 @@
 // Assembles the logo lab page (compare versions, repaint by color or letter, ring width, no-ring) from the SVGs on disk.
 // Usage: node build-lab.js <lab.json> <out.html> [--root <repo root>] [--site]
 // --site writes the version served by xplaya at /logo-oficial: a full HTML document for the minijinja loader (content in
-// {% raw %} blocks), with the site's social meta, noindex, and download links to every SVG.
+// {% raw %} blocks), with the site's social meta, noindex, and a download table (SVG, PNG, JPG) for every shape of every version.
 // The manifest lists the versions; each version has a build-logo config (for its measurements) and a folder of SVGs.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const sharp = require('sharp');
 const { loadConfig, measure } = require('./build-logo.js');
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -63,7 +64,7 @@ ${body.trim()}
 `;
 }
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   const siteIdx = args.indexOf('--site');
   const site = siteIdx >= 0;
@@ -87,13 +88,30 @@ function main() {
     const read = (kind) => fs.readFileSync(path.join(dir, `${slug}-${kind}.svg`), 'utf8');
     const line = inline(read('linea'), 'line', `${v.id}l`, m.classPrefix);
     const circ = inline(read('circular'), 'circle', `${v.id}c`, m.classPrefix, ` data-stem="${m.stem}" data-pad="${m.pad}"`);
-    const kinds = [['linea', 'Una línea'], ['circular', 'Circular'], ['dos-lineas', 'Dos líneas']];
-    // /static is served with a one-year immutable cache, so the link carries a hash of the file: it changes only when the SVG does
-    const hash = (kind) => crypto.createHash('sha1').update(read(kind)).digest('hex').slice(0, 8);
-    const links = site ? `\n          <p class="pair-files">SVG: ${kinds.map(([k, l]) => `<a href="/${esc(manifest.logoDir)}/${esc(v.id)}/${esc(slug)}-${k}.svg?v=${hash(k)}" download>${l}</a>`).join(' · ')}</p>` : '';
+    // site mode: a download table per version, one row per shape and one button per format that exists on disk
+    let links = '';
+    if (site) {
+      const shapes = [['linea', 'Una línea'], ['circular', 'Circular'], ['dos-lineas', 'Dos líneas']];
+      const rows = [];
+      for (const [k, label] of shapes) {
+        const btns = [];
+        const dims = fs.existsSync(path.join(dir, `${slug}-${k}.png`)) ? await sharp(path.join(dir, `${slug}-${k}.png`)).metadata() : null;
+        for (const [ext, name, tip] of [['svg', 'SVG', 'Vector: escala sin límite y se puede pintar'], ['png', 'PNG', dims && `${dims.width} × ${dims.height} px, fondo transparente`], ['jpg', 'JPG', dims && `${dims.width} × ${dims.height} px, sobre fondo oscuro`]]) {
+          const file = path.join(dir, `${slug}-${k}.${ext}`);
+          if (!fs.existsSync(file)) continue;
+          // /static is served with a one-year immutable cache, so each link carries a hash of its file: it changes only when the file does
+          const h = crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex').slice(0, 8);
+          btns.push(`<a class="dl-btn" href="/${esc(manifest.logoDir)}/${esc(v.id)}/${esc(slug)}-${k}.${ext}?v=${h}" download title="${esc(tip)}">${name}</a>`);
+        }
+        rows.push(`            <div class="dl-row"><span class="dl-name">${label}</span>${btns.join('')}</div>`);
+      }
+      links = `\n          <div class="pair-files">\n${rows.join('\n')}\n          </div>`;
+    }
     pairs += `        <div class="pair" data-ver="${esc(v.id)}" data-short="${esc(v.short || v.id)}">\n          <h3>${esc(v.label)}</h3>\n          <div class="pair-logos">${line}${circ}</div>${links}\n        </div>\n`;
     files += `<code>${esc(manifest.logoDir)}/${esc(v.id)}/${esc(slug)}-*.svg</code> `;
   }
+
+  if (site && manifest.site && manifest.site.downloadNote) pairs += `        <p class="dl-note">${esc(manifest.site.downloadNote)}</p>\n`;
 
   const lab = {
     cssPrefix: first.cssPrefix, classPrefix: first.classPrefix, roles: first.roles,
@@ -115,4 +133,4 @@ function main() {
   console.log(`lab page -> ${outFile} (${manifest.versions.length} versions, ${(template.length / 1024).toFixed(0)} KB)`);
 }
 
-main();
+main().catch((e) => { console.error(e); process.exit(1); });

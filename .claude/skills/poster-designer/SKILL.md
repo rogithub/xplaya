@@ -24,7 +24,7 @@ If it is not clear which one, ask. **Never mix them.** A client's poster does no
 4. **Choose the style.** If the user has not picked a direction, propose 5 to 7 genuinely different ones, marking which fit the brand (`references/styles.md`), and wait for the pick.
 5. **Build one HTML file with real text** from `assets/poster-starter.html`, following `references/formats.md`: brand tokens, the logo inline, the size in its three places, the safe area.
 6. **Review with the user**: publish the HTML as a private Artifact so they see it in their own browser, then iterate on their feedback while keeping the chosen style (`references/styles.md`, iteration table).
-7. **Deliver** the final `.html` in the agreed folder and tell the user how to export it (PDF for print, PNG for WhatsApp; the steps are in `references/formats.md`).
+7. **Deliver.** The user's current preference is to see posters as Artifacts and to keep them **out of the repo**: the Artifact is the deliverable, and no poster file is written to the repo or to a `carteles/` folder unless they ask. When they approve one and want to print it, save the HTML where they say and give the export steps (PDF for print, PNG for WhatsApp; in `references/formats.md`).
 
 ## Rules that hold in both modes
 
@@ -45,7 +45,7 @@ If it is not clear which one, ask. **Never mix them.** A client's poster does no
 
 ## Where things go
 
-- Poster files are not put in `static/` (the site serves it publicly and caches it for a year) and are not committed without the user's yes. Ask once where finished posters go; a folder outside the repo is the safe default.
+- Posters stay in Artifacts for now (see step 7). A poster file is never put in `static/` (the site serves it publicly and caches it for a year) and is never committed without the user's yes; if they ask for a file, ask where it goes.
 - A client's logo, brand profile and finished posters are their information: keep them in the agreed folder, not in the repo, unless the user explicitly says otherwise (`references/brief.md`).
 - Publishing the preview as an Artifact keeps a copy of a client's logo on the user's Claude account. Mention it once when the poster is for a client.
 - The papelería's public logo page is `xplaya.com/logo-oficial`; its logos are made and changed with the `logo-designer` skill.
@@ -64,3 +64,4 @@ After drafting or delivering a poster, say briefly: the format, the style, which
 | `references/formats.md` | Choosing sizes, print versus in-house, building and exporting the file. |
 | `references/styles.md` | Proposing styles, keeping one coherent, reading feedback. |
 | `assets/poster-starter.html` | The starting file for every poster. |
+| `scripts/poster-kit.js` | Building a poster with no browser available: measures text with the real font metrics and checks the layout. |

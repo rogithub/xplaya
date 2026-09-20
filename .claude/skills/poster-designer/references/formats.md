@@ -58,6 +58,12 @@ Deliver a single **HTML file with real text** built from `assets/poster-starter.
    Paste the SVG in place. It already carries its quiet zone; keep that zone, put the QR on a light panel even on a dark poster, make it at least about 1.2 in (30 mm) on paper, and ask the user to scan it with a phone before printing.
 7. Open the file with `#guides` at the end of the address to see the safe area.
 
+## Building without a browser: the poster kit
+
+There is no browser on this machine, so `scripts/poster-kit.js` stands in for the eyes that are missing. Write the poster as a script that places each block in inches (`Layout.text` for text with explicit lines, `Layout.box` for shapes), and the kit measures every line with the real font, then aborts if a line is wider than its box, a block leaves the 10 × 16 in safe area, or two blocks overlap without `allow()`. It also inlines the official logo (repainted through CSS variables when the ground is light) and a QR, and wraps everything as an Artifact fragment. It catches what a missing preview would hide: overflowing lines and colliding blocks. It cannot judge taste, so the user's review still decides.
+
+Install `opentype.js`, `qrcode` and the `@fontsource/<font>` packages you need in a scratch folder and run the poster script from there. Fonts used so far: Fredoka (in the logo skill), Jost for Bauhaus, Archivo for Swiss, Rubik for Risograph.
+
 ## Reviewing and exporting
 
 This machine has no usable browser (a headless Chromium was tried and does not start here), so nothing can be rendered on it. The workflow is: build the HTML, publish it as a private Artifact so the user sees it in their own browser, take their feedback, iterate. Printing from inside an Artifact is not reliable, so the final export is done from the saved `.html` file, which is why the user needs these steps (say so; they have not been run on this machine):

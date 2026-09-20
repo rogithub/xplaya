@@ -14,6 +14,7 @@ Use the `poster-designer` skill to *use* the logos in posters (its `brands/papel
 | Path | What it is |
 |---|---|
 | `scripts/build-logo.js` | Config in, three SVGs out: `<slug>-linea.svg`, `<slug>-circular.svg`, `<slug>-dos-lineas.svg`. |
+| `scripts/build-rasters.js` | The official SVGs in, PNG (transparent) and JPG (on the dark brand ground) out, 3000 px on the longest side, next to each SVG. |
 | `scripts/build-icons.js` | Badge in, the site's icon set out: `favicon.svg`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png`, the two manifest icons and `site.webmanifest`. |
 | `scripts/verify.js` | Checks the SVGs (well-formed, no NaN, transparent corners) and renders `preview.png` on white, paper and dark. |
 | `scripts/build-lab.js` | Assembles the comparison/repaint page from the SVGs on disk. |
@@ -57,6 +58,17 @@ Compare with `static/img/logo/$v/` (ignore line 2, the header comment). Look at 
 3. Ask the user which one they prefer when it is a taste call (weight, case, ring width). Show them side by side; the lab page is the best way.
 4. Install the winner in `static/img/logo/<id>/` (use `git mv` when moving tracked files), add it to `assets/papeleria/lab.json`, then rebuild the site page (see "Keeping the lab") and run `test-lab.js`.
 5. If the set of official logos changed, update the logo section of `.claude/skills/poster-designer/brands/papeleria.md`.
+
+### PNG and JPG exports
+
+Each logo folder also holds a PNG and a JPG of every shape (`papeleria-linea`, `-circular`, `-dos-lineas`), made from the SVGs so that people can use the logo where a vector is not accepted. PNG keeps the transparency; **JPG cannot be transparent, so it sits on the brand's dark brown `#231916`**, the ground the logo's colors are made for (on white the teal and mustard fail contrast). The public page offers all three formats for every version.
+
+```bash
+cd /home/ro/code/xplaya
+for v in v1 v2 v3; do node $SK/scripts/build-rasters.js static/img/logo/$v papeleria; done
+```
+
+Whenever an SVG in `static/img/logo/` changes, regenerate its PNG and JPG **and** the site page (next section), in that order: the page's download links carry a hash of each file.
 
 ### Site icons and the in-page logo
 
@@ -120,8 +132,8 @@ node $SK/scripts/build-lab.js $SK/assets/papeleria/lab.json templates/pages/logo
 ```
 
 - **Regenerate it every time a file in `static/img/logo/` changes.** The logos are inlined in the page, so a stale page shows old logos, and `test-lab.js` will not notice.
-- `--site` makes it a standalone document (it does not extend `base.html`, whose Bulma would fight the page's own CSS), marks it `noindex`, adds the site's social meta, wraps the generated markup in `{% raw %}` so minijinja leaves the CSS and JS alone, and adds download links to every SVG.
-- The download links carry `?v=<hash of the file>` because `/static` is served with a one-year `immutable` cache; the hash changes only when the SVG does.
+- `--site` makes it a standalone document (it does not extend `base.html`, whose Bulma would fight the page's own CSS), marks it `noindex`, adds the site's social meta, wraps the generated markup in `{% raw %}` so minijinja leaves the CSS and JS alone, and adds a download table under each version: one row per shape (line, circular, two lines) and one button per format found on disk (SVG, PNG, JPG). `manifest.site.downloadNote` is the explanation printed under the versions.
+- The download links carry `?v=<hash of the file>` because `/static` is served with a one-year `immutable` cache; the hash changes only when that file does.
 - `manifest.site` in `lab.json` holds the page title, description and social image. Remove `noindex` in `siteDocument()` only if the user wants the page found by search engines.
 - To test the served page: run the site on a spare port (`PORT=3199 cargo run`), save the response of `/logo-oficial`, run `test-lab.js` on it, then stop only that process (find its pid with `ss -ltnp | grep :3199`; do not `pkill` by name, the user may have their own server running).
 - Adding the route was authorized by the user (2026-09-19): the logos are public brand information.
