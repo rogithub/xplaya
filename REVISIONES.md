@@ -4,6 +4,38 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Imágenes para compartir (`og_*`) con un ícono que invita a la acción
+
+Las ocho `og_*.jpeg` se rehicieron para que se reconozcan aun a 300 px (como las muestra
+WhatsApp): en vez de titular y lista, cada una es un ícono grande de lo que hace la página sobre
+un panel de color, con el logo v3 puesto en el objeto y una insignia naranja de la acción. Todas
+comparten posición, sombra dura, trazo, titular y línea naranja; solo cambia el panel (verde
+azulado, mostaza o café oscuro) y el objeto.
+
+| Imagen | Objeto | Insignia | Panel |
+|---|---|---|---|
+| `og_xplaya` | tienda | cursor | café |
+| `og_terminos` | carpeta con hoja | "i" | mostaza |
+| `og_saldo` | celular | lupa | verde azulado |
+| `og_resena` | globo con estrellas | pin de mapa | café |
+| `og_recibo` | ticket | palomita | verde azulado |
+| `og_monedero` | cartera | "$" | mostaza |
+| `og_producto` | bolsa | carrito | verde azulado |
+| `og_cotizacion` | documento PDF | descarga | mostaza |
+
+**Archivos a mirar:**
+- `static/img/og_*.jpeg` — mismas medidas (1024 × 541) y mismos nombres; 46 a 52 KB cada una.
+- Plantillas (15 archivos) — `?v=2` pasó a `?v=3` en cada `og:image` / `twitter:image` para que
+  WhatsApp y Facebook vuelvan a bajarlas. Los enlaces ya compartidos pueden tardar en refrescarse.
+- `.claude/skills/logo-designer/scripts/og-icons.js` (dibujo de los íconos), `build-og.js`
+  (composición) y `assets/papeleria/og.json` (textos, paneles y páginas donde se usa cada una).
+- `templates/pages/logo-oficial.html` — regenerada con el `?v=3`.
+
+**Para ver el resultado:** correr el sitio y abrir el código fuente de cualquier página; el
+`og:image` debe terminar en `?v=3`. Requiere deploy para que las apps las vean.
+
+---
+
 ## Imágenes para compartir (`og_*`) rehechas en estilo Swiss con el logo v3
 
 Las `og_*.jpeg` eran fotos hechas con IA con el logo 3D viejo horneado dentro (varias con textos

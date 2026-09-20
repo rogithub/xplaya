@@ -13,15 +13,8 @@
     {
       "file": "og_xplaya.jpeg",
       "headline": [
-        "Papelería y mercería"
-      ],
-      "items": [
-        "Copias e impresiones",
-        "Fotos carnet y polaroid",
-        "Enmicados y engargolados",
-        "Escáner",
-        "Trámites en línea",
-        "WiFi gratis"
+        "Papelería",
+        "y mercería"
       ],
       "role": "Imagen por defecto del sitio",
       "usedIn": [
@@ -57,19 +50,18 @@
           "/carrito, /cortinas y la 404",
           "Páginas sin imagen propia usan esta por defecto"
         ]
-      ]
+      ],
+      "layout": "store",
+      "panel": "#231916",
+      "panelShadow": "#4A3A34",
+      "caption": "Copias, fotos y trámites",
+      "action": "Cursor: entra a la tienda"
     },
     {
       "file": "og_terminos.jpeg",
       "headline": [
-        "Términos del",
-        "Monedero Electrónico"
-      ],
-      "items": [
-        "Programa de lealtad gratuito",
-        "Cashback en cada compra",
-        "Descuento en compras futuras",
-        "Registro por WhatsApp"
+        "Términos",
+        "del Monedero"
       ],
       "role": "Términos del Monedero",
       "usedIn": [
@@ -77,17 +69,18 @@
           "/terminos",
           "Términos y condiciones del Monedero Electrónico"
         ]
-      ]
+      ],
+      "layout": "clipboard",
+      "panel": "#EBB728",
+      "panelShadow": "#B78F1E",
+      "caption": "Cómo funciona el cashback",
+      "action": "Información: lee los términos"
     },
     {
       "file": "og_saldo.jpeg",
       "headline": [
-        "Consulta tu saldo"
-      ],
-      "items": [
-        "Solo necesitas tu teléfono",
-        "Saldo y cashback acumulado",
-        "Regístrate mandando #monedero"
+        "Consulta",
+        "tu saldo"
       ],
       "role": "Consulta de saldo",
       "usedIn": [
@@ -95,17 +88,18 @@
           "/saldo",
           "Formulario para consultar el saldo con el teléfono"
         ]
-      ]
+      ],
+      "layout": "phone",
+      "panel": "#7DC5C3",
+      "panelShadow": "#5EA3A1",
+      "caption": "Solo necesitas tu teléfono",
+      "action": "Lupa: consulta tu saldo"
     },
     {
       "file": "og_resena.jpeg",
       "headline": [
-        "¿Te gustó nuestro",
-        "servicio?"
-      ],
-      "items": [
-        "Deja tu reseña en Google Maps",
-        "Tu opinión nos ayuda a seguir mejorando"
+        "Déjanos",
+        "tu reseña"
       ],
       "role": "Reseñas",
       "usedIn": [
@@ -113,7 +107,12 @@
           "/resena",
           "Invitación a dejar una reseña en Google Maps"
         ]
-      ]
+      ],
+      "layout": "bubble",
+      "panel": "#231916",
+      "panelShadow": "#4A3A34",
+      "caption": "En Google Maps",
+      "action": "Pin de mapa: se abre Google Maps"
     },
     {
       "file": "og_recibo.jpeg",
@@ -130,19 +129,15 @@
       ],
       "layout": "ticket",
       "caption": "Detalle de tu compra",
-      "note": "Diseño distinto al resto: un ticket ilustrado con el logo v3, en vez de titular y lista."
+      "panel": "#7DC5C3",
+      "panelShadow": "#5EA3A1",
+      "action": "Palomita: compra confirmada"
     },
     {
       "file": "og_monedero.jpeg",
       "headline": [
-        "Tu Monedero",
-        "Electrónico"
-      ],
-      "items": [
-        "Saldo disponible",
-        "Historial de compras",
-        "Cashback generado y usado",
-        "Vencimiento de tu saldo"
+        "Tu",
+        "Monedero"
       ],
       "role": "Monedero de un cliente",
       "usedIn": [
@@ -150,18 +145,18 @@
           "/monedero/{cliente}",
           "Monedero de cada cliente; se comparte por WhatsApp. El nombre y el saldo van en el texto del enlace, no en la imagen"
         ]
-      ]
+      ],
+      "layout": "wallet",
+      "panel": "#EBB728",
+      "panelShadow": "#B78F1E",
+      "caption": "Saldo y cashback acumulado",
+      "action": "Signo de pesos: tu saldo"
     },
     {
       "file": "og_producto.jpeg",
       "headline": [
-        "Disponible en",
-        "nuestro catálogo"
-      ],
-      "items": [
-        "Material escolar, de oficina y más",
-        "Compra en línea",
-        "Enviamos a todo México por paquetería"
+        "En nuestro",
+        "catálogo"
       ],
       "role": "Producto sin foto",
       "usedIn": [
@@ -169,18 +164,18 @@
           "/productos/{id}",
           "Solo cuando el producto no tiene foto; si la tiene, se usa su foto"
         ]
-      ]
+      ],
+      "layout": "bag",
+      "panel": "#7DC5C3",
+      "panelShadow": "#5EA3A1",
+      "caption": "Compra en línea",
+      "action": "Carrito: agrégalo y compra"
     },
     {
       "file": "og_cotizacion.jpeg",
       "headline": [
-        "Tu cotización"
-      ],
-      "items": [
-        "Productos, cantidades y precios",
-        "Total de tu compra",
-        "Cashback que ganarías",
-        "Descarga tu cotización en PDF"
+        "Tu",
+        "cotización"
       ],
       "role": "Cotización",
       "usedIn": [
@@ -188,7 +183,12 @@
           "/cotizacion/{id}",
           "Cotización de un cliente; se comparte por WhatsApp. Un solo diseño para todas"
         ]
-      ]
+      ],
+      "layout": "document",
+      "panel": "#EBB728",
+      "panelShadow": "#B78F1E",
+      "caption": "Productos y precios",
+      "action": "Flecha de descarga: PDF"
     }
   ],
   "panel": "#7DC5C3",

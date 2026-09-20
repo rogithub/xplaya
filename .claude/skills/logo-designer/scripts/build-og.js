@@ -3,7 +3,10 @@
 // Builds the site's social preview images (og_*.jpeg) in the Swiss style: white ground, official v3 logo in its light-ground
 // colors, a big headline, a thin-ruled list of what the page offers. No photos, no contact data.
 // An image with "layout": "ticket" is drawn instead as a big illustrated receipt (logo on the ticket, abstract rows, a QR-like
-// icon and a check badge) with just a headline and one caption.
+// icon and a check badge), and one with "layout": "document" as a sheet with a folded corner (logo, a table of abstract rows, a PDF
+// tag and a download badge), each with just a headline and one caption. Both take their own panel / panelShadow colors.
+// Other layouts (store, clipboard, phone, bubble, wallet, bag) are drawn by og-icons.js the same way: one object with the logo,
+// a hard shadow and a badge that says what the click does.
 // Usage: node build-og.js <og.json> <outDir> [--root <repo root>] [--png]
 //   <outDir> gets one JPEG per image at the size in og.json (the site's files are 1024 x 541); --png also writes PNGs.
 // Text is converted to outlines with the bundled Archivo font, so the result does not depend on system fonts.
@@ -94,56 +97,96 @@ function composeSwiss(img) {
   return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${parts.join('')}</svg>`, problems, hpx, ipx };
 }
 
-// A big illustrated receipt on a color panel, with a hard ink shadow like the rest of the Swiss family.
+const ICONS = require('./og-icons.js')({ ink, accent, logoSvg, shape, textPath, capHeight });
+
+// The document icon: a sheet with a folded corner, a table of abstract rows, a PDF tag and a download badge.
+function drawDocument(parts, problems, g) {
+  const { tx, ty, tw, th, shadow } = g, fold = 58;
+  const sheet = (dx, dy) => `M${tx + dx} ${ty + dy}H${tx + tw - fold + dx}L${tx + tw + dx} ${ty + fold + dy}V${ty + th + dy}H${tx + dx}Z`;
+  parts.push(`<path d="${sheet(16, 16)}" fill="${shadow}"/>`);
+  parts.push(`<path d="${sheet(0, 0)}" fill="#ffffff" stroke="${ink}" stroke-width="5" stroke-linejoin="round"/>`);
+  parts.push(`<path d="M${tx + tw - fold} ${ty}V${ty + fold}H${tx + tw}Z" fill="#DCE3E2" stroke="${ink}" stroke-width="5" stroke-linejoin="round"/>`);
+
+  const pad = 26, ix = tx + pad, iw = tw - 2 * pad;
+  const lg = logoSvg(), lw = iw - 46, lh = lw / lg.ratio;      // narrower than the sheet so it clears the folded corner
+  parts.push(`<svg x="${ix}" y="${ty + pad + 2}" width="${lw}" height="${lh.toFixed(2)}" viewBox="0 0 ${lg.vw} ${lg.vh}">${lg.inner}</svg>`);
+
+  // table: a header row, a rule, four rows (quantity, product, price), a rule, the total
+  const bar = (x, y, w, h = 12, fill = ink) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="${fill}"/>`;
+  const px = ix + iw - 46;
+  parts.push(bar(ix, ty + 98, 34), bar(ix + 50, ty + 98, 92), bar(px, ty + 98, 46));
+  parts.push(`<rect x="${ix}" y="${ty + 124}" width="${iw}" height="3" fill="${ink}"/>`);
+  [128, 110, 120, 96].forEach((nw, i) => { const y = ty + 146 + i * 36; parts.push(bar(ix, y, 22), bar(ix + 50, y, nw), bar(px, y, 46)); });
+  parts.push(`<rect x="${ix}" y="${ty + 290}" width="${iw}" height="3" fill="${ink}"/>`);
+  parts.push(bar(ix, ty + 312, 74, 16), bar(ix + iw - 96, ty + 312, 96, 16, accent));
+
+  // PDF tag, inside the sheet
+  const tagY = ty + th - 76, tagW = 136, tagH = 54;
+  parts.push(`<rect x="${ix}" y="${tagY}" width="${tagW}" height="${tagH}" rx="11" fill="${accent}" stroke="${ink}" stroke-width="5"/>`);
+  const tpx = 38, tw2 = shape(900, 'PDF', tpx).width;
+  parts.push(textPath(900, 'PDF', tpx, ix + (tagW - tw2) / 2, tagY + tagH / 2 + capHeight(900, tpx) / 2, '#ffffff'));
+
+  // download badge on the corner
+  const bx = tx + tw + 6, by = ty + th - 26;
+  parts.push(`<circle cx="${bx}" cy="${by}" r="44" fill="${accent}" stroke="${ink}" stroke-width="5"/>`);
+  parts.push(`<path d="M${bx} ${by - 20}V${by + 8}M${bx - 16} ${by - 6}L${bx} ${by + 10}L${bx + 16} ${by - 6}M${bx - 19} ${by + 24}H${bx + 19}" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`);
+  if (tagY < ty + 328) problems.push('PDF tag collides with the table');
+}
+
+// A big illustrated receipt (or document) on a color panel, with a hard ink shadow like the rest of the Swiss family.
 function composeTicket(img) {
   const problems = [], parts = [];
-  const panel = cfg.panel || '#7DC5C3', shadow = cfg.panelShadow || '#5EA3A1', panelW = 470;
+  const panel = img.panel || cfg.panel || '#7DC5C3', shadow = img.panelShadow || cfg.panelShadow || '#5EA3A1', panelW = 470;
   parts.push(`<rect width="${W}" height="${H}" fill="#ffffff"/>`, `<rect width="${panelW}" height="${H}" fill="${panel}"/>`, `<rect width="${W}" height="8" fill="${ink}"/>`);
 
   const tw = 300, tx = (panelW - tw) / 2, ty = 50, th = 436, tooth = 20, toothH = 12;
-  const ticket = (dx, dy) => {
-    let d = `M${tx + dx} ${ty + dy}H${tx + tw + dx}V${ty + th + dy}`;
-    const n = Math.floor(tw / tooth), step = tw / n;
-    for (let i = 0; i < n; i++) { const xr = tx + tw - i * step; d += `L${(xr - step / 2 + dx).toFixed(2)} ${ty + th + toothH + dy}L${(xr - step + dx).toFixed(2)} ${ty + th + dy}`; }
-    return d + 'Z';
-  };
-  parts.push(`<path d="${ticket(16, 16)}" fill="${shadow}"/>`);
-  parts.push(`<path d="${ticket(0, 0)}" fill="#ffffff" stroke="${ink}" stroke-width="5" stroke-linejoin="round"/>`);
+  if (img.layout === 'document') drawDocument(parts, problems, { tx, ty, tw, th, panel, shadow });
+  else if (ICONS[img.layout]) ICONS[img.layout](parts, { panel, shadow, panelW, problems });
+  else {
+    const ticket = (dx, dy) => {
+      let d = `M${tx + dx} ${ty + dy}H${tx + tw + dx}V${ty + th + dy}`;
+      const n = Math.floor(tw / tooth), step = tw / n;
+      for (let i = 0; i < n; i++) { const xr = tx + tw - i * step; d += `L${(xr - step / 2 + dx).toFixed(2)} ${ty + th + toothH + dy}L${(xr - step + dx).toFixed(2)} ${ty + th + dy}`; }
+      return d + 'Z';
+    };
+    parts.push(`<path d="${ticket(16, 16)}" fill="${shadow}"/>`);
+    parts.push(`<path d="${ticket(0, 0)}" fill="#ffffff" stroke="${ink}" stroke-width="5" stroke-linejoin="round"/>`);
 
-  const pad = 26, ix = tx + pad, iw = tw - 2 * pad;
-  const lg = logoSvg(), lh = iw / lg.ratio;
-  parts.push(`<svg x="${ix}" y="${ty + pad}" width="${iw}" height="${lh.toFixed(2)}" viewBox="0 0 ${lg.vw} ${lg.vh}">${lg.inner}</svg>`);
+    const pad = 26, ix = tx + pad, iw = tw - 2 * pad;
+    const lg = logoSvg(), lh = iw / lg.ratio;
+    parts.push(`<svg x="${ix}" y="${ty + pad}" width="${iw}" height="${lh.toFixed(2)}" viewBox="0 0 ${lg.vw} ${lg.vh}">${lg.inner}</svg>`);
 
-  // abstract rows: name on the left, price on the right
-  const rowY = ty + 106, names = [156, 112, 138];
-  names.forEach((nw, i) => {
-    const y = rowY + i * 34;
-    parts.push(`<rect x="${ix}" y="${y}" width="${nw}" height="12" rx="6" fill="${ink}"/>`, `<rect x="${ix + iw - 46}" y="${y}" width="46" height="12" rx="6" fill="${ink}"/>`);
-  });
-  const sepY = rowY + 3 * 34 + 8;
-  parts.push(`<line x1="${ix}" y1="${sepY}" x2="${ix + iw}" y2="${sepY}" stroke="${ink}" stroke-width="3" stroke-dasharray="11 8"/>`);
-  const totY = sepY + 26;
-  parts.push(`<rect x="${ix}" y="${totY}" width="74" height="16" rx="8" fill="${ink}"/>`, `<rect x="${ix + iw - 96}" y="${totY}" width="96" height="16" rx="8" fill="${accent}"/>`);
+    // abstract rows: name on the left, price on the right
+    const rowY = ty + 106, names = [156, 112, 138];
+    names.forEach((nw, i) => {
+      const y = rowY + i * 34;
+      parts.push(`<rect x="${ix}" y="${y}" width="${nw}" height="12" rx="6" fill="${ink}"/>`, `<rect x="${ix + iw - 46}" y="${y}" width="46" height="12" rx="6" fill="${ink}"/>`);
+    });
+    const sepY = rowY + 3 * 34 + 8;
+    parts.push(`<line x1="${ix}" y1="${sepY}" x2="${ix + iw}" y2="${sepY}" stroke="${ink}" stroke-width="3" stroke-dasharray="11 8"/>`);
+    const totY = sepY + 26;
+    parts.push(`<rect x="${ix}" y="${totY}" width="74" height="16" rx="8" fill="${ink}"/>`, `<rect x="${ix + iw - 96}" y="${totY}" width="96" height="16" rx="8" fill="${accent}"/>`);
 
-  // QR-like icon: three finder squares and a fixed pattern of modules (an icon, not a real code)
-  const q = 96, qx = tx + tw / 2 - q / 2, qy = totY + 42, u = q / 12;
-  const finder = (x, y) => `<rect x="${x + 3}" y="${y + 3}" width="${3 * u - 6}" height="${3 * u - 6}" fill="none" stroke="${ink}" stroke-width="6"/><rect x="${x + 1.15 * u}" y="${y + 1.15 * u}" width="${0.7 * u * 1.2}" height="${0.7 * u * 1.2}" fill="${ink}"/>`;
-  parts.push(finder(qx, qy), finder(qx + q - 3 * u, qy), finder(qx, qy + q - 3 * u));
-  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let r = 0; r < 12; r++) for (let c = 0; c < 12; c++) {
-    const inFinder = (r < 4 && c < 4) || (r < 4 && c > 7) || (r > 7 && c < 4);
-    if (!inFinder && rnd() > 0.5) parts.push(`<rect x="${(qx + c * u).toFixed(2)}" y="${(qy + r * u).toFixed(2)}" width="${(u - 1.5).toFixed(2)}" height="${(u - 1.5).toFixed(2)}" fill="${ink}"/>`);
+    // QR-like icon: three finder squares and a fixed pattern of modules (an icon, not a real code)
+    const q = 96, qx = tx + tw / 2 - q / 2, qy = totY + 42, u = q / 12;
+    const finder = (x, y) => `<rect x="${x + 3}" y="${y + 3}" width="${3 * u - 6}" height="${3 * u - 6}" fill="none" stroke="${ink}" stroke-width="6"/><rect x="${x + 1.15 * u}" y="${y + 1.15 * u}" width="${0.7 * u * 1.2}" height="${0.7 * u * 1.2}" fill="${ink}"/>`;
+    parts.push(finder(qx, qy), finder(qx + q - 3 * u, qy), finder(qx, qy + q - 3 * u));
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let r = 0; r < 12; r++) for (let c = 0; c < 12; c++) {
+      const inFinder = (r < 4 && c < 4) || (r < 4 && c > 7) || (r > 7 && c < 4);
+      if (!inFinder && rnd() > 0.5) parts.push(`<rect x="${(qx + c * u).toFixed(2)}" y="${(qy + r * u).toFixed(2)}" width="${(u - 1.5).toFixed(2)}" height="${(u - 1.5).toFixed(2)}" fill="${ink}"/>`);
+    }
+    if (qy + q > ty + th - 8) problems.push('QR icon runs past the ticket');
+
+    // confirmation badge on the corner
+    const bx = tx + tw + 6, by = ty + th - 26;
+    parts.push(`<circle cx="${bx}" cy="${by}" r="44" fill="${accent}" stroke="${ink}" stroke-width="5"/>`, `<path d="M${bx - 19} ${by + 2}L${bx - 5} ${by + 16}L${bx + 20} ${by - 14}" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`);
   }
-  if (qy + q > ty + th - 8) problems.push('QR icon runs past the ticket');
-
-  // confirmation badge on the corner
-  const bx = tx + tw + 6, by = ty + th - 26;
-  parts.push(`<circle cx="${bx}" cy="${by}" r="44" fill="${accent}" stroke="${ink}" stroke-width="5"/>`, `<path d="M${bx - 19} ${by + 2}L${bx - 5} ${by + 16}L${bx + 20} ${by - 14}" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`);
 
   // text: a headline and one line
   const x0 = panelW + 60, avail = W - M - x0;
   const hpx = Math.min(112, fitPx(900, img.headline, avail, 112, -0.02));
-  if (hpx < 64) problems.push(`headline too long (${hpx}px)`);
+  if (hpx < 60) problems.push(`headline too long (${hpx}px)`);
   const hcap = capHeight(900, hpx), lhH = hpx * 0.95, capTop = 150;
   img.headline.forEach((l, i) => parts.push(textPath(900, l, hpx, x0, capTop + hcap + i * lhH, ink, -0.02)));
   const headBottom = capTop + hcap + (img.headline.length - 1) * lhH, accentY = headBottom + 30;
@@ -158,7 +201,7 @@ function composeTicket(img) {
   fs.mkdirSync(outDir, { recursive: true });
   let bad = 0;
   for (const img of cfg.images) {
-    const r = img.layout === 'ticket' ? composeTicket(img) : composeSwiss(img);
+    const r = img.layout === 'ticket' || img.layout === 'document' || ICONS[img.layout] ? composeTicket(img) : composeSwiss(img);
     if (r.problems.length) { bad++; console.error(`${img.file}: ${r.problems.join('; ')}`); continue; }
     // rendered at 3x and downsampled, so the outlined text is smooth
     const render = () => sharp(Buffer.from(r.svg), { density: 216 }).resize(W, H, { fit: 'fill' });

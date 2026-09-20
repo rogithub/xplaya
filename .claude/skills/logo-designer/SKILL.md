@@ -15,6 +15,7 @@ Use the `poster-designer` skill to *use* the logos in posters (its `brands/papel
 |---|---|
 | `scripts/build-logo.js` | Config in, three SVGs out: `<slug>-linea.svg`, `<slug>-circular.svg`, `<slug>-dos-lineas.svg`. |
 | `scripts/build-rasters.js` | The official SVGs in, PNG (transparent) and JPG (on the dark brand ground) out, 3000 px on the longest side, next to each SVG. |
+| `scripts/og-icons.js` | The illustrated icons used by `build-og.js` (store, clipboard, phone, bubble, wallet, bag): one object with the logo, a hard shadow and a badge that says what the click does. |
 | `scripts/build-og.js` | `og.json` in, the site's social preview images (`og_*.jpeg`) out, in the Swiss style with the v3 logo: headline plus a ruled list, no photos, no contact data. |
 | `scripts/build-icons.js` | Badge in, the site's icon set out: `favicon.svg`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png`, the two manifest icons and `site.webmanifest`. |
 | `scripts/verify.js` | Checks the SVGs (well-formed, no NaN, transparent corners) and renders `preview.png` on white, paper and dark. |
@@ -62,7 +63,7 @@ Compare with `static/img/logo/$v/` (ignore line 2, the header comment). Look at 
 
 ### Social preview images (`og_*.jpeg`)
 
-The images WhatsApp and other apps show when a link is shared. `assets/papeleria/og.json` holds, for each file, its headline, the short list of what the page offers (all taken from the page itself, no contact data) and the pages that use it (`usedIn`). The generator draws them in the Swiss style: white ground, the v3 logo in its light-ground colors, an Archivo Black headline sized to fit, a thin-ruled list at the bottom. Text is converted to outlines, so the output does not depend on system fonts and can be rendered and looked at here.
+The images WhatsApp and other apps show when a link is shared. `assets/papeleria/og.json` holds, for each file, its headline, the short list of what the page offers (all taken from the page itself, no contact data) and the pages that use it (`usedIn`). The generator draws them in the Swiss style with Archivo Black headlines. The approved set is an icon per image on a colored panel (teal, mustard or dark brown): a big object that suggests the page's action, the v3 logo placed on the object, a short headline and a caption. The plain Swiss layout (white ground, headline plus ruled list) is still available. Text is converted to outlines, so the output does not depend on system fonts and can be rendered and looked at here.
 
 ```bash
 cd /home/ro/code/xplaya
@@ -70,12 +71,12 @@ node $SK/scripts/build-og.js $SK/assets/papeleria/og.json /tmp/logo-work/og --ro
 node $SK/scripts/build-og.js $SK/assets/papeleria/og.json static/img --root .                   # replace the site's images
 ```
 
-- **Layouts.** Every image uses the Swiss layout (headline plus ruled list) unless its entry in `og.json` has `"layout": "ticket"`; that one is drawn as a big illustrated receipt on a teal panel (the v3 logo on the ticket, abstract rows, a QR-like icon, a check badge) with only a two-line headline and a `caption`. `og_recibo.jpeg` is the only one that uses it. The panel color and its shadow are `panel` / `panelShadow` in `og.json`.
+- **Layouts.** An entry without `"layout"` uses the plain Swiss layout (headline plus ruled list); every entry in the current `og.json` sets one: `"ticket"` draws a big illustrated receipt on a teal panel (the v3 logo on the ticket, abstract rows, a QR-like icon, a check badge) and `"document"` a sheet with a folded corner (logo, a table of abstract rows, a PDF tag, a download badge); both carry only a short headline and a `caption`. `og_recibo.jpeg` uses the ticket and `og_cotizacion.jpeg` the document. `og-icons.js` adds `store` (xplaya, cursor badge), `clipboard` (terminos, "i"), `phone` (saldo, magnifier), `bubble` (resena, map pin), `wallet` (monedero, "$") and `bag` (producto, cart). Headlines may go down to 60 px in the icon layouts. The panel colors are `panel` / `panelShadow`, global in `og.json` or per image.
 - **Size:** the site's files are **1024 × 541**, not the 1200 × 630 that several templates declare in `og:image:width` / `og:image:height`. Keep the file size; correcting the declared numbers is a separate decision.
 - **The list is secondary.** WhatsApp shows the image about 300 px wide, so only the headline and the logo survive at that size. Keep headlines short and the list to 6 items at most (one column up to 3 items, two columns from 4).
 - **Cache.** Apps cache each image by URL, and `/static` is `immutable` for a year: when the images are replaced, add `?v=` to every `og:image` and `twitter:image` URL in the templates.
 - `og_producto.jpeg` is used only when a product has no photo. `og_catalogo.jpeg` and `og_futbol.jpeg` (the World Cup one) were used by no page and were deleted.
-- **Status: applied.** `static/img` holds exactly the eight generated `og_*.jpeg`. Every `og:image` and `twitter:image` in the templates carries `?v=2` and declares 1024 × 541 (a product's own photo, which is external, keeps its 1200 × 630). When the images change, bump that `?v=` in all the templates and regenerate the logo page.
+- **Status: applied (icon set).** `static/img` holds exactly the eight generated `og_*.jpeg`, each icon on a panel; `og.json` is the approved config. Every `og:image` and `twitter:image` in the templates carries `?v=3` and declares 1024 × 541 (a product's own photo, which is external, keeps its 1200 × 630). When the images change, bump that `?v=` in all the templates and regenerate the logo page.
 
 ### PNG and JPG exports
 

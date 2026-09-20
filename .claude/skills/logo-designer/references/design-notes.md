@@ -60,7 +60,7 @@ Every letter has `fill="#hex"` as an attribute and a class rule `fill:var(--<pre
 - `apple-touch-icon` (180) and the manifest icons (192, 512) are opaque dark squares with the badge centered at 86 % and 74 % of the side; 74 % keeps it inside the maskable safe zone (central circle of 80 % of the width).
 - `site.webmanifest` lists each size twice, purpose `any` and `maskable`, with absolute paths under `/static/img/favicon/`. The previous manifest said "MyWebSite" and pointed at paths that did not exist.
 - Rasterizing: the SVG is rendered at 2x the target size or more and downsampled, otherwise small sizes look soft.
-- The social images `static/img/og_*.jpeg` used to be AI photos with the old 3D logo baked in (some with garbled text). They were replaced by the Swiss set from `build-og.js`, drawn with the v3 logo and real text.
+- The social images `static/img/og_*.jpeg` used to be AI photos with the old 3D logo baked in (some with garbled text). They were replaced by a set from `build-og.js` drawn with the v3 logo and real text: first Swiss (headline plus list), then, the current one, an icon per page on a colored panel. Icons are drawn in `og-icons.js` with the same hard shadow, stroke, headline position and orange rule so the eight read as a family; only the panel color and the object change. At WhatsApp's ~300 px preview the object is what is recognized, which is why the headline list was dropped.
 
 ## The lab page
 
