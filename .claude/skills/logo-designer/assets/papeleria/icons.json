@@ -1,0 +1,9 @@
+{
+  "insignia": "static/img/logo/v3/papeleria-insignia.svg",
+  "outDir": "static/img/favicon",
+  "urlPrefix": "/static/img/favicon",
+  "background": "#231916",
+  "themeColor": "#E85D04",
+  "name": "Papelería xplaya",
+  "shortName": "xplaya"
+}

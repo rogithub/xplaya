@@ -53,6 +53,15 @@ Every letter has `fill="#hex"` as an attribute and a class rule `fill:var(--<pre
 8. **The accent:** `í` gets the id `letra-8-i` (ASCII ids).
 9. **Source renders have traps** (see `poster-designer/brands/papeleria.md`): `metalico.jpeg` has its "transparent" checkerboard baked in, and two files carry a small generator watermark. Do not trace or reuse them without cropping.
 
+## Icons and the badge
+
+- The badge (`papeleria-insignia.svg`) is the v3 circular logo with its `disco` circle filled `#231916`. Icons use it because they need a ground of their own; the transparent circular logo is meant for dark posters or for a dark panel behind it.
+- Sizes: `favicon.ico` holds 16, 32 and 48 px as PNG-in-ICO; at 16 px the badge is a dark dot with color specks, which is expected for a tab icon (32 px still reads). `favicon.svg` is the badge itself for browsers that take SVG.
+- `apple-touch-icon` (180) and the manifest icons (192, 512) are opaque dark squares with the badge centered at 86 % and 74 % of the side; 74 % keeps it inside the maskable safe zone (central circle of 80 % of the width).
+- `site.webmanifest` lists each size twice, purpose `any` and `maskable`, with absolute paths under `/static/img/favicon/`. The previous manifest said "MyWebSite" and pointed at paths that did not exist.
+- Rasterizing: the SVG is rendered at 2x the target size or more and downsampled, otherwise small sizes look soft.
+- The social images `static/img/og_*.jpeg` still carry the old 3D logo baked into AI photos (some with garbled text). They are not part of this set and were left for later.
+
 ## The lab page
 
 `assets/logo-lab.template.html` is fully data-driven: colors, roles, letters, presets and versions come from `lab.json` and the configs. Behaviors worth knowing:

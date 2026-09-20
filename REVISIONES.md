@@ -4,6 +4,31 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Íconos y logo dentro de las páginas: de imágenes 3D a la insignia SVG v3
+
+El favicon, el ícono de iOS, los íconos del manifiesto y el logo del encabezado eran el render 3D
+viejo (`circleai`, un JPG/PNG cuadrado y pesado). Ahora salen de una **insignia**: el logo
+circular v3 sobre su disco oscuro `#231916`, que se lee igual sobre fondo claro y oscuro.
+
+**Archivos a mirar:**
+- `static/img/logo/v3/papeleria-insignia.svg` — la insignia (la genera `build-logo.js` con
+  `"badge"` en `v3.json`; los otros nueve SVG oficiales no cambiaron, se comprobó byte a byte).
+- `static/img/favicon/*` — `favicon.svg`, `favicon.ico` (16/32/48), `favicon-96x96.png`,
+  `apple-touch-icon.png`, `web-app-manifest-192/512.png` y `site.webmanifest`, regenerados con
+  `.claude/skills/logo-designer/scripts/build-icons.js`. Pesan mucho menos (el PNG de 512 pasa de 334 KB a 25 KB).
+- `templates/base.html`, `templates/kiosko/base.html`, `templates/pages/404.html`,
+  `templates/pages/resena.html` — usan la insignia en el encabezado, la 404 y la reseña; los
+  `<link>` de íconos y el JSON-LD llevan `?v=3`.
+- `site.webmanifest` — además se arregló: decía "MyWebSite" y apuntaba a rutas que no existían.
+
+**Caché:** `/static` va con `immutable` de un año, así que las URLs llevan `?v=3`; cuando cambien
+los íconos hay que subir ese número en todas las plantillas (regla añadida en `CLAUDE.md`).
+
+**Pendiente a propósito:** las imágenes `og_*.jpeg` de vista previa social siguen con el logo 3D
+viejo horneado en fotos hechas con IA (algunas con textos con errores). Se rehacen aparte.
+
+---
+
 ## Skill de carteles genérico: una marca por ficha
 
 El skill `poster-designer` estaba escrito solo para la papelería. Ahora separa el **método** (que

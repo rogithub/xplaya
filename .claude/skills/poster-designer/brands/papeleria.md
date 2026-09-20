@@ -41,7 +41,9 @@ Every folder has the same three files:
 | `papeleria-circular.svg` | Two lines (PAPE / LERIA, or Pape / lería in v2) inside a ring, block centered in the ring. 1:1. Avatars, stamps, corner badges, round spots. |
 | `papeleria-dos-lineas.svg` | The same two lines with no ring and an equal margin on all sides. Aspect: v1 2.0:1, v2 1.4:1, v3 1.9:1. For placing the logo inside a rectangle, banner or any other shape. |
 
-All have a transparent background and no fixed pixel size, so they scale to any size (an 11×17 print included) with no resolution limit. Always set the size yourself (`height="48"` or CSS), because a bare `<img>` with no size stretches to its container's width.
+**Badge (v3 only):** `static/img/logo/v3/papeleria-insignia.svg` is the circular logo on its dark disc (`#231916`). It is what the site uses for its icons and in-page logo, and it works as a small round mark on any ground, light included. It is not one of the three formats and not a fourth version.
+
+All three formats have a transparent background and no fixed pixel size, so they scale to any size (an 11×17 print included) with no resolution limit. Always set the size yourself (`height="48"` or CSS), because a bare `<img>` with no size stretches to its container's width.
 
 **Structure.** Each letter is its own `<path>` (`letra-1-P` … `letra-9-A`, in reading order: PAPE / Pape = 1–4, LERIA / lería = 5–9; in v2 the í is `letra-8-i`). The circular one also has `aro` (the ring, a stroke) and `disco` (a circle behind the letters, transparent by default).
 
@@ -87,7 +89,7 @@ Before placing any raster, look for baked-in backgrounds and for small AI-genera
 
 | Files | Role |
 |---|---|
-| `static/img/favicon/` | Favicon set (`favicon.svg`, `favicon-96x96.png`, `apple-touch-icon.png`, `web-app-manifest-*.png`): small-scale versions of the mark, only ever a tiny badge. |
+| `static/img/favicon/` | Favicon set generated from the badge (`favicon.svg`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png`, `web-app-manifest-*.png`): small-scale versions of the mark, only ever a tiny badge. |
 | `static/img/og_*.jpeg`, `resena.png`, `saldo.jpeg`, `recibo.jpg`, `cortinas/*.webp` | Page-specific social-preview and hero images. These are not the logo. Use them only if the brief is explicitly about that page or product (for example the `cortinas` photos for a cortinas promo), and look at the image first, since file names do not fully describe content. |
 
 Product photos for product posters live in MinIO: `{CONTENT_BASE_URL}/papeleria-fotos-productos/{filename}` (default base `https://cntnt.xplaya.com`). Look at a photo before using it.

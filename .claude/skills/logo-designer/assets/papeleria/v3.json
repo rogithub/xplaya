@@ -51,5 +51,8 @@
   "ring": {
     "margin": 84,
     "widthPct": 100
+  },
+  "badge": {
+    "disc": "#231916"
   }
 }

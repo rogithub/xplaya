@@ -248,8 +248,10 @@ function enclosing(pts) {
   return { cx, cy };
 }
 
-async function circleLogo(ctx, L1, L2) {
+// opts.disc: fill of the disc behind the letters (the badge); without it the circle stays transparent
+async function circleLogo(ctx, L1, L2, opts = {}) {
   const { ring, TOP, BOT, K, L: lay, cfg, cls, cssPrefix } = ctx;
+  const discFill = opts.disc || 'none';
   const d = docs(ctx);
   const { placed, dy } = await place(ctx, L1, L2);
   const pts = placed.flatMap((p) => p.g.points(p.ox, p.oy));
@@ -262,9 +264,9 @@ async function circleLogo(ctx, L1, L2) {
   const half = R + ring.width / 2 + 8;
   const items = placed.map((p) => ({ n: p.n, d: p.g.emit(p.ox - (mx - half), p.oy - (my - half)) }));
   const size = r2(2 * half * K), ctr = r2(half * K), rad = r2(R * K), sw = r2(ring.width * K);
-  const extra = `\n    .${cls}-ring{stroke:var(--${cssPrefix}-ring,${cfg.ringColor})}\n    .${cls}-disc{fill:var(--${cssPrefix}-disc,none)}`;
-  return `${d.head(`circular, ${cfg.lines.join(' / ')}`, `0 0 ${size} ${size}`)}\n${d.style(extra)}
-  <circle id="disco" class="${cls}-disc" cx="${ctr}" cy="${ctr}" r="${rad}" fill="none"/>
+  const extra = `\n    .${cls}-ring{stroke:var(--${cssPrefix}-ring,${cfg.ringColor})}\n    .${cls}-disc{fill:var(--${cssPrefix}-disc,${discFill})}`;
+  return `${d.head(`${opts.disc ? 'insignia' : 'circular'}, ${cfg.lines.join(' / ')}`, `0 0 ${size} ${size}`)}\n${d.style(extra)}
+  <circle id="disco" class="${cls}-disc" cx="${ctr}" cy="${ctr}" r="${rad}" fill="${discFill}"/>
   <circle id="aro" class="${cls}-ring" cx="${ctr}" cy="${ctr}" r="${rad}" fill="none" stroke="${cfg.ringColor}" stroke-width="${sw}"/>
   <g id="letras">\n${d.paths(items, '    ')}\n  </g>\n</svg>\n`;
 }
@@ -289,6 +291,8 @@ async function build(cfg, outDir) {
     [`${slug}-circular.svg`]: await circleLogo(ctx, l1, l2),
     [`${slug}-dos-lineas.svg`]: await stackedLogo(ctx, l1, l2),
   };
+  // optional badge: the circular logo on its own dark disc, for icons and small round marks
+  if (cfg.badge) out[`${slug}-insignia.svg`] = await circleLogo(ctx, l1, l2, { disc: cfg.badge.disc });
   for (const [name, svg] of Object.entries(out)) {
     if (/NaN|Infinity/.test(svg)) throw new Error('non-finite number in ' + name);
     fs.writeFileSync(path.join(outDir, name), svg);

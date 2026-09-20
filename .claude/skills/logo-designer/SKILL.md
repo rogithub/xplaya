@@ -14,11 +14,12 @@ Use the `poster-designer` skill to *use* the logos in posters (its `brands/papel
 | Path | What it is |
 |---|---|
 | `scripts/build-logo.js` | Config in, three SVGs out: `<slug>-linea.svg`, `<slug>-circular.svg`, `<slug>-dos-lineas.svg`. |
+| `scripts/build-icons.js` | Badge in, the site's icon set out: `favicon.svg`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png`, the two manifest icons and `site.webmanifest`. |
 | `scripts/verify.js` | Checks the SVGs (well-formed, no NaN, transparent corners) and renders `preview.png` on white, paper and dark. |
 | `scripts/build-lab.js` | Assembles the comparison/repaint page from the SVGs on disk. |
 | `scripts/test-lab.js` | Regression test that drives the page's controls in jsdom. Run it after touching the template. |
 | `assets/logo-lab.template.html` | The lab page template (data-driven, no brand hard-coded). |
-| `assets/papeleria/` | `v1.json`, `v2.json`, `v3.json` (one config per official version) and `lab.json` (the lab manifest). |
+| `assets/papeleria/` | `v1.json`, `v2.json`, `v3.json` (one config per official version), `lab.json` (the lab manifest) and `icons.json` (the icon set). |
 | `assets/fonts/` | Fredoka SemiBold (600) and Bold (700), with its SIL OFL license. |
 | `references/design-notes.md` | Why things are built this way, tuning ratios and every pitfall we hit. Read it before changing the algorithm or adding a font. |
 
@@ -56,6 +57,20 @@ Compare with `static/img/logo/$v/` (ignore line 2, the header comment). Look at 
 3. Ask the user which one they prefer when it is a taste call (weight, case, ring width). Show them side by side; the lab page is the best way.
 4. Install the winner in `static/img/logo/<id>/` (use `git mv` when moving tracked files), add it to `assets/papeleria/lab.json`, then rebuild the site page (see "Keeping the lab") and run `test-lab.js`.
 5. If the set of official logos changed, update the logo section of `.claude/skills/poster-designer/brands/papeleria.md`.
+
+### Site icons and the in-page logo
+
+The site's favicons, home-screen icons and in-page logo come from the **badge**: `static/img/logo/v3/papeleria-insignia.svg`, the v3 circular logo on its dark disc (`#231916`). It is generated with the other v3 files because `v3.json` has `"badge": {"disc": "#231916"}`; the disc carries the dark ground, so the badge reads on white and on dark pages alike. Do not use the plain transparent circular logo for icons: its default colors need a dark ground.
+
+```bash
+cd /home/ro/code/xplaya
+node $SK/scripts/build-logo.js $SK/assets/papeleria/v3.json static/img/logo/v3      # includes the badge
+node $SK/scripts/build-icons.js $SK/assets/papeleria/icons.json --root .            # writes static/img/favicon/*
+```
+
+`icons.json` holds the badge path, the output folder, the dark color, the theme color and the app names. The manifest icons keep the badge inside the central 80 % circle (maskable safe zone); `apple-touch-icon` is an opaque square because iOS paints transparency black.
+
+**Cache.** `/static` is served with a one-year `immutable` cache, so a changed file at the same URL is not refreshed for returning visitors. Every template reference to these files carries `?v=3`; **bump that number in all of them when the icons or the badge change** (`grep -rn "?v=3" templates`).
 
 ### Build the lab page
 

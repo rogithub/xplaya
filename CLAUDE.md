@@ -284,6 +284,7 @@ cargo clippy
 - Rust: código explícito sobre abstracciones elegantes — este es un proyecto de práctica, no aprendizaje, pero la claridad sigue siendo prioritaria.
 - No añadir capas de abstracción que no aporten funcionalidad real.
 - Images siempre `latest` (proyecto propio, un solo consumer).
+- `/static` se sirve con caché `immutable` de un año: si cambias el **contenido** de un archivo ya publicado, actualiza el `?v=` de cada referencia en las plantillas (por ejemplo `favicon.svg?v=3`), o los visitantes seguirán viendo el anterior.
 
 ### Convenciones de templates — URLs y escape
 
