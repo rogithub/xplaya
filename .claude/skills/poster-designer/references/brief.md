@@ -9,9 +9,10 @@ Ask only for what is missing, in one short message, and never more than you need
 - **Headline / main message.** What must be understood in three seconds.
 - **What is offered:** product, service or event.
 - **Price**, with the exact wording ("$45", "2x1", "desde $30") and its validity.
-- **Date, time, place** if it is an event or a limited offer.
+- **Date, time, place** if it is an event or a limited offer. If the poster names a weekday with a date ("sábado 26"), check it with `date -d YYYY-MM-DD +%A` and tell the user when the two do not match; do not silently pick one.
 - **Call to action and contact:** phone or WhatsApp, address, web or social handle, QR destination.
 - **Required or legal text:** conditions, "hasta agotar existencias", registration numbers.
+- **A reference, if there is one:** a photo of the product or a poster they like. Look at it (Read shows images) and use it for accuracy, not to copy.
 - **Where it will be seen and how it will be produced** (see the print reality in `formats.md`): window, counter, street, WhatsApp Status; in-house printer or print shop; size; quantity; deadline.
 
 Copy every price, date, time, phone number, URL and business name exactly as the user wrote it. Do not add slogans or invented descriptions unless the user asks for creative copy.
