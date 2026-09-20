@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Imágenes para compartir (`og_*`) rehechas en estilo Swiss con el logo v3
+
+Las `og_*.jpeg` eran fotos hechas con IA con el logo 3D viejo horneado dentro (varias con textos
+con errores). Ahora son ocho imágenes nuevas, sin fotos y sin datos de contacto: fondo blanco,
+logo v3, un titular grande y una lista corta de lo que ofrece cada página, con el texto tomado de
+la propia página. La del ticket digital (`og_recibo`) es una ilustración de un ticket con el logo.
+Mismas medidas y mismos nombres que las anteriores.
+
+**Archivos a mirar:**
+- `static/img/og_*.jpeg` — solo quedan las ocho nuevas (1024 × 541, 43 a 59 KB; las anteriores
+  pesaban 65 a 144 KB). Se **borraron** `og_catalogo.jpeg` y `og_futbol.jpeg`: ninguna página
+  las usaba (la de fútbol era del tema del mundial).
+- Plantillas (14 archivos) — cada `og:image` y `twitter:image` lleva `?v=2` porque WhatsApp y
+  Facebook guardan la imagen por dirección y `/static` va con caché `immutable`. También se
+  corrigieron las medidas declaradas: decían 1200 × 630 y los archivos miden 1024 × 541. La foto
+  propia de cada producto (externa) conserva 1200 × 630.
+- `.claude/skills/logo-designer/scripts/build-og.js` y `assets/papeleria/og.json` — generan las
+  imágenes; el texto de cada una y las páginas donde se usa están en `og.json`.
+
+**Cuando cambien:** regenerar con `build-og.js`, subir el `?v=` en las plantillas y regenerar
+`/logo-oficial` (está en `SKILL.md` de `logo-designer`).
+
+---
+
 ## `/logo-oficial`: descargas en SVG, PNG y JPG
 
 La página ya enlazaba los SVG; ahora cada versión trae una tabla con **las tres formas** (una

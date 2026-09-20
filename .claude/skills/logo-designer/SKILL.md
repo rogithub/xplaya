@@ -74,8 +74,8 @@ node $SK/scripts/build-og.js $SK/assets/papeleria/og.json static/img --root .   
 - **Size:** the site's files are **1024 × 541**, not the 1200 × 630 that several templates declare in `og:image:width` / `og:image:height`. Keep the file size; correcting the declared numbers is a separate decision.
 - **The list is secondary.** WhatsApp shows the image about 300 px wide, so only the headline and the logo survive at that size. Keep headlines short and the list to 6 items at most (one column up to 3 items, two columns from 4).
 - **Cache.** Apps cache each image by URL, and `/static` is `immutable` for a year: when the images are replaced, add `?v=` to every `og:image` and `twitter:image` URL in the templates.
-- `og_producto.jpeg` is used only when a product has no photo; `og_catalogo.jpeg` and `og_futbol.jpeg` are used by no page.
-- **Status:** the new images were previewed as an Artifact and are **not yet applied** to `static/img`.
+- `og_producto.jpeg` is used only when a product has no photo. `og_catalogo.jpeg` and `og_futbol.jpeg` (the World Cup one) were used by no page and were deleted.
+- **Status: applied.** `static/img` holds exactly the eight generated `og_*.jpeg`. Every `og:image` and `twitter:image` in the templates carries `?v=2` and declares 1024 × 541 (a product's own photo, which is external, keeps its 1200 × 630). When the images change, bump that `?v=` in all the templates and regenerate the logo page.
 
 ### PNG and JPG exports
 

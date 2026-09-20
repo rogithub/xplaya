@@ -49,7 +49,7 @@ function siteDocument(page, meta) {
 <meta property="og:locale" content="es_MX">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${desc}">
-${img}<meta name="twitter:card" content="summary_large_image">
+${meta.ogWidth ? `<meta property="og:image:width" content="${meta.ogWidth}">\n<meta property="og:image:height" content="${meta.ogHeight}">\n` : ''}${img}<meta name="twitter:card" content="summary_large_image">
 {% raw %}
 ${head}
 <style>body { margin: 0; }</style>
