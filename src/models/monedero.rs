@@ -41,6 +41,8 @@ pub struct ProductoRecibo {
 
 #[derive(Serialize)]
 pub struct Cotizacion {
+    /// Pedidos.Id — número de pedido que ve el cliente.
+    pub id: i32,
     pub uid: Uuid,
     pub fecha: String,
     pub hora: String,
