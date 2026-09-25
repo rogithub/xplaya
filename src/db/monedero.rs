@@ -108,7 +108,7 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
     };
 
     let productos_rows = sqlx::query_as::<_, ProductoAjusteRow>(
-        "SELECT p.nombre, ap.cantidad,
+        "SELECT COALESCE(ap.descripcion, p.nombre) AS nombre, ap.cantidad,
                 COALESCE(ap.preciounitarioventa, 0) AS preciounitarioventa,
                 EXISTS(
                     SELECT 1 FROM v_ingresos_trasladados v WHERE v.id = p.id
@@ -248,8 +248,8 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
     };
 
     let items = sqlx::query_as::<_, PedidoItemRow>(
-        "SELECT p.nombre, pi.cantidad,
-                COALESCE(hist.precioventa, 0) AS precioventa,
+        "SELECT COALESCE(pi.descripcion, p.nombre) AS nombre, pi.cantidad,
+                COALESCE(pi.preciounitario, hist.precioventa, 0) AS precioventa,
                 pres.nombre AS presentacion_nombre,
                 pres.precioventa AS presentacion_precio
          FROM pedidoitems pi
