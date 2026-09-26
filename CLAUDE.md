@@ -57,7 +57,7 @@ graph TD
 
 **Infra**
 - PostgreSQL compartida — base `inventario_papeleria`
-- Despliegue: contenedor OCI ARM64 en k3s vía ArgoCD
+- Despliegue: contenedor OCI amd64 en k3s (cluster x86) vía ArgoCD
 - Namespace: `papeleria` (mismo que el predecessor)
 
 ---
@@ -110,7 +110,7 @@ xplaya/
 ├── static/
 │   └── css/
 │       └── main.css         # Estilos propios mínimos (todo lo demás es Bulma)
-├── Containerfile            # Multi-stage, ARM64
+├── Containerfile            # Multi-stage; cross-compila (amd64 hoy, arm64 si se pide)
 ├── .env.example
 └── CLAUDE.md
 ```
@@ -221,8 +221,8 @@ Calcular pagos solo desde `Ajustes`; datos de líneas desde `AjustesProductos` e
 ## Despliegue
 
 - Namespace k3s: `papeleria`
-- NodePort: por asignar (próximo disponible en `k3s-manifests/CLAUDE.md` es **30517** — verificar antes de asignar)
-- Imagen: `ghcr.io/rogithub/...` (ARM64), siempre `latest`
+- NodePort: **30517**
+- Imagen: `ghcr.io/rogithub/...` (amd64), siempre `latest`
 - Variables de entorno: `DATABASE_URL` (connection string PostgreSQL)
 - Manifiestos en `k3s-manifests/workloads/papeleria/`
 - Secrets vía SealedSecrets — **nunca commitear secrets en texto plano**
