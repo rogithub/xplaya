@@ -45,34 +45,7 @@ pub async fn crear(
     Ok((pedido_uid, cliente_id))
 }
 
-/// Pedido del kiosko en tienda: sin datos del cliente — el pedido queda a nombre
-/// del cliente de sistema ID_CLIENTE_KIOSKO (Settings) y el vendedor asigna el
-/// cliente real al cobrar en el POS. Origen=0 (Tienda) — el cliente está presente.
-/// Devuelve None si la setting no existe (la BD no está preparada).
-pub async fn crear_kiosko(
-    pool: &PgPool,
-    items: &[PedidoItemRequest],
-) -> Result<Option<Uuid>, sqlx::Error> {
-    let mut tx = pool.begin().await?;
-
-    let cliente_kiosko = sqlx::query_scalar::<_, String>(
-        "SELECT value FROM settings WHERE key = 'ID_CLIENTE_KIOSKO'",
-    )
-    .fetch_optional(&mut *tx)
-    .await?
-    .and_then(|v| Uuid::parse_str(&v).ok());
-
-    let Some(cliente_id) = cliente_kiosko else {
-        return Ok(None);
-    };
-
-    let pedido_uid = insertar_pedido(&mut tx, cliente_id, items, 0).await?;
-    tx.commit().await?;
-
-    Ok(Some(pedido_uid))
-}
-
-/// INSERT común de pedido + items. `origen`: 0=Tienda (kiosko), 1=EnLinea (web).
+/// INSERT común de pedido + items. `origen`: 0=Tienda, 1=EnLinea (web).
 async fn insertar_pedido(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     cliente_id: Uuid,

@@ -6,11 +6,6 @@ pub struct Config {
     pub site_url: String,
     pub gotenberg_url: String,
     pub imagina_url: String,
-    /// Token compartido con el kiosko físico — valida POST /kiosko/pedidos (Fase 3).
-    pub kiosko_token: String,
-    /// URL del servicio bge-m3 para búsqueda semántica (Embeddings Fase 4).
-    /// None → el fallback semántico queda apagado y la búsqueda funciona como siempre.
-    pub bge_embeddings_url: Option<String>,
 }
 
 impl Config {
@@ -30,10 +25,6 @@ impl Config {
                 .unwrap_or_else(|_| "http://gotenberg-service.gotenberg.svc.cluster.local:3000".to_string()),
             imagina_url: std::env::var("IMAGINA_URL")
                 .unwrap_or_else(|_| "https://imagina.xplaya.com".to_string()),
-            kiosko_token: std::env::var("KIOSKO_TOKEN").unwrap_or_default(),
-            bge_embeddings_url: std::env::var("BGE_EMBEDDINGS_URL")
-                .ok()
-                .filter(|s| !s.is_empty()),
         }
     }
 }

@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Retiro del kiosko, la búsqueda semántica y las familias (2026-09-26)
+
+Se quitó todo lo que dependía de embeddings: la columna `vector(1024)` por producto había
+llevado la BD de ~10 a ~34 MB y seguía creciendo con cada producto nuevo, para un fallback de
+búsqueda con muy poco tráfico. Con eso se fueron también el kiosko (piloto sin fecha, sin
+mobiliario todavía) y sus tiles de `FamiliasSemanticas`. El código completo quedó en el tag
+`kiosko-v1`.
+
+- Borrados: `src/embeddings.rs`, `src/routes/kiosko.rs`, `src/db/kiosko.rs`,
+  `src/models/kiosko.rs`, `templates/kiosko/`.
+- `src/routes/productos.rs` — sin el bloque de fallback semántico; si la búsqueda no encuentra
+  nada se muestra el "sin resultados" de siempre. `templates/productos/partials/grid.html` ya no
+  recibe `semantica`.
+- `src/db/productos.rs` — sin `busqueda_semantica()`, `SemanticaRow` ni `vector_literal()`.
+- `src/db/pedidos.rs` / `src/models/pedido.rs` — sin `crear_kiosko()` ni los tipos
+  `KioskoPedido*`; `insertar_pedido()` se conserva para `POST /pedidos` (web).
+- `src/config.rs` / `.env.example` — sin `KIOSKO_TOKEN` ni `BGE_EMBEDDINGS_URL`.
+- Los links a `{{ imagina_url }}/kiosko/...` en `fotos.html` y `foto-credencial.html` se quedan:
+  son del kiosko de **imagina**, otro proyecto.
+
+---
+
 ## Imágenes para compartir (`og_*`) con un ícono que invita a la acción
 
 Las ocho `og_*.jpeg` se rehicieron para que se reconozcan aun a 300 px (como las muestra
