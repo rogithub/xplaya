@@ -15,7 +15,7 @@ pub async fn sitemap_productos(pool: &PgPool) -> Result<Vec<(i32, Vec<String>)>,
         "SELECT vi.nid, fp.filename
          FROM v_inventario vi
          LEFT JOIN fotosproductos fp ON fp.productoid = vi.id
-         WHERE vi.stock > 0 OR vi.escompuesto = true
+         WHERE vi.stock > 0 OR vi.stockilimitado -- misma regla que la caja: un kit sin material no se lista
          ORDER BY vi.nid, fp.filename",
     )
     .fetch_all(pool)
