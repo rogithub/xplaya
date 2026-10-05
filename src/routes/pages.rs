@@ -61,6 +61,8 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 - [Preguntas frecuentes]({site}/preguntas-frecuentes): horarios, ubicación, precios, envíos,
   formas de pago y Monedero Electrónico.
 - [Monedero Electrónico — Términos]({site}/terminos): programa de cashback para clientes.
+- [Política de devoluciones]({site}/devoluciones): 30 días para productos sin usar, en tienda o
+  por paquetería; los servicios e impresiones no tienen devolución.
 - [Reseñas]({site}/resena): enlace para dejar reseña en Google.
 
 ## Datos del negocio
@@ -102,6 +104,7 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> Response {
         (format!("{site}/imagina"), "0.8", "monthly"),
         (format!("{site}/preguntas-frecuentes"), "0.7", "monthly"),
         (format!("{site}/resena"), "0.5", "monthly"),
+        (format!("{site}/devoluciones"), "0.4", "yearly"),
     ] {
         xml.push_str(&format!(
             "<url><loc>{loc}</loc><lastmod>{today}</lastmod><priority>{priority}</priority><changefreq>{freq}</changefreq></url>\n"
@@ -146,6 +149,18 @@ pub async fn faq(State(state): State<AppState>) -> Result<Html<String>, StatusCo
     })?;
     let html = tmpl.render(context!()).map_err(|e| {
         tracing::error!("Render faq: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Html(html))
+}
+
+pub async fn devoluciones(State(state): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let tmpl = state.tmpl.get_template("pages/devoluciones.html").map_err(|e| {
+        tracing::error!("Template devoluciones: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let html = tmpl.render(context!()).map_err(|e| {
+        tracing::error!("Render devoluciones: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Html(html))

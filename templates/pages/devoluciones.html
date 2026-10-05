@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Política de devoluciones — xplaya.com{% endblock %}
+{% block meta_description %}
+<meta name="description" content="Devoluciones en Papelería xplaya.com: 30 días para devolver productos sin usar, en tienda o por paquetería. Reembolso por el mismo medio de pago.">
+{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ site_url }}/devoluciones">{% endblock %}
+{% block meta_social %}
+<meta property="og:site_name" content="xplaya.com">
+<meta property="og:locale" content="es_MX">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ site_url }}/devoluciones">
+<meta property="og:title" content="Política de devoluciones — xplaya.com">
+<meta property="og:description" content="30 días para devolver productos sin usar, en tienda o por paquetería. Reembolso por el mismo medio de pago.">
+<meta property="og:image" content="{{ site_url }}/static/img/og_xplaya.jpeg?v=3">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="541">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Política de devoluciones — xplaya.com">
+<meta name="twitter:description" content="30 días para devolver productos sin usar, en tienda o por paquetería. Reembolso por el mismo medio de pago.">
+<meta name="twitter:image" content="{{ site_url }}/static/img/og_xplaya.jpeg?v=3">
+{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+<div class="column" style="max-width: 680px;">
+
+    {# Encabezado #}
+    <div class="is-flex is-align-items-center mb-5" style="gap: 1rem;">
+        <div class="has-background-success has-text-white
+                    is-flex is-justify-content-center is-align-items-center is-size-3"
+             style="width:52px; height:52px; border-radius:50%; flex-shrink:0;">
+            ↩️
+        </div>
+        <div>
+            <h1 class="title is-4 mb-0">Política de devoluciones</h1>
+            <p class="has-text-grey is-size-7 mb-0">Papelería xplaya.com — Playa del Carmen</p>
+        </div>
+    </div>
+
+    <div class="notification is-success is-light mb-5">
+        Tienes <strong>30 días naturales</strong> para devolver los productos que te vendimos,
+        sin usar y en buen estado. Puedes devolverlos <strong>en la tienda</strong> o
+        <strong>por paquetería</strong>, y te regresamos tu dinero por el mismo medio con el que pagaste.
+    </div>
+
+    {# 1. Plazo y condiciones #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            📅 Plazo y condiciones
+        </h2>
+        <ul class="is-size-7 mb-0" style="padding-left: 1.5rem;">
+            <li>
+                El plazo es de <strong>30 días naturales</strong> a partir de que recibes tu pedido
+                o de la fecha de tu compra en la tienda.
+            </li>
+            <li>
+                La mercancía debe estar <strong>sin usar, completa y en buen estado</strong>,
+                de preferencia en su empaque original.
+            </li>
+            <li>Presenta tu recibo o tu número de pedido.</li>
+        </ul>
+    </div>
+
+    {# 2. Qué se puede devolver #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            ✅ Qué se puede devolver
+        </h2>
+        <p class="is-size-7 mb-2">
+            Los <strong>productos que revendemos</strong>: los artículos de papelería y mercería
+            de nuestro <a href="/">catálogo</a>.
+        </p>
+        <h3 class="is-size-7 has-text-weight-bold mb-1">No tienen devolución:</h3>
+        <ul class="is-size-7 mb-0" style="padding-left: 1.5rem;">
+            <li>
+                <strong>Servicios</strong>: copias, <strong>impresiones</strong>, fotos, enmicados,
+                engargolados, escaneos y trámites.
+            </li>
+            <li>Cualquier producto que incluya un servicio realizado por la tienda.</li>
+        </ul>
+    </div>
+
+    {# 3. Cómo devolver #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            📦 Cómo devolver
+        </h2>
+        <p class="is-size-7 has-text-weight-bold mb-1">En la tienda — sin costo</p>
+        <p class="is-size-7 mb-3">
+            Lleva el producto a la papelería en nuestro horario de atención. No necesitas
+            avisarnos antes.
+        </p>
+        <p class="is-size-7 has-text-weight-bold mb-1">Por paquetería</p>
+        <ul class="is-size-7 mb-3" style="padding-left: 1.5rem;">
+            <li>Escríbenos por WhatsApp con tu número de pedido antes de enviarlo; te damos la dirección.</li>
+            <li>
+                Si cambiaste de opinión, el <strong>costo del envío de regreso corre por tu cuenta</strong>.
+            </li>
+            <li>
+                Si el producto <strong>llegó dañado, con defecto o no es el que pediste</strong>,
+                nosotros cubrimos el envío.
+            </li>
+        </ul>
+        <a href="https://wa.me/524522018336?text=Hola%2C%20quiero%20hacer%20una%20devoluci%C3%B3n"
+           class="button is-success is-fullwidth"
+           target="_blank" rel="noopener">
+            Iniciar devolución por WhatsApp
+        </a>
+    </div>
+
+    {# 4. Reembolso #}
+    <div class="box mb-4">
+        <h2 class="is-size-6 has-text-weight-bold has-text-success mb-2">
+            💵 Reembolso
+        </h2>
+        <p class="is-size-7 mb-0">
+            Cuando recibimos el producto y revisamos que esté en buen estado, te
+            <strong>regresamos el dinero por el mismo medio de pago</strong> que usaste en tu compra.
+        </p>
+    </div>
+
+    {# Pie del documento #}
+    <div class="has-text-centered has-text-grey is-size-7 py-4"
+         style="border-top: 1px solid #dbdbdb;">
+        <p class="mb-1">
+            <strong>Versión vigente desde:</strong> 5 de octubre de 2026
+        </p>
+        <p class="mb-0">Papelería xplaya.com — Playa del Carmen</p>
+    </div>
+
+</div>
+</div>
+
+{% endblock %}
