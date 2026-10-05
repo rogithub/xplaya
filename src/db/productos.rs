@@ -1,8 +1,8 @@
-use rust_decimal::Decimal;
+use rust_decimal::{prelude::ToPrimitive, Decimal};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::producto::{ComponenteKit, Paginacion, Presentacion, ProductoCard, ProductoDetalle};
+use crate::models::producto::{ComponenteKit, FeedProducto, Paginacion, Presentacion, ProductoCard, ProductoDetalle};
 
 #[derive(sqlx::FromRow)]
 struct SitemapRow {
@@ -69,17 +69,97 @@ struct ProductoMetaRow {
     codigobarrasitem: Option<String>,
 }
 
-/// GTIN válido = solo dígitos y longitud de un formato de barcode real
-/// (GTIN-8/12/13/14). Si no cumple, se trata como código interno (sku)
-/// en vez de arriesgar un "gtin" inválido en el JSON-LD.
+/// GTIN válido = solo dígitos, longitud de un formato de barcode real
+/// (GTIN-8/12/13/14) y dígito verificador correcto. Si no cumple, se trata
+/// como código interno (sku) en vez de arriesgar un "gtin" inválido en el
+/// JSON-LD o en el feed (Merchant Center rechaza GTINs con checksum malo).
 fn clasificar_codigo_barras(raw: Option<String>) -> (Option<String>, Option<String>) {
     match raw.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()) {
-        Some(c) if matches!(c.len(), 8 | 12 | 13 | 14) && c.chars().all(|ch| ch.is_ascii_digit()) => {
-            (Some(c), None)
-        }
+        Some(c) if es_gtin_valido(&c) => (Some(c), None),
         Some(c) => (None, Some(c)),
         None => (None, None),
     }
+}
+
+/// Dígito verificador GS1: de derecha a izquierda (sin contar el último dígito)
+/// los pesos alternan 3, 1, 3, 1... y la suma más el verificador debe ser múltiplo de 10.
+fn es_gtin_valido(codigo: &str) -> bool {
+    if !matches!(codigo.len(), 8 | 12 | 13 | 14) || !codigo.chars().all(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    let digitos: Vec<u32> = codigo.chars().filter_map(|c| c.to_digit(10)).collect();
+    let (verificador, resto) = digitos.split_last().unwrap();
+    let suma: u32 = resto
+        .iter()
+        .rev()
+        .enumerate()
+        .map(|(i, d)| if i % 2 == 0 { d * 3 } else { *d })
+        .sum();
+    (10 - suma % 10) % 10 == *verificador
+}
+
+#[derive(sqlx::FromRow)]
+struct FeedRow {
+    nid: i32,
+    nombre: String,
+    categoria: String,
+    ultimoprecioventa: Decimal,
+    stock: Decimal,
+    stockilimitado: bool,
+    marca: Option<String>,
+    descripcion: Option<String>,
+    codigobarrasitem: Option<String>,
+    fotos: Vec<String>,
+}
+
+/// Productos para los feeds de Google Merchant Center.
+/// Misma regla de visibilidad que el catálogo (`stock > 0 OR stockilimitado`,
+/// así un kit sin material no aparece), más lo que Google exige:
+/// sin servicios ni precio libre, con precio y con al menos una foto.
+pub async fn feed_productos(pool: &PgPool) -> Result<Vec<FeedProducto>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, FeedRow>(
+        // DISTINCT ON: v_inventario repite el producto si tiene más de una fila
+        // en CategoriasProductos; Google rechaza ids duplicados en el feed.
+        "SELECT DISTINCT ON (vi.nid)
+                vi.nid, vi.nombre, vi.categoria, vi.ultimoprecioventa,
+                vi.stock, coalesce(vi.stockilimitado, false) AS stockilimitado,
+                p.marca, p.descripcion, p.codigobarrasitem,
+                (SELECT array_agg(fp.filename::text ORDER BY fp.filename)
+                 FROM fotosproductos fp WHERE fp.productoid = vi.id) AS fotos
+         FROM v_inventario vi
+         JOIN productos p ON p.id = vi.id
+         WHERE (vi.stock > 0 OR vi.stockilimitado)
+           AND vi.esservicio IS NOT TRUE
+           AND vi.preciolibre IS NOT TRUE
+           AND vi.ultimoprecioventa > 0
+           AND EXISTS (SELECT 1 FROM fotosproductos fp WHERE fp.productoid = vi.id)
+         ORDER BY vi.nid, vi.categoria",
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            // Hay productos por metro (stock fraccionario): se reportan piezas enteras.
+            let cantidad = if r.stockilimitado {
+                None
+            } else {
+                r.stock.floor().to_i64().filter(|q| *q > 0)
+            };
+            FeedProducto {
+                nid: r.nid,
+                nombre: r.nombre,
+                categoria: r.categoria,
+                precio_venta: format!("{:.2}", r.ultimoprecioventa),
+                cantidad,
+                marca: r.marca.map(|m| m.trim().to_string()).filter(|m| !m.is_empty()),
+                descripcion: r.descripcion.map(|d| d.trim().to_string()).filter(|d| !d.is_empty()),
+                gtin: clasificar_codigo_barras(r.codigobarrasitem).0,
+                fotos: r.fotos,
+            }
+        })
+        .collect())
 }
 
 #[derive(sqlx::FromRow)]

@@ -4,6 +4,31 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Feeds para Google Merchant Center (2026-10-05)
+
+Para que los productos aparezcan en Google Shopping, AI Mode y Maps ("búscame un borrador" cerca
+de la tienda) con fichas gratuitas e inventario local. Merchant Center descarga los feeds una vez al
+día; se arman desde la BD en cada request, así que un producto entra solo en cuanto tiene foto.
+
+- `src/routes/feeds.rs` (nuevo) — `GET /feeds/google.xml` (catálogo) y
+  `GET /feeds/google-local.xml` (inventario de la tienda). RSS 2.0 con namespace `g:`, armado a
+  mano como `sitemap.xml`. `xml_escape()` también quita caracteres de control que XML 1.0 no
+  permite: uno solo invalidaría el feed completo. `Cache-Control: public, max-age=3600`.
+- `src/db/productos.rs` — `feed_productos()`: la regla del catálogo (`stock > 0 OR stockilimitado`,
+  un kit sin material no sale) más lo que Google exige: sin servicios ni precio libre, precio > 0 y
+  al menos una foto. `DISTINCT ON (nid)` porque `v_inventario` repite un producto si tiene filas
+  duplicadas en `CategoriasProductos` (hoy el nid 5).
+- `src/db/productos.rs` — `clasificar_codigo_barras()` ahora valida el dígito verificador GS1
+  (`es_gtin_valido()`). Antes bastaba la longitud; un GTIN con checksum malo se rechaza en
+  Merchant Center. Sin GTIN válido el feed manda `g:identifier_exists=no` (no guardamos MPN).
+- `g:quantity` es la existencia real en piezas enteras (`floor`, hay productos por metro); se
+  omite en stock ilimitado.
+- `src/config.rs` / `.env.example` — `GOOGLE_STORE_CODE`: el "código de tienda" del Perfil de
+  Negocio (no el Profile ID). Sin él, el feed local responde 404.
+- `templates/productos/detalle.html` — `availableAtOrFrom → #store` en el `Offer`.
+
+---
+
 ## Retiro del kiosko, la búsqueda semántica y las familias (2026-09-26)
 
 Se quitó todo lo que dependía de embeddings: la columna `vector(1024)` por producto había

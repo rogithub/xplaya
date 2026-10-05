@@ -45,6 +45,8 @@ async fn main() {
         .route("/robots.txt", get(routes::pages::robots_txt))
         .route("/llms.txt", get(routes::pages::llms_txt))
         .route("/sitemap.xml", get(routes::pages::sitemap_xml))
+        .route("/feeds/google.xml", get(routes::feeds::google_productos))
+        .route("/feeds/google-local.xml", get(routes::feeds::google_inventario_local))
         .route("/productos/{nid}", get(routes::productos::detalle))
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))

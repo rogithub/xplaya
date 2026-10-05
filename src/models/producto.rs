@@ -85,8 +85,24 @@ pub struct ProductoDetalle {
     pub marca: Option<String>,
     pub modelo: Option<String>,
     pub descripcion: Option<String>,
-    /// GTIN válido (EAN-13/UPC-A/etc.) — solo si CodigoBarrasItem tiene forma de código de barras real.
+    /// GTIN válido (EAN-13/UPC-A/etc.) — solo si CodigoBarrasItem pasa el dígito verificador GS1.
     pub gtin: Option<String>,
-    /// Código interno cuando CodigoBarrasItem no tiene forma de GTIN válido.
+    /// Código interno cuando CodigoBarrasItem no es un GTIN válido.
     pub sku: Option<String>,
+}
+
+/// Una fila de los feeds de Google Merchant Center (productos e inventario local).
+/// Se arma en `db::productos::feed_productos`; las rutas solo la convierten en XML.
+pub struct FeedProducto {
+    pub nid: i32,
+    pub nombre: String,
+    pub categoria: String,
+    pub precio_venta: String,
+    /// Existencia en piezas enteras; `None` si es stock ilimitado o menos de 1 pieza.
+    pub cantidad: Option<i64>,
+    pub marca: Option<String>,
+    pub descripcion: Option<String>,
+    pub gtin: Option<String>,
+    /// Nombres de archivo en MinIO, en el mismo orden que la galería del detalle.
+    pub fotos: Vec<String>,
 }

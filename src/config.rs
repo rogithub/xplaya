@@ -6,6 +6,9 @@ pub struct Config {
     pub site_url: String,
     pub gotenberg_url: String,
     pub imagina_url: String,
+    /// Código de tienda del Perfil de Negocio de Google (feed de inventario local).
+    /// Sin él, `/feeds/google-local.xml` responde 404.
+    pub google_store_code: Option<String>,
 }
 
 impl Config {
@@ -25,6 +28,10 @@ impl Config {
                 .unwrap_or_else(|_| "http://gotenberg-service.gotenberg.svc.cluster.local:3000".to_string()),
             imagina_url: std::env::var("IMAGINA_URL")
                 .unwrap_or_else(|_| "https://imagina.xplaya.com".to_string()),
+            google_store_code: std::env::var("GOOGLE_STORE_CODE")
+                .ok()
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty()),
         }
     }
 }
