@@ -135,7 +135,7 @@ Un archivo por tema en `db/` y un archivo por grupo de rutas en `routes/`.
 
 ### Nuevas — vistas públicas del POS (migradas fuera del POS)
 
-| Ruta | GUID es... | Descripción | Origen en POS |
+| Ruta | GUID es... | Descripción | Origen en POS (retirada el 26 sep 2026) |
 |---|---|---|---|
 | `/recibo/{guid}` | `Ajustes.Id` | Ticket de venta | `/Recibo/{id:guid}` |
 | `/cotizacion/{guid}` | `Pedidos.Id` | Cotización/pedido | `/Cotizacion/{id:guid}` |

@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## CLAUDE.md: ruta real del monedero (2026-10-05)
+
+Solo documentación. `CLAUDE.md` decía que el monedero vivía en `/app/{guid}`, pero la ruta real es
+`/monedero/{guid}` (`src/main.rs:64`). Ese dato viejo hizo creer que la línea
+`Disallow: /monedero/` de `robots.txt` no servía, cuando sí protege el monedero.
+
+- `CLAUDE.md` — `/app/{guid}` → `/monedero/{guid}` en la estructura (`routes/monedero.rs`) y en la
+  tabla de vistas migradas del POS, incluido el redirect de `/saldo`.
+- `CLAUDE.md` — la columna "Origen en POS" ahora aclara que esas rutas se retiraron del POS el
+  26 sep 2026 (commit `6547341` de `inventario_papeleria`). Se conserva como referencia histórica.
+
+---
+
 ## Feeds para Google Merchant Center (2026-10-05)
 
 Para que los productos aparezcan en Google Shopping, AI Mode y Maps ("búscame un borrador" cerca
