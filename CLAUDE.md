@@ -79,7 +79,7 @@ xplaya/
 │   │   ├── mod.rs           # Registro de todas las rutas
 │   │   ├── productos.rs     # GET /productos, GET /productos/:id
 │   │   ├── carrito.rs       # GET /carrito, POST /pedidos
-│   │   ├── monedero.rs      # GET /app/:guid, GET /saldo, GET /recibo/:guid
+│   │   ├── monedero.rs      # GET /monedero/:guid, GET /saldo, GET /recibo/:guid
 │   │   └── pages.rs         # GET /resena, GET /terminos (páginas estáticas)
 │   ├── middleware/
 │   │   ├── mod.rs
@@ -139,8 +139,8 @@ Un archivo por tema en `db/` y un archivo por grupo de rutas en `routes/`.
 |---|---|---|---|
 | `/recibo/{guid}` | `Ajustes.Id` | Ticket de venta | `/Recibo/{id:guid}` |
 | `/cotizacion/{guid}` | `Pedidos.Id` | Cotización/pedido | `/Cotizacion/{id:guid}` |
-| `/app/{guid}` | `Clientes.Id` | Monedero del cliente (cashback) | `/App/{clienteId:guid}` |
-| `/saldo` | — | Busca cliente por teléfono → redirige a `/app/{guid}` | `/saldo` |
+| `/monedero/{guid}` | `Clientes.Id` | Monedero del cliente (cashback) | `/App/{clienteId:guid}` |
+| `/saldo` | — | Busca cliente por teléfono → redirige a `/monedero/{guid}` | `/saldo` |
 | `/terminos` | — | Lee `Settings`: `DIAS_VIGENCIA_MONEDERO`, `TIPO_CAMBIO_MONEDERO` | `/Terminos` |
 
 **Ninguna ruta requiere autenticación.** El acceso al monedero se protege solo con el GUID del cliente.
