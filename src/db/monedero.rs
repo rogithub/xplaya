@@ -191,7 +191,7 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
                         let display_cantidad = p.cantidad / factor;
                         let display_precio = precio_base * factor;
                         (
-                            format!("{} — {}", p.nombre, nombre_pres),
+                            nombre_pres.to_string(),
                             format!("{}", display_cantidad.normalize()),
                             mxn(display_precio),
                             mxn(display_precio * display_cantidad),
@@ -271,12 +271,13 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
     let productos: Vec<ProductoCotizacion> = items
         .into_iter()
         .map(|it| {
-            // Cuando el item tiene presentación (caja, paquete…) se usa su precio y nombre.
-            // La cantidad en PedidoItems ya está en unidades de presentación (el usuario
-            // seleccionó "2 cajas"), por lo que no hay que dividir por factor.
+            // Cuando el item tiene presentación (caja, paquete…) se usa su precio y solo su
+            // nombre, sin el del producto (igual que el recibo). La cantidad en PedidoItems ya
+            // está en unidades de presentación (el usuario seleccionó "2 cajas"), por lo que no
+            // hay que dividir por factor.
             let (nombre, precio) = match (it.presentacion_nombre.as_deref(), it.presentacion_precio) {
                 (Some(nombre_pres), Some(precio_pres)) => (
-                    format!("{} — {}", it.nombre, nombre_pres),
+                    nombre_pres.to_string(),
                     precio_pres,
                 ),
                 _ => (it.nombre.clone(), it.precioventa.unwrap_or(Decimal::ZERO)),
