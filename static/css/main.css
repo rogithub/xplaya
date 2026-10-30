@@ -39,6 +39,68 @@
     color: #fff;
 }
 
+/*
+ * Aviso de Día de Muertos — franja nocturna con papel picado y cempasúchil.
+ * Se muestra desde base.html mientras today() < "2026-11-03".
+ */
+.aviso-muertos {
+    background:
+        radial-gradient(ellipse at 50% 120%, rgba(232, 93, 4, .28), transparent 60%),
+        linear-gradient(180deg, #2a1640 0%, #1b0f2b 100%);
+    color: #f3e9ff;
+    text-align: center;
+}
+/* Papel picado: banderitas de colores con borde inferior en pico */
+.aviso-muertos__picado {
+    height: 14px;
+    background: repeating-linear-gradient(90deg,
+        #E85D04 0 40px, #E4007C 40px 80px, #FFBA08 80px 120px,
+        #7B2CBF 120px 160px, #2EC4B6 160px 200px);
+    -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 20px 100%;
+            mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 20px 100%;
+    opacity: .9;
+}
+.aviso-muertos__cuerpo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.1rem 1rem 1.4rem;
+}
+.aviso-muertos__flor {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 10px rgba(255, 186, 8, .35));
+}
+.aviso-muertos__eyebrow {
+    color: #FFBA08;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+}
+.aviso-muertos__titulo {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.25;
+    color: #fff;
+    margin: .15rem 0 .25rem;
+}
+.aviso-muertos__texto {
+    font-size: .95rem;
+    color: #d9c9ec;
+}
+.aviso-muertos__texto strong {
+    color: #fff;
+}
+@media screen and (max-width: 768px) {
+    .aviso-muertos__cuerpo { gap: .9rem; }
+    .aviso-muertos__flor { width: 2.25rem; height: 2.25rem; }
+    .aviso-muertos__titulo { font-size: 1.3rem; }
+}
+
 @media print {
     nav.navbar,
     footer.footer,

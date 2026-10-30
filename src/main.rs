@@ -35,6 +35,12 @@ async fn main() {
     tmpl.set_loader(path_loader("templates"));
     tmpl.add_global("site_url", minijinja::Value::from_safe_string(cfg.site_url.clone()));
     tmpl.add_global("imagina_url", minijinja::Value::from_safe_string(cfg.imagina_url.clone()));
+    // Fecha de hoy en Quintana Roo (UTC-5 fijo, sin horario de verano) como "YYYY-MM-DD".
+    // Sirve para mostrar avisos por fecha: {% if today() < "2026-11-03" %}
+    tmpl.add_function("today", || {
+        let qroo = chrono::FixedOffset::west_opt(5 * 3600).unwrap();
+        chrono::Utc::now().with_timezone(&qroo).format("%Y-%m-%d").to_string()
+    });
 
     let http = reqwest::Client::new();
     let state = AppState { tmpl, config: cfg, pool, http };
