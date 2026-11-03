@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Se retira el aviso de Día de Muertos (2026-11-03)
+
+Deshace el commit `9c2a0bf`. El aviso ya se ocultaba solo desde el 3 de noviembre, así que los
+visitantes no ven ningún cambio; solo se limpia código que ya no se usa.
+
+- `templates/base.html` — se quita el bloque `.aviso-muertos`; `main.css` sube a `?v=4` porque
+  cambió su contenido y `/static` se sirve con caché `immutable`.
+- `static/css/main.css` — se quitan los estilos `.aviso-muertos*`.
+- `src/main.rs` — se quita la función `today()` de las plantillas, que solo usaba este aviso.
+
+---
+
 ## CLAUDE.md: ruta real del monedero (2026-10-05)
 
 Solo documentación. `CLAUDE.md` decía que el monedero vivía en `/app/{guid}`, pero la ruta real es
