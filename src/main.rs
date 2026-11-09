@@ -1,3 +1,5 @@
+use std::{sync::Arc, time::Duration};
+
 use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}, extract::Request};
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
@@ -9,6 +11,7 @@ mod config;
 mod db;
 mod middleware;
 mod models;
+mod passkeys;
 mod routes;
 
 #[derive(Clone)]
@@ -17,6 +20,14 @@ pub struct AppState {
     pub config: config::Config,
     pub pool: PgPool,
     pub http: reqwest::Client,
+    /// Passkeys de la app de clientes (`passkeys.rs`).
+    pub webauthn: Arc<webauthn_rs::Webauthn>,
+    /// Altas del recibo que ya pasaron los 4 dígitos (o los datos) y esperan la passkey.
+    pub altas: Arc<passkeys::Pendientes<routes::alta::AltaPendiente>>,
+    /// Estado de "crear passkey", con el ticket del alta como id.
+    pub registros: Arc<passkeys::Pendientes<webauthn_rs::prelude::PasskeyRegistration>>,
+    /// Estado de "entrar con passkey".
+    pub entradas: Arc<passkeys::Pendientes<webauthn_rs::prelude::DiscoverableAuthentication>>,
 }
 
 #[tokio::main]
@@ -38,7 +49,17 @@ async fn main() {
     tmpl.add_global("app_url", minijinja::Value::from_safe_string(cfg.app_url.clone()));
 
     let http = reqwest::Client::new();
-    let state = AppState { tmpl, config: cfg, pool, http };
+    let webauthn = Arc::new(passkeys::webauthn(&cfg));
+    let state = AppState {
+        tmpl,
+        config: cfg,
+        pool,
+        http,
+        webauthn,
+        altas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
+        registros: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
+        entradas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
+    };
 
     let site = Router::new()
         .route("/", get(routes::productos::lista))

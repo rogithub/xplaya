@@ -71,7 +71,10 @@ frente a la pantalla.
 
 Los tickets no se imprimen: el recibo se comparte por WhatsApp como `/recibo/{guid}`. Ese recibo
 muestra un enlace de alta de **un solo uso** y válido por **24 horas**, para quien compró y se fue
-sin pasar por el kiosko. No aparece si el cliente de la venta ya tiene la app.
+sin pasar por el kiosko. Si el cliente de la venta ya tiene un celular ligado, el enlace dice
+"¿Cambiaste de celular? Liga el nuevo" (es la forma de recuperar el acceso sin ir a la tienda); si
+quien lo abre ya tiene sesión con ese mismo cliente, la app lo manda a su monedero sin gastar el
+enlace. Los 4 dígitos admiten **5 intentos**; al quinto fallo el enlace queda bloqueado.
 
 | Caso | Qué pasa |
 |---|---|
@@ -79,6 +82,9 @@ sin pasar por el kiosko. No aparece si el cliente de la venta ya tiene la app.
 | Venta sin cliente, teléfono nuevo | Captura nombre y teléfono; se crea su monedero y se abona esa compra |
 | Venta sin cliente, teléfono que ya tiene monedero | **No** se liga el celular (desde fuera de la tienda no se puede comprobar el número), pero **sí** se abona esa compra a ese monedero. La app le pide que en su próxima visita escanee el kiosko |
 | Cliente que ya tiene la app abre el enlace de una venta sin cliente (olvidó mostrar su tarjeta) | La compra se abona a su monedero; no se crea otro cliente |
+
+Si el celular de un cliente nuevo no puede crear passkeys, "Solo abona mi compra" crea su monedero
+y abona la compra sin ligar el celular; lo ve en la web, como hasta hoy.
 
 #### Si cambia o pierde el celular
 

@@ -109,16 +109,18 @@ pub async fn app(
     State(state): State<AppState>,
     Path(cliente_id): Path<Uuid>,
 ) -> Result<Html<String>, StatusCode> {
-    render_monedero(&state, cliente_id, false).await
+    render_monedero(&state, cliente_id, false, false).await
 }
 
 /// Arma la tarjeta del monedero. `en_app` indica si se sirve en app.xplaya.com:
 /// ahí se enlaza el manifest de la PWA y se registra el service worker; en
 /// xplaya.com, en cambio, se muestra un enlace para instalar la app.
+/// `con_sesion`: el celular está ligado (la app abre en `/` y se puede salir).
 pub async fn render_monedero(
     state: &AppState,
     cliente_id: Uuid,
     en_app: bool,
+    con_sesion: bool,
 ) -> Result<Html<String>, StatusCode> {
     let cliente = db::monedero::monedero(&state.pool, cliente_id)
         .await
@@ -142,6 +144,7 @@ pub async fn render_monedero(
             cliente_id => cliente_id.to_string(),
             qr_caja => qr_caja,
             en_app => en_app,
+            con_sesion => con_sesion,
         })
         .map_err(|e| {
             tracing::error!("Render app: {e}");
@@ -176,12 +179,22 @@ pub async fn recibo(
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
+    // Enlace de alta en la app (24 h, un solo uso). Si la consulta falla, el recibo se
+    // muestra igual, sin el enlace.
+    let alta = db::altas::venta_disponible(&state.pool, id)
+        .await
+        .inspect_err(|e| tracing::error!("DB alta recibo {id}: {e}"))
+        .ok()
+        .flatten();
+    let alta_disponible = alta.is_some();
+    let alta_cambio = alta.is_some_and(|a| a.tiene_celular);
+
     let tmpl = state.tmpl.get_template("monedero/recibo.html").map_err(|e| {
         tracing::error!("Template recibo: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { venta => venta, id => id.to_string() })
+        .render(context! { venta => venta, id => id.to_string(), alta_disponible, alta_cambio })
         .map_err(|e| {
             tracing::error!("Render recibo: {e}");
             StatusCode::INTERNAL_SERVER_ERROR

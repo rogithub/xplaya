@@ -129,6 +129,18 @@
         <ul class="has-text-left is-size-7 mb-3" style="list-style:none; padding-left:0;">
             <li>✅ Es gratis.</li>
             <li>✅ Tus compras acumulan cashback.</li>
+            {% if alta_disponible %}
+            <li>✅ Esta compra se abona a tu monedero si te registras hoy.</li>
+            {% endif %}
+        </ul>
+        {% if alta_disponible %}
+        <a href="{{ app_url }}/alta/recibo/{{ id }}" class="button is-success is-fullwidth mb-2">📱 Crear mi monedero en el celular</a>
+        <p class="is-size-7 has-text-grey mb-0">
+            O <a href="https://wa.me/524522018336?text=%23monedero%20" target="_blank" rel="noopener"
+                 class="has-text-success">regístrate por WhatsApp</a> mandando <strong>#monedero</strong> y tu nombre.
+        </p>
+        {% else %}
+        <ul class="has-text-left is-size-7 mb-0" style="list-style:none; padding-left:0;">
             <li>
                 <a href="https://wa.me/524522018336?text=%23monedero%20"
                    target="_blank" rel="noopener" class="has-text-success">
@@ -136,6 +148,7 @@
                 </a>
             </li>
         </ul>
+        {% endif %}
     </div>
     {% endif %}
 
@@ -144,6 +157,12 @@
         {% if venta.tiene_monedero %}
         <a href="/monedero/{{ venta.cliente_id }}" class="button is-success is-fullwidth mb-2">
             💳 Ver Monedero
+        </a>
+        {% endif %}
+        {# Enlace de alta en la app: 24 h, un solo uso (routes/alta.rs). #}
+        {% if alta_disponible and venta.tiene_monedero %}
+        <a href="{{ app_url }}/alta/recibo/{{ id }}" class="button is-success is-light is-fullwidth mb-2">
+            {% if alta_cambio %}📱 ¿Cambiaste de celular? Liga el nuevo{% else %}📱 Lleva tu monedero en el celular{% endif %}
         </a>
         {% endif %}
         <a href="/recibo/{{ id }}/pdf" class="button is-light is-fullwidth mb-2">

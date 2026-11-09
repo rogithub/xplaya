@@ -405,3 +405,39 @@ a { color: var(--accent); }
 }
 
 .inicio-nota { margin-top: 18px; font-size: .9rem; color: var(--muted); }
+
+/* ── Entrar con huella y alta desde el recibo ───────────────────────────── */
+
+.entrar { margin-bottom: 22px; }
+.entrar-nota { margin: 8px 0 0; font-size: .85rem; }
+
+a.btn-qr { text-decoration: none; }
+.btn-qr:disabled { opacity: .55; cursor: default; }
+
+.campo-sig { margin-top: 14px; }
+.campo-digitos { text-align: center; font-size: 1.6rem; letter-spacing: .5em; }
+
+.check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 4px 2px 0;
+    font-size: .95rem;
+    cursor: pointer;
+}
+.check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); flex-shrink: 0; }
+
+/* Botón con aspecto de enlace (acciones secundarias que van por POST). */
+.btn-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.btn-link:disabled { opacity: .5; cursor: default; }
+
+.solo-abonar { margin-top: 18px; text-align: center; font-size: .9rem; }
+.form-salir { display: inline; margin: 0; }

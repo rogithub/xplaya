@@ -6,13 +6,23 @@
 <section class="inicio">
     <img class="inicio-logo" src="/static/img/logo/v3/papeleria-insignia.svg" alt="Papelería" width="120" height="120">
     <h1 class="app-title">Tu monedero</h1>
-    <p class="inicio-txt">
-        Abre el enlace de tu monedero que te enviamos por WhatsApp, o búscalo con tu teléfono.
-    </p>
-
     {% if error %}
     <p class="alerta" role="alert">{{ error }}</p>
     {% endif %}
+
+    {# Entrar con la passkey del celular ligado. Si el navegador no las soporta, no se muestra. #}
+    <div x-data="entrarHuella" x-show="soportado" x-cloak class="entrar">
+        <button type="button" class="btn-qr" @click="entrar()" :disabled="ocupado">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a9 9 0 0 0-9 9v1h2v-1a7 7 0 0 1 14 0v2a13 13 0 0 1-1.1 5.3l1.8.8A15 15 0 0 0 21 13v-2a9 9 0 0 0-9-9zm0 4a5 5 0 0 0-5 5v2a9 9 0 0 1-2 5.7l1.6 1.2A11 11 0 0 0 9 13v-2a3 3 0 0 1 6 0v2a17 17 0 0 1-2.2 8.4l1.7 1A19 19 0 0 0 17 13v-2a5 5 0 0 0-5-5zm-1 5v2a13 13 0 0 1-3.4 8.8l1.5 1.4A15 15 0 0 0 13 13v-2h-2z"/></svg>
+            <span x-text="ocupado ? 'Esperando tu huella…' : 'Entrar con huella o cara'"></span>
+        </button>
+        <p class="alerta" role="alert" x-show="error" x-text="error"></p>
+        <p class="inicio-txt entrar-nota">Si ya ligaste tu celular desde el enlace de un recibo.</p>
+    </div>
+
+    <p class="inicio-txt">
+        O abre el enlace de tu monedero que te enviamos por WhatsApp, o búscalo con tu teléfono.
+    </p>
 
     <form method="post" action="/entrar" class="inicio-form">
         <label for="telefono" class="campo-label">Teléfono a 10 dígitos</label>
@@ -21,7 +31,7 @@
         <button type="submit" class="btn-qr">Ver mi monedero</button>
     </form>
 
-    <p class="inicio-nota">¿Aún no tienes monedero? Pídelo en caja en tu próxima compra.</p>
+    <p class="inicio-nota">¿Aún no tienes monedero? Pídelo en caja, o ábrelo desde el enlace de tu ticket digital.</p>
 </section>
 
 <footer class="app-foot">

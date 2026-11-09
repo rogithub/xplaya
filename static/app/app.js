@@ -50,6 +50,127 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
+// ── Passkeys (huella o cara) ────────────────────────────────────────────────
+// El servidor (webauthn-rs) manda y recibe los datos binarios en base64url; la API del
+// navegador los quiere como bytes. Estas dos funciones convierten de un lado al otro.
+
+function b64aBytes(texto) {
+    let s = texto.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+}
+
+function bytesAB64(buffer) {
+    let s = '';
+    new Uint8Array(buffer).forEach((b) => { s += String.fromCharCode(b); });
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function postJson(url, datos) {
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+    });
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(json.error || 'Algo falló. Intenta de nuevo.');
+    return json;
+}
+
+// El cliente canceló o el celular no encontró la passkey: no es un error "real".
+function mensajeCancelado(e, texto) {
+    return e.name === 'NotAllowedError' ? texto : e.message;
+}
+
+const passkeysSoportadas = typeof window.PublicKeyCredential === 'function';
+
+document.addEventListener('alpine:init', () => {
+    // Alta: crea la passkey del ticket del alta (routes/alta.rs).
+    Alpine.data('crearAcceso', (ticket) => ({
+        soportado: passkeysSoportadas,
+        acepto: false,
+        ocupado: false,
+        error: '',
+
+        async crear() {
+            this.error = '';
+            this.ocupado = true;
+            try {
+                const opciones = await postJson('/passkey/registro/inicio', { ticket });
+                const pk = opciones.publicKey;
+                pk.challenge = b64aBytes(pk.challenge);
+                pk.user.id = b64aBytes(pk.user.id);
+                (pk.excludeCredentials || []).forEach((c) => { c.id = b64aBytes(c.id); });
+
+                const cred = await navigator.credentials.create({ publicKey: pk });
+                const fin = await postJson('/passkey/registro/fin', {
+                    ticket,
+                    terminos: this.acepto,
+                    credencial: {
+                        id: cred.id,
+                        rawId: bytesAB64(cred.rawId),
+                        type: cred.type,
+                        response: {
+                            attestationObject: bytesAB64(cred.response.attestationObject),
+                            clientDataJSON: bytesAB64(cred.response.clientDataJSON),
+                            transports: cred.response.getTransports ? cred.response.getTransports() : undefined,
+                        },
+                        extensions: cred.getClientExtensionResults(),
+                    },
+                });
+                location.href = fin.ir;
+            } catch (e) {
+                this.error = mensajeCancelado(e, 'Se canceló. Toca el botón para intentarlo otra vez.');
+            } finally {
+                this.ocupado = false;
+            }
+        },
+    }));
+
+    // Portada: entrar con la passkey que tenga el celular para este dominio.
+    Alpine.data('entrarHuella', () => ({
+        soportado: passkeysSoportadas,
+        ocupado: false,
+        error: '',
+
+        async entrar() {
+            this.error = '';
+            this.ocupado = true;
+            try {
+                const { id, opciones } = await postJson('/passkey/entrar/inicio', {});
+                const pk = opciones.publicKey;
+                pk.challenge = b64aBytes(pk.challenge);
+                (pk.allowCredentials || []).forEach((c) => { c.id = b64aBytes(c.id); });
+
+                // Sin `mediation`: es un botón, no el autollenado del formulario.
+                const cred = await navigator.credentials.get({ publicKey: pk });
+                const r = cred.response;
+                const fin = await postJson('/passkey/entrar/fin', {
+                    id,
+                    credencial: {
+                        id: cred.id,
+                        rawId: bytesAB64(cred.rawId),
+                        type: cred.type,
+                        response: {
+                            authenticatorData: bytesAB64(r.authenticatorData),
+                            clientDataJSON: bytesAB64(r.clientDataJSON),
+                            signature: bytesAB64(r.signature),
+                            userHandle: r.userHandle ? bytesAB64(r.userHandle) : null,
+                        },
+                        extensions: cred.getClientExtensionResults(),
+                    },
+                });
+                location.href = fin.ir;
+            } catch (e) {
+                this.error = mensajeCancelado(e,
+                    'No encontramos tu acceso en este celular. Liga tu celular desde el enlace de un recibo.');
+            } finally {
+                this.ocupado = false;
+            }
+        },
+    }));
+});
+
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW:', e));
 }

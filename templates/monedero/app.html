@@ -15,7 +15,8 @@
 <meta name="twitter:description" content="Saldo disponible: ${{ cliente.saldo }} · Miembro desde {{ cliente.miembro_desde }}">
 <meta name="twitter:image" content="{{ site_url }}/static/img/og_monedero.jpeg?v=3">
 {% endblock %}
-{% block manifest %}<link rel="manifest" href="/monedero/{{ cliente_id }}/manifest.webmanifest">{% endblock %}
+{# Con el celular ligado la app abre en `/` (sesión o huella); si no, directo en este monedero. #}
+{% block manifest %}{% if con_sesion %}<link rel="manifest" href="/manifest.webmanifest">{% else %}<link rel="manifest" href="/monedero/{{ cliente_id }}/manifest.webmanifest">{% endif %}{% endblock %}
 {% block content %}
 
 {# x-data: estado de Alpine para abrir/cerrar el QR a pantalla completa. #}
@@ -130,6 +131,12 @@
     <footer class="app-foot">
         <a href="{{ site_url }}/terminos">Términos del monedero</a>
         <a href="{{ site_url }}/">xplaya.com</a>
+        {% if con_sesion %}
+        {# Cierra la sesión en este celular; vuelve a entrar con su huella. #}
+        <form method="post" action="/salir" class="form-salir">
+            <button type="submit" class="btn-link">Salir</button>
+        </form>
+        {% endif %}
     </footer>
 
     {# ── QR a pantalla completa: fondo blanco para que el lector de caja lo lea bien. ── #}

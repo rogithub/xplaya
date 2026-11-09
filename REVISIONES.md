@@ -4,6 +4,63 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App de clientes, paso 3: alta con passkey desde el recibo (2026-11-09)
+
+El recibo de una venta de las últimas 24 horas lleva un enlace a
+`app.xplaya.com/alta/recibo/{venta}`. Desde ahí el cliente liga su celular con una **passkey**
+(huella o cara) y la app abre su monedero sin el GUID en la URL. Requiere los cambios de BD del POS
+(rama `feature/app-monedero-bd`: tablas nuevas y `fn_asignar_cliente_venta`).
+
+- `Cargo.toml` — `webauthn-rs` 0.6 (con `conditional-ui`, para las passkeys descubribles), `sha2`
+  (hash del token de sesión) y `rand` (el token). `webauthn-rs` es Rust puro: el `Containerfile` no
+  cambia.
+- `src/passkeys.rs` (nuevo):
+  - `webauthn()` arma la configuración con `PASSKEY_RP_ID` y `APP_URL`.
+  - `opciones_descubrible()` pide al celular una passkey **descubrible**: la necesitamos porque en
+    iPhone la app instalada no comparte cookies con Safari, así que al abrirla no sabemos quién es.
+    `webauthn-rs` la pide "discouraged" y no exporta el tipo para cambiarlo; se ajusta el JSON.
+  - `Pendientes<T>`: lo que vive unos minutos en memoria (el reto de la passkey, el alta que ya pasó
+    los 4 dígitos). xplaya corre con una réplica; si el pod se reinicia, el cliente vuelve a tocar el
+    botón.
+- `src/db/altas.rs` (nuevo) — el enlace está vivo si la venta tiene menos de 24 h (en hora de
+  Cancún, como la guarda el POS) y no tiene resultado en `AltasRecibo`. `revisar_digitos()` cuenta
+  los fallos y bloquea al 5.º. `gastar()` marca el resultado y devuelve `false` si alguien llegó
+  antes. `abonar_venta()` llama a `fn_asignar_cliente_venta`, la misma función que usa el POS.
+- `src/db/celulares.rs` (nuevo) — `ligar()` desliga el celular anterior (`reemplazado`) y borra sus
+  sesiones. Sesiones de un año: la cookie `xp_sesion` lleva el token y la BD solo su SHA-256.
+- `src/routes/alta.rs` (nuevo) — los cuatro casos del diseño:
+  - Venta con cliente: 4 dígitos → passkey → celular ligado y `AceptoPrograma`.
+  - Sin cliente, teléfono nuevo: nombre y teléfono → passkey → cliente nuevo y compra abonada. Si
+    su celular no puede crear passkeys, "Solo abona mi compra" crea el monedero sin ligar.
+  - Sin cliente, teléfono que ya existe: se abona la compra; **no** se liga el celular.
+  - Cliente con sesión y venta sin cliente: botón para abonarla a su monedero.
+  Nada se escribe hasta que la passkey existe (salvo los intentos fallidos), y todo el alta va en una
+  transacción.
+- `src/routes/app.rs`:
+  - `/` muestra el monedero de la sesión.
+  - `POST /passkey/entrar/*` entra con la passkey.
+  - `POST /salir` cierra la sesión.
+  - `/manifest.webmanifest` abre la app instalada en `/`.
+  - `/monedero/{guid}` sigue igual para quien no ha ligado su celular.
+- `src/routes/monedero.rs` — el recibo de xplaya.com muestra el enlace mientras esté vivo. Si el
+  cliente ya tiene celular, el texto es "¿Cambiaste de celular? Liga el nuevo".
+- Plantillas y estáticos:
+  - `templates/app/alta.html` (nuevo): una plantilla con un `paso` por pantalla.
+  - `templates/app/inicio.html`: botón "Entrar con huella o cara".
+  - `templates/monedero/app.html`: manifest según haya sesión, y "Salir".
+  - `templates/monedero/recibo.html`: el enlace de alta.
+  - `templates/pages/terminos.html`: sección de la app y el celular ligado; los datos de privacidad
+    agregan la llave pública y el tipo de celular.
+  - `static/app/app.js` (`?v=2`): componentes `crearAcceso` y `entrarHuella`, que convierten
+    base64url ↔ bytes para la API de passkeys del navegador. `static/css/app.css` (`?v=3`).
+- `config.rs` / `.env.example` / `CLAUDE.md` — `PASSKEY_RP_ID` (por defecto `xplaya.com`; en
+  desarrollo `app.localhost`, porque Chrome no acepta `localhost` para una página en `app.localhost`).
+
+Probado contra la BD de desarrollo con Playwright y un autenticador virtual (20 casos), más curl para
+el bloqueo, el vencimiento de 24 h y "solo abonar". Los datos de prueba se borraron.
+
+---
+
 ## Fix: el build del contenedor no encontraba `sw.js` (2026-11-09)
 
 El paso 2 incrustaba `static/app/sw.js` en el binario con `include_str!`, pero el `Containerfile`

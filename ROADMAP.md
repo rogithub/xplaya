@@ -38,8 +38,9 @@ La web pública (`xplaya.com`) está en producción: catálogo, carrito/pedidos,
 Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 
 - ✅ Tarjeta de solo lectura con el diseño nuevo (`/monedero/{guid}`, 2026-11-09)
-- ✅ `app.xplaya.com` + PWA instalable (2026-11-09; falta la ruta en el túnel de Cloudflare)
-- ⬜ Tablas nuevas, términos y alta con passkey desde el recibo
+- ✅ `app.xplaya.com` + PWA instalable (2026-11-09)
+- ✅ Tablas nuevas, términos y alta con passkey desde el recibo (2026-11-09; falta aplicar los
+  scripts del POS en producción antes de desplegar)
 - ⬜ QR de caja que caduca + lectura en el POS + desligar celular
 - ⬜ Kiosko en tienda: QR de 30 s y aprobación por ntfy
 - ⬜ Notificaciones: abonos y vencimiento

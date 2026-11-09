@@ -9,6 +9,10 @@ pub struct Config {
     /// URL pública de la app de clientes (PWA del monedero). Las peticiones cuyo
     /// `Host` coincide con esta URL van al router de la app; el resto, al sitio.
     pub app_url: String,
+    /// Dominio de las passkeys (RP ID de WebAuthn). Una passkey solo sirve en este
+    /// dominio y sus subdominios: con `xplaya.com`, la de app.xplaya.com también
+    /// funcionaría en el kiosko u otro subdominio. En desarrollo: `app.localhost`.
+    pub passkey_rp_id: String,
     /// Código de tienda del Perfil de Negocio de Google (feed de inventario local).
     /// Sin él, `/feeds/google-local.xml` responde 404.
     pub google_store_code: Option<String>,
@@ -33,6 +37,8 @@ impl Config {
                 .unwrap_or_else(|_| "https://imagina.xplaya.com".to_string()),
             app_url: std::env::var("APP_URL")
                 .unwrap_or_else(|_| "https://app.xplaya.com".to_string()),
+            passkey_rp_id: std::env::var("PASSKEY_RP_ID")
+                .unwrap_or_else(|_| "xplaya.com".to_string()),
             google_store_code: std::env::var("GOOGLE_STORE_CODE")
                 .ok()
                 .map(|s| s.trim().to_string())

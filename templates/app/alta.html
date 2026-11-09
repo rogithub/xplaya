@@ -1,0 +1,129 @@
+{% extends "app/base.html" %}
+{#
+  Alta desde el enlace del recibo (routes/alta.rs). Una sola plantilla; `paso` dice qué
+  mostrar:
+    digitos        la venta tiene cliente: últimos 4 dígitos de su teléfono
+    datos          venta sin cliente: nombre y teléfono
+    acceso         crear la passkey (huella o cara) y aceptar términos
+    abonar         cliente con sesión y venta sin cliente: abonarla a su monedero
+    abonado        el teléfono ya tenía monedero: se abonó la compra, sin ligar el celular
+    abonado_nuevo  monedero nuevo sin passkey (su celular no pudo crearla)
+    no_disponible  enlace vencido o ya usado
+    bloqueado      demasiados intentos de los 4 dígitos
+#}
+{% block title %}Tu monedero en el celular — xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<section class="inicio alta">
+    <img class="inicio-logo" src="/static/img/logo/v3/papeleria-insignia.svg" alt="Papelería" width="120" height="120">
+
+    {% if paso == "digitos" %}
+    <h1 class="app-title">{% if cambio %}Liga tu celular nuevo{% else %}Tu monedero en el celular{% endif %}</h1>
+    <p class="inicio-txt">
+        Para comprobar que eres tú, escribe los <strong>últimos 4 dígitos</strong> del teléfono
+        con el que te registraste.
+        {% if cambio %}Tu celular anterior dejará de abrir el monedero.{% endif %}
+    </p>
+    {% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="/alta/recibo/{{ ajuste_id }}/digitos" class="inicio-form">
+        <label for="digitos" class="campo-label">Últimos 4 dígitos</label>
+        <input id="digitos" name="digitos" type="text" inputmode="numeric" pattern="[0-9]{4}"
+               maxlength="4" autocomplete="off" required class="campo campo-digitos" placeholder="••••">
+        <button type="submit" class="btn-qr">Continuar</button>
+    </form>
+
+    {% elif paso == "datos" %}
+    <h1 class="app-title">Tu monedero xplaya</h1>
+    <p class="inicio-txt">
+        Es gratis: cada compra te devuelve saldo para la siguiente. Escribe tus datos y
+        <strong>esta compra se abona a tu monedero</strong>.
+    </p>
+    {% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="/alta/recibo/{{ ajuste_id }}/datos" class="inicio-form">
+        <label for="nombre" class="campo-label">Tu nombre</label>
+        <input id="nombre" name="nombre" type="text" autocomplete="name" maxlength="100"
+               required class="campo" value="{{ nombre or '' }}">
+        <label for="telefono" class="campo-label campo-sig">Teléfono a 10 dígitos</label>
+        <input id="telefono" name="telefono" type="tel" inputmode="numeric" autocomplete="tel"
+               placeholder="984 123 4567" required class="campo" value="{{ telefono or '' }}">
+        <button type="submit" class="btn-qr">Continuar</button>
+    </form>
+
+    {% elif paso == "acceso" %}
+    <h1 class="app-title">¡Hola, {{ nombre }}!</h1>
+    <p class="inicio-txt">
+        Crea tu acceso con <strong>huella o cara</strong>. Así solo tú abres tu monedero en
+        este celular, sin contraseñas.
+    </p>
+    <div x-data="crearAcceso('{{ ticket }}')" class="inicio-form">
+        <label class="check">
+            <input type="checkbox" x-model="acepto">
+            <span>Acepto los <a href="{{ site_url }}/terminos" target="_blank" rel="noopener">términos del monedero</a>.</span>
+        </label>
+        <button type="button" class="btn-qr" @click="crear()" :disabled="!acepto || ocupado" x-show="soportado">
+            <span x-text="ocupado ? 'Esperando tu huella…' : 'Crear acceso'"></span>
+        </button>
+        <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+        <p class="alerta" role="status" x-show="!soportado" x-cloak>
+            Este navegador no puede crear el acceso. Ábrelo en Safari (iPhone) o Chrome (Android).
+        </p>
+
+        {% if nuevo %}
+        {# Celulares que no pueden crear passkeys: al menos que no pierdan el abono. #}
+        <form method="post" action="/alta/recibo/{{ ajuste_id }}/solo-abonar" class="solo-abonar">
+            <input type="hidden" name="ticket" value="{{ ticket }}">
+            <input type="hidden" name="terminos" value="si" :disabled="!acepto">
+            <button type="submit" class="btn-link" :disabled="!acepto">
+                ¿No puedes crear el acceso? Solo abona mi compra
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% elif paso == "abonar" %}
+    <h1 class="app-title">¿Olvidaste mostrar tu tarjeta?</h1>
+    <p class="inicio-txt">Esta compra no tiene monedero. Abónala al tuyo.</p>
+    <form method="post" action="/alta/recibo/{{ ajuste_id }}/abonar" class="inicio-form">
+        <button type="submit" class="btn-qr">Abonar a mi monedero</button>
+    </form>
+    <a class="btn-sec btn-enlace" href="/">Ver mi monedero</a>
+
+    {% elif paso == "abonado" %}
+    <h1 class="app-title">¡Compra abonada!</h1>
+    <p class="inicio-txt">
+        Ese teléfono ya tenía monedero, así que le abonamos esta compra.
+    </p>
+    <p class="alerta" role="status">
+        Por seguridad, desde aquí no podemos comprobar que ese teléfono sea tuyo, así que
+        no ligamos este celular. Para ver tu monedero en la app, en tu próxima compra
+        <strong>da tu teléfono en caja</strong> y abre el enlace de ese ticket.
+    </p>
+
+    {% elif paso == "abonado_nuevo" %}
+    <h1 class="app-title">¡Listo, {{ nombre }}!</h1>
+    <p class="inicio-txt">Ya tienes monedero y esta compra está abonada.</p>
+    <a class="btn-qr" href="/monedero/{{ cliente_id }}">Ver mi monedero</a>
+
+    {% elif paso == "bloqueado" %}
+    <h1 class="app-title">Enlace bloqueado</h1>
+    <p class="inicio-txt">
+        Hubo demasiados intentos con dígitos equivocados. Por seguridad, este enlace ya no
+        sirve. Pide ayuda en la tienda en tu próxima visita.
+    </p>
+
+    {% else %}
+    <h1 class="app-title">Este enlace ya no está disponible</h1>
+    <p class="inicio-txt">
+        Los enlaces de los recibos duran 24 horas y se usan una sola vez.
+    </p>
+    <a class="btn-sec btn-enlace" href="/">Ir a la app</a>
+    {% endif %}
+</section>
+
+<footer class="app-foot">
+    <a href="{{ site_url }}/terminos">Términos del monedero</a>
+    <a href="{{ site_url }}/">xplaya.com</a>
+</footer>
+
+{% endblock %}
