@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Diseño de la app de clientes (2026-11-09)
+
+Solo documentación, en la rama nueva `develop`. La idea de la app del monedero vivía en el repo
+`pwa-monedero`; como casi todo se construye aquí, se trae a este repo y aquel se retira.
+
+- `APP_MONEDERO.md` (nuevo) — la idea con las decisiones de hoy: `app.xplaya.com`, un celular por
+  cliente (el nuevo reemplaza al anterior), kiosko en tienda con QR de 30 s y aprobación por ntfy
+  cuando el teléfono ya existe, enlace de alta en el recibo con sus cuatro casos, y abonos detectados
+  con una tarea que revisa cada minuto. Termina con las piezas nuevas y el orden propuesto.
+- `ROADMAP.md` — sección nueva con los seis pasos de la etapa 1.
+
+---
+
 ## Se retira el aviso de Día de Muertos (2026-11-03)
 
 Deshace el commit `9c2a0bf`. El aviso ya se ocultaba solo desde el 3 de noviembre, así que los

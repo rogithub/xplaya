@@ -33,6 +33,17 @@ La web pública (`xplaya.com`) está en producción: catálogo, carrito/pedidos,
 - ✅ Cashback potencial en cotizaciones
 - ✅ QR de validación en impresiones de recibos y cotizaciones
 
+### App de clientes (etapa 1: tarjeta del monedero)
+
+Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
+
+- ⬜ Tarjeta de solo lectura con el diseño nuevo
+- ⬜ `app.xplaya.com` + PWA instalable
+- ⬜ Tablas nuevas, términos y alta con passkey desde el recibo
+- ⬜ QR de caja que caduca + lectura en el POS + desligar celular
+- ⬜ Kiosko en tienda: QR de 30 s y aprobación por ntfy
+- ⬜ Notificaciones: abonos y vencimiento
+
 ### Pendiente sin fecha
 
 - ⬜ **ANALYTICS** — middleware que inserta en `Visitas`, gestión `SessionId` en cookie, excluir `/static/*`
