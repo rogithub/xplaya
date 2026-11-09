@@ -6,13 +6,15 @@
 
 use axum::{
     extract::{Form, Path, Query, State},
-    http::{header, HeaderMap, StatusCode},
+    http::{header, HeaderMap, HeaderValue, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
     Router,
 };
 use minijinja::context;
 use serde::Deserialize;
+use tower::ServiceBuilder;
+use tower_http::{services::ServeFile, set_header::SetResponseHeaderLayer};
 use uuid::Uuid;
 
 use crate::{db, routes::monedero, AppState};
@@ -26,7 +28,18 @@ pub fn router() -> Router<AppState> {
         .route("/entrar", post(entrar))
         .route("/monedero/{cliente_id}", get(monedero))
         .route("/monedero/{cliente_id}/manifest.webmanifest", get(manifest))
-        .route("/sw.js", get(service_worker))
+        // El service worker tiene que servirse desde la raíz para controlar toda la
+        // app (`scope: /`); por eso no va en `/static`. Se lee del disco como el resto
+        // de estáticos, con `no-cache` para que cada despliegue se vea de inmediato.
+        .route_service(
+            "/sw.js",
+            ServiceBuilder::new()
+                .layer(SetResponseHeaderLayer::overriding(
+                    header::CACHE_CONTROL,
+                    HeaderValue::from_static("no-cache"),
+                ))
+                .service(ServeFile::new("static/app/sw.js")),
+        )
         .route("/robots.txt", get(robots_txt))
         .fallback(|| async { Redirect::to("/") })
 }
@@ -162,22 +175,6 @@ async fn manifest(Path(cliente_id): Path<Uuid>) -> Response {
             (header::CACHE_CONTROL, "no-cache"),
         ],
         manifest.to_string(),
-    )
-        .into_response()
-}
-
-// ── /sw.js ──────────────────────────────────────────────────────────────────
-
-/// El service worker tiene que servirse desde la raíz para controlar todo el sitio
-/// (`scope: /`); por eso no va en `/static`. `no-cache` para que el navegador vea
-/// cada versión nueva en cuanto se despliega.
-async fn service_worker() -> Response {
-    (
-        [
-            (header::CONTENT_TYPE, "text/javascript; charset=utf-8"),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        include_str!("../../static/app/sw.js"),
     )
         .into_response()
 }

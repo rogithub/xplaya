@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fix: el build del contenedor no encontraba `sw.js` (2026-11-09)
+
+El paso 2 incrustaba `static/app/sw.js` en el binario con `include_str!`, pero el `Containerfile`
+compila solo con `src/` (copia `static/` después, en la imagen final). El build de GitHub falló;
+producción siguió con la imagen anterior.
+
+- `src/routes/app.rs` — `/sw.js` se sirve desde el disco con `ServeFile` (como el resto de
+  estáticos) y `Cache-Control: no-cache`. Regla: nada de `include_str!` sobre archivos fuera de `src/`.
+
+---
+
 ## App de clientes, paso 2: app.xplaya.com y PWA instalable (2026-11-09)
 
 El mismo servidor atiende `xplaya.com` y `app.xplaya.com`. En la app, el monedero se puede
