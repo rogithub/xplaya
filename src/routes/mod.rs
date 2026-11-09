@@ -3,3 +3,4 @@ pub mod carrito;
 pub mod pages;
 pub mod monedero;
 pub mod feeds;
+pub mod app;

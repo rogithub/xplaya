@@ -4,6 +4,44 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App de clientes, paso 2: app.xplaya.com y PWA instalable (2026-11-09)
+
+El mismo servidor atiende `xplaya.com` y `app.xplaya.com`. En la app, el monedero se puede
+instalar en el celular y abre sin señal con la última copia guardada.
+
+- `src/main.rs` — dos routers (`site` y `app`) y un tercero (`root`) que reparte cada petición
+  según su `Host`. Un `Router` de Axum también es un `Service` de tower, por eso se le puede pasar la
+  petición con `oneshot`. `tower` sube a 0.5 (la que ya usa Axum) para tener `ServiceExt`.
+  `/static` pasa a una función `static_files()` que comparten los dos.
+- `src/config.rs` — `APP_URL` (por defecto `https://app.xplaya.com`) y `app_host()`.
+- `src/routes/app.rs` (nuevo) — rutas de la app:
+  - `/` — si hay cookie `xp_monedero`, redirige a ese monedero; si no, pide el teléfono.
+  - `POST /entrar` — busca por teléfono, como `/saldo`.
+  - `/monedero/{guid}` — la tarjeta con la PWA activada; guarda la cookie un año. Si el GUID no
+    existe, borra la cookie y vuelve a `/`.
+  - `/monedero/{guid}/manifest.webmanifest` — manifest **por cliente**: su `start_url` es el
+    monedero de ese cliente, así la app instalada entra directo, aun en iPhone (que no comparte
+    cookies entre Safari y la app instalada).
+  - `/sw.js` — el service worker, desde la raíz para controlar toda la app.
+  - `/robots.txt` — `Disallow: /`.
+- `src/routes/monedero.rs` — `render_monedero(state, id, en_app)` sirve la tarjeta a los dos
+  dominios. `normalizar_telefono()` reemplaza la lógica que estaba repetida en `/saldo`.
+- `static/app/sw.js` (nuevo) — páginas: red primero, copia guardada si no hay señal. `/static`,
+  Alpine y fuentes: caché primero, para que el QR funcione sin internet en caja.
+- `static/app/app.js` (nuevo) — botón "Instalar app" en Android (`beforeinstallprompt`), pasos para
+  iPhone y aviso "Sin conexión".
+- `templates/app/base.html` — con `en_app`: manifest, metas de Apple y `app.js`.
+- `templates/app/inicio.html` (nuevo) — portada de la app.
+- `templates/monedero/app.html` — bloque para instalar (en la app) o botón "Abrir como app" (en
+  xplaya.com). Recibo, términos y xplaya.com se enlazan con `site_url`, porque en la app esas rutas
+  no existen.
+- `CLAUDE.md`, `.env.example` — `APP_URL` y cómo probar la app en `app.localhost`.
+
+**Pendiente fuera del repo:** agregar `app.xplaya.com` en el túnel de Cloudflare apuntando al mismo
+servicio que `xplaya.com`. Hasta entonces, el botón "Abrir como app" en xplaya.com no lleva a nada.
+
+---
+
 ## App de clientes, paso 1: la tarjeta del monedero (2026-11-09)
 
 `/monedero/{guid}` deja de verse como página de la tienda y se ve como app: tarjeta oscura con la

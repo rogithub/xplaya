@@ -15,6 +15,7 @@
 <meta name="twitter:description" content="Saldo disponible: ${{ cliente.saldo }} · Miembro desde {{ cliente.miembro_desde }}">
 <meta name="twitter:image" content="{{ site_url }}/static/img/og_monedero.jpeg?v=3">
 {% endblock %}
+{% block manifest %}<link rel="manifest" href="/monedero/{{ cliente_id }}/manifest.webmanifest">{% endblock %}
 {% block content %}
 
 {# x-data: estado de Alpine para abrir/cerrar el QR a pantalla completa. #}
@@ -53,6 +54,36 @@
     </button>
     {% endif %}
 
+    {% if en_app %}
+    {# ── Instalar la app (solo si aún no está instalada) ── #}
+    <section class="instalar" x-data="instalar" x-show="visible" x-cloak aria-label="Instalar la app">
+        <p class="instalar-txt">
+            <strong>Tenla siempre a la mano.</strong>
+            Instala la app y te avisamos cuando ganes saldo o esté por vencer.
+        </p>
+        <template x-if="!ios">
+            <button type="button" class="btn-sec" @click="instalarAndroid()">Instalar app</button>
+        </template>
+        <template x-if="ios">
+            <div>
+                <button type="button" class="btn-sec" @click="pasos = !pasos" :aria-expanded="pasos">
+                    Cómo instalarla en iPhone
+                </button>
+                <ol class="pasos" x-show="pasos" x-transition>
+                    <li>Abre esta página en <strong>Safari</strong>.</li>
+                    <li>Toca <strong>Compartir</strong>
+                        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class="ico"><path fill="currentColor" d="M12 2l4 4-1.4 1.4L13 5.8V15h-2V5.8L9.4 7.4 8 6l4-4zM5 10h3v2H6v8h12v-8h-2v-2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1z"/></svg>
+                        (si no lo ves, está dentro del botón <strong>⋯</strong>).</li>
+                    <li>Elige <strong>Agregar a pantalla de inicio</strong>; si no aparece, desliza la lista hacia arriba.</li>
+                    <li>Toca <strong>Agregar</strong>. La app queda junto a tus otras apps.</li>
+                </ol>
+            </div>
+        </template>
+    </section>
+    {% else %}
+    <a class="btn-sec btn-enlace" href="{{ app_url }}/monedero/{{ cliente_id }}">Abrir como app</a>
+    {% endif %}
+
     {% if cliente.alerta %}
     <p class="alerta" role="status">
         <strong>${{ cliente.alerta.monto }}</strong> vencen el <strong>{{ cliente.alerta.fecha }}</strong>.
@@ -67,7 +98,7 @@
         <ul class="hist-list">
             {% for row in cliente.historial %}
             <li>
-                <a class="hist-row" href="/recibo/{{ row.ajuste_id }}">
+                <a class="hist-row" href="{{ site_url }}/recibo/{{ row.ajuste_id }}">
                     <div class="hist-main">
                         <span class="hist-fecha">{{ row.fecha }}</span>
                         <span class="hist-meta">
@@ -97,8 +128,8 @@
     </section>
 
     <footer class="app-foot">
-        <a href="/terminos">Términos del monedero</a>
-        <a href="/">xplaya.com</a>
+        <a href="{{ site_url }}/terminos">Términos del monedero</a>
+        <a href="{{ site_url }}/">xplaya.com</a>
     </footer>
 
     {# ── QR a pantalla completa: fondo blanco para que el lector de caja lo lea bien. ── #}

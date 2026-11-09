@@ -235,6 +235,7 @@ Calcular pagos solo desde `Ajustes`; datos de líneas desde `AjustesProductos` e
 |---|---|---|---|
 | `DATABASE_URL` | Sí | — | `postgres://user:pass@host/inventario_papeleria` |
 | `PORT` | No | `3000` | Puerto HTTP — nunca hardcodeado, k3s asigna el NodePort externamente |
+| `APP_URL` | No | `https://app.xplaya.com` | URL de la app de clientes (PWA del monedero). Las peticiones con ese `Host` van a `routes/app.rs`; el resto, al sitio. En desarrollo: `http://app.localhost:3000` |
 | `CONTENT_BASE_URL` | No | `https://cntnt.xplaya.com` | Base URL de imágenes en MinIO. Sin cliente MinIO — solo construcción de URL: `{CONTENT_BASE_URL}/papeleria-fotos-productos/{filename}` |
 
 Si `CONTENT_BASE_URL` no está definida, las imágenes no se muestran — comportamiento aceptable en desarrollo local.  
@@ -245,8 +246,15 @@ Copiar `.env.example` a `.env` para desarrollo. `.env` está en `.gitignore`.
 ```bash
 cp .env.example .env   # completar DATABASE_URL
 cargo run
-# http://localhost:3000
+# http://localhost:3000       → sitio (xplaya.com)
+# http://app.localhost:3000   → app de clientes (con APP_URL=http://app.localhost:3000)
 ```
+
+### Dos dominios, un servidor
+
+`main.rs` arma dos routers y elige uno por el `Host` de cada petición: `app.xplaya.com` va a
+`routes/app.rs` (PWA del monedero, layout `templates/app/base.html`, sin Bulma) y todo lo demás al
+sitio. Diseño completo de la app en `APP_MONEDERO.md`.
 
 ## Calidad de código — Clippy
 

@@ -43,13 +43,7 @@ pub async fn saldo_get(
 ) -> Result<Response, StatusCode> {
     // Si viene ?p=telefono, busca directamente sin mostrar el formulario
     if let Some(raw) = params.p {
-        let digits: String = raw.chars().filter(|c| c.is_ascii_digit()).collect();
-        let tel = if digits.len() > 10 {
-            digits[digits.len() - 10..].to_string()
-        } else {
-            digits
-        };
-        if tel.len() == 10 {
+        if let Some(tel) = normalizar_telefono(&raw) {
             let cliente_id = db::monedero::buscar_cliente(&state.pool, &tel)
                 .await
                 .map_err(|e| {
@@ -86,18 +80,11 @@ pub async fn saldo_post(
     State(state): State<AppState>,
     Form(form): Form<SaldoForm>,
 ) -> Result<Redirect, StatusCode> {
-    let digits: String = form.telefono.chars().filter(|c| c.is_ascii_digit()).collect();
-    let tel = if digits.len() > 10 {
-        digits[digits.len() - 10..].to_string()
-    } else {
-        digits
-    };
-
-    if tel.len() != 10 {
+    let Some(tel) = normalizar_telefono(&form.telefono) else {
         return Ok(Redirect::to(
             "/saldo?error=Ingresa+un+número+de+teléfono+de+10+dígitos.",
         ));
-    }
+    };
 
     let cliente_id = db::monedero::buscar_cliente(&state.pool, &tel)
         .await
@@ -114,11 +101,24 @@ pub async fn saldo_post(
     }
 }
 
-// ── /app/:cliente_id ──────────────────────────────────────────────────────────
+// ── /monedero/:cliente_id ─────────────────────────────────────────────────────
 
+/// Monedero en xplaya.com. La misma tarjeta se sirve en app.xplaya.com desde
+/// `routes::app::monedero`; las dos llaman a `render_monedero`.
 pub async fn app(
     State(state): State<AppState>,
     Path(cliente_id): Path<Uuid>,
+) -> Result<Html<String>, StatusCode> {
+    render_monedero(&state, cliente_id, false).await
+}
+
+/// Arma la tarjeta del monedero. `en_app` indica si se sirve en app.xplaya.com:
+/// ahí se enlaza el manifest de la PWA y se registra el service worker; en
+/// xplaya.com, en cambio, se muestra un enlace para instalar la app.
+pub async fn render_monedero(
+    state: &AppState,
+    cliente_id: Uuid,
+    en_app: bool,
 ) -> Result<Html<String>, StatusCode> {
     let cliente = db::monedero::monedero(&state.pool, cliente_id)
         .await
@@ -137,12 +137,29 @@ pub async fn app(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { cliente => cliente, qr_caja => qr_caja })
+        .render(context! {
+            cliente => cliente,
+            cliente_id => cliente_id.to_string(),
+            qr_caja => qr_caja,
+            en_app => en_app,
+        })
         .map_err(|e| {
             tracing::error!("Render app: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Html(html))
+}
+
+/// Deja solo los dígitos y se queda con los últimos 10 (quita +52, espacios, guiones).
+/// `None` si no quedan exactamente 10.
+pub fn normalizar_telefono(raw: &str) -> Option<String> {
+    let digits: String = raw.chars().filter(|c| c.is_ascii_digit()).collect();
+    let tel = if digits.len() > 10 {
+        digits[digits.len() - 10..].to_string()
+    } else {
+        digits
+    };
+    (tel.len() == 10).then_some(tel)
 }
 
 // ── /recibo/:id ───────────────────────────────────────────────────────────────

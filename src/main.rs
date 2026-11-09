@@ -1,7 +1,7 @@
-use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}};
+use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}, extract::Request};
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
-use tower::ServiceBuilder;
+use tower::{ServiceBuilder, ServiceExt};
 use tower_http::services::ServeDir;
 use tower_http::set_header::SetResponseHeaderLayer;
 
@@ -35,11 +35,12 @@ async fn main() {
     tmpl.set_loader(path_loader("templates"));
     tmpl.add_global("site_url", minijinja::Value::from_safe_string(cfg.site_url.clone()));
     tmpl.add_global("imagina_url", minijinja::Value::from_safe_string(cfg.imagina_url.clone()));
+    tmpl.add_global("app_url", minijinja::Value::from_safe_string(cfg.app_url.clone()));
 
     let http = reqwest::Client::new();
     let state = AppState { tmpl, config: cfg, pool, http };
 
-    let app = Router::new()
+    let site = Router::new()
         .route("/", get(routes::productos::lista))
         .route("/productos", get(|| async { Redirect::permanent("/") }))
         .route("/robots.txt", get(routes::pages::robots_txt))
@@ -69,19 +70,42 @@ async fn main() {
         .route("/cotizacion/{uid}/pdf", get(routes::monedero::cotizacion_pdf))
         .route("/cotizacion/{uid}/print", get(routes::monedero::cotizacion_print))
         .route("/r/{code}", get(routes::monedero::redirigir))
-        .nest_service(
-            "/static",
-            ServiceBuilder::new()
-                .layer(SetResponseHeaderLayer::if_not_present(
-                    header::CACHE_CONTROL,
-                    HeaderValue::from_static("public, max-age=31536000, immutable"),
-                ))
-                .service(ServeDir::new("static")),
-        )
+        .nest_service("/static", static_files())
         .fallback(routes::pages::fallback)
-        .with_state(state);
+        .with_state(state.clone());
+
+    // App de clientes (app.xplaya.com): sus propias rutas, mismos archivos estáticos.
+    let app = routes::app::router()
+        .nest_service("/static", static_files())
+        .with_state(state.clone());
+
+    // Un solo servidor para los dos dominios: según el `Host` de cada petición se
+    // la pasa al router de la app o al del sitio. `oneshot` ejecuta el router
+    // elegido con esa petición (un Router de Axum también es un Service de tower).
+    let app_host = state.config.app_host();
+    let root = Router::new().fallback_service(tower::service_fn(move |req: Request| {
+        let host = req
+            .headers()
+            .get(header::HOST)
+            .and_then(|h| h.to_str().ok())
+            .or_else(|| req.uri().authority().map(|a| a.as_str()))
+            .unwrap_or("")
+            .to_lowercase();
+        let router = if host == app_host { app.clone() } else { site.clone() };
+        router.oneshot(req)
+    }));
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     tracing::info!("Servidor en http://{}", addr);
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, root).await.unwrap();
+}
+
+/// `/static` con caché de un año: si cambias un archivo ya publicado, sube su `?v=`.
+fn static_files() -> tower_http::set_header::SetResponseHeader<ServeDir, HeaderValue> {
+    ServiceBuilder::new()
+        .layer(SetResponseHeaderLayer::if_not_present(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static("public, max-age=31536000, immutable"),
+        ))
+        .service(ServeDir::new("static"))
 }

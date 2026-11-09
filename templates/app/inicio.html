@@ -1,0 +1,32 @@
+{% extends "app/base.html" %}
+{% block title %}Monedero xplaya{% endblock %}
+{% block meta_description %}<meta name="description" content="Tu monedero de la Papelería xplaya: saldo, vencimientos y código para caja.">{% endblock %}
+{% block content %}
+
+<section class="inicio">
+    <img class="inicio-logo" src="/static/img/logo/v3/papeleria-insignia.svg" alt="Papelería" width="120" height="120">
+    <h1 class="app-title">Tu monedero</h1>
+    <p class="inicio-txt">
+        Abre el enlace de tu monedero que te enviamos por WhatsApp, o búscalo con tu teléfono.
+    </p>
+
+    {% if error %}
+    <p class="alerta" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/entrar" class="inicio-form">
+        <label for="telefono" class="campo-label">Teléfono a 10 dígitos</label>
+        <input id="telefono" name="telefono" type="tel" inputmode="numeric" autocomplete="tel"
+               placeholder="984 123 4567" required class="campo">
+        <button type="submit" class="btn-qr">Ver mi monedero</button>
+    </form>
+
+    <p class="inicio-nota">¿Aún no tienes monedero? Pídelo en caja en tu próxima compra.</p>
+</section>
+
+<footer class="app-foot">
+    <a href="{{ site_url }}/terminos">Términos del monedero</a>
+    <a href="{{ site_url }}/">xplaya.com</a>
+</footer>
+
+{% endblock %}
