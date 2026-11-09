@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Mi Monedero — {{ cliente.nombre }}{% endblock %}
+{% extends "app/base.html" %}
+{% block title %}Monedero — {{ cliente.nombre }}{% endblock %}
 {% block meta_description %}<meta name="description" content="Saldo disponible: ${{ cliente.saldo }} · Miembro desde {{ cliente.miembro_desde }}">{% endblock %}
 {% block meta_social %}
 <meta property="og:site_name" content="xplaya.com">
@@ -15,95 +15,105 @@
 <meta name="twitter:description" content="Saldo disponible: ${{ cliente.saldo }} · Miembro desde {{ cliente.miembro_desde }}">
 <meta name="twitter:image" content="{{ site_url }}/static/img/og_monedero.jpeg?v=3">
 {% endblock %}
-{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 {% block content %}
 
-<div class="columns is-centered">
-<div class="column" style="max-width: 680px;">
+{# x-data: estado de Alpine para abrir/cerrar el QR a pantalla completa. #}
+<div x-data="{ qr: false }" @keydown.escape.window="qr = false">
 
-    {# Cabecera cliente #}
-    <div class="is-flex is-align-items-center mb-5" style="gap: 1rem;">
-        <div class="has-background-success has-text-white has-text-weight-bold
-                    is-flex is-justify-content-center is-align-items-center is-size-3"
-             style="width:56px; height:56px; border-radius:50%; flex-shrink:0;">
-            {{ cliente.nombre | first | upper }}
+    <header class="app-top">
+        <h1 class="app-title">Mis tarjetas</h1>
+    </header>
+
+    {# ── Tarjeta ── #}
+    <section class="card" aria-label="Tarjeta del monedero">
+        <div class="card-head">
+            <span class="card-brand">Monedero</span>
+            <img class="card-logo" src="/static/img/logo/v3/papeleria-insignia.svg" alt="Papelería" width="56" height="56">
         </div>
-        <div>
-            <p class="has-text-weight-semibold is-size-5 mb-0">{{ cliente.nombre }}</p>
-            <p class="has-text-grey is-size-7">Cliente desde {{ cliente.miembro_desde }}</p>
+        <div class="card-saldo">
+            <span class="card-label">Saldo disponible</span>
+            <span class="card-amount">${{ cliente.saldo }}</span>
         </div>
-    </div>
-
-    {# Alerta de vencimiento próximo #}
-    {% if cliente.alerta %}
-    <div class="notification is-warning is-light mb-4">
-        Tienes <strong>${{ cliente.alerta.monto }}</strong> que vencen el
-        <strong>{{ cliente.alerta.fecha }}</strong>. ¡Úsalos pronto en tienda!
-    </div>
-    {% endif %}
-
-    {# Saldo card #}
-    <div class="mb-5 p-5 has-text-centered has-text-white"
-         style="background: linear-gradient(135deg, #48c774 0%, #23d160 100%);
-                border-radius: 8px;">
-        <p class="is-size-7 mb-1" style="opacity:.8; text-transform:uppercase; letter-spacing:.05em;">
-            Saldo disponible
-        </p>
-        <p class="is-size-2 has-text-weight-bold">${{ cliente.saldo }}</p>
-        <p class="is-size-7" style="opacity:.7;">Monedero electrónico</p>
-    </div>
-
-    {# Historial #}
-    {% if cliente.historial %}
-    <p class="has-text-grey is-size-7 has-text-weight-semibold mb-3"
-       style="text-transform:uppercase; letter-spacing:.05em;">
-        Historial de compras
-    </p>
-    {% for row in cliente.historial %}
-    <div class="box py-3 px-4 mb-2">
-        <div class="is-flex is-justify-content-space-between is-align-items-start"
-             style="gap: .5rem;">
+        <div class="card-foot">
             <div>
-                <a href="/recibo/{{ row.ajuste_id }}" class="has-text-weight-semibold">
-                    {{ row.fecha }}
-                </a>
-                <p class="is-size-7 has-text-grey mt-1">
-                    Generado: ${{ row.dinero_generado }}
-                    {% if row.dinero_gastado != "0.00" %}
-                    &nbsp;·&nbsp;Usado: ${{ row.dinero_gastado }}
-                    {% endif %}
-                </p>
-                <p class="is-size-7 has-text-grey">Vence: {{ row.fecha_expiracion }}</p>
+                <span class="card-label">Cliente</span>
+                <span class="card-name">{{ cliente.nombre }}</span>
             </div>
-            <div class="has-text-right" style="flex-shrink:0;">
-                {% if row.disponible_neto != "0.00" %}
-                <p class="has-text-success has-text-weight-semibold">${{ row.disponible_neto }}</p>
-                {% else %}
-                <p class="has-text-grey">—</p>
-                {% endif %}
-                {% if row.estado == "Disponible" %}
-                <span class="tag is-success is-light mt-1">Disponible</span>
-                {% elif row.estado == "Devuelto" %}
-                <span class="tag is-warning is-light mt-1">Devuelto</span>
-                {% else %}
-                <span class="tag is-light mt-1">Agotado</span>
-                {% endif %}
+            <div class="card-since">
+                <span class="card-label">Miembro desde</span>
+                <span>{{ cliente.miembro_desde }}</span>
             </div>
         </div>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div class="has-text-centered has-text-grey py-6">
-        <p class="is-size-2">🧾</p>
-        <p class="mt-2 is-size-7">Aún no tienes compras registradas.</p>
+    </section>
+
+    {% if qr_caja %}
+    <button type="button" class="btn-qr" @click="qr = true">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm11-2h2v2h-2v-2zm-3 0h2v3h-2v-3zm3 3h2v2h-2v-2zm2 2h3v3h-2v-1h-1v-2zm-5 1h3v2h-3v-2zm5-6h3v3h-3v-3z"/></svg>
+        Mostrar en caja
+    </button>
+    {% endif %}
+
+    {% if cliente.alerta %}
+    <p class="alerta" role="status">
+        <strong>${{ cliente.alerta.monto }}</strong> vencen el <strong>{{ cliente.alerta.fecha }}</strong>.
+        ¡Úsalos pronto en la tienda!
+    </p>
+    {% endif %}
+
+    {# ── Historial ── #}
+    <section class="hist" aria-labelledby="hist-titulo">
+        <h2 id="hist-titulo" class="sec-title">Historial</h2>
+        {% if cliente.historial %}
+        <ul class="hist-list">
+            {% for row in cliente.historial %}
+            <li>
+                <a class="hist-row" href="/recibo/{{ row.ajuste_id }}">
+                    <div class="hist-main">
+                        <span class="hist-fecha">{{ row.fecha }}</span>
+                        <span class="hist-meta">
+                            Ganaste ${{ row.dinero_generado }}{% if row.dinero_gastado != "0.00" %} · usaste ${{ row.dinero_gastado }}{% endif %}
+                        </span>
+                        {% if row.estado == "Disponible" %}
+                        <span class="hist-meta">Vence el {{ row.fecha_expiracion }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="hist-side">
+                        {% if row.estado == "Disponible" %}
+                        <span class="hist-monto">${{ row.disponible_neto }}</span>
+                        <span class="chip chip-ok">Disponible</span>
+                        {% elif row.estado == "Devuelto" %}
+                        <span class="chip chip-warn">Devuelto</span>
+                        {% else %}
+                        <span class="chip">Usado</span>
+                        {% endif %}
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="vacio">Aún no tienes compras registradas.<br>Tu saldo aparecerá aquí con tu primera compra.</p>
+        {% endif %}
+    </section>
+
+    <footer class="app-foot">
+        <a href="/terminos">Términos del monedero</a>
+        <a href="/">xplaya.com</a>
+    </footer>
+
+    {# ── QR a pantalla completa: fondo blanco para que el lector de caja lo lea bien. ── #}
+    {% if qr_caja %}
+    <div class="qr-sheet" x-show="qr" x-cloak x-transition.opacity
+         role="dialog" aria-modal="true" aria-label="Código para escanear en caja"
+         @click="qr = false">
+        <div class="qr-box" @click.stop>
+            <p class="qr-name">{{ cliente.nombre }}</p>
+            <div class="qr-code">{{ qr_caja | safe }}</div>
+            <p class="qr-hint">Muestra este código en caja para acumular y usar tu saldo.</p>
+            <button type="button" class="btn-close" @click="qr = false">Cerrar</button>
+        </div>
     </div>
     {% endif %}
 
-    <p class="has-text-centered mt-5">
-        <a href="/terminos" class="is-size-7 has-text-grey">Términos y condiciones del monedero</a>
-    </p>
-
 </div>
-</div>
-
 {% endblock %}

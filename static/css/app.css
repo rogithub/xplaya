@@ -1,0 +1,335 @@
+/*
+ * App de clientes (monedero). Sin Bulma: estilos propios con los colores del logo
+ * oficial v3 (ver /logo-oficial). La tarjeta siempre es oscura, como la insignia;
+ * la página cambia entre claro y oscuro según el celular.
+ */
+
+:root {
+    --bg: #EEF2F1;
+    --surface: #FFFFFF;
+    --ink: #18211F;
+    --muted: #56635F;
+    --line: #D3DCD9;
+    --chip: #E3EAE8;
+    --accent: #1F7A76;
+    --accent-ink: #FFFFFF;
+    --ok: #1F7A76;
+    --ok-bg: #DDEFEE;
+    --warn: #A8431A;
+    --warn-bg: #FBE6DA;
+
+    /* Marca: fijos en ambos modos */
+    --brand-dark: #231916;
+    --brand-copper: #A0603E;
+    --brand-teal: #7DC5C3;
+    --brand-yellow: #EBB728;
+    --brand-orange: #EC652A;
+
+    --font-display: "Fredoka", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #141110;
+        --surface: #1F1917;
+        --ink: #F2ECE7;
+        --muted: #A99F98;
+        --line: #3A2F2A;
+        --chip: #2B2320;
+        --accent: #5CC3BE;
+        --accent-ink: #0E1A19;
+        --ok: #5CC3BE;
+        --ok-bg: #16302F;
+        --warn: #F08A5A;
+        --warn-bg: #3A2117;
+    }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[x-cloak] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.app {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+}
+
+a { color: var(--accent); }
+
+/* ── Encabezado ─────────────────────────────────────────────────────────── */
+
+.app-top { margin: 8px 2px 16px; }
+
+.app-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.75rem;
+    letter-spacing: .01em;
+}
+
+/* ── Tarjeta ────────────────────────────────────────────────────────────── */
+
+.card {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1.586;               /* proporción de una tarjeta bancaria */
+    min-height: 200px;
+    padding: 18px 20px;
+    border-radius: 20px;
+    background:
+        radial-gradient(120% 90% at 110% -10%, rgba(125, 197, 195, .22), transparent 55%),
+        radial-gradient(90% 80% at -15% 120%, rgba(236, 101, 42, .20), transparent 60%),
+        var(--brand-dark);
+    color: #F7F1EC;
+    box-shadow:
+        inset 0 0 0 2px rgba(160, 96, 62, .55),
+        0 12px 28px -12px rgba(35, 25, 22, .55);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Franja de colores del logo en el borde inferior */
+.card::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 5px;
+    background: linear-gradient(90deg,
+        var(--brand-teal) 0 33.3%, var(--brand-yellow) 33.3% 66.6%, var(--brand-orange) 66.6% 100%);
+}
+
+.card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-brand {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--brand-teal);
+}
+
+.card-logo { display: block; width: 56px; height: 56px; }
+
+.card-label {
+    display: block;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(247, 241, 236, .62);
+}
+
+.card-amount {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 12vw, 3rem);
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+}
+
+.card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    font-size: .9rem;
+    padding-bottom: 4px;
+}
+
+.card-foot > div { min-width: 0; }
+
+.card-name {
+    display: block;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-since { text-align: right; flex-shrink: 0; }
+
+/* ── Botón QR ───────────────────────────────────────────────────────────── */
+
+.btn-qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 600 1.05rem var(--font-body);
+    cursor: pointer;
+}
+
+.btn-qr:focus-visible, .btn-close:focus-visible, .hist-row:focus-visible {
+    outline: 3px solid var(--brand-yellow);
+    outline-offset: 2px;
+}
+
+/* ── Alerta de vencimiento ──────────────────────────────────────────────── */
+
+.alerta {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--warn-bg);
+    color: var(--warn);
+    font-size: .95rem;
+}
+
+/* ── Historial ──────────────────────────────────────────────────────────── */
+
+.hist { margin-top: 28px; }
+
+.sec-title {
+    margin: 0 2px 10px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.2rem;
+}
+
+.hist-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.hist-list li + li { border-top: 1px solid var(--line); }
+
+.hist-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.hist-main { display: flex; flex-direction: column; min-width: 0; }
+.hist-fecha { font-weight: 600; }
+.hist-meta { font-size: .85rem; color: var(--muted); }
+
+.hist-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.hist-monto {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--ok);
+    font-variant-numeric: tabular-nums;
+}
+
+.chip {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.chip-ok { background: var(--ok-bg); color: var(--ok); }
+.chip-warn { background: var(--warn-bg); color: var(--warn); }
+
+.vacio {
+    margin: 0;
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+}
+
+/* ── Pie ────────────────────────────────────────────────────────────────── */
+
+.app-foot {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 28px;
+    font-size: .85rem;
+}
+
+.app-foot a { color: var(--muted); }
+
+/* ── QR a pantalla completa ─────────────────────────────────────────────── */
+
+.qr-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(20, 17, 16, .82);
+}
+
+/* Siempre blanco y negro, aun en modo oscuro: es lo que mejor leen los escáneres. */
+.qr-box {
+    width: 100%;
+    max-width: 360px;
+    padding: 22px 20px 18px;
+    border-radius: 20px;
+    background: #FFFFFF;
+    color: #18211F;
+    text-align: center;
+}
+
+.qr-name {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.qr-code svg { display: block; width: 100%; height: auto; }
+
+.qr-hint { margin: 8px 0 14px; font-size: .9rem; color: #56635F; }
+
+.btn-close {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #D3DCD9;
+    border-radius: 12px;
+    background: #FFFFFF;
+    color: #18211F;
+    font: 600 1rem var(--font-body);
+    cursor: pointer;
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+{#
+  Layout de la app de clientes (monedero). Es distinto de base.html a propósito:
+  sin navbar, footer ni botón de WhatsApp de la tienda, pensado para verse como app
+  en el celular. En el paso 2 este mismo layout se sirve en app.xplaya.com.
+  Sin Bulma: los estilos están en /static/css/app.css con los colores del logo oficial.
+#}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#EEF2F1" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#141110" media="(prefers-color-scheme: dark)">
+    <title>{% block title %}Monedero xplaya{% endblock %}</title>
+    {% block meta_description %}{% endblock %}
+    {% block meta_social %}{% endblock %}
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="/static/img/favicon/favicon.ico?v=3" sizes="any">
+    <link rel="icon" href="/static/img/favicon/favicon.svg?v=3" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/static/img/favicon/apple-touch-icon.png?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Instrument+Sans:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/static/css/app.css?v=1">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    <script defer src="https://analytics.xplaya.com/script.js"
+            data-website-id="8ca14307-e98c-4366-8d28-4560b42a8546"></script>
+</head>
+<body>
+    <main class="app">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -65,6 +65,8 @@ pub struct ProductoCotizacion {
 #[derive(Serialize)]
 pub struct ClienteMonedero {
     pub nombre: String,
+    /// Solo para el QR de caja; el template no lo muestra como texto.
+    pub telefono: String,
     pub miembro_desde: String,
     pub saldo: String,
     pub historial: Vec<HistorialEntry>,

@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App de clientes, paso 1: la tarjeta del monedero (2026-11-09)
+
+`/monedero/{guid}` deja de verse como página de la tienda y se ve como app: tarjeta oscura con la
+insignia del logo, saldo grande, botón "Mostrar en caja" y el historial ordenado. Es la misma
+URL de hoy; en el paso 2 este layout se sirve en `app.xplaya.com`.
+
+- `templates/app/base.html` (nuevo) — layout de la app, distinto de `base.html`: sin navbar, footer
+  ni Bulma; fuentes Fredoka e Instrument Sans (las del logo oficial), Alpine para el QR y siempre
+  `noindex`.
+- `static/css/app.css` (nuevo) — estilos con los colores del logo v3; la página sigue el modo
+  claro/oscuro del celular y la tarjeta siempre es oscura. El QR se muestra sobre blanco aun en modo
+  oscuro, porque es lo que mejor leen los escáneres.
+- `templates/monedero/app.html` — rediseño. Alpine (`x-data="{ qr: false }"`) abre el QR a pantalla
+  completa; se cierra con el botón, tocando fuera o con Esc.
+- `src/routes/monedero.rs` — el handler `app` genera el QR de caja con el teléfono del cliente,
+  igual que las tarjetas impresas del POS, que ya lo lee. En el paso 4 se cambia por ID + código que
+  caduca.
+- `src/db/monedero.rs`, `src/models/monedero.rs` — la consulta trae `telefono`; solo se usa para
+  el QR, no se muestra como texto.
+
+---
+
 ## Diseño de la app de clientes (2026-11-09)
 
 Solo documentación, en la rama nueva `develop`. La idea de la app del monedero vivía en el repo

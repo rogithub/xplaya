@@ -128,12 +128,16 @@ pub async fn app(
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
+    // QR para escanear en caja: por ahora lleva el teléfono, igual que las tarjetas
+    // impresas (el POS ya lo lee). En el paso 4 se cambia por ID + código que caduca.
+    let qr_caja = qr_svg(&cliente.telefono);
+
     let tmpl = state.tmpl.get_template("monedero/app.html").map_err(|e| {
         tracing::error!("Template app: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { cliente => cliente })
+        .render(context! { cliente => cliente, qr_caja => qr_caja })
         .map_err(|e| {
             tracing::error!("Render app: {e}");
             StatusCode::INTERNAL_SERVER_ERROR

@@ -72,6 +72,7 @@ struct PedidoItemRow {
 #[derive(sqlx::FromRow)]
 struct ClienteRow {
     nombre: String,
+    telefono: String,
     fechacreado: chrono::NaiveDateTime,
 }
 
@@ -325,7 +326,7 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
 pub async fn monedero(pool: &PgPool, cliente_id: Uuid) -> Result<Option<ClienteMonedero>, sqlx::Error> {
     // Solo se muestra el monedero si el cliente aceptó explícitamente el programa.
     let Some(cliente) = sqlx::query_as::<_, ClienteRow>(
-        "SELECT nombre, fechacreado FROM clientes WHERE id = $1 AND aceptoprograma = true",
+        "SELECT nombre, telefono, fechacreado FROM clientes WHERE id = $1 AND aceptoprograma = true",
     )
     .bind(cliente_id)
     .fetch_optional(pool)
@@ -421,6 +422,7 @@ pub async fn monedero(pool: &PgPool, cliente_id: Uuid) -> Result<Option<ClienteM
 
     Ok(Some(ClienteMonedero {
         nombre: cliente.nombre,
+        telefono: cliente.telefono,
         miembro_desde: fecha_es(cliente.fechacreado),
         saldo: format!("{:.2}", saldo),
         historial,
