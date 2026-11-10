@@ -98,6 +98,23 @@
     </div>
     {% endif %}
 
+    {# ── Fotos en imagina (credencial y polaroid) ── #}
+    {% if fotos_qr %}
+    <div class="kiosko-vista" x-show="vista === 'fotos'" x-cloak>
+        <section class="kiosko-info">
+            <h1 class="kiosko-titulo">Tus fotos desde el celular</h1>
+            <p class="kiosko-sub">
+                Tómate tu foto de credencial (infantil, pasaporte, visa…) o arma tus fotos
+                polaroid con marco y texto. Te las imprimimos aquí.
+            </p>
+        </section>
+        <section class="kiosko-qr-lado" aria-label="Código de fotos de credencial y polaroid">
+            <div class="kiosko-qr">{{ fotos_qr }}</div>
+            <p class="kiosko-qr-txt">imagina.xplaya.com</p>
+        </section>
+    </div>
+    {% endif %}
+
     {# ── Reseña en Google ── #}
     {% if resena_qr %}
     <div class="kiosko-vista" x-show="vista === 'resena'" x-cloak>
@@ -152,6 +169,9 @@
         <button type="button" :class="vista === 'contacto' && 'activo'" @click="ir('contacto')">📱 Nuestro WhatsApp</button>
         {% if tienda_qr %}
         <button type="button" :class="vista === 'tienda' && 'activo'" @click="ir('tienda')">🛒 Haz tu pedido</button>
+        {% endif %}
+        {% if fotos_qr %}
+        <button type="button" :class="vista === 'fotos' && 'activo'" @click="ir('fotos')">📸 Fotos credencial</button>
         {% endif %}
         {% if resena_qr %}
         <button type="button" :class="vista === 'resena' && 'activo'" @click="ir('resena')">⭐ Tu reseña</button>

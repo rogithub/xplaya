@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: pestaña "Fotos credencial" (2026-11-10)
+
+QR fijo al kiosko de imagina (`https://imagina.xplaya.com/kiosko`): foto de credencial y fotos
+polaroid desde el celular del cliente. El menú queda con 7 botones.
+
+- `src/routes/kiosko.rs` — `URL_IMAGINA_KIOSKO` y `fotos_qr` en `pantalla`.
+- `templates/app/kiosko.html` — vista `fotos` y su botón, antes del de la reseña.
+
+---
+
 ## Kiosko: pestaña "Nuestro WhatsApp" (2026-11-10)
 
 QR del contacto de WhatsApp de la papelería (el que genera WhatsApp en "Compartir contacto"),
