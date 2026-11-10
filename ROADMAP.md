@@ -47,7 +47,8 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   con la Raspberry `chaac`)
 - ✅ Menú del kiosko: WiFi para clientes y "te agregamos a WhatsApp" (2026-11-10)
 - ✅ Pestaña "Tu reseña" en el kiosko: QR a la reseña de Google (2026-11-10)
-- ✅ Pestaña "Haz tu pedido" en el kiosko: QR a `xplaya.com/productos` (2026-11-10)
+- ✅ Pestaña "Haz tu pedido" en el kiosko (2026-11-10); reemplazada el mismo día por "Instala
+  nuestra app", con el QR del monedero
 - ✅ Pestaña "Nuestro WhatsApp" en el kiosko: QR del contacto de la papelería (2026-11-10)
 - ✅ Pestaña "Fotos credencial" en el kiosko: QR a `imagina.xplaya.com/kiosko` (2026-11-10)
 - ✅ Inicio del kiosko con Vitrina (monedero + productos al azar con QR) y cuadros (2026-11-10)

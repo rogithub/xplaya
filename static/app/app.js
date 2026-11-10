@@ -277,7 +277,9 @@ document.addEventListener('alpine:init', () => {
                 const r = await fetch('/kiosko/qr', { cache: 'no-store' });
                 if (r.ok) {
                     const { svg, ms } = await r.json();
+                    // El mismo QR en la vitrina y en "Instala nuestra app".
                     this.$refs.qr.innerHTML = svg;
+                    if (this.$refs.qrApp) this.$refs.qrApp.innerHTML = svg;
                     espera = ms + 200;
                 }
             } catch (e) {

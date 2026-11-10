@@ -658,6 +658,14 @@ a.btn-qr { text-decoration: none; }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
 /* Las demás vistas, en pantalla completa con "← Inicio" arriba a la izquierda. */
 .kiosko-vista { padding-top: 10vh; }
+.kiosko-ventajas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2vh;
+    font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+}
 .kiosko-volver {
     position: absolute;
     top: 3vh;

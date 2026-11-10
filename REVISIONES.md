@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: "Instala nuestra app" en lugar de "Haz tu pedido" (2026-11-10)
+
+Todo lo de la Elo empuja a activar el monedero: el cuadro "Haz tu pedido" (QR a
+`xplaya.com/productos`) pasa a ser "Instala nuestra app", con el mismo QR del monedero (alta con
+código por WhatsApp). Al terminar, la app ya tiene la tienda y le ofrece instalarse.
+
+- `templates/app/kiosko.html` — vista `app` (ventajas: monedero, pedidos sin escribir datos,
+  entrar con huella) con `x-ref="qrApp"`; fuera la vista `tienda`.
+- `static/app/app.js` — `nuevoQr` pinta el mismo QR en la vitrina y en `qrApp`.
+- `src/routes/kiosko.rs` — fuera `tienda_qr`. `static/css/app.css` — `.kiosko-ventajas`.
+
+---
+
 ## Salir del carrito de xplaya.com y pasos de instalar por navegador (2026-11-10)
 
 - La sesión que crea "Entrar con huella" en el carrito de xplaya.com dura un año y es aparte de

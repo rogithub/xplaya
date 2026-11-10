@@ -5,7 +5,7 @@
   Inicio: a la izquierda la **vitrina**, que alterna el QR del monedero (cambia cada 30 s) con
   productos al azar con foto, precio y QR para pedirlos (‹ › para moverse); a la derecha, cuadros
   que abren cada vista en pantalla completa (WiFi, "te agregamos a WhatsApp", nuestro WhatsApp,
-  pedido, fotos, reseña) con "← Inicio". Sin tocar nada en un minuto, vuelve al inicio y la
+  instala la app, fotos, reseña) con "← Inicio". Sin tocar nada en un minuto, vuelve al inicio y la
   vitrina sigue pasando sola. Lógica en `kioskoPantalla` (static/app/app.js).
 #}
 {% block title %}Kiosko — Papelería xplaya{% endblock %}
@@ -66,7 +66,7 @@
             {% if wifi_qr %}<button type="button" @click="ir('wifi')"><span>📶</span>WiFi gratis</button>{% endif %}
             <button type="button" @click="ir('whatsapp')"><span>💬</span>Te agregamos a WhatsApp</button>
             <button type="button" @click="ir('contacto')"><span>📱</span>Nuestro WhatsApp</button>
-            {% if tienda_qr %}<button type="button" @click="ir('tienda')"><span>🛒</span>Haz tu pedido</button>{% endif %}
+            <button type="button" @click="ir('app')"><span>📲</span>Instala nuestra app</button>
             {% if fotos_qr %}<button type="button" @click="ir('fotos')"><span>📸</span>Fotos credencial</button>{% endif %}
             {% if resena_qr %}<button type="button" @click="ir('resena')"><span>⭐</span>Tu reseña</button>{% endif %}
         </nav>
@@ -115,22 +115,23 @@
         </section>
     </div>
 
-    {# ── Tienda en línea (xplaya.com) ── #}
-    {% if tienda_qr %}
-    <div class="kiosko-vista" x-show="vista === 'tienda'" x-cloak>
+    {# ── Instala nuestra app: el mismo QR del monedero (alta con código por WhatsApp). Al
+       terminar, la app tiene monedero y tienda, y le ofrece instalarla. ── #}
+    <div class="kiosko-vista" x-show="vista === 'app'" x-cloak>
         <section class="kiosko-info">
-            <h1 class="kiosko-titulo">Arma tu pedido desde tu celular</h1>
-            <p class="kiosko-sub">
-                Busca lo que necesitas, mándanos tu pedido y te lo tenemos listo.
-                También sirve desde tu casa.
-            </p>
+            <h1 class="kiosko-titulo">Instala nuestra app</h1>
+            <p class="kiosko-sub">Gratis, en tu celular:</p>
+            <ul class="kiosko-ventajas">
+                <li>💳 <strong>Tu monedero</strong>: cada compra te devuelve saldo.</li>
+                <li>🛍️ <strong>Haz tus pedidos</strong> sin escribir tus datos y te los tenemos listos.</li>
+                <li>👆 <strong>Entras con tu huella</strong>, sin contraseñas.</li>
+            </ul>
         </section>
-        <section class="kiosko-qr-lado" aria-label="Código de la tienda en línea">
-            <div class="kiosko-qr">{{ tienda_qr }}</div>
-            <p class="kiosko-qr-txt">xplaya.com</p>
+        <section class="kiosko-qr-lado" aria-label="Código para instalar la app">
+            <div class="kiosko-qr" x-ref="qrApp"></div>
+            <p class="kiosko-qr-txt">Escanéame con la cámara</p>
         </section>
     </div>
-    {% endif %}
 
     {# ── Fotos en imagina (credencial y polaroid) ── #}
     {% if fotos_qr %}
