@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Corrección: "destino is not defined" al crear el acceso (2026-11-10)
+
+Al agregar `destino` a `entrarHuella` (tienda, `e5f78ca`), el reemplazo también cambió el final de
+`crearAcceso` (alta desde el recibo o el kiosko), donde `destino` no existe: la passkey se creaba
+y el celular quedaba ligado, pero al final salía el error en lugar de ir al monedero.
+
+- `static/app/app.js` — `crearAcceso` vuelve a `location.href = fin.ir`.
+
+---
+
 ## Kiosko: el enlace del QR vale 3 minutos (2026-11-10)
 
 La pantalla sigue cambiando el QR cada 30 s, pero cada enlace valía 30 a 60 s: copiándolo y

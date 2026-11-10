@@ -112,7 +112,7 @@ document.addEventListener('alpine:init', () => {
                         extensions: cred.getClientExtensionResults(),
                     },
                 });
-                location.href = destino || fin.ir;
+                location.href = fin.ir;
             } catch (e) {
                 this.error = mensajeCancelado(e, 'Se canceló. Toca el botón para intentarlo otra vez.');
             } finally {
