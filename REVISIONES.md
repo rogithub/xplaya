@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: íconos del manifest con versión (2026-11-10)
+
+Al instalar la app salía el ícono de una app vieja (un lápiz amarillo), aunque el servidor entrega
+el nuevo: la app vieja usaba los mismos nombres de archivo y el celular tenía guardado el ícono
+viejo con esa dirección.
+
+- `src/routes/app.rs` y `static/img/favicon/site.webmanifest` — íconos con `?v=4`, para que el
+  celular los vuelva a bajar. `templates/base.html` — `site.webmanifest?v=5`.
+
+---
+
 ## App: aviso "Instala la app" en todas las páginas (2026-11-10)
 
 Antes el botón "Instalar" solo salía en el Monedero y, en Android, solo si Chrome ya lo había

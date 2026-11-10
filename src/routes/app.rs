@@ -261,10 +261,10 @@ fn manifest_json(state: &AppState, start_url: &str) -> Response {
         "icons": [
             // Los mismos íconos que el manifest de xplaya.com, incluida la versión maskable de
             // 192 px: sin ella, Android puede tomar la normal y meterla en un círculo blanco.
-            { "src": "/static/img/favicon/web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-            { "src": "/static/img/favicon/web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-            { "src": "/static/img/favicon/web-app-manifest-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-            { "src": "/static/img/favicon/web-app-manifest-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+            { "src": "/static/img/favicon/web-app-manifest-192x192.png?v=4", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+            { "src": "/static/img/favicon/web-app-manifest-192x192.png?v=4", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+            { "src": "/static/img/favicon/web-app-manifest-512x512.png?v=4", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+            { "src": "/static/img/favicon/web-app-manifest-512x512.png?v=4", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
         ]
     });
     (
