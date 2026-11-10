@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## xplaya.com ya no se instala como app (2026-11-10)
+
+El manifest del sitio (el del paquete de íconos) tenía `"display": "standalone"`, así que el
+celular ofrecía instalar xplaya.com y quedaban dos apps (Monedero y xplaya). Como se decidió
+dejarlos separados, solo app.xplaya.com se instala.
+
+- `static/img/favicon/site.webmanifest` — `"display": "browser"`: conserva los íconos, pero el
+  sitio ya no se ofrece como app.
+- `templates/base.html` — `site.webmanifest?v=4`.
+
+---
+
 ## "Entrar con huella" en el carrito de xplaya.com (2026-11-10)
 
 Se decidió **no unir** app.xplaya.com y xplaya.com (lo que se gana es más orden que negocio). Lo
