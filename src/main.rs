@@ -9,6 +9,7 @@ use tower_http::set_header::SetResponseHeaderLayer;
 
 mod config;
 mod db;
+mod kiosko;
 mod middleware;
 mod models;
 mod passkeys;
@@ -28,6 +29,11 @@ pub struct AppState {
     pub registros: Arc<passkeys::Pendientes<webauthn_rs::prelude::PasskeyRegistration>>,
     /// Estado de "entrar con passkey".
     pub entradas: Arc<passkeys::Pendientes<webauthn_rs::prelude::DiscoverableAuthentication>>,
+    /// Kiosko: visitas abiertas por el QR, esperas de aprobación de la caja y los tokens
+    /// de los botones de ntfy (apuntan a la espera).
+    pub kiosko_visitas: Arc<passkeys::Pendientes<()>>,
+    pub kiosko_esperas: Arc<passkeys::Pendientes<routes::kiosko::Espera>>,
+    pub kiosko_aprobaciones: Arc<passkeys::Pendientes<uuid::Uuid>>,
 }
 
 #[tokio::main]
@@ -59,6 +65,9 @@ async fn main() {
         altas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
         registros: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
         entradas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
+        kiosko_visitas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
+        kiosko_esperas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(10 * 60))),
+        kiosko_aprobaciones: Arc::new(passkeys::Pendientes::new(Duration::from_secs(10 * 60))),
     };
 
     let site = Router::new()

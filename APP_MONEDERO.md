@@ -139,7 +139,7 @@ ligado, el kiosko y las notificaciones.
 | Tabla de celulares ligados (passkey, secreto del QR, suscripción push, fechas) | BD compartida | Una fila activa por cliente |
 | Fecha de aceptación de términos | `Clientes` | El "quiero participar" |
 | Tokens de alta (recibo, 24 h, un solo uso) | BD compartida | Parecida a `ShortUrls` |
-| Aprobaciones pendientes del kiosko | BD compartida | Token de un solo uso para el botón de ntfy |
+| Aprobaciones pendientes del kiosko | xplaya, en memoria | Token de un solo uso para el botón de ntfy; si el pod se reinicia, el cliente vuelve a escanear (como el alta del recibo) |
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |
 | Publicar en ntfy | xplaya | Token de publicador en SealedSecret; tema `papeleria-altas` |

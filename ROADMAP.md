@@ -43,7 +43,8 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   2026-11-10)
 - ✅ Ver y desligar el celular en la ficha del cliente del POS (2026-11-10; el QR que caduca se
   descartó por ahora, ver `APP_MONEDERO.md`)
-- ⬜ Kiosko en tienda: QR de 30 s y aprobación por ntfy
+- ✅ Kiosko en tienda: QR de 30 s y aprobación por ntfy (2026-11-10; falta en producción:
+  `KIOSKO_TOKEN` y `NTFY_TOKEN` en el SealedSecret, y la Raspberry)
 - ⬜ Notificaciones: abonos y vencimiento
 
 ### Pendiente sin fecha

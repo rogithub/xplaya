@@ -1,14 +1,17 @@
 {% extends "app/base.html" %}
 {#
-  Alta desde el enlace del recibo (routes/alta.rs). Una sola plantilla; `paso` dice qué
-  mostrar:
+  Alta desde el enlace del recibo (routes/alta.rs) o el kiosko de la tienda
+  (routes/kiosko.rs, con `kiosko`). Una sola plantilla; `accion` es la ruta base de los
+  formularios y `paso` dice qué mostrar:
     digitos        la venta tiene cliente: últimos 4 dígitos de su teléfono
     datos          venta sin cliente: nombre y teléfono
     acceso         crear la passkey (huella o cara) y aceptar términos
     abonar         cliente con sesión y venta sin cliente: abonarla a su monedero
     abonado        el teléfono ya tenía monedero: se abonó la compra, sin ligar el celular
     abonado_nuevo  monedero nuevo sin passkey (su celular no pudo crearla)
-    no_disponible  enlace vencido o ya usado
+    espera         kiosko, teléfono que ya tiene monedero: la caja confirma que es él
+    rechazado      kiosko: la caja dijo que no
+    no_disponible  enlace vencido o ya usado (en el kiosko: QR vencido)
     bloqueado      demasiados intentos de los 4 dígitos
 #}
 {% block title %}Tu monedero en el celular — xplaya{% endblock %}
@@ -26,7 +29,7 @@
         {% if cambio %}Tu celular anterior dejará de abrir el monedero.{% endif %}
     </p>
     {% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
-    <form method="post" action="/alta/recibo/{{ ajuste_id }}/digitos" class="inicio-form">
+    <form method="post" action="{{ accion }}/digitos" class="inicio-form">
         <label for="digitos" class="campo-label">Últimos 4 dígitos</label>
         <input id="digitos" name="digitos" type="text" inputmode="numeric" pattern="[0-9]{4}"
                maxlength="4" autocomplete="off" required class="campo campo-digitos" placeholder="••••">
@@ -35,12 +38,19 @@
 
     {% elif paso == "datos" %}
     <h1 class="app-title">Tu monedero xplaya</h1>
+    {% if kiosko %}
+    <p class="inicio-txt">
+        Es gratis: cada compra te devuelve saldo para la siguiente. Escribe tus datos; si ya
+        tienes monedero, la caja confirmará que eres tú.
+    </p>
+    {% else %}
     <p class="inicio-txt">
         Es gratis: cada compra te devuelve saldo para la siguiente. Escribe tus datos y
         <strong>esta compra se abona a tu monedero</strong>.
     </p>
+    {% endif %}
     {% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
-    <form method="post" action="/alta/recibo/{{ ajuste_id }}/datos" class="inicio-form">
+    <form method="post" action="{{ accion }}/datos" class="inicio-form">
         <label for="nombre" class="campo-label">Tu nombre</label>
         <input id="nombre" name="nombre" type="text" autocomplete="name" maxlength="100"
                required class="campo" value="{{ nombre or '' }}">
@@ -71,11 +81,11 @@
 
         {% if nuevo %}
         {# Celulares que no pueden crear passkeys: al menos que no pierdan el abono. #}
-        <form method="post" action="/alta/recibo/{{ ajuste_id }}/solo-abonar" class="solo-abonar">
+        <form method="post" action="{{ accion }}/solo-abonar" class="solo-abonar">
             <input type="hidden" name="ticket" value="{{ ticket }}">
             <input type="hidden" name="terminos" value="si" :disabled="!acepto">
             <button type="submit" class="btn-link" :disabled="!acepto">
-                ¿No puedes crear el acceso? Solo abona mi compra
+                ¿No puedes crear el acceso? {% if kiosko %}Solo crea mi monedero{% else %}Solo abona mi compra{% endif %}
             </button>
         </form>
         {% endif %}
@@ -84,7 +94,7 @@
     {% elif paso == "abonar" %}
     <h1 class="app-title">¿Olvidaste mostrar tu tarjeta?</h1>
     <p class="inicio-txt">Esta compra no tiene monedero. Abónala al tuyo.</p>
-    <form method="post" action="/alta/recibo/{{ ajuste_id }}/abonar" class="inicio-form">
+    <form method="post" action="{{ accion }}/abonar" class="inicio-form">
         <button type="submit" class="btn-qr">Abonar a mi monedero</button>
     </form>
     <a class="btn-sec btn-enlace" href="/">Ver mi monedero</a>
@@ -102,8 +112,27 @@
 
     {% elif paso == "abonado_nuevo" %}
     <h1 class="app-title">¡Listo, {{ nombre }}!</h1>
-    <p class="inicio-txt">Ya tienes monedero y esta compra está abonada.</p>
+    <p class="inicio-txt">Ya tienes monedero{% if not kiosko %} y esta compra está abonada{% endif %}.</p>
     <a class="btn-qr" href="/monedero/{{ cliente_id }}">Ver mi monedero</a>
+
+    {% elif paso == "espera" %}
+    <div x-data="esperarCaja('{{ espera }}')">
+        <h1 class="app-title">Esperando a la caja…</h1>
+        <p class="inicio-txt" x-show="estado === 'pendiente'">
+            Ese teléfono ya tiene monedero. Avisamos a la caja para que confirme que eres tú;
+            no cierres esta página.
+        </p>
+        <p class="alerta" role="status" x-show="estado === 'vencida'" x-cloak>
+            Pasó mucho tiempo. Vuelve a escanear el código de la pantalla.
+        </p>
+        <form method="post" action="/kiosko/espera/{{ espera }}/continuar" x-ref="continuar"></form>
+    </div>
+
+    {% elif paso == "rechazado" %}
+    <h1 class="app-title">No se pudo confirmar</h1>
+    <p class="inicio-txt">
+        La caja no confirmó que ese teléfono sea tuyo. Si es un error, pide ayuda en la caja.
+    </p>
 
     {% elif paso == "bloqueado" %}
     <h1 class="app-title">Enlace bloqueado</h1>
@@ -113,10 +142,17 @@
     </p>
 
     {% else %}
+    {% if kiosko %}
+    <h1 class="app-title">Este código ya venció</h1>
+    <p class="inicio-txt">
+        El código de la pantalla cambia cada 30 segundos. Vuelve a escanearlo.
+    </p>
+    {% else %}
     <h1 class="app-title">Este enlace ya no está disponible</h1>
     <p class="inicio-txt">
         Los enlaces de los recibos duran 24 horas y se usan una sola vez.
     </p>
+    {% endif %}
     <a class="btn-sec btn-enlace" href="/">Ir a la app</a>
     {% endif %}
 </section>

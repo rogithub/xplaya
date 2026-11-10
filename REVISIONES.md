@@ -4,6 +4,35 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App de clientes, paso 5: kiosko en la tienda (2026-11-10)
+
+`app.xplaya.com/kiosko` es una pantalla para la tienda (Chromium en modo kiosko) con instrucciones y
+un QR que cambia cada 30 s. El cliente lo escanea y liga su celular ahí mismo.
+
+- `src/kiosko.rs` (nuevo, lógica pura con pruebas) — el código del QR es un HMAC-SHA256 del número
+  de ventana de 30 s, con `KIOSKO_TOKEN` como llave. El servidor no guarda nada: recalcula y compara
+  (vale la ventana actual y la anterior). `mascara_telefono()` para el aviso a la caja.
+- `src/routes/kiosko.rs` (nuevo):
+  - `/kiosko/activar?t=` guarda el token en una cookie HttpOnly (`Path=/kiosko`); `/kiosko` y
+    `/kiosko/qr` la exigen. Mismo esquema que el kiosko retirado (`git checkout kiosko-v1`).
+  - El QR abre `/kiosko/k/{código}` → una **visita** de 15 min → nombre y teléfono. La visita se
+    gasta al mandar los datos.
+  - **Teléfono nuevo**: la misma alta pendiente y passkey que el recibo; crea el cliente y liga el
+    celular con origen `kiosko`.
+  - **Teléfono que ya existe**: publica en ntfy (tema `papeleria-altas`) con botones Aprobar /
+    Rechazar, que hacen POST a `/kiosko/aprobar|rechazar/{token}` (un solo uso). El celular consulta
+    `/kiosko/espera/{id}` cada 2 s y, al aprobarse, sigue solo a crear la passkey. El celular nunca
+    ve el nombre registrado; el aviso a la caja sí, junto con lo que escribió la persona.
+  - Sin `NTFY_TOKEN` el aviso solo va al log, con los enlaces, para probar en desarrollo.
+- `src/routes/alta.rs` — `AltaPendiente` lleva `Origen::Recibo(venta)` u `Origen::Kiosko(visita)`;
+  `completar_alta()` solo abona y gasta el enlace cuando viene de un recibo.
+- `templates/app/alta.html` — los formularios usan `accion` (ruta base) y los textos cambian con
+  `kiosko`; pasos nuevos `espera` y `rechazado`. `templates/app/kiosko.html` (nuevo) y estilos
+  `.kiosko*` en `app.css`. `app.js`: componentes `esperarCaja` y `kioskoPantalla`.
+- Versiones: `app.css?v=4`, `app.js?v=3`.
+
+---
+
 ## App de clientes, paso 4: desligar el celular desde el POS (2026-11-10)
 
 Sin cambios de código en xplaya: el trabajo está en el POS (rama `feature/desligar-celular`).

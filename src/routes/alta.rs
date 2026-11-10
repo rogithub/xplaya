@@ -12,6 +12,9 @@
 //! Entre los 4 dígitos (o los datos) y la passkey, lo ya comprobado vive en memoria como
 //! `AltaPendiente`, con un ticket que va en la página. Nada se escribe en la BD hasta que
 //! la passkey queda creada, salvo los intentos fallidos.
+//!
+//! El kiosko de la tienda (`routes/kiosko.rs`) reusa la misma alta pendiente, la misma
+//! plantilla y el mismo registro de la passkey, con `Origen::Kiosko`.
 
 use axum::{
     extract::{Form, Path, State},
@@ -34,11 +37,20 @@ use crate::{
 /// Lo que ya se comprobó y espera la passkey para completarse.
 #[derive(Clone)]
 pub struct AltaPendiente {
-    pub ajuste_id: Uuid,
+    pub origen: Origen,
     /// Id del celular nuevo; también es el "usuario" de la passkey (no revela al cliente).
     pub celular_id: Uuid,
     pub nombre: String,
     pub quien: Quien,
+}
+
+/// Desde dónde se liga el celular.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Origen {
+    /// Enlace del recibo de esta venta.
+    Recibo(Uuid),
+    /// Kiosko de la tienda; el id es la visita (el QR que escaneó).
+    Kiosko(Uuid),
 }
 
 #[derive(Clone)]
@@ -57,7 +69,7 @@ pub async fn recibo(
     headers: HeaderMap,
 ) -> Result<Response, StatusCode> {
     let Some(venta) = db::altas::venta_disponible(&state.pool, ajuste_id).await.map_err(error_bd)? else {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     };
 
     if let Some(sesion) = app::cliente_sesion(&state, &headers).await {
@@ -65,15 +77,15 @@ pub async fn recibo(
             // Su propia compra: no hay nada que hacer.
             Some(id) if id == sesion => return Ok(Redirect::to("/").into_response()),
             // Olvidó mostrar su tarjeta: se le ofrece abonarla a su monedero.
-            None => return pagina(&state, ajuste_id, context! { paso => "abonar" }),
+            None => return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "abonar" }),
             // Compra de otra persona (por ejemplo, de alguien de su familia): flujo normal.
             Some(_) => {}
         }
     }
 
     match venta.cliente_id {
-        Some(_) => pagina(&state, ajuste_id, context! { paso => "digitos", cambio => venta.tiene_celular }),
-        None => pagina(&state, ajuste_id, context! { paso => "datos" }),
+        Some(_) => pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "digitos", cambio => venta.tiene_celular }),
+        None => pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "datos" }),
     }
 }
 
@@ -90,7 +102,7 @@ pub async fn digitos(
     Form(form): Form<DigitosForm>,
 ) -> Result<Response, StatusCode> {
     let Some(venta) = db::altas::venta_disponible(&state.pool, ajuste_id).await.map_err(error_bd)? else {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     };
     let Some(cliente_id) = venta.cliente_id else {
         return Ok(Redirect::to(&format!("/alta/recibo/{ajuste_id}")).into_response());
@@ -98,7 +110,7 @@ pub async fn digitos(
 
     let digitos: String = form.digitos.chars().filter(|c| c.is_ascii_digit()).collect();
     if digitos.len() != 4 {
-        return pagina(&state, ajuste_id, context! {
+        return pagina(&state, Origen::Recibo(ajuste_id), context! {
             paso => "digitos", cambio => venta.tiene_celular,
             error => "Escribe los últimos 4 dígitos de tu teléfono.",
         });
@@ -111,7 +123,7 @@ pub async fn digitos(
                 .map_err(error_bd)?
                 .unwrap_or_default();
             let alta = AltaPendiente {
-                ajuste_id,
+                origen: Origen::Recibo(ajuste_id),
                 celular_id: Uuid::new_v4(),
                 nombre,
                 quien: Quien::Cliente(cliente_id),
@@ -124,9 +136,9 @@ pub async fn digitos(
             } else {
                 format!("Esos no son. Te quedan {quedan} intentos.")
             };
-            pagina(&state, ajuste_id, context! { paso => "digitos", cambio => venta.tiene_celular, error })
+            pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "digitos", cambio => venta.tiene_celular, error })
         }
-        Intento::Bloqueado => pagina(&state, ajuste_id, context! { paso => "bloqueado" }),
+        Intento::Bloqueado => pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "bloqueado" }),
     }
 }
 
@@ -144,7 +156,7 @@ pub async fn datos(
     Form(form): Form<DatosForm>,
 ) -> Result<Response, StatusCode> {
     let Some(venta) = db::altas::venta_disponible(&state.pool, ajuste_id).await.map_err(error_bd)? else {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     };
     if venta.cliente_id.is_some() {
         return Ok(Redirect::to(&format!("/alta/recibo/{ajuste_id}")).into_response());
@@ -154,7 +166,7 @@ pub async fn datos(
     let nombre: String = form.nombre.split_whitespace().collect::<Vec<_>>().join(" ").chars().take(100).collect();
     let tel = normalizar_telefono(&form.telefono);
     let (Some(tel), false) = (tel, nombre.is_empty()) else {
-        return pagina(&state, ajuste_id, context! {
+        return pagina(&state, Origen::Recibo(ajuste_id), context! {
             paso => "datos", nombre => form.nombre, telefono => form.telefono,
             error => "Escribe tu nombre y tu teléfono a 10 dígitos.",
         });
@@ -164,7 +176,7 @@ pub async fn datos(
     let Some(cliente_id) = db::altas::cliente_por_telefono(&mut tx, &tel).await.map_err(error_bd)? else {
         // Teléfono nuevo: falta la passkey para crear su monedero.
         let alta = AltaPendiente {
-            ajuste_id,
+            origen: Origen::Recibo(ajuste_id),
             celular_id: Uuid::new_v4(),
             nombre,
             quien: Quien::Nuevo { telefono: tel },
@@ -177,10 +189,10 @@ pub async fn datos(
     let abonada = db::altas::abonar_venta(&mut tx, ajuste_id, cliente_id).await.map_err(error_bd)?;
     let gastado = db::altas::gastar(&mut tx, ajuste_id, "abonado", cliente_id).await.map_err(error_bd)?;
     if !(abonada && gastado) {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     }
     tx.commit().await.map_err(error_bd)?;
-    pagina(&state, ajuste_id, context! { paso => "abonado" })
+    pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "abonado" })
 }
 
 // ── POST /alta/recibo/{venta}/abonar (cliente con sesión) ───────────────────
@@ -198,7 +210,7 @@ pub async fn abonar(
     let abonada = db::altas::abonar_venta(&mut tx, ajuste_id, cliente_id).await.map_err(error_bd)?;
     let gastado = db::altas::gastar(&mut tx, ajuste_id, "abonado", cliente_id).await.map_err(error_bd)?;
     if !(abonada && gastado) {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     }
     tx.commit().await.map_err(error_bd)?;
     Ok(Redirect::to("/").into_response())
@@ -219,7 +231,7 @@ pub async fn solo_abonar(
     Path(ajuste_id): Path<Uuid>,
     Form(form): Form<SoloAbonarForm>,
 ) -> Result<Response, StatusCode> {
-    let Some(alta) = state.altas.ver(form.ticket).filter(|a| a.ajuste_id == ajuste_id) else {
+    let Some(alta) = state.altas.ver(form.ticket).filter(|a| a.origen == Origen::Recibo(ajuste_id)) else {
         return Ok(Redirect::to(&format!("/alta/recibo/{ajuste_id}")).into_response());
     };
     let Quien::Nuevo { telefono } = &alta.quien else {
@@ -231,18 +243,18 @@ pub async fn solo_abonar(
 
     let mut tx = state.pool.begin().await.map_err(error_bd)?;
     if db::altas::cliente_por_telefono(&mut tx, telefono).await.map_err(error_bd)?.is_some() {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     }
     let cliente_id = db::altas::crear_cliente(&mut tx, &alta.nombre, telefono).await.map_err(error_bd)?;
     let abonada = db::altas::abonar_venta(&mut tx, ajuste_id, cliente_id).await.map_err(error_bd)?;
     let gastado = db::altas::gastar(&mut tx, ajuste_id, "abonado", cliente_id).await.map_err(error_bd)?;
     if !(abonada && gastado) {
-        return pagina(&state, ajuste_id, context! { paso => "no_disponible" });
+        return pagina(&state, Origen::Recibo(ajuste_id), context! { paso => "no_disponible" });
     }
     tx.commit().await.map_err(error_bd)?;
     state.altas.tomar(form.ticket);
 
-    pagina(&state, ajuste_id, context! {
+    pagina(&state, Origen::Recibo(ajuste_id), context! {
         paso => "abonado_nuevo",
         nombre => primer_nombre(&alta.nombre),
         cliente_id => cliente_id.to_string(),
@@ -262,7 +274,7 @@ pub async fn registro_inicio(
     Json(body): Json<TicketJson>,
 ) -> Response {
     let Some(alta) = state.altas.ver(body.ticket) else {
-        return error_json(StatusCode::GONE, "Pasó mucho tiempo. Vuelve a abrir el enlace de tu recibo.");
+        return error_json(StatusCode::GONE, "Pasó mucho tiempo. Vuelve a empezar.");
     };
 
     let nombre = format!("{} · Monedero xplaya", alta.nombre);
@@ -299,7 +311,7 @@ pub async fn registro_fin(
         return error_json(StatusCode::BAD_REQUEST, "Acepta los términos del monedero para continuar.");
     }
     let (Some(alta), Some(estado)) = (state.altas.ver(body.ticket), state.registros.tomar(body.ticket)) else {
-        return error_json(StatusCode::GONE, "Pasó mucho tiempo. Vuelve a abrir el enlace de tu recibo.");
+        return error_json(StatusCode::GONE, "Pasó mucho tiempo. Vuelve a empezar.");
     };
 
     let passkey = match state.webauthn.finish_passkey_registration(&body.credencial, &estado) {
@@ -319,17 +331,17 @@ pub async fn registro_fin(
         }
         Ok(None) => error_json(
             StatusCode::CONFLICT,
-            "Este enlace ya se usó. Si necesitas ayuda, pregunta en la tienda.",
+            "Ya no se pudo completar. Si necesitas ayuda, pregunta en la tienda.",
         ),
         Err(e) => {
-            tracing::error!("completar_alta {}: {e}", alta.ajuste_id);
+            tracing::error!("completar_alta {:?}: {e}", alta.origen);
             error_json(StatusCode::INTERNAL_SERVER_ERROR, "Algo falló de nuestro lado. Intenta de nuevo.")
         }
     }
 }
 
 /// `Ok(None)` si el enlace se gastó mientras tanto (o el teléfono se registró): no se
-/// escribe nada.
+/// escribe nada. Desde el kiosko no hay venta que abonar ni enlace que gastar.
 async fn completar_alta(
     state: &AppState,
     alta: &AltaPendiente,
@@ -348,17 +360,25 @@ async fn completar_alta(
                 return Ok(None);
             }
             let id = db::altas::crear_cliente(&mut tx, &alta.nombre, telefono).await?;
-            if !db::altas::abonar_venta(&mut tx, alta.ajuste_id, id).await? {
+            if let Origen::Recibo(ajuste_id) = alta.origen
+                && !db::altas::abonar_venta(&mut tx, ajuste_id, id).await?
+            {
                 return Ok(None);
             }
             id
         }
     };
 
-    if !db::altas::gastar(&mut tx, alta.ajuste_id, "ligado", cliente_id).await? {
-        return Ok(None);
-    }
-    db::celulares::ligar(&mut tx, alta.celular_id, cliente_id, passkey, "recibo", dispositivo).await?;
+    let origen = match alta.origen {
+        Origen::Recibo(ajuste_id) => {
+            if !db::altas::gastar(&mut tx, ajuste_id, "ligado", cliente_id).await? {
+                return Ok(None);
+            }
+            "recibo"
+        }
+        Origen::Kiosko(_) => "kiosko",
+    };
+    db::celulares::ligar(&mut tx, alta.celular_id, cliente_id, passkey, origen, dispositivo).await?;
     let token = db::celulares::crear_sesion(&mut tx, alta.celular_id).await?;
     tx.commit().await?;
     Ok(Some(token))
@@ -367,23 +387,30 @@ async fn completar_alta(
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 /// Guarda el alta pendiente y muestra el paso de crear la passkey.
-fn pagina_acceso(state: &AppState, alta: AltaPendiente) -> Result<Response, StatusCode> {
-    let ajuste_id = alta.ajuste_id;
+pub fn pagina_acceso(state: &AppState, alta: AltaPendiente) -> Result<Response, StatusCode> {
+    let origen = alta.origen;
     let nombre = primer_nombre(&alta.nombre);
     let nuevo = matches!(alta.quien, Quien::Nuevo { .. });
     let ticket = state.altas.guardar(alta);
-    pagina(state, ajuste_id, context! {
+    pagina(state, origen, context! {
         paso => "acceso", ticket => ticket.to_string(), nombre, nuevo,
     })
 }
 
-fn pagina(state: &AppState, ajuste_id: Uuid, ctx: Value) -> Result<Response, StatusCode> {
+/// `accion` es la ruta base de los formularios; `kiosko` cambia los textos.
+pub fn pagina(state: &AppState, origen: Origen, ctx: Value) -> Result<Response, StatusCode> {
+    let (accion, kiosko) = match origen {
+        Origen::Recibo(id) => (format!("/alta/recibo/{id}"), false),
+        Origen::Kiosko(visita) => (format!("/kiosko/alta/{visita}"), true),
+    };
     let tmpl = state.tmpl.get_template("app/alta.html").map_err(|e| {
         tracing::error!("Template app/alta: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { ajuste_id => ajuste_id.to_string(), en_app => true, ..ctx })
+        .render(context! {
+            accion => Value::from_safe_string(accion), kiosko, en_app => true, ..ctx
+        })
         .map_err(|e| {
             tracing::error!("Render app/alta: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
@@ -391,11 +418,11 @@ fn pagina(state: &AppState, ajuste_id: Uuid, ctx: Value) -> Result<Response, Sta
     Ok(Html(html).into_response())
 }
 
-fn primer_nombre(nombre: &str) -> String {
+pub fn primer_nombre(nombre: &str) -> String {
     nombre.split_whitespace().next().unwrap_or("").to_string()
 }
 
-fn error_bd(e: sqlx::Error) -> StatusCode {
+pub fn error_bd(e: sqlx::Error) -> StatusCode {
     tracing::error!("BD alta: {e}");
     StatusCode::INTERNAL_SERVER_ERROR
 }

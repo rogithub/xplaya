@@ -169,6 +169,53 @@ document.addEventListener('alpine:init', () => {
             }
         },
     }));
+
+    // Kiosko, en el celular: espera a que la caja apruebe (ntfy) y entonces sigue solo.
+    Alpine.data('esperarCaja', (espera) => ({
+        estado: 'pendiente',
+
+        init() { this.revisar(); },
+
+        async revisar() {
+            try {
+                const r = await fetch(`/kiosko/espera/${espera}`, { cache: 'no-store' });
+                this.estado = (await r.json()).estado;
+            } catch (e) {
+                // Sin señal un momento: se vuelve a intentar.
+            }
+            if (this.estado === 'aprobada' || this.estado === 'rechazada') {
+                this.$refs.continuar.submit();
+            } else if (this.estado === 'pendiente') {
+                setTimeout(() => this.revisar(), 2000);
+            }
+        },
+    }));
+
+    // Pantalla del kiosko: pide un QR nuevo justo cuando vence el anterior y pasa las
+    // instrucciones una por una.
+    Alpine.data('kioskoPantalla', (pasos) => ({
+        paso: 0,
+
+        init() {
+            this.nuevoQr();
+            setInterval(() => { this.paso = (this.paso + 1) % pasos; }, 6000);
+        },
+
+        async nuevoQr() {
+            let espera = 5000;
+            try {
+                const r = await fetch('/kiosko/qr', { cache: 'no-store' });
+                if (r.ok) {
+                    const { svg, ms } = await r.json();
+                    this.$refs.qr.innerHTML = svg;
+                    espera = ms + 200;
+                }
+            } catch (e) {
+                // Sin red: se reintenta en 5 s.
+            }
+            setTimeout(() => this.nuevoQr(), espera);
+        },
+    }));
 });
 
 if ('serviceWorker' in navigator) {

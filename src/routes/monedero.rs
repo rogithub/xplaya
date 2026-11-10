@@ -207,7 +207,7 @@ pub async fn recibo(
 /// SVG inline de un QR que apunta a `url`. El cliente lo escanea y llega a la
 /// versión en vivo del recibo/cotización en xplaya.com — eso valida que el
 /// papel sea auténtico.
-fn qr_svg(url: &str) -> Option<String> {
+pub fn qr_svg(url: &str) -> Option<String> {
     let code = qrcode::QrCode::new(url.as_bytes()).ok()?;
     Some(
         code.render::<qrcode::render::svg::Color>()

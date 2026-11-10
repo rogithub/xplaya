@@ -26,7 +26,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 
 use crate::{
     db,
-    routes::{alta, alta::error_json, monedero},
+    routes::{alta, alta::error_json, kiosko, monedero},
     AppState,
 };
 
@@ -48,6 +48,17 @@ pub fn router() -> Router<AppState> {
         .route("/alta/recibo/{ajuste_id}/datos", post(alta::datos))
         .route("/alta/recibo/{ajuste_id}/abonar", post(alta::abonar))
         .route("/alta/recibo/{ajuste_id}/solo-abonar", post(alta::solo_abonar))
+        .route("/kiosko", get(kiosko::pantalla))
+        .route("/kiosko/activar", get(kiosko::activar))
+        .route("/kiosko/qr", get(kiosko::qr))
+        .route("/kiosko/k/{codigo}", get(kiosko::escaneo))
+        .route("/kiosko/alta/{visita}", get(kiosko::datos_get))
+        .route("/kiosko/alta/{visita}/datos", post(kiosko::datos))
+        .route("/kiosko/alta/{visita}/solo-abonar", post(kiosko::solo_monedero))
+        .route("/kiosko/espera/{espera}", get(kiosko::espera_estado))
+        .route("/kiosko/espera/{espera}/continuar", post(kiosko::espera_continuar))
+        .route("/kiosko/aprobar/{token}", post(kiosko::aprobar))
+        .route("/kiosko/rechazar/{token}", post(kiosko::rechazar))
         .route("/passkey/registro/inicio", post(alta::registro_inicio))
         .route("/passkey/registro/fin", post(alta::registro_fin))
         .route("/passkey/entrar/inicio", post(entrar_inicio))

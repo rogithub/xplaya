@@ -5,3 +5,4 @@ pub mod monedero;
 pub mod feeds;
 pub mod app;
 pub mod alta;
+pub mod kiosko;
