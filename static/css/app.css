@@ -604,6 +604,14 @@ a.btn-qr { text-decoration: none; }
 }
 .vitrina-unidad { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
 .vitrina-pedir { margin: 0; font-family: var(--font-display); font-size: clamp(1.3rem, 2vw, 1.9rem); }
+.vitrina-nid {
+    display: inline-block;
+    padding: .1em .5em;
+    border-radius: 10px;
+    background: var(--chip);
+    font-weight: 600;
+    letter-spacing: .05em;
+}
 .vitrina-flecha {
     position: absolute;
     top: 50%;

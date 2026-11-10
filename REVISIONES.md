@@ -9,6 +9,7 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 - Vitrina: se quitó el QR de cada producto (abría la tienda de la app, donde quien no tiene
   cuenta no puede terminar el pedido). Ahora dice "Pídelo en caja": los productos están detrás
   del mostrador. `GET /kiosko/vitrina` ya no genera QR (devuelve los productos tal cual).
+- "Pídelo en caja con el número 1967": muestra el NID del producto para buscarlo rápido en el POS.
 
 - `templates/app/kiosko.html` — el cuadro "Nuestro WhatsApp" usa el ícono de WhatsApp (SVG de
   Font Awesome Free 6.5.0, CC BY 4.0, el mismo que usa xplaya.com) en verde WhatsApp, en lugar
