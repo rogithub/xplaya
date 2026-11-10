@@ -1,0 +1,82 @@
+{% extends "app/base.html" %}
+{#
+  Detalle de producto dentro de la app (routes/tienda.rs): fotos, presentaciones y "Agregar
+  al carrito". La lógica (presentación elegida, precio) está en `productoApp` (app.js); los
+  datos le llegan por <script type="application/json">, donde tojson es seguro.
+#}
+{% block title %}{{ producto.nombre }} — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<a href="javascript:history.back()" class="btn-link tienda-volver">← Regresar</a>
+
+<script type="application/json" id="producto-datos">{{ {
+    "id": producto.id | string,
+    "nid": producto.nid,
+    "nombre": producto.nombre,
+    "precio": producto.precio_venta,
+    "unidad": producto.unidad_medida,
+    "presentaciones": producto.presentaciones,
+} | tojson }}</script>
+
+<article class="producto" x-data="productoApp">
+    {% if producto.fotos %}
+    <div x-data="{ principal: 0 }">
+        {% for foto in producto.fotos %}
+        <img src="{{ foto | safe }}" alt="{{ producto.nombre }}" class="producto-foto"
+             x-show="principal === {{ loop.index0 }}" {% if not loop.first %}x-cloak loading="lazy"{% endif %}>
+        {% endfor %}
+        {% if producto.fotos | length > 1 %}
+        <div class="producto-miniaturas">
+            {% for foto in producto.fotos %}
+            <button type="button" @click="principal = {{ loop.index0 }}"
+                    :class="principal === {{ loop.index0 }} && 'activo'" aria-label="Foto {{ loop.index }}">
+                <img src="{{ foto | safe }}" alt="" loading="lazy">
+            </button>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <span class="producto-foto tienda-sin-foto" aria-hidden="true">📦</span>
+    {% endif %}
+
+    <p class="producto-cat">{{ producto.categoria }}</p>
+    <h1 class="producto-nombre">{{ producto.nombre }}</h1>
+    {% if producto.marca or producto.modelo %}
+    <p class="producto-cat">{{ producto.marca or "" }}{% if producto.marca and producto.modelo %} · {% endif %}{{ producto.modelo or "" }}</p>
+    {% endif %}
+
+    {% if producto.componentes %}
+    <ul class="producto-kit">
+        {% for c in producto.componentes %}<li>✓ {{ c.cantidad }} × {{ c.nombre }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if producto.presentaciones %}
+    <div class="producto-pres" role="group" aria-label="Presentación">
+        <button type="button" :class="clave === null && 'activo'" @click="elegir(null)">
+            {{ producto.unidad_medida }} — ${{ producto.precio_venta }}
+        </button>
+        {% for pres in producto.presentaciones %}
+        <button type="button" :class="clave === '{{ pres.id }}' && 'activo'" @click="elegir('{{ pres.id }}')">
+            {{ pres.nombre }} — ${{ pres.precio_venta }}
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <p class="producto-precio" x-text="'$' + precio">${{ producto.precio_venta }}</p>
+    <p class="producto-unidad" x-text="'por ' + unidad">por {{ producto.unidad_medida }}</p>
+
+    <button type="button" class="btn-qr" @click="agregar()" x-text="agregado ? '✓ Agregado' : 'Agregar al carrito'">
+        Agregar al carrito
+    </button>
+    <a href="/carrito" class="btn-link producto-ir" x-show="agregado" x-cloak>Ver mi carrito →</a>
+
+    {% if producto.descripcion %}
+    <p class="producto-desc">{{ producto.descripcion }}</p>
+    {% endif %}
+</article>
+
+{% endblock %}

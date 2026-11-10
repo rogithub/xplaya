@@ -145,6 +145,8 @@ pub async fn render_monedero(
             qr_caja => qr_caja,
             en_app => en_app,
             con_sesion => con_sesion,
+            // Barra de abajo (Monedero · Tienda · Carrito), solo en la app.
+            nav => en_app.then_some("monedero"),
         })
         .map_err(|e| {
             tracing::error!("Render app: {e}");

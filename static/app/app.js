@@ -118,7 +118,7 @@ document.addEventListener('alpine:init', () => {
                         extensions: cred.getClientExtensionResults(),
                     },
                 });
-                location.href = fin.ir;
+                location.href = destino || fin.ir;
             } catch (e) {
                 this.error = mensajeCancelado(e, 'Se canceló. Toca el botón para intentarlo otra vez.');
             } finally {
@@ -128,7 +128,8 @@ document.addEventListener('alpine:init', () => {
     }));
 
     // Portada: entrar con la passkey que tenga el celular para este dominio.
-    Alpine.data('entrarHuella', () => ({
+    // `destino`: a dónde volver al entrar (p. ej. el carrito); sin él, a lo que diga el servidor.
+    Alpine.data('entrarHuella', (destino) => ({
         soportado: passkeysSoportadas,
         ocupado: false,
         error: '',
@@ -160,7 +161,7 @@ document.addEventListener('alpine:init', () => {
                         extensions: cred.getClientExtensionResults(),
                     },
                 });
-                location.href = fin.ir;
+                location.href = destino || fin.ir;
             } catch (e) {
                 this.error = mensajeCancelado(e,
                     'No encontramos tu acceso en este celular. Liga tu celular desde el enlace de un recibo.');
@@ -173,6 +174,66 @@ document.addEventListener('alpine:init', () => {
     // Pantalla del kiosko: menú (monedero, WiFi, WhatsApp), QR del monedero que se pide justo
     // cuando vence el anterior, instrucciones que pasan solas y vuelta al monedero tras un
     // minuto sin que nadie toque la pantalla.
+    // ── Tienda (routes/tienda.rs) ──
+
+    // Detalle de producto: presentación elegida y "Agregar al carrito" (store de cart.js).
+    // Los datos vienen del <script id="producto-datos"> de la página.
+    Alpine.data('productoApp', () => {
+        const p = JSON.parse(document.getElementById('producto-datos').textContent);
+        return {
+            clave: null,
+            precio: p.precio,
+            unidad: p.unidad,
+            agregado: false,
+
+            elegir(clave) {
+                const pres = clave && p.presentaciones.find((x) => x.id === clave);
+                this.clave = pres ? clave : null;
+                this.precio = pres ? pres.precio_venta : p.precio;
+                this.unidad = pres ? pres.nombre : p.unidad;
+                this.agregado = false;
+            },
+
+            agregar() {
+                this.$store.carrito.agregar({
+                    id: p.id,
+                    nid: p.nid,
+                    nombre: p.nombre,
+                    precio: this.precio,
+                    unidad_medida: this.unidad,
+                    presentacion_id: this.clave,
+                });
+                this.agregado = true;
+            },
+        };
+    });
+
+    // Carrito: manda el pedido a nombre del cliente de la sesión.
+    Alpine.data('carritoApp', () => ({
+        enviando: false,
+        error: '',
+        cotizacion: '',
+
+        async enviar() {
+            this.error = '';
+            this.enviando = true;
+            try {
+                const items = this.$store.carrito.items.map((i) => ({
+                    producto_id: i.id,
+                    cantidad: i.cantidad,
+                    presentacion_id: i.presentacion_id || null,
+                }));
+                const r = await postJson('/tienda/pedido', { items });
+                this.$store.carrito.vaciar();
+                this.cotizacion = r.cotizacion;
+            } catch (e) {
+                this.error = e.message;
+            } finally {
+                this.enviando = false;
+            }
+        },
+    }));
+
     Alpine.data('kioskoPantalla', (pasos) => ({
         vista: 'monedero',
         paso: 0,

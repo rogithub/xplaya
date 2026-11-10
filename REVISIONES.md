@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: tienda dentro de la app (2026-11-10)
+
+La app de clientes (app.xplaya.com) suma la tienda: una barra abajo con **Monedero · Tienda ·
+Carrito**. Con el celular ligado (passkey), el pedido no pide nombre ni teléfono: sale a nombre de
+ese cliente, con el teléfono ya comprobado. Sin sesión se puede ver todo, y para mandar el pedido
+se entra con la huella.
+
+- `src/routes/tienda.rs` — `lista` y `detalle` (reusan `db::productos`), `carrito` (con sesión
+  muestra a nombre de quién va) y `crear_pedido` (`POST /tienda/pedido`; 401 sin sesión, errores
+  como `{ "error" }`; responde la URL de la cotización en xplaya.com).
+- `src/db/pedidos.rs` — `crear_para_cliente`: el mismo `insertar_pedido` (`Origen = 1`) sin
+  crear ni buscar cliente.
+- `src/routes/app.rs` — rutas `/tienda`, `/tienda/{nid}`, `/tienda/pedido`, `/carrito`.
+- `src/routes/monedero.rs` — el monedero pasa `nav = "monedero"` cuando se sirve en la app.
+- `templates/app/nav.html` (barra) y `templates/app/tienda/{lista,detalle,carrito}.html`.
+  `app/base.html` incluye la barra cuando la página manda `nav` y carga `cart.js` (el mismo store
+  del sitio, antes de Alpine).
+- `static/app/app.js` (`?v=5`) — `productoApp` (presentación y agregar), `carritoApp` (mandar
+  pedido); `entrarHuella` acepta a dónde regresar (`entrarHuella('/carrito')`).
+- `static/css/app.css` (`?v=7`) — barra, catálogo, producto y carrito.
+- `Cargo.toml` — minijinja con `urlencode` (la búsqueda va en los enlaces de página).
+
+---
+
 ## Kiosko: pestaña "Fotos credencial" (2026-11-10)
 
 QR fijo al kiosko de imagina (`https://imagina.xplaya.com/kiosko`): foto de credencial y fotos

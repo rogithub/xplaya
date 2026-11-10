@@ -6,3 +6,4 @@ pub mod feeds;
 pub mod app;
 pub mod alta;
 pub mod kiosko;
+pub mod tienda;

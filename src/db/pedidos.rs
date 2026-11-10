@@ -45,6 +45,19 @@ pub async fn crear(
     Ok((pedido_uid, cliente_id))
 }
 
+/// Pedido desde la app (`app.xplaya.com`): el cliente ya viene de la sesión del celular
+/// ligado (passkey), así que no se pide nombre ni teléfono ni se crea cliente.
+pub async fn crear_para_cliente(
+    pool: &PgPool,
+    cliente_id: Uuid,
+    items: &[PedidoItemRequest],
+) -> Result<Uuid, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let pedido_uid = insertar_pedido(&mut tx, cliente_id, items, 1).await?;
+    tx.commit().await?;
+    Ok(pedido_uid)
+}
+
 /// INSERT común de pedido + items. `origen`: 0=Tienda, 1=EnLinea (web).
 async fn insertar_pedido(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,

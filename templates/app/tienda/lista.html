@@ -1,0 +1,56 @@
+{% extends "app/base.html" %}
+{#
+  Catálogo dentro de la app (routes/tienda.rs). Las mismas consultas que xplaya.com, con
+  búsqueda por formulario normal (la app no usa HTMX) y páginas anterior/siguiente.
+#}
+{% block title %}Tienda — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<header class="app-top">
+    <h1 class="app-title">Tienda</h1>
+</header>
+
+<form method="get" action="/tienda" class="tienda-buscar" role="search">
+    <input type="search" name="busqueda" value="{{ busqueda }}" placeholder="Buscar productos…"
+           class="campo" aria-label="Buscar productos" enterkeyhint="search">
+    <button type="submit" class="btn-qr">Buscar</button>
+</form>
+
+{% if productos %}
+<ul class="tienda-grid">
+    {% for p in productos %}
+    <li>
+        <a href="/tienda/{{ p.nid }}" class="tienda-card">
+            {% if p.foto_url %}
+            <img src="{{ p.foto_url | safe }}" alt="" loading="lazy" class="tienda-foto">
+            {% else %}
+            <span class="tienda-foto tienda-sin-foto" aria-hidden="true">📦</span>
+            {% endif %}
+            <span class="tienda-nombre">{{ p.nombre }}</span>
+            <span class="tienda-precio">${{ p.precio_venta }}</span>
+            <span class="tienda-unidad">por {{ p.unidad_medida }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if paginacion.total_paginas > 1 %}
+<nav class="tienda-paginas" aria-label="Páginas">
+    {% if paginacion.pagina_actual > 1 %}
+    <a class="btn-link" href="/tienda?pagina={{ paginacion.pagina_actual - 1 }}&busqueda={{ busqueda | urlencode }}">← Anterior</a>
+    {% else %}<span></span>{% endif %}
+    <span>{{ paginacion.pagina_actual }} de {{ paginacion.total_paginas }}</span>
+    {% if paginacion.pagina_actual < paginacion.total_paginas %}
+    <a class="btn-link" href="/tienda?pagina={{ paginacion.pagina_actual + 1 }}&busqueda={{ busqueda | urlencode }}">Siguiente →</a>
+    {% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<p class="tienda-vacio">
+    {% if busqueda %}No encontramos productos para "{{ busqueda }}".{% else %}No hay productos disponibles.{% endif %}
+</p>
+{% endif %}
+
+{% endblock %}

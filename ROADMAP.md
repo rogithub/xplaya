@@ -50,6 +50,10 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ✅ Pestaña "Haz tu pedido" en el kiosko: QR a `xplaya.com/productos` (2026-11-10)
 - ✅ Pestaña "Nuestro WhatsApp" en el kiosko: QR del contacto de la papelería (2026-11-10)
 - ✅ Pestaña "Fotos credencial" en el kiosko: QR a `imagina.xplaya.com/kiosko` (2026-11-10)
+- ✅ Tienda dentro de la app: barra Monedero · Tienda · Carrito; el pedido sale a nombre del
+  cliente de la sesión, sin pedir datos (2026-11-10)
+- ⬜ Decidir si se unen app.xplaya.com y xplaya.com en una sola app (más barato mientras casi
+  nadie tiene la app instalada)
 - ⬜ Notificaciones: abonos y vencimiento
 
 ### Ideas para el kiosko (sin fecha)

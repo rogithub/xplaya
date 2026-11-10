@@ -1,0 +1,66 @@
+{% extends "app/base.html" %}
+{#
+  Carrito dentro de la app (routes/tienda.rs). Con sesión, el pedido va a nombre del
+  cliente del celular ligado: no se piden datos. Sin sesión, primero entra con su huella
+  (y regresa aquí, con el carrito intacto en localStorage). Lógica en `carritoApp` (app.js).
+#}
+{% block title %}Carrito — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<header class="app-top">
+    <h1 class="app-title">Tu carrito</h1>
+</header>
+
+<div x-data="carritoApp">
+
+    <section class="carrito-listo" x-show="cotizacion" x-cloak role="status">
+        <h2>¡Pedido recibido!</h2>
+        <p>Te escribimos por WhatsApp para confirmarlo y decirte cuándo está listo.</p>
+        <a :href="cotizacion" class="btn-qr">Ver mi pedido</a>
+        <a href="/tienda" class="btn-link">Seguir comprando</a>
+    </section>
+
+    <p class="tienda-vacio" x-show="!cotizacion && $store.carrito.items.length === 0" x-cloak>
+        Tu carrito está vacío. <a href="/tienda">Ver la tienda</a>
+    </p>
+
+    <div x-show="!cotizacion && $store.carrito.items.length > 0" x-cloak>
+        <ul class="carrito-lista">
+            <template x-for="item in $store.carrito.items" :key="item._key">
+                <li class="carrito-item">
+                    <div>
+                        <p class="carrito-nombre" x-text="item.nombre"></p>
+                        <p class="carrito-unidad" x-text="'$' + item.precio + ' por ' + item.unidad_medida"></p>
+                    </div>
+                    <div class="carrito-cant">
+                        <button type="button" @click="$store.carrito.cambiarCantidad(item._key, item.cantidad - 1)"
+                                :aria-label="'Uno menos de ' + item.nombre">−</button>
+                        <span x-text="item.cantidad"></span>
+                        <button type="button" @click="$store.carrito.cambiarCantidad(item._key, item.cantidad + 1)"
+                                :aria-label="'Uno más de ' + item.nombre">+</button>
+                    </div>
+                </li>
+            </template>
+        </ul>
+        <p class="carrito-total">Total estimado <strong x-text="'$' + $store.carrito.subtotal"></strong></p>
+
+        {% if con_sesion %}
+        <p class="carrito-quien">Pedido a nombre de <strong>{{ nombre }}</strong>.</p>
+        <button type="button" class="btn-qr" @click="enviar()" :disabled="enviando"
+                x-text="enviando ? 'Mandando…' : 'Mandar pedido'">Mandar pedido</button>
+        {% else %}
+        <div x-data="entrarHuella('/carrito')" class="entrar">
+            <p class="carrito-quien">Entra con tu huella para mandar tu pedido.</p>
+            <button type="button" class="btn-qr" @click="entrar()" :disabled="ocupado"
+                    x-text="ocupado ? 'Esperando tu huella…' : 'Entrar con huella o cara'">Entrar con huella o cara</button>
+            <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+        </div>
+        <p class="inicio-nota">¿Todavía no tienes acceso? Liga tu celular desde el enlace de tu
+            recibo, o pídelo en caja.</p>
+        {% endif %}
+        <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+    </div>
+</div>
+
+{% endblock %}

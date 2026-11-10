@@ -140,6 +140,21 @@ Se envían con Web Push (llaves VAPID). Como los abonos los crea el POS, xplaya 
 al día los saldos que vencen en 7 días. Si más adelante el POS publica eventos en NATS, se puede
 cambiar a escucharlos.
 
+### Tienda dentro de la app
+
+La app tiene una barra abajo: **Monedero · Tienda · Carrito** (`templates/app/nav.html`).
+
+- **Tienda** (`/tienda`, `/tienda/{nid}`): el mismo catálogo y búsqueda de xplaya.com
+  (`db::productos`), con el diseño de la app. Búsqueda con formulario normal y páginas
+  anterior/siguiente (la app no usa HTMX).
+- **Carrito** (`/carrito`): el store de `static/js/cart.js`, en el `localStorage` de
+  app.xplaya.com (aparte del de xplaya.com).
+- **Pedido** (`POST /tienda/pedido`): con la sesión del celular ligado ya se sabe quién es, así
+  que **no pide nombre ni teléfono**: entra a nombre de ese cliente (`Origen = 1`, como los de la
+  web) y responde el enlace de su cotización. Sin sesión se puede ver todo; para mandar, "Entrar
+  con huella" y regresa al carrito.
+- Más adelante: unir app.xplaya.com y xplaya.com en una sola app (pendiente de decidir).
+
 ### Términos y privacidad
 
 Se usan los mismos términos del programa que ya están en xplaya.com (incluyen privacidad conforme a
