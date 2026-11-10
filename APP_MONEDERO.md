@@ -51,7 +51,8 @@ celular del cliente, nunca en el kiosko.
 
 Una Raspberry con pantalla Elo, del lado de los clientes, que pasa slides con instrucciones muy
 sencillas y muestra un **QR que cambia cada 30 segundos**. Escanearlo prueba que la persona está
-frente a la pantalla.
+frente a la pantalla. Cada enlace vale unos **3 minutos** (para quien copia el enlace y lo pega en
+el navegador); lo que de verdad comprueba el teléfono es el código por WhatsApp.
 
 - El cliente lo escanea con su celular y captura **nombre y teléfono**.
 - En todas las pantallas del POS aparece un aviso con su nombre, su teléfono y un **código de 4

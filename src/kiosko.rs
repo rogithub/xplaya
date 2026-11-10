@@ -9,8 +9,14 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 
-/// Segundos que dura cada QR.
+/// Segundos que dura cada QR en la pantalla.
 pub const SEGUNDOS_QR: u64 = 30;
+
+/// Ventanas en las que vale un código: la suya y las 5 siguientes, o sea unos 3 minutos. La
+/// pantalla lo cambia cada 30 s, pero quien copia el enlace y lo pega en el navegador necesita
+/// más tiempo. Lo que de verdad comprueba al cliente es el código de 4 dígitos por WhatsApp;
+/// esto solo evita que sirva una foto vieja del QR.
+pub const VENTANAS_VALIDAS: u64 = 6;
 
 /// Ventana de tiempo actual y milisegundos que le faltan para cambiar.
 pub fn ventana_actual() -> (u64, u64) {
@@ -30,15 +36,15 @@ pub fn codigo(token: &str, ventana: u64) -> String {
     bytes.iter().take(6).map(|b| format!("{b:02x}")).collect()
 }
 
-/// El código vale en su ventana y en la anterior: quien lo escanea al final de los 30 s
-/// alcanza a abrirlo.
+/// El código vale en su ventana y en las siguientes hasta completar `VENTANAS_VALIDAS`
+/// (unos 3 minutos).
 pub fn codigo_valido(token: &str, recibido: &str, ventana: u64) -> bool {
     if token.is_empty() {
         return false;
     }
-    [ventana, ventana.saturating_sub(1)]
-        .iter()
-        .any(|v| codigo(token, *v) == recibido)
+    (0..VENTANAS_VALIDAS)
+        .filter_map(|atras| ventana.checked_sub(atras))
+        .any(|v| codigo(token, v) == recibido)
 }
 
 /// Texto del QR de WiFi (formato que leen las cámaras de iPhone y Android). `\ ; , : "` se
@@ -71,11 +77,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn codigo_vale_en_su_ventana_y_la_anterior() {
+    fn codigo_vale_unos_3_minutos() {
         let c = codigo("secreto", 100);
         assert!(codigo_valido("secreto", &c, 100));
         assert!(codigo_valido("secreto", &c, 101));
-        assert!(!codigo_valido("secreto", &c, 102));
+        assert!(codigo_valido("secreto", &c, 105)); // 5 ventanas después: 2.5 a 3 min
+        assert!(!codigo_valido("secreto", &c, 106));
         assert!(!codigo_valido("secreto", &c, 99));
     }
 

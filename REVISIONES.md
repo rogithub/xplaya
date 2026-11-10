@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: el enlace del QR vale 3 minutos (2026-11-10)
+
+La pantalla sigue cambiando el QR cada 30 s, pero cada enlace valía 30 a 60 s: copiándolo y
+pegándolo en el navegador no alcanzaba. Ahora vale su ventana y las 5 siguientes (unos 3 min).
+Lo que comprueba el teléfono es el código de 4 dígitos por WhatsApp; el QR solo evita que sirva
+una foto vieja.
+
+- `src/kiosko.rs` — `VENTANAS_VALIDAS = 6`; `codigo_valido` las recorre. Prueba actualizada.
+- `APP_MONEDERO.md` — anotado.
+
+---
+
 ## App: íconos del manifest con versión (2026-11-10)
 
 Al instalar la app salía el ícono de una app vieja (un lápiz amarillo), aunque el servidor entrega
