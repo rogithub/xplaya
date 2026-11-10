@@ -70,6 +70,16 @@ frente a la pantalla.
   en modo kiosko. Se identifica con un token de dispositivo, para que nadie genere QR válidos desde
   fuera. El kiosko retirado en 2026-09 (`git checkout kiosko-v1`) ya resolvía ese token con una
   cookie HttpOnly.
+- **Menú** abajo de la pantalla, con botones grandes (es táctil):
+  - **Monedero**: lo de arriba.
+  - **WiFi gratis**: QR de la red para clientes, con nombre y contraseña (`KIOSKO_WIFI_*`).
+  - **Te agregamos a WhatsApp**: para quien no sabe agregar un contacto. Escribe su teléfono con
+    un teclado de números en la pantalla (sin usar su celular). En el POS aparece un aviso con el
+    botón para escribirle; cuando contesta (eso comprueba que el teléfono es suyo), la caja escribe
+    su nombre y crea el cliente. Queda sin "aceptó el programa": no aceptó los términos. Si el
+    teléfono ya era de un cliente, no se crea otro. Es la misma tabla `KioskoSolicitudes`, con
+    `Tipo = 'whatsapp'`: las dos solicitudes comprueban el teléfono.
+  - Sin tocar nada en un minuto, vuelve al monedero.
 - Entre las slides de instrucciones puede mostrar promociones de la semana.
 
 #### Enlace en el recibo
@@ -144,7 +154,7 @@ ligado, el kiosko y las notificaciones.
 | Tabla de celulares ligados (passkey, secreto del QR, suscripción push, fechas) | BD compartida | Una fila activa por cliente |
 | Fecha de aceptación de términos | `Clientes` | El "quiero participar" |
 | Tokens de alta (recibo, 24 h, un solo uso) | BD compartida | Parecida a `ShortUrls` |
-| Solicitudes del kiosko (`KioskoSolicitudes`) | BD compartida | Nombre, teléfono, código de 4 dígitos, intentos y estado |
+| Solicitudes del kiosko (`KioskoSolicitudes`) | BD compartida | Tipo (`monedero` o `whatsapp`), nombre, teléfono, código, intentos, estado y el cliente que quedó |
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |
 | Aviso del kiosko con el código | POS | Aviso flotante en todas las pantallas, botón a WhatsApp |

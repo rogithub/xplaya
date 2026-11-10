@@ -442,33 +442,41 @@ a.btn-qr { text-decoration: none; }
 .solo-abonar { margin-top: 18px; text-align: center; font-size: .9rem; }
 .form-salir { display: inline; margin: 0; }
 
-/* ── Kiosko de la tienda (templates/app/kiosko.html): pantalla horizontal completa ── */
+/* ── Kiosko de la tienda (templates/app/kiosko.html): pantalla táctil horizontal completa ── */
 .kiosko {
     position: fixed;
     inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--ink);
+    overflow: hidden;
+    user-select: none;
+}
+.kiosko-vista {
+    flex: 1;
+    min-height: 0;
     display: grid;
     grid-template-columns: 1.3fr 1fr;
     gap: 4vw;
     align-items: center;
-    padding: 5vh 5vw;
-    background: var(--bg);
-    color: var(--ink);
-    overflow: hidden;
+    padding: 3vh 5vw 1vh;
 }
-.kiosko-logo { width: clamp(80px, 10vw, 140px); height: auto; }
+.kiosko-gracias { grid-template-columns: 1fr; text-align: center; }
+.kiosko-logo { width: clamp(56px, 7vw, 100px); height: auto; }
 .kiosko-titulo {
     font-family: var(--font-display);
     font-size: clamp(2rem, 4vw, 3.4rem);
     line-height: 1.1;
     margin: 1.5vh 0 1vh;
 }
-.kiosko-sub { font-size: clamp(1rem, 1.6vw, 1.4rem); color: var(--muted); margin: 0 0 3vh; }
-.kiosko-pasos { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.6vh; }
+.kiosko-sub { font-size: clamp(1.1rem, 1.8vw, 1.6rem); color: var(--muted); margin: 0 0 3vh; }
+.kiosko-pasos { list-style: none; padding: 0; margin: 0; display: grid; gap: 1vh; }
 .kiosko-pasos li {
     display: flex;
     gap: 1rem;
     align-items: center;
-    padding: 1.4vh 1.2vw;
+    padding: 1.2vh 1.2vw;
     border-radius: 16px;
     font-size: clamp(1rem, 1.5vw, 1.35rem);
     color: var(--muted);
@@ -493,9 +501,67 @@ a.btn-qr { text-decoration: none; }
     background: #fff;
     padding: 2vw;
     border-radius: 24px;
-    width: min(36vw, 70vh);
+    width: min(34vw, 60vh);
     aspect-ratio: 1;
     box-shadow: 0 8px 30px rgb(0 0 0 / .12);
 }
 .kiosko-qr svg { width: 100%; height: 100%; display: block; }
 .kiosko-qr-txt { font-family: var(--font-display); font-size: clamp(1.2rem, 2vw, 1.8rem); margin: 0; }
+
+.kiosko-wifi {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1vh 1.5vw;
+    font-size: clamp(1.3rem, 2.4vw, 2.2rem);
+    margin: 0;
+}
+.kiosko-wifi dt { color: var(--muted); }
+.kiosko-wifi dd { margin: 0; font-weight: 600; font-family: ui-monospace, monospace; }
+
+/* Teclado de números en pantalla: botones grandes para dedos. */
+.kiosko-teclado-lado { display: grid; gap: 2vh; }
+.kiosko-tel {
+    font-family: ui-monospace, monospace;
+    font-size: clamp(1.6rem, 3.2vw, 2.8rem);
+    text-align: center;
+    padding: 1.5vh 1vw;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 3px solid var(--line);
+    color: var(--muted);
+}
+.kiosko-tel.completo { border-color: var(--accent); color: var(--ink); }
+.kiosko-teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4vh 1vw; }
+.kiosko-teclado button {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    padding: 1.6vh 0;
+    border: 0;
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 3px 10px rgb(0 0 0 / .08);
+}
+.kiosko-teclado button:active { transform: scale(.96); }
+.kiosko-teclado .borrar { background: var(--chip); }
+.kiosko-teclado .enviar { background: var(--accent); color: var(--accent-ink); font-size: clamp(1.1rem, 2vw, 1.7rem); }
+.kiosko-teclado .enviar:disabled { opacity: .35; }
+.kiosko-error { color: var(--warn); font-size: 1.2rem; margin: 0; text-align: center; }
+
+.kiosko-menu {
+    display: flex;
+    gap: 1.5vw;
+    padding: 1.5vh 5vw 3vh;
+}
+.kiosko-menu button {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 2vw, 1.7rem);
+    padding: 2vh 1vw;
+    border: 0;
+    border-radius: 18px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 4px 14px rgb(0 0 0 / .08);
+}
+.kiosko-menu button.activo { background: var(--accent); color: var(--accent-ink); }

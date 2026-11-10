@@ -71,10 +71,20 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
     if !es_kiosko(&state, &headers) {
         return Ok((StatusCode::FORBIDDEN, "Este kiosko no está activado.").into_response());
     }
+    let cfg = &state.config;
+    let wifi_qr = (!cfg.kiosko_wifi_ssid.is_empty())
+        .then(|| qr_svg(&kiosko::texto_qr_wifi(&cfg.kiosko_wifi_ssid, &cfg.kiosko_wifi_password)))
+        .flatten()
+        .map(minijinja::Value::from_safe_string);
     let html = state
         .tmpl
         .get_template("app/kiosko.html")
-        .and_then(|t| t.render(context! { en_app => true }))
+        .and_then(|t| t.render(context! {
+            en_app => true,
+            wifi_qr,
+            wifi_ssid => &cfg.kiosko_wifi_ssid,
+            wifi_password => &cfg.kiosko_wifi_password,
+        }))
         .map_err(|e| {
             tracing::error!("Render app/kiosko: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
@@ -93,6 +103,33 @@ pub async fn qr(State(state): State<AppState>, headers: HeaderMap) -> Response {
     match qr_svg(&url) {
         Some(svg) => Json(serde_json::json!({ "svg": svg, "ms": ms })).into_response(),
         None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct WhatsAppJson {
+    pub telefono: String,
+}
+
+/// Desde la pantalla: "quiero que me agreguen a WhatsApp". El POS lo muestra con el botón
+/// para escribirle (solicitud de tipo `whatsapp`).
+pub async fn whatsapp(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<WhatsAppJson>,
+) -> Response {
+    if !es_kiosko(&state, &headers) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    let Some(tel) = normalizar_telefono(&body.telefono) else {
+        return alta::error_json(StatusCode::BAD_REQUEST, "Escribe tu teléfono a 10 dígitos.");
+    };
+    match db::kiosko::crear_whatsapp(&state.pool, &tel).await {
+        Ok(()) => Json(serde_json::json!({ "ok": true })).into_response(),
+        Err(e) => {
+            tracing::error!("kiosko whatsapp: {e}");
+            alta::error_json(StatusCode::INTERNAL_SERVER_ERROR, "Algo falló. Pide ayuda en la caja.")
+        }
     }
 }
 

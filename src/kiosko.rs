@@ -41,6 +41,24 @@ pub fn codigo_valido(token: &str, recibido: &str, ventana: u64) -> bool {
         .any(|v| codigo(token, *v) == recibido)
 }
 
+/// Texto del QR de WiFi (formato que leen las cámaras de iPhone y Android). `\ ; , : "` se
+/// escapan con `\`.
+pub fn texto_qr_wifi(ssid: &str, password: &str) -> String {
+    let escapar = |s: &str| {
+        s.chars()
+            .flat_map(|c| match c {
+                '\\' | ';' | ',' | ':' | '"' => vec!['\\', c],
+                _ => vec![c],
+            })
+            .collect::<String>()
+    };
+    if password.is_empty() {
+        format!("WIFI:T:nopass;S:{};;", escapar(ssid))
+    } else {
+        format!("WIFI:T:WPA;S:{};P:{};;", escapar(ssid), escapar(password))
+    }
+}
+
 /// "****1234": lo que se muestra del teléfono en el celular, mientras espera el código.
 pub fn mascara_telefono(telefono: &str) -> String {
     let digitos: Vec<char> = telefono.chars().filter(|c| c.is_ascii_digit()).collect();
@@ -71,6 +89,13 @@ mod tests {
     #[test]
     fn sin_token_nada_vale() {
         assert!(!codigo_valido("", &codigo("", 100), 100));
+    }
+
+    #[test]
+    fn qr_wifi_escapa_lo_especial() {
+        assert_eq!(texto_qr_wifi("mi-red.com", "clave1!"), "WIFI:T:WPA;S:mi-red.com;P:clave1!;;");
+        assert_eq!(texto_qr_wifi("a;b", r#"c:"d"#), r#"WIFI:T:WPA;S:a\;b;P:c\:\"d;;"#);
+        assert_eq!(texto_qr_wifi("abierta", ""), "WIFI:T:nopass;S:abierta;;");
     }
 
     #[test]

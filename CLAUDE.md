@@ -238,6 +238,7 @@ Calcular pagos solo desde `Ajustes`; datos de líneas desde `AjustesProductos` e
 | `APP_URL` | No | `https://app.xplaya.com` | URL de la app de clientes (PWA del monedero). Las peticiones con ese `Host` van a `routes/app.rs`; el resto, al sitio. En desarrollo: `http://app.localhost:3000` |
 | `PASSKEY_RP_ID` | No | `xplaya.com` | Dominio de las passkeys de la app (RP ID de WebAuthn). En desarrollo: `app.localhost` |
 | `KIOSKO_TOKEN` | No | — | Token del kiosko de la tienda (`app.xplaya.com/kiosko`): se activa una vez con `/kiosko/activar?t=TOKEN` y firma los QR de 30 s. Vacío: kiosko apagado. Va en SealedSecret |
+| `KIOSKO_WIFI_SSID` / `KIOSKO_WIFI_PASSWORD` | No | — | Red WiFi para clientes que el menú del kiosko muestra con su QR. Sin SSID, el botón de WiFi no aparece |
 | `CONTENT_BASE_URL` | No | `https://cntnt.xplaya.com` | Base URL de imágenes en MinIO. Sin cliente MinIO — solo construcción de URL: `{CONTENT_BASE_URL}/papeleria-fotos-productos/{filename}` |
 
 Si `CONTENT_BASE_URL` no está definida, las imágenes no se muestran — comportamiento aceptable en desarrollo local.  

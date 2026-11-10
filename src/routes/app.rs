@@ -51,6 +51,7 @@ pub fn router() -> Router<AppState> {
         .route("/kiosko", get(kiosko::pantalla))
         .route("/kiosko/activar", get(kiosko::activar))
         .route("/kiosko/qr", get(kiosko::qr))
+        .route("/kiosko/whatsapp", post(kiosko::whatsapp))
         .route("/kiosko/k/{codigo}", get(kiosko::escaneo))
         .route("/kiosko/s/{id}", get(kiosko::pagina))
         .route("/kiosko/s/{id}/datos", post(kiosko::datos))

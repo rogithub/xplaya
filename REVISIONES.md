@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: menú con WiFi y "te agregamos a WhatsApp" (2026-11-10)
+
+La pantalla del kiosko tiene un menú abajo (es táctil): **Monedero** (lo de antes), **WiFi gratis**
+y **Te agregamos a WhatsApp**. Requiere el bloque 2026-11-10 (b) del POS (rama
+`feature/kiosko-menu`): `KioskoSolicitudes` suma `Tipo` (`monedero` o `whatsapp`), porque las dos
+solicitudes comprueban el teléfono. La rama también trae su aviso.
+
+- `templates/app/kiosko.html` — tres vistas con `x-show` y la barra de menú. La de WhatsApp tiene
+  un teclado de números en pantalla: en Chromium en modo kiosko no hay teclado del sistema.
+- `static/app/app.js` — `kioskoPantalla` lleva la vista, el teléfono que se teclea y la vuelta al
+  monedero tras un minuto sin tocar. Versiones: `app.css?v=5`, `app.js?v=4`.
+- `src/kiosko.rs` — `texto_qr_wifi()` arma el QR de WiFi (`WIFI:T:WPA;S:…;P:…;;`, escapando
+  `\ ; , : "`), con prueba.
+- `src/routes/kiosko.rs` — `pantalla` manda el QR de WiFi si hay `KIOSKO_WIFI_SSID`;
+  `POST /kiosko/whatsapp` (exige la cookie del kiosko) crea una solicitud de tipo `whatsapp`
+  (`db/kiosko.rs`; las del monedero filtran `tipo = 'monedero'`). El cliente lo crea el POS cuando
+  la persona contesta el WhatsApp.
+
+---
+
 ## App de clientes, paso 5: kiosko en la tienda (2026-11-10)
 
 `app.xplaya.com/kiosko` es una pantalla para la tienda (Chromium en modo kiosko) con instrucciones y

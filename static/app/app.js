@@ -170,14 +170,53 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // Pantalla del kiosko: pide un QR nuevo justo cuando vence el anterior y pasa las
-    // instrucciones una por una.
+    // Pantalla del kiosko: menú (monedero, WiFi, WhatsApp), QR del monedero que se pide justo
+    // cuando vence el anterior, instrucciones que pasan solas y vuelta al monedero tras un
+    // minuto sin que nadie toque la pantalla.
     Alpine.data('kioskoPantalla', (pasos) => ({
+        vista: 'monedero',
         paso: 0,
+        telefono: '',
+        enviando: false,
+        error: '',
+        ultimoToque: Date.now(),
 
         init() {
             this.nuevoQr();
             setInterval(() => { this.paso = (this.paso + 1) % pasos; }, 6000);
+            setInterval(() => {
+                if (this.vista !== 'monedero' && Date.now() - this.ultimoToque > 60000) this.ir('monedero');
+            }, 5000);
+        },
+
+        actividad() { this.ultimoToque = Date.now(); },
+
+        ir(vista) {
+            this.vista = vista;
+            this.telefono = '';
+            this.error = '';
+            this.actividad();
+        },
+
+        tecla(d) { if (this.telefono.length < 10) this.telefono += d; this.error = ''; },
+        borrar() { this.telefono = this.telefono.slice(0, -1); },
+        telefonoBonito() {
+            const t = this.telefono;
+            return [t.slice(0, 3), t.slice(3, 6), t.slice(6)].filter((p) => p).join(' ');
+        },
+
+        async pedirWhatsApp() {
+            this.enviando = true;
+            this.error = '';
+            try {
+                await postJson('/kiosko/whatsapp', { telefono: this.telefono });
+                this.ir('gracias');
+                setTimeout(() => { if (this.vista === 'gracias') this.ir('monedero'); }, 12000);
+            } catch (e) {
+                this.error = e.message || 'Algo falló. Pide ayuda en la caja.';
+            } finally {
+                this.enviando = false;
+            }
         },
 
         async nuevoQr() {

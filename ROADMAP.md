@@ -44,7 +44,9 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ✅ Ver y desligar el celular en la ficha del cliente del POS (2026-11-10; el QR que caduca se
   descartó por ahora, ver `APP_MONEDERO.md`)
 - ✅ Kiosko en tienda: QR de 30 s y código por WhatsApp desde el POS (2026-11-10; falta en
-  producción: la tabla `KioskoSolicitudes`, `KIOSKO_TOKEN` en el SealedSecret y la Raspberry)
+  producción: `KIOSKO_TOKEN` en el SealedSecret, `KIOSKO_WIFI_*` y la Raspberry)
+- ✅ Menú del kiosko: WiFi para clientes y "te agregamos a WhatsApp" (2026-11-10; falta el bloque
+  2026-11-10 (b) del POS en producción)
 - ⬜ Notificaciones: abonos y vencimiento
 
 ### Pendiente sin fecha
