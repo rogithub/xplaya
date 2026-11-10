@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: ícono de WhatsApp en "Nuestro WhatsApp" y vitrina sin QR por producto (2026-11-10)
+
+- Vitrina: se quitó el QR de cada producto (abría la tienda de la app, donde quien no tiene
+  cuenta no puede terminar el pedido). Ahora dice "Pídelo en caja": los productos están detrás
+  del mostrador. `GET /kiosko/vitrina` ya no genera QR (devuelve los productos tal cual).
+
+- `templates/app/kiosko.html` — el cuadro "Nuestro WhatsApp" usa el ícono de WhatsApp (SVG de
+  Font Awesome Free 6.5.0, CC BY 4.0, el mismo que usa xplaya.com) en verde WhatsApp, en lugar
+  del emoji 📱. "Te agregamos a WhatsApp" se queda con 💬 para no confundirlos.
+- `static/css/app.css` — `.ico-whatsapp`.
+
+---
+
 ## Kiosko: "Instala nuestra app" en lugar de "Haz tu pedido" (2026-11-10)
 
 Todo lo de la Elo empuja a activar el monedero: el cuadro "Haz tu pedido" (QR a

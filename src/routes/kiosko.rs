@@ -116,26 +116,14 @@ pub async fn qr(State(state): State<AppState>, headers: HeaderMap) -> Response {
     }
 }
 
-/// Productos al azar para la vitrina de la pantalla, cada uno con el QR a su página en la app
-/// (desde ahí se pide). La pantalla pide otra tanda cada pocos minutos.
+/// Productos al azar para la vitrina de la pantalla (foto, nombre y precio; se piden en caja).
+/// La pantalla pide otra tanda cada pocos minutos.
 pub async fn vitrina(State(state): State<AppState>, headers: HeaderMap) -> Response {
     if !es_kiosko(&state, &headers) {
         return StatusCode::FORBIDDEN.into_response();
     }
     match db::productos::vitrina(&state.pool, &state.config.content_base_url, 24).await {
-        Ok(productos) => {
-            let lista: Vec<serde_json::Value> = productos
-                .into_iter()
-                .map(|p| {
-                    let qr = qr_svg(&format!("{}/tienda/{}", state.config.app_url, p.nid));
-                    serde_json::json!({
-                        "nombre": p.nombre, "precio": p.precio, "unidad": p.unidad,
-                        "foto": p.foto, "qr": qr,
-                    })
-                })
-                .collect();
-            Json(lista).into_response()
-        }
+        Ok(productos) => Json(productos).into_response(),
         Err(e) => {
             tracing::error!("Vitrina del kiosko: {e}");
             StatusCode::INTERNAL_SERVER_ERROR.into_response()

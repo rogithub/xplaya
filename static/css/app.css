@@ -603,10 +603,7 @@ a.btn-qr { text-decoration: none; }
     color: var(--accent);
 }
 .vitrina-unidad { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
-.vitrina-pedir { display: flex; align-items: center; gap: 1.5vw; }
-.vitrina-pedir p { margin: 0; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
-.vitrina-qr { flex: none; width: min(11vw, 22vh); padding: .8vw; border-radius: 14px; background: #fff; }
-.vitrina-qr svg { width: 100%; height: 100%; display: block; }
+.vitrina-pedir { margin: 0; font-family: var(--font-display); font-size: clamp(1.3rem, 2vw, 1.9rem); }
 .vitrina-flecha {
     position: absolute;
     top: 50%;
@@ -655,6 +652,8 @@ a.btn-qr { text-decoration: none; }
     box-shadow: 0 4px 14px rgb(0 0 0 / .08);
 }
 .kiosko-cuadros button span { font-size: clamp(2rem, 3.4vw, 3.2rem); }
+.kiosko-cuadros .ico-whatsapp { color: #25D366; line-height: 1; }
+.kiosko-cuadros .ico-whatsapp svg { width: 1.15em; height: 1.15em; display: block; margin: 0 auto; }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
 /* Las demás vistas, en pantalla completa con "← Inicio" arriba a la izquierda. */
 .kiosko-vista { padding-top: 10vh; }
