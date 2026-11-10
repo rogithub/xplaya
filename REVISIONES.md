@@ -7,28 +7,31 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 ## App de clientes, paso 5: kiosko en la tienda (2026-11-10)
 
 `app.xplaya.com/kiosko` es una pantalla para la tienda (Chromium en modo kiosko) con instrucciones y
-un QR que cambia cada 30 s. El cliente lo escanea y liga su celular ahí mismo.
+un QR que cambia cada 30 s. El cliente lo escanea, escribe nombre y teléfono, la caja le manda por
+WhatsApp el código de 4 dígitos que aparece en el POS, y al escribirlo liga su celular. Requiere la
+tabla `KioskoSolicitudes` del POS (rama `feature/kiosko-codigo-whatsapp`), que también trae el aviso
+flotante.
 
 - `src/kiosko.rs` (nuevo, lógica pura con pruebas) — el código del QR es un HMAC-SHA256 del número
   de ventana de 30 s, con `KIOSKO_TOKEN` como llave. El servidor no guarda nada: recalcula y compara
-  (vale la ventana actual y la anterior). `mascara_telefono()` para el aviso a la caja.
+  (vale la ventana actual y la anterior).
+- `src/db/kiosko.rs` (nuevo) — crear la solicitud con un código al azar, revisarlo (5 intentos, 15
+  minutos) y cerrarla con el cliente que quedó.
 - `src/routes/kiosko.rs` (nuevo):
   - `/kiosko/activar?t=` guarda el token en una cookie HttpOnly (`Path=/kiosko`); `/kiosko` y
     `/kiosko/qr` la exigen. Mismo esquema que el kiosko retirado (`git checkout kiosko-v1`).
-  - El QR abre `/kiosko/k/{código}` → una **visita** de 15 min → nombre y teléfono. La visita se
-    gasta al mandar los datos.
-  - **Teléfono nuevo**: la misma alta pendiente y passkey que el recibo; crea el cliente y liga el
-    celular con origen `kiosko`.
-  - **Teléfono que ya existe**: publica en ntfy (tema `papeleria-altas`) con botones Aprobar /
-    Rechazar, que hacen POST a `/kiosko/aprobar|rechazar/{token}` (un solo uso). El celular consulta
-    `/kiosko/espera/{id}` cada 2 s y, al aprobarse, sigue solo a crear la passkey. El celular nunca
-    ve el nombre registrado; el aviso a la caja sí, junto con lo que escribió la persona.
-  - Sin `NTFY_TOKEN` el aviso solo va al log, con los enlaces, para probar en desarrollo.
-- `src/routes/alta.rs` — `AltaPendiente` lleva `Origen::Recibo(venta)` u `Origen::Kiosko(visita)`;
-  `completar_alta()` solo abona y gasta el enlace cuando viene de un recibo.
+  - El QR abre `/kiosko/k/{código}` → una **visita** en memoria de 15 min → `/kiosko/s/{visita}`
+    pide nombre y teléfono → se crea la solicitud y la página pasa a `/kiosko/s/{solicitud}`, que
+    pide el código.
+  - Con el código bien: si el teléfono ya existe, se liga a ese cliente; si no, el cliente se crea
+    al terminar la passkey (nunca antes, para no dejar clientes de teléfonos ajenos). Antes del
+    código el celular no ve el nombre registrado.
+- `src/routes/alta.rs` — `AltaPendiente` lleva `Origen::Recibo(venta)` u `Origen::Kiosko(id)`;
+  `completar_alta()` abona y gasta el enlace si viene de un recibo, o cierra la solicitud si viene
+  del kiosko.
 - `templates/app/alta.html` — los formularios usan `accion` (ruta base) y los textos cambian con
-  `kiosko`; pasos nuevos `espera` y `rechazado`. `templates/app/kiosko.html` (nuevo) y estilos
-  `.kiosko*` en `app.css`. `app.js`: componentes `esperarCaja` y `kioskoPantalla`.
+  `kiosko`; paso nuevo `codigo`. `templates/app/kiosko.html` (nuevo) y estilos `.kiosko*` en
+  `app.css`; `kioskoPantalla` en `app.js` pide el QR nuevo justo cuando vence el anterior.
 - Versiones: `app.css?v=4`, `app.js?v=3`.
 
 ---

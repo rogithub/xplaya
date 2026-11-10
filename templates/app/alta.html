@@ -9,8 +9,7 @@
     abonar         cliente con sesión y venta sin cliente: abonarla a su monedero
     abonado        el teléfono ya tenía monedero: se abonó la compra, sin ligar el celular
     abonado_nuevo  monedero nuevo sin passkey (su celular no pudo crearla)
-    espera         kiosko, teléfono que ya tiene monedero: la caja confirma que es él
-    rechazado      kiosko: la caja dijo que no
+    codigo         kiosko: el código de 4 dígitos que la caja le mandó por WhatsApp
     no_disponible  enlace vencido o ya usado (en el kiosko: QR vencido)
     bloqueado      demasiados intentos de los 4 dígitos
 #}
@@ -40,8 +39,8 @@
     <h1 class="app-title">Tu monedero xplaya</h1>
     {% if kiosko %}
     <p class="inicio-txt">
-        Es gratis: cada compra te devuelve saldo para la siguiente. Escribe tus datos; si ya
-        tienes monedero, la caja confirmará que eres tú.
+        Es gratis: cada compra te devuelve saldo para la siguiente. Escribe tus datos y la caja
+        te mandará un <strong>código por WhatsApp</strong> para comprobar que el teléfono es tuyo.
     </p>
     {% else %}
     <p class="inicio-txt">
@@ -115,30 +114,26 @@
     <p class="inicio-txt">Ya tienes monedero{% if not kiosko %} y esta compra está abonada{% endif %}.</p>
     <a class="btn-qr" href="/monedero/{{ cliente_id }}">Ver mi monedero</a>
 
-    {% elif paso == "espera" %}
-    <div x-data="esperarCaja('{{ espera }}')">
-        <h1 class="app-title">Esperando a la caja…</h1>
-        <p class="inicio-txt" x-show="estado === 'pendiente'">
-            Ese teléfono ya tiene monedero. Avisamos a la caja para que confirme que eres tú;
-            no cierres esta página.
-        </p>
-        <p class="alerta" role="status" x-show="estado === 'vencida'" x-cloak>
-            Pasó mucho tiempo. Vuelve a escanear el código de la pantalla.
-        </p>
-        <form method="post" action="/kiosko/espera/{{ espera }}/continuar" x-ref="continuar"></form>
-    </div>
-
-    {% elif paso == "rechazado" %}
-    <h1 class="app-title">No se pudo confirmar</h1>
+    {% elif paso == "codigo" %}
+    <h1 class="app-title">Revisa tu WhatsApp</h1>
     <p class="inicio-txt">
-        La caja no confirmó que ese teléfono sea tuyo. Si es un error, pide ayuda en la caja.
+        En un momento la caja te manda un <strong>código de 4 dígitos</strong> por WhatsApp al
+        {{ telefono }}. Escríbelo aquí.
     </p>
+    {% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="{{ accion }}/codigo" class="inicio-form">
+        <label for="codigo" class="campo-label">Código</label>
+        <input id="codigo" name="codigo" type="text" inputmode="numeric" pattern="[0-9]{4}"
+               maxlength="4" autocomplete="one-time-code" required class="campo campo-digitos" placeholder="••••">
+        <button type="submit" class="btn-qr">Continuar</button>
+    </form>
 
     {% elif paso == "bloqueado" %}
     <h1 class="app-title">Enlace bloqueado</h1>
     <p class="inicio-txt">
-        Hubo demasiados intentos con dígitos equivocados. Por seguridad, este enlace ya no
-        sirve. Pide ayuda en la tienda en tu próxima visita.
+        Hubo demasiados intentos con {% if kiosko %}códigos{% else %}dígitos{% endif %} equivocados.
+        Por seguridad, este enlace ya no sirve.
+        {% if kiosko %}Pide ayuda en la caja.{% else %}Pide ayuda en la tienda en tu próxima visita.{% endif %}
     </p>
 
     {% else %}

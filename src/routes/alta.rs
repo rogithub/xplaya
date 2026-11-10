@@ -49,7 +49,7 @@ pub struct AltaPendiente {
 pub enum Origen {
     /// Enlace del recibo de esta venta.
     Recibo(Uuid),
-    /// Kiosko de la tienda; el id es la visita (el QR que escaneó).
+    /// Kiosko de la tienda; el id es la visita del QR y después la solicitud.
     Kiosko(Uuid),
 }
 
@@ -341,7 +341,7 @@ pub async fn registro_fin(
 }
 
 /// `Ok(None)` si el enlace se gastó mientras tanto (o el teléfono se registró): no se
-/// escribe nada. Desde el kiosko no hay venta que abonar ni enlace que gastar.
+/// escribe nada. Desde el kiosko no hay venta que abonar: se cierra la solicitud.
 async fn completar_alta(
     state: &AppState,
     alta: &AltaPendiente,
@@ -376,7 +376,12 @@ async fn completar_alta(
             }
             "recibo"
         }
-        Origen::Kiosko(_) => "kiosko",
+        Origen::Kiosko(solicitud) => {
+            if !db::kiosko::completar(&mut tx, solicitud, cliente_id).await? {
+                return Ok(None);
+            }
+            "kiosko"
+        }
     };
     db::celulares::ligar(&mut tx, alta.celular_id, cliente_id, passkey, origen, dispositivo).await?;
     let token = db::celulares::crear_sesion(&mut tx, alta.celular_id).await?;
@@ -401,7 +406,7 @@ pub fn pagina_acceso(state: &AppState, alta: AltaPendiente) -> Result<Response, 
 pub fn pagina(state: &AppState, origen: Origen, ctx: Value) -> Result<Response, StatusCode> {
     let (accion, kiosko) = match origen {
         Origen::Recibo(id) => (format!("/alta/recibo/{id}"), false),
-        Origen::Kiosko(visita) => (format!("/kiosko/alta/{visita}"), true),
+        Origen::Kiosko(id) => (format!("/kiosko/s/{id}"), true),
     };
     let tmpl = state.tmpl.get_template("app/alta.html").map_err(|e| {
         tracing::error!("Template app/alta: {e}");

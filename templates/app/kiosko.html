@@ -8,8 +8,8 @@
 {% block content %}
 {% set pasos = [
     ("Abre la cámara de tu celular", "y apúntala al código de la derecha."),
-    ("Escribe tu nombre y tu teléfono", "Si ya tienes monedero, la caja confirma que eres tú."),
-    ("Crea tu acceso con tu huella o tu cara", "Sin contraseñas: solo tú abres tu monedero."),
+    ("Escribe tu nombre y tu teléfono", "La caja te manda un código por WhatsApp."),
+    ("Escribe el código y usa tu huella o tu cara", "Sin contraseñas: solo tú abres tu monedero."),
     ("¡Listo! Tu monedero en el celular", "Ve tu saldo y cuándo vence, cuando quieras."),
 ] %}
 <div class="kiosko" x-data="kioskoPantalla({{ pasos | length }})">

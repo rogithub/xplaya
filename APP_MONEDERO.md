@@ -54,11 +54,16 @@ sencillas y muestra un **QR que cambia cada 30 segundos**. Escanearlo prueba que
 frente a la pantalla.
 
 - El cliente lo escanea con su celular y captura **nombre y teléfono**.
-- **Teléfono nuevo:** se da de alta en el momento, acepta términos y crea su passkey.
-- **Teléfono que ya tiene monedero:** llega una notificación de **ntfy** a la caja (tema
-  `papeleria-altas`), por ejemplo *"Juan Pérez (\*\*\*\*1234) está en el kiosko, ¿es él?"*, con
-  botones **Aprobar** / **Rechazar**. El botón llama a xplaya con un token de un solo uso. El
-  celular del cliente muestra "Esperando confirmación…" y continúa al aprobarse.
+- En todas las pantallas del POS aparece un aviso con su nombre, su teléfono y un **código de 4
+  dígitos**, con el botón **Enviar por WhatsApp** (abre el chat con ese número, aunque no esté en
+  contactos, con el mensaje ya escrito).
+- El cliente escribe el código en su celular: así se comprueba que el teléfono es suyo (5 intentos;
+  la solicitud vive 15 minutos). Después acepta términos y crea su passkey.
+- **Teléfono nuevo:** su monedero se crea hasta ese momento, no antes. **Teléfono que ya tiene
+  monedero:** se liga a ese cliente. Es el mismo camino para los dos.
+- Se descartó (10 nov 2026) avisar por ntfy con botones Aprobar/Rechazar: la caja solo comprobaba
+  que la persona "se parecía" al dueño; el código por WhatsApp comprueba que tiene el teléfono, y
+  la solicitud queda en la BD (`KioskoSolicitudes`), también la que no se completa.
 - La pantalla puede confirmar "¡Listo, Juan!" al terminar, pero **nunca** muestra saldo, teléfono
   completo ni historial: es una pantalla pública.
 - No es un programa aparte: es una página de xplaya (`app.xplaya.com/kiosko`) abierta en Chromium
@@ -139,10 +144,10 @@ ligado, el kiosko y las notificaciones.
 | Tabla de celulares ligados (passkey, secreto del QR, suscripción push, fechas) | BD compartida | Una fila activa por cliente |
 | Fecha de aceptación de términos | `Clientes` | El "quiero participar" |
 | Tokens de alta (recibo, 24 h, un solo uso) | BD compartida | Parecida a `ShortUrls` |
-| Aprobaciones pendientes del kiosko | xplaya, en memoria | Token de un solo uso para el botón de ntfy; si el pod se reinicia, el cliente vuelve a escanear (como el alta del recibo) |
+| Solicitudes del kiosko (`KioskoSolicitudes`) | BD compartida | Nombre, teléfono, código de 4 dígitos, intentos y estado |
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |
-| Publicar en ntfy | xplaya | Token de publicador en SealedSecret; tema `papeleria-altas` |
+| Aviso del kiosko con el código | POS | Aviso flotante en todas las pantallas, botón a WhatsApp |
 | Ver y desligar el celular | POS | Ficha del cliente |
 
 ## Orden propuesto
@@ -151,5 +156,5 @@ ligado, el kiosko y las notificaciones.
 2. `app.xplaya.com` + PWA instalable (manifest, service worker, guía para iPhone).
 3. Tablas nuevas, términos y alta con passkey desde el enlace del recibo.
 4. Ver y desligar el celular en la ficha del cliente del POS (el QR que caduca se descartó por ahora).
-5. Kiosko: página, QR de 30 s y aprobación por ntfy.
+5. Kiosko: página, QR de 30 s y código por WhatsApp desde el POS.
 6. Notificaciones: abonos y vencimiento.

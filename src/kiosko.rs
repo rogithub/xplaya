@@ -41,7 +41,7 @@ pub fn codigo_valido(token: &str, recibido: &str, ventana: u64) -> bool {
         .any(|v| codigo(token, *v) == recibido)
 }
 
-/// "****1234": lo único del teléfono que va en el aviso a la caja.
+/// "****1234": lo que se muestra del teléfono en el celular, mientras espera el código.
 pub fn mascara_telefono(telefono: &str) -> String {
     let digitos: Vec<char> = telefono.chars().filter(|c| c.is_ascii_digit()).collect();
     let ultimos: String = digitos[digitos.len().saturating_sub(4)..].iter().collect();

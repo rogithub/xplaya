@@ -16,11 +16,6 @@ pub struct Config {
     /// Token del kiosko de la tienda (`routes/kiosko.rs`). Vacío: el kiosko está apagado.
     /// Firma también los QR de 30 s, así que nadie fuera puede generar uno válido.
     pub kiosko_token: String,
-    /// ntfy, para avisar a la caja cuando alguien liga en el kiosko un teléfono que ya
-    /// tiene monedero. Sin token no se publica: el aviso (con sus enlaces) solo va al log,
-    /// para probar en desarrollo.
-    pub ntfy_url: String,
-    pub ntfy_token: String,
     /// Código de tienda del Perfil de Negocio de Google (feed de inventario local).
     /// Sin él, `/feeds/google-local.xml` responde 404.
     pub google_store_code: Option<String>,
@@ -48,9 +43,6 @@ impl Config {
             passkey_rp_id: std::env::var("PASSKEY_RP_ID")
                 .unwrap_or_else(|_| "xplaya.com".to_string()),
             kiosko_token: std::env::var("KIOSKO_TOKEN").unwrap_or_default().trim().to_string(),
-            ntfy_url: std::env::var("NTFY_URL")
-                .unwrap_or_else(|_| "https://ntfy.xplaya.com".to_string()),
-            ntfy_token: std::env::var("NTFY_TOKEN").unwrap_or_default().trim().to_string(),
             google_store_code: std::env::var("GOOGLE_STORE_CODE")
                 .ok()
                 .map(|s| s.trim().to_string())

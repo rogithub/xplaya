@@ -238,8 +238,6 @@ Calcular pagos solo desde `Ajustes`; datos de líneas desde `AjustesProductos` e
 | `APP_URL` | No | `https://app.xplaya.com` | URL de la app de clientes (PWA del monedero). Las peticiones con ese `Host` van a `routes/app.rs`; el resto, al sitio. En desarrollo: `http://app.localhost:3000` |
 | `PASSKEY_RP_ID` | No | `xplaya.com` | Dominio de las passkeys de la app (RP ID de WebAuthn). En desarrollo: `app.localhost` |
 | `KIOSKO_TOKEN` | No | — | Token del kiosko de la tienda (`app.xplaya.com/kiosko`): se activa una vez con `/kiosko/activar?t=TOKEN` y firma los QR de 30 s. Vacío: kiosko apagado. Va en SealedSecret |
-| `NTFY_URL` | No | `https://ntfy.xplaya.com` | ntfy para avisar a la caja (tema `papeleria-altas`) cuando alguien liga en el kiosko un teléfono que ya tiene monedero |
-| `NTFY_TOKEN` | No | — | Token del usuario `publicador` de ntfy. Vacío: el aviso y sus enlaces de Aprobar/Rechazar solo van al log (para probar en desarrollo). Va en SealedSecret |
 | `CONTENT_BASE_URL` | No | `https://cntnt.xplaya.com` | Base URL de imágenes en MinIO. Sin cliente MinIO — solo construcción de URL: `{CONTENT_BASE_URL}/papeleria-fotos-productos/{filename}` |
 
 Si `CONTENT_BASE_URL` no está definida, las imágenes no se muestran — comportamiento aceptable en desarrollo local.  
@@ -263,8 +261,8 @@ sitio. Diseño completo de la app en `APP_MONEDERO.md`.
 La app usa sesiones con passkey (`src/passkeys.rs`, `routes/alta.rs`, `db/celulares.rs`). Para
 probar el alta en desarrollo: `APP_URL=http://app.localhost:3000 PASSKEY_RP_ID=app.localhost`, y el
 recibo de una venta de las últimas 24 h. Para el kiosko: `KIOSKO_TOKEN=lo-que-sea`, abrir
-`http://app.localhost:3000/kiosko/activar?t=lo-que-sea`; sin `NTFY_TOKEN`, los enlaces de
-Aprobar/Rechazar salen en el log (son POST). Las tablas (`ClienteCelulares`, `CelularSesiones`,
+`http://app.localhost:3000/kiosko/activar?t=lo-que-sea`. El código de 4 dígitos de cada solicitud
+está en `KioskoSolicitudes` (en el POS sale en el aviso flotante). Las tablas (`ClienteCelulares`, `CelularSesiones`,
 `AltasRecibo`) y `fn_asignar_cliente_venta` se definen en el repo del POS.
 
 ## Calidad de código — Clippy

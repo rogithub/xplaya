@@ -170,27 +170,6 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // Kiosko, en el celular: espera a que la caja apruebe (ntfy) y entonces sigue solo.
-    Alpine.data('esperarCaja', (espera) => ({
-        estado: 'pendiente',
-
-        init() { this.revisar(); },
-
-        async revisar() {
-            try {
-                const r = await fetch(`/kiosko/espera/${espera}`, { cache: 'no-store' });
-                this.estado = (await r.json()).estado;
-            } catch (e) {
-                // Sin señal un momento: se vuelve a intentar.
-            }
-            if (this.estado === 'aprobada' || this.estado === 'rechazada') {
-                this.$refs.continuar.submit();
-            } else if (this.estado === 'pendiente') {
-                setTimeout(() => this.revisar(), 2000);
-            }
-        },
-    }));
-
     // Pantalla del kiosko: pide un QR nuevo justo cuando vence el anterior y pasa las
     // instrucciones una por una.
     Alpine.data('kioskoPantalla', (pasos) => ({
