@@ -68,7 +68,12 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ⬜ **Carrito con código**: el pedido entra al momento y el teléfono se confirma con un código
   de 4 dígitos por WhatsApp (aviso en el POS y por ntfy, tema `pedidos`). Después: "Entrar con tu
   huella" para quien ya tiene la app.
-- ✅ **Productos**: hecho como la Vitrina del inicio (2026-11-10).
+- ✅ **Productos**: hecho como la Vitrina del inicio (2026-11-10); desde el mismo día muestra el
+  inventario lento con más dinero parado.
+- ⬜ **Lentos sin foto**: lista en el POS de los productos sin venderse en 60 días y sin foto,
+  ordenada por dinero parado, para fotografiar primero esos (la vitrina solo muestra con foto).
+- ⬜ **Medir la pantalla**: reporte semanal en Superset (altas de monedero desde el kiosko,
+  contactos de WhatsApp, cuántos volvieron a comprar).
 
 ### Pendiente sin fecha
 

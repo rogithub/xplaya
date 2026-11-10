@@ -391,15 +391,37 @@ pub struct ProductoVitrina {
     pub foto: String,
 }
 
-/// Productos al azar para la vitrina del kiosko: los de la galería (con existencia, no servicios,
-/// con precio; `v_galeria_principal`) que tienen foto.
+/// Productos para la vitrina del kiosko, para mover el inventario lento: al azar entre los 100
+/// productos con foto que no se han vendido en 60 días y más dinero tienen parado (existencia ×
+/// precio). Si no alcanzan, se completa con productos de la galería al azar. Solo productos de
+/// `v_galeria_principal` (con existencia, no servicios, con precio) que tienen foto.
 pub async fn vitrina(pool: &PgPool, content_base_url: &str, cuantos: i64) -> Result<Vec<ProductoVitrina>, sqlx::Error> {
     let filas: Vec<(i32, String, Decimal, String, String)> = sqlx::query_as(
-        "SELECT nid, nombre, precioventa, unidadmedida, foto
-           FROM v_galeria_principal
-          WHERE foto IS NOT NULL
-          ORDER BY random()
-          LIMIT $1",
+        "WITH vendidos AS (
+             SELECT DISTINCT ap.productoid
+               FROM ajustesproductos ap
+               JOIN ajustes a ON a.id = ap.ajusteid
+              WHERE a.tipoajuste = 0 AND a.fechaajuste > NOW() - INTERVAL '60 days'
+         ),
+         lentos AS (
+             SELECT g.nid, g.nombre, g.precioventa, g.unidadmedida, g.foto
+               FROM v_galeria_principal g
+              WHERE g.foto IS NOT NULL AND g.stock > 0
+                AND g.id NOT IN (SELECT productoid FROM vendidos)
+              ORDER BY g.stock * g.precioventa DESC
+              LIMIT 100
+         ),
+         elegidos AS (SELECT * FROM lentos ORDER BY random() LIMIT $1),
+         relleno AS (
+             SELECT g.nid, g.nombre, g.precioventa, g.unidadmedida, g.foto
+               FROM v_galeria_principal g
+              WHERE g.foto IS NOT NULL AND g.nid NOT IN (SELECT nid FROM elegidos)
+              ORDER BY random()
+              LIMIT GREATEST($1 - (SELECT COUNT(*) FROM elegidos), 0)
+         )
+         SELECT nid, nombre, precioventa, unidadmedida, foto FROM elegidos
+         UNION ALL
+         SELECT nid, nombre, precioventa, unidadmedida, foto FROM relleno",
     )
     .bind(cuantos)
     .fetch_all(pool)

@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: la vitrina mueve el inventario lento (2026-11-10)
+
+En lugar de productos al azar, la vitrina elige al azar entre los **100 productos con foto que no
+se han vendido en 60 días y más dinero tienen parado** (existencia × precio); si no alcanzan,
+completa con productos al azar. En desarrollo había 574 lentos con foto (≈ $485 mil a precio de
+venta) y 1,316 sin foto (≈ $796 mil).
+
+- `src/db/productos.rs` — `vitrina`: CTE `vendidos` (ventas de los últimos 60 días), `lentos`
+  (top 100 por existencia × precio), `elegidos` al azar y `relleno`. Responde en ~0.1 s.
+
+---
+
 ## Kiosko: ícono de WhatsApp en "Nuestro WhatsApp" y vitrina sin QR por producto (2026-11-10)
 
 - Vitrina: se quitó el QR de cada producto (abría la tienda de la app, donde quien no tiene
