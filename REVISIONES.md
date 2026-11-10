@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: ícono como el de xplaya.com y CSS sin la copia vieja (2026-11-10)
+
+- `src/routes/app.rs` — el manifest de la app suma la versión maskable de 192 px (igual que
+  `site.webmanifest`): sin ella, Android podía tomar la normal y meterla en un círculo blanco.
+- `templates/app/base.html` — `app.css?v=8`. Durante el reinicio conviven el pod viejo y el
+  nuevo: un celular pidió la página al nuevo (`v=7`) y el CSS al viejo, y se quedó un año con el
+  CSS viejo bajo el nombre nuevo (barra sin estilo, tienda descompuesta). Pendiente: versión
+  calculada por el servidor para que no vuelva a pasar.
+
+---
+
 ## xplaya.com ya no se instala como app (2026-11-10)
 
 El manifest del sitio (el del paquete de íconos) tenía `"display": "standalone"`, así que el
