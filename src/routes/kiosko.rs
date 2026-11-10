@@ -80,6 +80,7 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
         .flatten()
         .map(minijinja::Value::from_safe_string);
     let resena_qr = qr_svg(URL_RESENA_GOOGLE).map(minijinja::Value::from_safe_string);
+    let tienda_qr = qr_svg(&format!("{}/productos", cfg.site_url)).map(minijinja::Value::from_safe_string);
     let html = state
         .tmpl
         .get_template("app/kiosko.html")
@@ -89,6 +90,7 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
             wifi_ssid => &cfg.kiosko_wifi_ssid,
             wifi_password => &cfg.kiosko_wifi_password,
             resena_qr,
+            tienda_qr,
         }))
         .map_err(|e| {
             tracing::error!("Render app/kiosko: {e}");

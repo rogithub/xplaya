@@ -3,7 +3,8 @@
   Pantalla del kiosko de la tienda (routes/kiosko.rs), en Chromium en modo kiosko con pantalla
   táctil. Es pública: nunca muestra nombres, saldos ni teléfonos de clientes.
   Menú abajo: monedero (QR que cambia cada 30 s), WiFi para clientes, "que te agreguemos a
-  WhatsApp" (teléfono con teclado en pantalla → aviso en el POS) y reseña en Google (QR fijo). Sin tocar nada en un minuto,
+  WhatsApp" (teléfono con teclado en pantalla → aviso en el POS), tienda en línea y reseña en
+  Google (estas dos, QR fijo). Sin tocar nada en un minuto,
   vuelve al monedero. Lógica en `kioskoPantalla` (static/app/app.js).
 #}
 {% block title %}Kiosko — Papelería xplaya{% endblock %}
@@ -80,6 +81,23 @@
         </section>
     </div>
 
+    {# ── Tienda en línea (xplaya.com) ── #}
+    {% if tienda_qr %}
+    <div class="kiosko-vista" x-show="vista === 'tienda'" x-cloak>
+        <section class="kiosko-info">
+            <h1 class="kiosko-titulo">Arma tu pedido desde tu celular</h1>
+            <p class="kiosko-sub">
+                Busca lo que necesitas, mándanos tu pedido y te lo tenemos listo.
+                También sirve desde tu casa.
+            </p>
+        </section>
+        <section class="kiosko-qr-lado" aria-label="Código de la tienda en línea">
+            <div class="kiosko-qr">{{ tienda_qr }}</div>
+            <p class="kiosko-qr-txt">xplaya.com</p>
+        </section>
+    </div>
+    {% endif %}
+
     {# ── Reseña en Google ── #}
     {% if resena_qr %}
     <div class="kiosko-vista" x-show="vista === 'resena'" x-cloak>
@@ -114,6 +132,9 @@
         <button type="button" :class="vista === 'wifi' && 'activo'" @click="ir('wifi')">📶 WiFi gratis</button>
         {% endif %}
         <button type="button" :class="vista === 'whatsapp' && 'activo'" @click="ir('whatsapp')">💬 Te agregamos a WhatsApp</button>
+        {% if tienda_qr %}
+        <button type="button" :class="vista === 'tienda' && 'activo'" @click="ir('tienda')">🛒 Haz tu pedido</button>
+        {% endif %}
         {% if resena_qr %}
         <button type="button" :class="vista === 'resena' && 'activo'" @click="ir('resena')">⭐ Tu reseña</button>
         {% endif %}

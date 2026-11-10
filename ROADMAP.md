@@ -47,6 +47,7 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   con la Raspberry `chaac`)
 - ✅ Menú del kiosko: WiFi para clientes y "te agregamos a WhatsApp" (2026-11-10)
 - ✅ Pestaña "Tu reseña" en el kiosko: QR a la reseña de Google (2026-11-10)
+- ✅ Pestaña "Haz tu pedido" en el kiosko: QR a `xplaya.com/productos` (2026-11-10)
 - ⬜ Notificaciones: abonos y vencimiento
 
 ### Ideas para el kiosko (sin fecha)
@@ -54,9 +55,9 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ⬜ **Cuenta en vivo**: mientras la caja cobra, el kiosko muestra los productos, el total y "con
   esta compra ganas $X en tu monedero". Nunca el nombre ni el saldo (pantalla pública). Antes de
   diseñarlo, revisar cómo guarda el POS la venta mientras se arma.
-- ⬜ **Imprimir**: pestaña con un QR; el cliente sube su archivo desde el celular (copias, color o
-  blanco y negro), el POS recibe un aviso con su turno y el kiosko le muestra "Tu impresión es la
-  #12". Archivos en MinIO, se borran solos a las pocas horas (actas, INE).
+- ⬜ **Imprimir por WhatsApp**: QR que abre el chat de la papelería con "Hola, quiero imprimir".
+  Se descartó un flujo propio en imagina (subir archivos, acomodar fotos, Word a PDF): los clientes
+  se atoran y le quitan tiempo a la caja; WhatsApp ya lo saben usar.
 - ⬜ **Productos**: cuadrícula de productos con foto (reusar el catálogo); quizá un carrusel
   cuando nadie la toca.
 

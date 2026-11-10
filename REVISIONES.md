@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: pestaña "Haz tu pedido" (2026-11-10)
+
+QR fijo a `{SITE_URL}/productos`: el cliente arma su pedido en el catálogo de xplaya.com desde su
+celular (mientras espera en la fila o en su casa). El carrito ya pide nombre y teléfono.
+
+- `src/routes/kiosko.rs` — `tienda_qr` en `pantalla`.
+- `templates/app/kiosko.html` — vista `tienda` y su botón, antes del de la reseña.
+
+---
+
 ## Kiosko: pestaña "Tu reseña" (2026-11-10)
 
 Cuarta pestaña del menú: un QR fijo al formulario de reseña de la ficha de Google (el mismo
