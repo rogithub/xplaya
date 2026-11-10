@@ -115,6 +115,23 @@
     </div>
     {% endif %}
 
+    {# ── Contacto de WhatsApp de la papelería (QR que genera WhatsApp, recortado) ── #}
+    <div class="kiosko-vista" x-show="vista === 'contacto'" x-cloak>
+        <section class="kiosko-info">
+            <h1 class="kiosko-titulo">Guarda nuestro WhatsApp</h1>
+            <p class="kiosko-sub">
+                Abre la cámara de tu celular, apúntala al código y agréganos.
+                Mándanos tus archivos para imprimir, pregunta por productos o haz tu pedido.
+            </p>
+        </section>
+        <section class="kiosko-qr-lado" aria-label="Código del WhatsApp de la papelería">
+            <div class="kiosko-qr">
+                <img src="/static/img/kiosko/whatsapp-contacto.png?v=1" alt="Código QR del WhatsApp de la papelería" width="360" height="360">
+            </div>
+            <p class="kiosko-qr-txt">Papelería en WhatsApp</p>
+        </section>
+    </div>
+
     <div class="kiosko-vista kiosko-gracias" x-show="vista === 'gracias'" x-cloak>
         <section class="kiosko-info">
             <h1 class="kiosko-titulo">¡Listo!</h1>
@@ -132,6 +149,7 @@
         <button type="button" :class="vista === 'wifi' && 'activo'" @click="ir('wifi')">📶 WiFi gratis</button>
         {% endif %}
         <button type="button" :class="vista === 'whatsapp' && 'activo'" @click="ir('whatsapp')">💬 Te agregamos a WhatsApp</button>
+        <button type="button" :class="vista === 'contacto' && 'activo'" @click="ir('contacto')">📱 Nuestro WhatsApp</button>
         {% if tienda_qr %}
         <button type="button" :class="vista === 'tienda' && 'activo'" @click="ir('tienda')">🛒 Haz tu pedido</button>
         {% endif %}

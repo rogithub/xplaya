@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: pestaña "Nuestro WhatsApp" (2026-11-10)
+
+QR del contacto de WhatsApp de la papelería (el que genera WhatsApp en "Compartir contacto"),
+recortado para dejar solo el código con su margen blanco. Sirve para mandar archivos a imprimir,
+preguntar o pedir.
+
+- `static/img/kiosko/whatsapp-contacto.png` — el QR recortado (360×360).
+- `templates/app/kiosko.html` — vista `contacto` y su botón, junto a "Te agregamos a WhatsApp".
+- `static/css/app.css` (`?v=6`) — `.kiosko-qr img` toma el mismo tamaño que el SVG.
+
+---
+
 ## Kiosko: pestaña "Haz tu pedido" (2026-11-10)
 
 QR fijo a `{SITE_URL}/productos`: el cliente arma su pedido en el catálogo de xplaya.com desde su
