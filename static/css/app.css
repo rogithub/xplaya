@@ -352,17 +352,6 @@ a { color: var(--accent); }
 
 .btn-enlace { margin-top: 10px; }
 
-.instalar {
-    margin-top: 14px;
-    padding: 14px;
-    border-radius: 16px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-}
-
-.instalar-txt { margin: 0 0 12px; font-size: .95rem; }
-.instalar-txt strong { display: block; }
-
 .pasos { margin: 12px 0 0; padding-left: 1.3rem; font-size: .95rem; }
 .pasos li + li { margin-top: 8px; }
 .ico { vertical-align: -3px; color: var(--accent); }
@@ -730,3 +719,36 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .carrito-listo { padding: 18px; border-radius: 16px; background: var(--ok-bg); text-align: center; }
 .carrito-listo h2 { margin: 0 0 6px; font-family: var(--font-display); color: var(--ok); }
 .carrito-listo .btn-link { display: inline-block; margin-top: 12px; }
+
+/* ── Aviso "Instala la app" (app/instalar.html) ─────────────────────────── */
+
+.instalar-aviso {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--ok-bg);
+    color: var(--ink);
+    font-size: .92rem;
+}
+.instalar-fila { display: flex; align-items: center; gap: 10px; }
+.instalar-fila span { flex: 1; }
+.btn-chico {
+    flex: none;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 600 .9rem var(--font-body);
+}
+.btn-cerrar {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    font-size: 1rem;
+}
+.instalar-aviso .pasos { margin-top: 10px; }

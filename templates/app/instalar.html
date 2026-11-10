@@ -1,0 +1,38 @@
+{#
+  Aviso "Instala la app", arriba en Monedero, Tienda y Carrito (lo incluye app/base.html cuando
+  la página manda `nav`). Lógica en `instalarApp` (app.js):
+  - Dentro de la app instalada no sale nunca.
+  - Si Chrome de Android dice que ya está instalada, sugiere abrirla desde la pantalla de inicio.
+  - "Instalar": navigator.install() (Chrome 158+) → la ventana de siempre de Chrome
+    (beforeinstallprompt) → pasos a mano (iPhone: Compartir; Android: menú ⋮).
+  - Con ✕ se oculta 30 días en este celular.
+#}
+<section class="instalar-aviso" x-data="instalarApp" x-show="visible" x-cloak aria-label="Instalar la app">
+    <template x-if="!yaInstalada">
+        <div class="instalar-fila">
+            <span>📲 <strong>Instala la app</strong> en tu celular</span>
+            <button type="button" class="btn-chico" @click="instalar()">Instalar</button>
+            <button type="button" class="btn-cerrar" @click="cerrar()" aria-label="No mostrar">✕</button>
+        </div>
+    </template>
+    <template x-if="yaInstalada">
+        <div class="instalar-fila">
+            <span>📲 Ya tienes la app: ábrela desde tu pantalla de inicio.</span>
+            <button type="button" class="btn-cerrar" @click="cerrar()" aria-label="Cerrar">✕</button>
+        </div>
+    </template>
+
+    <ol class="pasos" x-show="pasos === 'ios'" x-transition>
+        <li>Abre esta página en <strong>Safari</strong>.</li>
+        <li>Toca <strong>Compartir</strong>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class="ico"><path fill="currentColor" d="M12 2l4 4-1.4 1.4L13 5.8V15h-2V5.8L9.4 7.4 8 6l4-4zM5 10h3v2H6v8h12v-8h-2v-2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1z"/></svg>
+            (si no lo ves, está dentro del botón <strong>⋯</strong>).</li>
+        <li>Elige <strong>Agregar a pantalla de inicio</strong>; si no aparece, desliza la lista hacia arriba.</li>
+        <li>Deja prendido <strong>Abrir como app web</strong> y toca <strong>Agregar</strong>.</li>
+    </ol>
+    <ol class="pasos" x-show="pasos === 'android'" x-transition>
+        <li>Toca el menú <strong>⋮</strong> de Chrome, arriba a la derecha.</li>
+        <li>Elige <strong>Instalar app</strong> (o <strong>Agregar a pantalla principal</strong>).</li>
+        <li>Toca <strong>Instalar</strong>. La app queda junto a tus otras apps.</li>
+    </ol>
+</section>

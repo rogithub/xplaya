@@ -12,29 +12,54 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 document.addEventListener('alpine:init', () => {
-    // Bloque "Instala la app": botón en Android, pasos en iPhone, nada si ya está instalada.
-    Alpine.data('instalar', () => ({
+    // Aviso "Instala la app" (templates/app/instalar.html).
+    const CERRADO = 'xp_instalar_cerrado';
+    const DIAS_OCULTO = 30;
+    Alpine.data('instalarApp', () => ({
         ios: /iphone|ipad|ipod/i.test(navigator.userAgent)
             || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),   // iPad con iPadOS
-        instalada: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
-        puedeInstalar: avisoInstalar !== null,
-        pasos: false,
+        // Abierta desde el ícono: su propia ventana, sin barra del navegador.
+        enLaApp: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
+        yaInstalada: false,
+        cerrado: false,
+        pasos: '',
 
-        init() {
-            window.addEventListener('xp-instalable', () => { this.puedeInstalar = true; });
-            window.addEventListener('appinstalled', () => { this.instalada = true; });
+        async init() {
+            try {
+                const t = Number(localStorage.getItem(CERRADO) || 0);
+                this.cerrado = Date.now() - t < DIAS_OCULTO * 864e5;
+            } catch { /* sin localStorage: se muestra */ }
+            window.addEventListener('appinstalled', () => { this.enLaApp = true; });
+            // Chrome de Android: ¿ya está instalada? (manifest con related_applications)
+            if (!this.enLaApp && navigator.getInstalledRelatedApps) {
+                try {
+                    this.yaInstalada = (await navigator.getInstalledRelatedApps()).length > 0;
+                } catch { /* no responde: se ofrece instalar */ }
+            }
         },
 
-        get visible() {
-            return !this.instalada && (this.ios || this.puedeInstalar);
+        get visible() { return !this.enLaApp && !this.cerrado; },
+
+        cerrar() {
+            this.cerrado = true;
+            try { localStorage.setItem(CERRADO, String(Date.now())); } catch { /* nada */ }
         },
 
-        async instalarAndroid() {
-            if (!avisoInstalar) return;
-            avisoInstalar.prompt();
-            await avisoInstalar.userChoice;
-            avisoInstalar = null;
-            this.puedeInstalar = false;
+        async instalar() {
+            // 1) Web Install API (Chrome 158+): la página pide instalar y Chrome muestra su
+            //    ventana, sin esperar a que Chrome "quiera" ofrecerlo.
+            if (navigator.install) {
+                try { await navigator.install(); return; } catch { /* canceló o no se pudo: sigue */ }
+            }
+            // 2) La ventana de siempre de Chrome, si ya la ofreció (beforeinstallprompt).
+            if (avisoInstalar) {
+                avisoInstalar.prompt();
+                await avisoInstalar.userChoice;
+                avisoInstalar = null;
+                return;
+            }
+            // 3) A mano.
+            this.pasos = this.pasos ? '' : (this.ios ? 'ios' : 'android');
         },
     }));
 });

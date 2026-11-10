@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: aviso "Instala la app" en todas las páginas (2026-11-10)
+
+Antes el botón "Instalar" solo salía en el Monedero y, en Android, solo si Chrome ya lo había
+ofrecido (`beforeinstallprompt`), y Chrome lo pausa días tras desinstalar o cerrar el aviso.
+
+- `templates/app/instalar.html` (nuevo) — aviso arriba de Monedero, Tienda y Carrito (lo incluye
+  `app/base.html` cuando hay `nav`; el kiosko no). Reemplaza el bloque que estaba en
+  `monedero/app.html`.
+- `static/app/app.js` — `instalarApp` (sustituye a `instalar`). "Instalar" intenta en orden:
+  `navigator.install()` (Web Install API, Chrome 158, estable desde el 17 nov 2026; en Android
+  aún sin confirmar), la ventana de Chrome (`beforeinstallprompt`) y los pasos a mano (iPhone:
+  Compartir → Agregar a inicio con "Abrir como app web"; Android: menú ⋮ → Instalar app). No sale
+  dentro de la app instalada; si `getInstalledRelatedApps()` dice que ya está instalada (Chrome
+  de Android), sugiere abrirla desde la pantalla de inicio. ✕ lo oculta 30 días
+  (`localStorage`). iPhone no deja a la página saber si está instalada.
+- `src/routes/app.rs` — el manifest suma `related_applications` (se declara a sí misma).
+- `static/css/app.css` — estilos del aviso; se quitan los del bloque viejo.
+
+---
+
 ## CSS y JS con huella: un reinicio ya no deja archivos viejos guardados (2026-11-10)
 
 Durante un reinicio conviven el pod viejo y el nuevo. Un celular podía pedir la página al nuevo

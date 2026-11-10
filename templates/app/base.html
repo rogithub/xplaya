@@ -47,6 +47,7 @@
             Sin conexión: puede que tu saldo no esté al día.
         </p>
         {% endif %}
+        {% if nav %}{% include "app/instalar.html" %}{% endif %}
         {% block content %}{% endblock %}
     </main>
     {% if en_app and nav %}{% include "app/nav.html" %}{% endif %}

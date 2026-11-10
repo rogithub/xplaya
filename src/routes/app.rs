@@ -229,19 +229,24 @@ async fn monedero(
 /// Manifest de la PWA. Es por cliente para que, al abrir la app instalada, entre
 /// directo a su monedero (`start_url`), aun en iPhone, donde la app instalada no
 /// comparte cookies con Safari. `id` es fijo: para el celular siempre es la misma app.
-async fn manifest(Path(cliente_id): Path<Uuid>) -> Response {
-    manifest_json(&format!("/monedero/{cliente_id}"))
+async fn manifest(State(state): State<AppState>, Path(cliente_id): Path<Uuid>) -> Response {
+    manifest_json(&state, &format!("/monedero/{cliente_id}"))
 }
 
 /// Manifest para quien tiene el celular ligado: la app abre en `/`, que muestra su
 /// monedero si hay sesión o le pide su huella si no (en iPhone, la primera vez que abre
 /// la app instalada).
-async fn manifest_sesion() -> Response {
-    manifest_json("/")
+async fn manifest_sesion(State(state): State<AppState>) -> Response {
+    manifest_json(&state, "/")
 }
 
-fn manifest_json(start_url: &str) -> Response {
+fn manifest_json(state: &AppState, start_url: &str) -> Response {
     let manifest = serde_json::json!({
+        // La app se declara a sí misma: así `navigator.getInstalledRelatedApps()` le dice a
+        // Chrome de Android, desde el navegador, que ya está instalada (aviso de instalar).
+        "related_applications": [
+            { "platform": "webapp", "url": format!("{}/manifest.webmanifest", state.config.app_url) }
+        ],
         "id": "/",
         "name": "Monedero xplaya",
         "short_name": "xplaya",
