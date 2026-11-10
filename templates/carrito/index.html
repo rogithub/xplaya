@@ -2,7 +2,7 @@
 {% block title %}Carrito{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/carrito">{% endblock %}
 {# Botón "Entrar con huella" (antes de Alpine, como cart.js). #}
-{% block head %}<script defer src="/static/js/huella.js?v=1"></script>{% endblock %}
+{% block head %}<script defer src="{{ estatico("js/huella.js") }}"></script>{% endblock %}
 {% block content %}
 
 <h1 class="title">Tu carrito</h1>

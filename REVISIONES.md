@@ -4,6 +4,27 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## CSS y JS con huella: un reinicio ya no deja archivos viejos guardados (2026-11-10)
+
+Durante un reinicio conviven el pod viejo y el nuevo. Un celular podía pedir la página al nuevo
+y el CSS o JS al viejo, y se quedaba un año con el archivo viejo bajo el nombre nuevo (pasó dos
+veces: la barra sin estilo y el botón "Agregar al carrito" sin texto, porque `app.js` viejo y
+`huella.js` nuevo declaraban las mismas funciones).
+
+- `src/estaticos.rs` (nuevo) — al arrancar calcula la huella (SHA-256, 10 hex) de cada `.css` y
+  `.js` de `static/`. `cache_estaticos` pone `Cache-Control`: un año si la huella pedida es la de
+  este pod; `no-store` si es de otra versión o el archivo no existe; sin huella (imágenes con
+  `?v=`), un año como siempre. Pruebas de las dos reglas.
+- `src/main.rs` — función de plantillas `estatico("css/app.css")` → `/static/css/app.css?h=…`;
+  `static_files` es un `Router` con ese middleware.
+- `templates/base.html`, `templates/app/base.html`, `templates/carrito/index.html` — CSS y JS con
+  `estatico(...)` en vez de `?v=`.
+- `static/app/sw.js` — `VERSION = 'app-v2'` (borra lo que se guardó antes) y de `/static` solo
+  guarda lo marcado `immutable`.
+- `CLAUDE.md` — la regla de `?v=` queda solo para imágenes.
+
+---
+
 ## App: ícono como el de xplaya.com y CSS sin la copia vieja (2026-11-10)
 
 - `src/routes/app.rs` — el manifest de la app suma la versión maskable de 192 px (igual que

@@ -9,7 +9,8 @@
 //
 // Si cambias este archivo de forma que la caché vieja ya no sirva, sube VERSION.
 
-const VERSION = 'app-v1';
+// app-v2: borra lo guardado antes de las huellas (archivos viejos bajo nombres nuevos).
+const VERSION = 'app-v2';
 
 const CACHE_PRIMERO = [
     'https://cdn.jsdelivr.net',
@@ -64,7 +65,12 @@ async function cachePrimero(req) {
     const guardada = await cache.match(req);
     if (guardada) return guardada;
     const resp = await fetch(req);
+    // De /static solo se guarda lo que el servidor marca para guardar (`immutable`): un
+    // archivo pedido con la huella de otra versión llega con `no-store` (estaticos.rs).
     // Las respuestas de otros dominios sin CORS llegan "opacas" (status 0); también sirven.
-    if (resp.ok || resp.type === 'opaque') cache.put(req, resp.clone());
+    const guardable = resp.type === 'opaque'
+        || (resp.ok && (new URL(req.url).origin !== location.origin
+                        || (resp.headers.get('Cache-Control') || '').includes('immutable')));
+    if (guardable) cache.put(req, resp.clone());
     return resp;
 }

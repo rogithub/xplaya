@@ -1,14 +1,14 @@
 use std::{sync::Arc, time::Duration};
 
-use axum::{Router, routing::{get, post}, response::Redirect, http::{header, HeaderValue}, extract::Request};
+use axum::{Router, routing::{get, post}, response::Redirect, http::header, extract::Request};
 use minijinja::{Environment, path_loader};
 use sqlx::PgPool;
-use tower::{ServiceBuilder, ServiceExt};
+use tower::ServiceExt;
 use tower_http::services::ServeDir;
-use tower_http::set_header::SetResponseHeaderLayer;
 
 mod config;
 mod db;
+mod estaticos;
 mod kiosko;
 mod middleware;
 mod models;
@@ -50,6 +50,14 @@ async fn main() {
     tmpl.add_global("site_url", minijinja::Value::from_safe_string(cfg.site_url.clone()));
     tmpl.add_global("imagina_url", minijinja::Value::from_safe_string(cfg.imagina_url.clone()));
     tmpl.add_global("app_url", minijinja::Value::from_safe_string(cfg.app_url.clone()));
+    // CSS y JS con su huella: {{ estatico("css/app.css") }} → /static/css/app.css?h=… (estaticos.rs)
+    let huellas = Arc::new(estaticos::Huellas::calcular("static"));
+    {
+        let huellas = huellas.clone();
+        tmpl.add_function("estatico", move |ruta: &str| {
+            minijinja::Value::from_safe_string(huellas.url(ruta))
+        });
+    }
 
     let http = reqwest::Client::new();
     let webauthn = Arc::new(passkeys::webauthn(&cfg));
@@ -98,13 +106,13 @@ async fn main() {
         .route("/cotizacion/{uid}/pdf", get(routes::monedero::cotizacion_pdf))
         .route("/cotizacion/{uid}/print", get(routes::monedero::cotizacion_print))
         .route("/r/{code}", get(routes::monedero::redirigir))
-        .nest_service("/static", static_files())
+        .nest_service("/static", static_files(huellas.clone()))
         .fallback(routes::pages::fallback)
         .with_state(state.clone());
 
     // App de clientes (app.xplaya.com): sus propias rutas, mismos archivos estáticos.
     let app = routes::app::router()
-        .nest_service("/static", static_files())
+        .nest_service("/static", static_files(huellas.clone()))
         .with_state(state.clone());
 
     // Un solo servidor para los dos dominios: según el `Host` de cada petición se
@@ -128,12 +136,11 @@ async fn main() {
     axum::serve(listener, root).await.unwrap();
 }
 
-/// `/static` con caché de un año: si cambias un archivo ya publicado, sube su `?v=`.
-fn static_files() -> tower_http::set_header::SetResponseHeader<ServeDir, HeaderValue> {
-    ServiceBuilder::new()
-        .layer(SetResponseHeaderLayer::if_not_present(
-            header::CACHE_CONTROL,
-            HeaderValue::from_static("public, max-age=31536000, immutable"),
-        ))
-        .service(ServeDir::new("static"))
+/// `/static`: el `Cache-Control` lo pone `estaticos::cache_estaticos` según la huella pedida
+/// (un año si es la de este pod; `no-store` si es de otra versión). Las imágenes van con `?v=`:
+/// si cambias una ya publicada, sube su `?v=`.
+fn static_files(huellas: Arc<estaticos::Huellas>) -> Router {
+    Router::new()
+        .fallback_service(ServeDir::new("static"))
+        .layer(axum::middleware::from_fn_with_state(huellas, estaticos::cache_estaticos))
 }

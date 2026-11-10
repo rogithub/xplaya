@@ -22,7 +22,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Instrument+Sans:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="/static/css/app.css?v=8">
+    <link rel="stylesheet" href="{{ estatico("css/app.css") }}">
     {% if en_app %}
     {# Solo en app.xplaya.com: PWA instalable. El manifest lo pone cada página
        (el del monedero lleva al cliente directo a su tarjeta al abrir la app). #}
@@ -31,10 +31,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="xplaya">
-    <script defer src="/static/js/huella.js?v=1"></script>
-    <script defer src="/static/app/app.js?v=6"></script>
+    <script defer src="{{ estatico("js/huella.js") }}"></script>
+    <script defer src="{{ estatico("app/app.js") }}"></script>
     {# Carrito de la tienda (el mismo store del sitio). Antes de Alpine: registra alpine:init. #}
-    <script defer src="/static/js/cart.js?v=2"></script>
+    <script defer src="{{ estatico("js/cart.js") }}"></script>
     {% endif %}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <script defer src="https://analytics.xplaya.com/script.js"
