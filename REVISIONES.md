@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App de clientes, paso 4: desligar el celular desde el POS (2026-11-10)
+
+Sin cambios de código en xplaya: el trabajo está en el POS (rama `feature/desligar-celular`).
+
+- **POS**, ficha del cliente (`Clientes/EditarCliente`): muestra si tiene celular ligado (tipo,
+  fecha y último uso) y un botón **Desligar**, que marca `FechaDesligado` con motivo `pos`.
+- xplaya no necesita nada nuevo: `cliente_de_sesion()` y `por_credencial()` ya ignoran los celulares
+  con `FechaDesligado`, así que la sesión y la passkey de ese celular dejan de servir en el momento.
+- `APP_MONEDERO.md` — el QR de caja que caduca se descartó por ahora: solo protegería si el POS lo
+  exigiera para gastar, y hoy la verificación real se hace por WhatsApp. El QR sigue llevando el
+  teléfono.
+
+---
+
 ## App de clientes, paso 3: alta con passkey desde el recibo (2026-11-09)
 
 El recibo de una venta de las últimas 24 horas lleva un enlace a

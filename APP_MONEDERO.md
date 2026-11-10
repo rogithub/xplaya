@@ -99,13 +99,13 @@ instalarla no recibe notificaciones (Web Push en iOS requiere 16.4+ y la app ins
 
 ### En la caja
 
-- El QR de la tarjeta lleva el **ID del cliente** (que nunca cambia) **más un código que caduca en
-  un minuto**, como el token de las apps de banco. Al ligar el celular, el servidor le da un secreto
-  y la PWA calcula el código sin necesidad de internet. El QR se renueva solo y el POS rechaza los
-  códigos vencidos (acepta también el minuto anterior por diferencias de reloj), así que una captura
-  de pantalla no sirve para gastar el monedero de otro.
-- El POS (inventario_papeleria) ya escanea QR en la venta (`html5-qrcode`); se adapta para leer este
-  formato y cargar al cliente en la venta.
+- El QR de la tarjeta lleva el **teléfono** del cliente, igual que las tarjetas impresas; el
+  escáner de caja lo teclea en el buscador de clientes.
+- **Se descartó (por ahora) un QR que caduca cada minuto.** Solo protegería si el POS lo exigiera
+  para gastar el monedero, y hoy hay pocos clientes con monedero; casi todos escriben por WhatsApp
+  desde el mismo número de su monedero, y así se verifica que son ellos (decidido el 10 de noviembre
+  de 2026). Se retoma si crecen los clientes: el QR llevaría el ID del cliente más un código de un
+  minuto calculado en la PWA con un secreto que el servidor da al ligar el celular.
 - En la ficha del cliente, el POS muestra su celular ligado y permite **desligarlo**.
 
 ### Notificaciones
@@ -143,13 +143,13 @@ ligado, el kiosko y las notificaciones.
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |
 | Publicar en ntfy | xplaya | Token de publicador en SealedSecret; tema `papeleria-altas` |
-| Validar QR de caja, ver y desligar celular | POS | Mismo cálculo del código que la PWA |
+| Ver y desligar el celular | POS | Ficha del cliente |
 
 ## Orden propuesto
 
 1. Tarjeta de solo lectura (con el diseño nuevo) sobre la URL de hoy.
 2. `app.xplaya.com` + PWA instalable (manifest, service worker, guía para iPhone).
 3. Tablas nuevas, términos y alta con passkey desde el enlace del recibo.
-4. QR de caja que caduca + lectura en el POS + desligar en la ficha del cliente.
+4. Ver y desligar el celular en la ficha del cliente del POS (el QR que caduca se descartó por ahora).
 5. Kiosko: página, QR de 30 s y aprobación por ntfy.
 6. Notificaciones: abonos y vencimiento.
