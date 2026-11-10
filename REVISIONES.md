@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: pestaña "Tu reseña" (2026-11-10)
+
+Cuarta pestaña del menú: un QR fijo al formulario de reseña de la ficha de Google (el mismo
+enlace de `/resena`), para subir en Maps.
+
+- `src/routes/kiosko.rs` — `URL_RESENA_GOOGLE` y `resena_qr` (SVG con `qr_svg`) en `pantalla`.
+- `templates/app/kiosko.html` — vista `resena` y su botón. Sin cambios de CSS ni JS: usa las
+  mismas clases de la vista de WiFi y `ir('resena')`.
+
+---
+
 ## Docs: Raspberry del kiosko e ideas para después (2026-11-10)
 
 Solo documentación, sin código.

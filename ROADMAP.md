@@ -46,6 +46,7 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ✅ Kiosko en tienda: QR de 30 s y código por WhatsApp desde el POS (2026-11-10, en producción
   con la Raspberry `chaac`)
 - ✅ Menú del kiosko: WiFi para clientes y "te agregamos a WhatsApp" (2026-11-10)
+- ✅ Pestaña "Tu reseña" en el kiosko: QR a la reseña de Google (2026-11-10)
 - ⬜ Notificaciones: abonos y vencimiento
 
 ### Ideas para el kiosko (sin fecha)

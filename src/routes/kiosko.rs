@@ -35,6 +35,9 @@ use crate::{
 
 const COOKIE_KIOSKO: &str = "kiosko_token";
 
+/// Formulario de reseña de la ficha de Google de la papelería (el mismo de `/resena`).
+const URL_RESENA_GOOGLE: &str = "https://search.google.com/local/writereview?placeid=ChIJVw8jFnxDTo8RnF2hE0foXRw";
+
 // ── Pantalla del kiosko ─────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -76,6 +79,7 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
         .then(|| qr_svg(&kiosko::texto_qr_wifi(&cfg.kiosko_wifi_ssid, &cfg.kiosko_wifi_password)))
         .flatten()
         .map(minijinja::Value::from_safe_string);
+    let resena_qr = qr_svg(URL_RESENA_GOOGLE).map(minijinja::Value::from_safe_string);
     let html = state
         .tmpl
         .get_template("app/kiosko.html")
@@ -84,6 +88,7 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
             wifi_qr,
             wifi_ssid => &cfg.kiosko_wifi_ssid,
             wifi_password => &cfg.kiosko_wifi_password,
+            resena_qr,
         }))
         .map_err(|e| {
             tracing::error!("Render app/kiosko: {e}");
