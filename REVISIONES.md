@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Docs: Raspberry del kiosko e ideas para después (2026-11-10)
+
+Solo documentación, sin código.
+
+- `APP_MONEDERO.md` — cómo quedó la Raspberry `chaac`: la Elo no avisa que está conectada, así
+  que `cmdline.txt` fuerza `video=HDMI-A-2:1920x1080@60D`; el autostart de labwc abre Chromium en
+  modo kiosko con la URL de activación guardada en `url.txt`.
+- `ROADMAP.md` — kiosko en producción; nueva sección "Ideas para el kiosko": cuenta en vivo,
+  imprimir desde el celular y productos con foto.
+
+---
+
 ## Kiosko: menú con WiFi y "te agregamos a WhatsApp" (2026-11-10)
 
 La pantalla del kiosko tiene un menú abajo (es táctil): **Monedero** (lo de antes), **WiFi gratis**

@@ -81,6 +81,13 @@ frente a la pantalla.
     `Tipo = 'whatsapp'`: las dos solicitudes comprueban el teléfono.
   - Sin tocar nada en un minuto, vuelve al monedero.
 - Entre las slides de instrucciones puede mostrar promociones de la semana.
+- **La Raspberry** (`chaac`, Raspberry 4, Raspberry Pi OS con labwc), por si hay que rehacerla:
+  - La Elo no avisa que está conectada (el puerto sale `disconnected`) y el escritorio apagaba la
+    salida. Se fuerza al final de `/boot/firmware/cmdline.txt`: `video=HDMI-A-2:1920x1080@60D`
+    (cable en el puerto lejos de la corriente; respaldo en `cmdline.txt.respaldo`).
+  - `~/.config/labwc/autostart` abre `chromium --kiosk ... "$(cat /home/ro/url.txt)"`. `url.txt`
+    (chmod 600) tiene `https://app.xplaya.com/kiosko/activar?t=TOKEN`: cada arranque renueva la
+    cookie. Sin la barra del escritorio; se administra por SSH.
 
 #### Enlace en el recibo
 

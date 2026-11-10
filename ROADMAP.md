@@ -43,11 +43,21 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   2026-11-10)
 - ✅ Ver y desligar el celular en la ficha del cliente del POS (2026-11-10; el QR que caduca se
   descartó por ahora, ver `APP_MONEDERO.md`)
-- ✅ Kiosko en tienda: QR de 30 s y código por WhatsApp desde el POS (2026-11-10; falta en
-  producción: `KIOSKO_TOKEN` en el SealedSecret, `KIOSKO_WIFI_*` y la Raspberry)
-- ✅ Menú del kiosko: WiFi para clientes y "te agregamos a WhatsApp" (2026-11-10; falta el bloque
-  2026-11-10 (b) del POS en producción)
+- ✅ Kiosko en tienda: QR de 30 s y código por WhatsApp desde el POS (2026-11-10, en producción
+  con la Raspberry `chaac`)
+- ✅ Menú del kiosko: WiFi para clientes y "te agregamos a WhatsApp" (2026-11-10)
 - ⬜ Notificaciones: abonos y vencimiento
+
+### Ideas para el kiosko (sin fecha)
+
+- ⬜ **Cuenta en vivo**: mientras la caja cobra, el kiosko muestra los productos, el total y "con
+  esta compra ganas $X en tu monedero". Nunca el nombre ni el saldo (pantalla pública). Antes de
+  diseñarlo, revisar cómo guarda el POS la venta mientras se arma.
+- ⬜ **Imprimir**: pestaña con un QR; el cliente sube su archivo desde el celular (copias, color o
+  blanco y negro), el POS recibe un aviso con su turno y el kiosko le muestra "Tu impresión es la
+  #12". Archivos en MinIO, se borran solos a las pocas horas (actas, INE).
+- ⬜ **Productos**: cuadrícula de productos con foto (reusar el catálogo); quizá un carrusel
+  cuando nadie la toca.
 
 ### Pendiente sin fecha
 
