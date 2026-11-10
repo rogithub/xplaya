@@ -50,6 +50,7 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ✅ Pestaña "Haz tu pedido" en el kiosko: QR a `xplaya.com/productos` (2026-11-10)
 - ✅ Pestaña "Nuestro WhatsApp" en el kiosko: QR del contacto de la papelería (2026-11-10)
 - ✅ Pestaña "Fotos credencial" en el kiosko: QR a `imagina.xplaya.com/kiosko` (2026-11-10)
+- ✅ Inicio del kiosko con Vitrina (monedero + productos al azar con QR) y cuadros (2026-11-10)
 - ✅ Tienda dentro de la app: barra Monedero · Tienda · Carrito; el pedido sale a nombre del
   cliente de la sesión, sin pedir datos (2026-11-10)
 - ✅ Se quedan separados app.xplaya.com y xplaya.com (2026-11-10); el carrito de xplaya.com
@@ -66,8 +67,7 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ⬜ **Carrito con código**: el pedido entra al momento y el teléfono se confirma con un código
   de 4 dígitos por WhatsApp (aviso en el POS y por ntfy, tema `pedidos`). Después: "Entrar con tu
   huella" para quien ya tiene la app.
-- ⬜ **Productos**: cuadrícula de productos con foto (reusar el catálogo); quizá un carrusel
-  cuando nadie la toca.
+- ✅ **Productos**: hecho como la Vitrina del inicio (2026-11-10).
 
 ### Pendiente sin fecha
 

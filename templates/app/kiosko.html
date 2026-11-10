@@ -2,10 +2,11 @@
 {#
   Pantalla del kiosko de la tienda (routes/kiosko.rs), en Chromium en modo kiosko con pantalla
   táctil. Es pública: nunca muestra nombres, saldos ni teléfonos de clientes.
-  Menú abajo: monedero (QR que cambia cada 30 s), WiFi para clientes, "que te agreguemos a
-  WhatsApp" (teléfono con teclado en pantalla → aviso en el POS), tienda en línea y reseña en
-  Google (estas dos, QR fijo). Sin tocar nada en un minuto,
-  vuelve al monedero. Lógica en `kioskoPantalla` (static/app/app.js).
+  Inicio: a la izquierda la **vitrina**, que alterna el QR del monedero (cambia cada 30 s) con
+  productos al azar con foto, precio y QR para pedirlos (‹ › para moverse); a la derecha, cuadros
+  que abren cada vista en pantalla completa (WiFi, "te agregamos a WhatsApp", nuestro WhatsApp,
+  pedido, fotos, reseña) con "← Inicio". Sin tocar nada en un minuto, vuelve al inicio y la
+  vitrina sigue pasando sola. Lógica en `kioskoPantalla` (static/app/app.js).
 #}
 {% block title %}Kiosko — Papelería xplaya{% endblock %}
 {% block content %}
@@ -17,25 +18,58 @@
 ] %}
 <div class="kiosko" x-data="kioskoPantalla({{ pasos | length }})" @pointerdown="actividad()">
 
-    {# ── Monedero ── #}
-    <div class="kiosko-vista" x-show="vista === 'monedero'">
-        <section class="kiosko-info">
-            <img class="kiosko-logo" src="/static/img/logo/v3/papeleria-insignia.svg" alt="Papelería" width="140" height="140">
-            <h1 class="kiosko-titulo">Lleva tu monedero en el celular</h1>
-            <p class="kiosko-sub">Es gratis: cada compra te devuelve saldo para la siguiente.</p>
-            <ol class="kiosko-pasos">
-                {% for titulo, texto in pasos %}
-                <li :class="paso === {{ loop.index0 }} && 'activo'">
-                    <span class="kiosko-num">{{ loop.index }}</span>
-                    <span><strong>{{ titulo }}</strong><br>{{ texto }}</span>
-                </li>
-                {% endfor %}
-            </ol>
+    {# ── Inicio: vitrina + cuadros ── #}
+    <div class="kiosko-inicio" x-show="vista === 'inicio'">
+        <section class="vitrina" aria-label="Vitrina">
+            {# Monedero: el QR siempre está en la página (x-show), para que se renueve solo. #}
+            <div class="vitrina-monedero" x-show="actual().tipo === 'monedero'">
+                <div>
+                    <h1 class="kiosko-titulo">Lleva tu monedero en el celular</h1>
+                    <p class="kiosko-sub">Es gratis: cada compra te devuelve saldo para la siguiente.</p>
+                    <ol class="kiosko-pasos">
+                        {% for titulo, texto in pasos %}
+                        <li :class="paso === {{ loop.index0 }} && 'activo'">
+                            <span class="kiosko-num">{{ loop.index }}</span>
+                            <span><strong>{{ titulo }}</strong><br>{{ texto }}</span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+                <div class="kiosko-qr-lado">
+                    <div class="kiosko-qr" x-ref="qr"></div>
+                    <p class="kiosko-qr-txt">Escanéame con la cámara</p>
+                </div>
+            </div>
+
+            <template x-if="actual().tipo === 'producto'">
+                <div class="vitrina-producto">
+                    <img :src="actual().foto" :alt="actual().nombre" class="vitrina-foto">
+                    <div class="vitrina-datos">
+                        <p class="vitrina-etiqueta">Vitrina</p>
+                        <h2 class="vitrina-nombre" x-text="actual().nombre"></h2>
+                        <p class="vitrina-precio" x-text="'$' + actual().precio"></p>
+                        <p class="vitrina-unidad" x-text="'por ' + actual().unidad"></p>
+                        <div class="vitrina-pedir">
+                            <div class="vitrina-qr" x-html="actual().qr"></div>
+                            <p>Pídelo desde tu celular: escanea el código.</p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <button type="button" class="vitrina-flecha izq" @click="anterior()" aria-label="Anterior">‹</button>
+            <button type="button" class="vitrina-flecha der" @click="siguiente()" aria-label="Siguiente">›</button>
+            <p class="vitrina-cuenta" x-show="diapositivas().length > 1" x-text="(i + 1) + ' / ' + diapositivas().length"></p>
         </section>
-        <section class="kiosko-qr-lado" aria-label="Código para escanear">
-            <div class="kiosko-qr" x-ref="qr"></div>
-            <p class="kiosko-qr-txt">Escanéame con la cámara</p>
-        </section>
+
+        <nav class="kiosko-cuadros" aria-label="Menú">
+            {% if wifi_qr %}<button type="button" @click="ir('wifi')"><span>📶</span>WiFi gratis</button>{% endif %}
+            <button type="button" @click="ir('whatsapp')"><span>💬</span>Te agregamos a WhatsApp</button>
+            <button type="button" @click="ir('contacto')"><span>📱</span>Nuestro WhatsApp</button>
+            {% if tienda_qr %}<button type="button" @click="ir('tienda')"><span>🛒</span>Haz tu pedido</button>{% endif %}
+            {% if fotos_qr %}<button type="button" @click="ir('fotos')"><span>📸</span>Fotos credencial</button>{% endif %}
+            {% if resena_qr %}<button type="button" @click="ir('resena')"><span>⭐</span>Tu reseña</button>{% endif %}
+        </nav>
     </div>
 
     {# ── WiFi ── #}
@@ -159,23 +193,6 @@
         </section>
     </div>
 
-    {# ── Menú ── #}
-    <nav class="kiosko-menu" aria-label="Menú">
-        <button type="button" :class="vista === 'monedero' && 'activo'" @click="ir('monedero')">💳 Monedero</button>
-        {% if wifi_qr %}
-        <button type="button" :class="vista === 'wifi' && 'activo'" @click="ir('wifi')">📶 WiFi gratis</button>
-        {% endif %}
-        <button type="button" :class="vista === 'whatsapp' && 'activo'" @click="ir('whatsapp')">💬 Te agregamos a WhatsApp</button>
-        <button type="button" :class="vista === 'contacto' && 'activo'" @click="ir('contacto')">📱 Nuestro WhatsApp</button>
-        {% if tienda_qr %}
-        <button type="button" :class="vista === 'tienda' && 'activo'" @click="ir('tienda')">🛒 Haz tu pedido</button>
-        {% endif %}
-        {% if fotos_qr %}
-        <button type="button" :class="vista === 'fotos' && 'activo'" @click="ir('fotos')">📸 Fotos credencial</button>
-        {% endif %}
-        {% if resena_qr %}
-        <button type="button" :class="vista === 'resena' && 'activo'" @click="ir('resena')">⭐ Tu reseña</button>
-        {% endif %}
-    </nav>
+    <button type="button" class="kiosko-volver" x-show="vista !== 'inicio'" x-cloak @click="ir('inicio')">← Inicio</button>
 </div>
 {% endblock %}

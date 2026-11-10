@@ -537,23 +537,140 @@ a.btn-qr { text-decoration: none; }
 .kiosko-teclado .enviar:disabled { opacity: .35; }
 .kiosko-error { color: var(--warn); font-size: 1.2rem; margin: 0; text-align: center; }
 
-.kiosko-menu {
-    display: flex;
-    gap: 1.5vw;
-    padding: 1.5vh 5vw 3vh;
-}
-.kiosko-menu button {
+/* Inicio: vitrina a la izquierda, cuadros a la derecha. */
+.kiosko-inicio {
     flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 34vw);
+    gap: 2vw;
+    padding: 3vh 2.5vw;
+}
+.vitrina {
+    position: relative;
+    min-height: 0;
+    display: grid;
+    padding: 3vh 5vw;
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: 0 8px 30px rgb(0 0 0 / .08);
+    overflow: hidden;
+}
+.vitrina-monedero {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 3vw;
+    align-items: center;
+}
+.vitrina-monedero .kiosko-titulo { font-size: clamp(1.8rem, 3vw, 2.8rem); }
+.vitrina-monedero .kiosko-sub { margin-bottom: 2vh; }
+.vitrina-monedero .kiosko-pasos li { font-size: clamp(.95rem, 1.2vw, 1.2rem); padding: 1vh 1vw; }
+.vitrina-monedero .kiosko-qr { width: min(24vw, 50vh); }
+.vitrina-producto {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 3vw;
+    align-items: center;
+    min-height: 0;
+}
+.vitrina-foto {
+    width: 100%;
+    height: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+    border-radius: 20px;
+    background: #fff;
+}
+.vitrina-etiqueta {
+    margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(1.1rem, 2vw, 1.7rem);
-    padding: 2vh 1vw;
+    font-size: clamp(1rem, 1.4vw, 1.3rem);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand-orange);
+}
+.vitrina-nombre {
+    margin: 1vh 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 2.6vw, 2.6rem);
+    line-height: 1.15;
+}
+.vitrina-precio {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.6rem, 5vw, 4.6rem);
+    color: var(--accent);
+}
+.vitrina-unidad { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
+.vitrina-pedir { display: flex; align-items: center; gap: 1.5vw; }
+.vitrina-pedir p { margin: 0; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
+.vitrina-qr { flex: none; width: min(11vw, 22vh); padding: .8vw; border-radius: 14px; background: #fff; }
+.vitrina-qr svg { width: 100%; height: 100%; display: block; }
+.vitrina-flecha {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    width: clamp(48px, 4.5vw, 72px);
+    height: clamp(48px, 4.5vw, 72px);
     border: 0;
-    border-radius: 18px;
+    border-radius: 50%;
+    background: var(--chip);
+    color: var(--ink);
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    line-height: 1;
+    box-shadow: 0 4px 14px rgb(0 0 0 / .1);
+}
+.vitrina-flecha.izq { left: 1vw; }
+.vitrina-flecha.der { right: 1vw; }
+.vitrina-flecha:active { transform: scale(.94); }
+.vitrina-cuenta {
+    position: absolute;
+    bottom: 1.5vh;
+    left: 50%;
+    translate: -50% 0;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1rem;
+}
+.kiosko-cuadros {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 1.5vw;
+}
+.kiosko-cuadros button {
+    display: grid;
+    place-content: center;
+    gap: 1vh;
+    padding: 1.5vh 1vw;
+    border: 0;
+    border-radius: 22px;
     background: var(--surface);
     color: var(--ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+    line-height: 1.15;
+    text-align: center;
     box-shadow: 0 4px 14px rgb(0 0 0 / .08);
 }
-.kiosko-menu button.activo { background: var(--accent); color: var(--accent-ink); }
+.kiosko-cuadros button span { font-size: clamp(2rem, 3.4vw, 3.2rem); }
+.kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
+/* Las demás vistas, en pantalla completa con "← Inicio" arriba a la izquierda. */
+.kiosko-vista { padding-top: 10vh; }
+.kiosko-volver {
+    position: absolute;
+    top: 3vh;
+    left: 3vw;
+    padding: 1.4vh 2vw;
+    border: 0;
+    border-radius: 16px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2vw, 1.8rem);
+    box-shadow: 0 4px 14px rgb(0 0 0 / .12);
+}
 
 /* ── Barra de abajo: Monedero · Tienda · Carrito (app/nav.html) ─────────── */
 

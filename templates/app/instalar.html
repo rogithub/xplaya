@@ -31,8 +31,17 @@
         <li>Deja prendido <strong>Abrir como app web</strong> y toca <strong>Agregar</strong>.</li>
     </ol>
     <ol class="pasos" x-show="pasos === 'android'" x-transition>
-        <li>Toca el menú <strong>⋮</strong> de Chrome, arriba a la derecha.</li>
-        <li>Elige <strong>Instalar app</strong> (o <strong>Agregar a pantalla principal</strong>).</li>
-        <li>Toca <strong>Instalar</strong>. La app queda junto a tus otras apps.</li>
+        <template x-if="navegador === 'firefox'">
+            <li>Toca el menú <strong>⋮</strong> de Firefox (abajo o arriba a la derecha).</li>
+        </template>
+        <template x-if="navegador === 'samsung'">
+            <li>Toca el menú <strong>☰</strong> de Samsung Internet, abajo a la derecha, y luego
+                <strong>Agregar página a</strong>.</li>
+        </template>
+        <template x-if="navegador === 'chrome'">
+            <li>Toca el menú <strong>⋮</strong> de Chrome, arriba a la derecha.</li>
+        </template>
+        <li>Elige <strong>Instalar</strong> o <strong>Agregar a pantalla de inicio</strong>.</li>
+        <li>Confirma. La app queda junto a tus otras apps.</li>
     </ol>
 </section>

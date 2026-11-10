@@ -55,6 +55,7 @@ pub fn router() -> Router<AppState> {
         .route("/kiosko", get(kiosko::pantalla))
         .route("/kiosko/activar", get(kiosko::activar))
         .route("/kiosko/qr", get(kiosko::qr))
+        .route("/kiosko/vitrina", get(kiosko::vitrina))
         .route("/kiosko/whatsapp", post(kiosko::whatsapp))
         .route("/kiosko/k/{codigo}", get(kiosko::escaneo))
         .route("/kiosko/s/{id}", get(kiosko::pagina))
@@ -282,12 +283,22 @@ fn manifest_json(state: &AppState, start_url: &str) -> Response {
 /// Cierra la sesión de este celular (la passkey sigue ligada: puede volver a entrar con
 /// su huella) y olvida el último monedero abierto.
 async fn salir(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    if let Some(token) = leer_cookie(&headers, COOKIE_SESION)
+    cerrar_sesion_y_volver(&state, &headers, "/").await
+}
+
+/// "Salir" del carrito de xplaya.com: su sesión es aparte de la de la app (cada dominio la
+/// suya), así que se cierra aquí y regresa al carrito.
+pub async fn salir_sitio(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    cerrar_sesion_y_volver(&state, &headers, "/carrito").await
+}
+
+async fn cerrar_sesion_y_volver(state: &AppState, headers: &HeaderMap, destino: &str) -> Response {
+    if let Some(token) = leer_cookie(headers, COOKIE_SESION)
         && let Err(e) = db::celulares::cerrar_sesion(&state.pool, token).await
     {
         tracing::error!("cerrar_sesion: {e}");
     }
-    let mut resp = Redirect::to("/").into_response();
+    let mut resp = Redirect::to(destino).into_response();
     for nombre in [COOKIE_SESION, COOKIE_MONEDERO] {
         if let Ok(v) = HeaderValue::from_str(&format!("{nombre}=; Path=/; Max-Age=0")) {
             resp.headers_mut().append(header::SET_COOKIE, v);

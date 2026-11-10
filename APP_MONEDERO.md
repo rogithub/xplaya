@@ -71,7 +71,9 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
   en modo kiosko. Se identifica con un token de dispositivo, para que nadie genere QR válidos desde
   fuera. El kiosko retirado en 2026-09 (`git checkout kiosko-v1`) ya resolvía ese token con una
   cookie HttpOnly.
-- **Menú** abajo de la pantalla, con botones grandes (es táctil):
+- **Inicio**: a la izquierda la **Vitrina**, que alterna el QR del monedero con productos al azar
+  (foto, precio y QR para pedirlo en la app; ‹ › para moverse). A la derecha, cuadros grandes (es
+  táctil) que abren cada vista en pantalla completa con "← Inicio":
   - **Monedero**: lo de arriba.
   - **WiFi gratis**: QR de la red para clientes, con nombre y contraseña (`KIOSKO_WIFI_*`).
   - **Te agregamos a WhatsApp**: para quien no sabe agregar un contacto. Escribe su teléfono con
@@ -80,7 +82,7 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
     su nombre y crea el cliente. Queda sin "aceptó el programa": no aceptó los términos. Si el
     teléfono ya era de un cliente, no se crea otro. Es la misma tabla `KioskoSolicitudes`, con
     `Tipo = 'whatsapp'`: las dos solicitudes comprueban el teléfono.
-  - Sin tocar nada en un minuto, vuelve al monedero.
+  - Sin tocar nada en un minuto, vuelve al inicio y la vitrina sigue pasando sola.
 - Entre las slides de instrucciones puede mostrar promociones de la semana.
 - **La Raspberry** (`chaac`, Raspberry 4, Raspberry Pi OS con labwc), por si hay que rehacerla:
   - La Elo no avisa que está conectada (el puerto sale `disconnected`) y el escritorio apagaba la

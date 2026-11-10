@@ -4,6 +4,36 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Salir del carrito de xplaya.com y pasos de instalar por navegador (2026-11-10)
+
+- La sesión que crea "Entrar con huella" en el carrito de xplaya.com dura un año y es aparte de
+  la de la app (el "Salir" de la app no la cierra). `templates/carrito/index.html` suma "¿No eres
+  tú? Salir"; `src/main.rs` registra `POST /salir` en el sitio con `app::salir_sitio`, que cierra
+  la sesión y regresa al carrito (`cerrar_sesion_y_volver`, compartida con el "Salir" de la app).
+- `templates/app/instalar.html` y `static/app/app.js` — los pasos a mano en Android nombran el
+  menú del navegador que se usa: Firefox (⋮), Samsung Internet (☰ → Agregar página a) o Chrome.
+
+---
+
+## Kiosko: inicio con vitrina y cuadros (2026-11-10)
+
+Con 7 botones la barra de abajo ya no cabía. Ahora el inicio es: a la izquierda la **Vitrina**,
+que alterna el QR del monedero con productos al azar (foto, precio y QR para pedirlo en la app),
+con flechas ‹ › para moverse; a la derecha, seis cuadros grandes que abren cada vista en pantalla
+completa con "← Inicio". Los productos están detrás del mostrador: la Elo es su vitrina.
+
+- `src/db/productos.rs` — `vitrina`: 24 productos al azar de `v_galeria_principal` con foto.
+- `src/routes/kiosko.rs` — `GET /kiosko/vitrina` (con la cookie del kiosko): JSON con nombre,
+  precio, unidad, foto y el QR a `/tienda/{nid}` de la app.
+- `templates/app/kiosko.html` — vista `inicio` (vitrina + cuadros) en lugar de la vista
+  `monedero` y la barra; botón "← Inicio" en las demás.
+- `static/app/app.js` — `kioskoPantalla`: diapositivas (el monedero, y otra vez el monedero entre
+  cada 3 productos), `mover`/‹ ›; cada 15 s, si nadie tocó en un minuto, pasa a la siguiente (o
+  vuelve al inicio desde otra vista); otra tanda al azar cada 10 min.
+- `static/css/app.css` — estilos de la vitrina, los cuadros y "← Inicio"; fuera los de la barra.
+
+---
+
 ## Corrección: "destino is not defined" al crear el acceso (2026-11-10)
 
 Al agregar `destino` a `entrarHuella` (tienda, `e5f78ca`), el reemplazo también cambió el final de

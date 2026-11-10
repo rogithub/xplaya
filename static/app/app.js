@@ -18,6 +18,9 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('instalarApp', () => ({
         ios: /iphone|ipad|ipod/i.test(navigator.userAgent)
             || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),   // iPad con iPadOS
+        // Para los pasos a mano en Android: cada navegador tiene su menú.
+        navegador: /Firefox\//.test(navigator.userAgent) ? 'firefox'
+            : /SamsungBrowser/.test(navigator.userAgent) ? 'samsung' : 'chrome',
         // Abierta desde el ícono: su propia ventana, sin barra del navegador.
         enLaApp: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
         yaInstalada: false,
@@ -185,28 +188,66 @@ document.addEventListener('alpine:init', () => {
     }));
 
     Alpine.data('kioskoPantalla', (pasos) => ({
-        vista: 'monedero',
+        vista: 'inicio',
         paso: 0,
         telefono: '',
         enviando: false,
         error: '',
-        ultimoToque: Date.now(),
+        ultimoToque: 0,
+        // Vitrina: productos al azar (/kiosko/vitrina) y en qué diapositiva va.
+        productos: [],
+        i: 0,
 
         init() {
             this.nuevoQr();
+            this.cargarVitrina();
+            setInterval(() => this.cargarVitrina(), 10 * 60 * 1000);   // otra tanda al azar
             setInterval(() => { this.paso = (this.paso + 1) % pasos; }, 6000);
             setInterval(() => {
-                if (this.vista !== 'monedero' && Date.now() - this.ultimoToque > 60000) this.ir('monedero');
-            }, 5000);
+                const quieto = Date.now() - this.ultimoToque > 60000;
+                if (!quieto) return;
+                if (this.vista !== 'inicio') this.ir('inicio', false);
+                else this.mover(1, false);              // la vitrina pasa sola
+            }, 15000);
         },
 
         actividad() { this.ultimoToque = Date.now(); },
 
-        ir(vista) {
+        ir(vista, tocado = true) {
             this.vista = vista;
             this.telefono = '';
             this.error = '';
-            this.actividad();
+            if (tocado) this.actividad();
+        },
+
+        // Diapositivas: el monedero y, entre cada 3 productos, otra vez el monedero.
+        diapositivas() {
+            const lista = [{ tipo: 'monedero' }];
+            this.productos.forEach((p, n) => {
+                if (n > 0 && n % 3 === 0) lista.push({ tipo: 'monedero' });
+                lista.push({ tipo: 'producto', ...p });
+            });
+            return lista;
+        },
+        actual() { return this.diapositivas()[this.i] || { tipo: 'monedero' }; },
+        mover(paso, tocado = true) {
+            const n = this.diapositivas().length;
+            this.i = (this.i + paso + n) % n;
+            if (tocado) this.actividad();
+        },
+        siguiente() { this.mover(1); },
+        anterior() { this.mover(-1); },
+
+        async cargarVitrina() {
+            try {
+                const r = await fetch('/kiosko/vitrina', { cache: 'no-store' });
+                if (r.ok) {
+                    this.productos = await r.json();
+                    this.i = 0;
+                }
+            } catch (e) {
+                // Sin red: se queda la tanda anterior (o solo el monedero).
+            }
         },
 
         tecla(d) { if (this.telefono.length < 10) this.telefono += d; this.error = ''; },
@@ -222,7 +263,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 await postJson('/kiosko/whatsapp', { telefono: this.telefono });
                 this.ir('gracias');
-                setTimeout(() => { if (this.vista === 'gracias') this.ir('monedero'); }, 12000);
+                setTimeout(() => { if (this.vista === 'gracias') this.ir('inicio', false); }, 12000);
             } catch (e) {
                 this.error = e.message || 'Algo falló. Pide ayuda en la caja.';
             } finally {

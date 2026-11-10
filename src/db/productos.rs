@@ -380,3 +380,38 @@ pub async fn detalle(
         sku,
     }))
 }
+
+/// Producto de la vitrina del kiosko de la tienda.
+#[derive(serde::Serialize)]
+pub struct ProductoVitrina {
+    pub nid: i32,
+    pub nombre: String,
+    pub precio: String,
+    pub unidad: String,
+    pub foto: String,
+}
+
+/// Productos al azar para la vitrina del kiosko: los de la galería (con existencia, no servicios,
+/// con precio; `v_galeria_principal`) que tienen foto.
+pub async fn vitrina(pool: &PgPool, content_base_url: &str, cuantos: i64) -> Result<Vec<ProductoVitrina>, sqlx::Error> {
+    let filas: Vec<(i32, String, Decimal, String, String)> = sqlx::query_as(
+        "SELECT nid, nombre, precioventa, unidadmedida, foto
+           FROM v_galeria_principal
+          WHERE foto IS NOT NULL
+          ORDER BY random()
+          LIMIT $1",
+    )
+    .bind(cuantos)
+    .fetch_all(pool)
+    .await?;
+    Ok(filas
+        .into_iter()
+        .map(|(nid, nombre, precio, unidad, foto)| ProductoVitrina {
+            nid,
+            nombre,
+            precio: format!("{precio:.2}"),
+            unidad,
+            foto: format!("{content_base_url}/papeleria-fotos-productos/{foto}"),
+        })
+        .collect())
+}

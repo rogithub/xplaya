@@ -80,6 +80,11 @@
             <div class="columns">
                 <div class="column is-half">
                     <p class="mb-3">Pedido a nombre de <strong>{{ nombre }}</strong>.</p>
+                    {# La sesión de xplaya.com dura un año: si no es su celular (o es una compu
+                       prestada), aquí la cierra. Es aparte de la de la app. #}
+                    <form method="post" action="/salir" class="mb-3">
+                        <button type="submit" class="button is-small is-text">¿No eres tú? Salir</button>
+                    </form>
                     <div x-show="error" class="notification is-danger is-light mb-4">
                         <span x-text="error"></span>
                     </div>
