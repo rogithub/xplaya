@@ -52,8 +52,8 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 - ✅ Pestaña "Fotos credencial" en el kiosko: QR a `imagina.xplaya.com/kiosko` (2026-11-10)
 - ✅ Tienda dentro de la app: barra Monedero · Tienda · Carrito; el pedido sale a nombre del
   cliente de la sesión, sin pedir datos (2026-11-10)
-- ⬜ Decidir si se unen app.xplaya.com y xplaya.com en una sola app (más barato mientras casi
-  nadie tiene la app instalada)
+- ✅ Se quedan separados app.xplaya.com y xplaya.com (2026-11-10); el carrito de xplaya.com
+  tiene "Entrar con huella" (su propia sesión) y no pide datos a quien ya tiene la app
 - ⬜ Notificaciones: abonos y vencimiento
 
 ### Ideas para el kiosko (sin fecha)

@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## "Entrar con huella" en el carrito de xplaya.com (2026-11-10)
+
+Se decidió **no unir** app.xplaya.com y xplaya.com (lo que se gana es más orden que negocio). Lo
+que sí tenía valor: que el carrito de xplaya.com **no pida datos a quien ya tiene la app**.
+
+Se descartó compartir la cookie de la app con `Domain=xplaya.com`: la llave de sesión de cada
+cliente viajaría a todos los subdominios (fotos en cntnt, analytics, POS…). En su lugar, el
+carrito tiene **"Entrar con huella o cara"** con la misma passkey (es de `xplaya.com`) y
+xplaya.com crea **su propia sesión**, que solo viaja a xplaya.com. Un toque, una vez al año.
+
+- `src/passkeys.rs` — acepta también el origen de `SITE_URL` si está dentro del RP ID
+  (producción); en desarrollo (`localhost` contra `app.localhost`) no aplica.
+- `src/main.rs` — el sitio suma `/passkey/entrar/inicio` y `/fin` (los mismos de la app, ahora
+  `pub` en `routes/app.rs`).
+- `src/routes/carrito.rs` — `pagina` pasa `nombre` si hay sesión; `crear_pedido` con sesión usa
+  `pedidos::crear_para_cliente` (sin crear ni buscar cliente por teléfono).
+- `templates/carrito/index.html` — con sesión, "Pedido a nombre de…" y Confirmar; sin sesión,
+  el cuadro "¿Ya tienes la app del monedero?" con el botón de huella, arriba del formulario.
+- `static/js/huella.js` (nuevo) — los ayudantes de passkeys y `entrarHuella`, sacados de
+  `app.js` (que registra el service worker y no se puede cargar en el sitio). La app carga los
+  dos (`app.js?v=6`).
+
+---
+
 ## App: tienda dentro de la app (2026-11-10)
 
 La app de clientes (app.xplaya.com) suma la tienda: una barra abajo con **Monedero · Tienda ·

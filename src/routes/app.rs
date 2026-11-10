@@ -292,7 +292,7 @@ async fn salir(State(state): State<AppState>, headers: HeaderMap) -> Response {
 
 /// Reto para entrar con la passkey. No dice de quién: el celular ofrece la que tenga
 /// para este dominio (passkey descubrible).
-async fn entrar_inicio(State(state): State<AppState>) -> Response {
+pub async fn entrar_inicio(State(state): State<AppState>) -> Response {
     match state.webauthn.start_discoverable_authentication() {
         Ok((opciones, estado)) => {
             let id = state.entradas.guardar(estado);
@@ -306,12 +306,12 @@ async fn entrar_inicio(State(state): State<AppState>) -> Response {
 }
 
 #[derive(Deserialize)]
-struct EntrarFin {
+pub struct EntrarFin {
     id: Uuid,
     credencial: PublicKeyCredential,
 }
 
-async fn entrar_fin(State(state): State<AppState>, Json(body): Json<EntrarFin>) -> Response {
+pub async fn entrar_fin(State(state): State<AppState>, Json(body): Json<EntrarFin>) -> Response {
     let Some(estado) = state.entradas.tomar(body.id) else {
         return error_json(StatusCode::GONE, "Pasó mucho tiempo. Toca el botón otra vez.");
     };

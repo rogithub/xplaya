@@ -76,6 +76,9 @@ async fn main() {
         .route("/productos/{nid}", get(routes::productos::detalle))
         .route("/carrito", get(routes::carrito::pagina))
         .route("/pedidos", post(routes::carrito::crear_pedido))
+        // "Entrar con huella" en el carrito: misma passkey que la app; la sesión es solo de xplaya.com.
+        .route("/passkey/entrar/inicio", post(routes::app::entrar_inicio))
+        .route("/passkey/entrar/fin", post(routes::app::entrar_fin))
         .route("/resena", get(routes::pages::resena))
         .route("/preguntas-frecuentes", get(routes::pages::faq))
         .route("/devoluciones", get(routes::pages::devoluciones))

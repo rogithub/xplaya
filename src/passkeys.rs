@@ -23,13 +23,22 @@ use crate::config::Config;
 
 /// Arma el `Webauthn` con el dominio de las passkeys (`PASSKEY_RP_ID`) y el origen de la
 /// app (`APP_URL`). Truena al arrancar si no cuadran: mejor que fallar con cada cliente.
+///
+/// También acepta el sitio (`SITE_URL`) cuando está dentro del RP ID (en producción,
+/// xplaya.com): su carrito tiene "Entrar con huella" con la misma passkey y crea su propia
+/// sesión. En desarrollo (`localhost` contra `app.localhost`) no aplica.
 pub fn webauthn(config: &Config) -> Webauthn {
     let origen = Url::parse(&config.app_url).expect("APP_URL no es una URL válida");
-    WebauthnBuilder::new(&config.passkey_rp_id, &origen)
+    let mut builder = WebauthnBuilder::new(&config.passkey_rp_id, &origen)
         .expect("PASSKEY_RP_ID tiene que ser el dominio de APP_URL o uno de sus padres")
-        .rp_name("Papelería xplaya")
-        .build()
-        .expect("Configuración de passkeys inválida")
+        .rp_name("Papelería xplaya");
+    if let Ok(sitio) = Url::parse(&config.site_url)
+        && let Some(host) = sitio.host_str()
+        && (host == config.passkey_rp_id || host.ends_with(&format!(".{}", config.passkey_rp_id)))
+    {
+        builder = builder.append_allowed_origin(&sitio);
+    }
+    builder.build().expect("Configuración de passkeys inválida")
 }
 
 /// Opciones para `navigator.credentials.create()`, pidiendo una passkey **descubrible**:

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Carrito{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ site_url }}/carrito">{% endblock %}
+{# Botón "Entrar con huella" (antes de Alpine, como cart.js). #}
+{% block head %}<script defer src="/static/js/huella.js?v=1"></script>{% endblock %}
 {% block content %}
 
 <h1 class="title">Tu carrito</h1>
@@ -73,6 +75,35 @@
                 </table>
             </div>
 
+            {% if nombre %}
+            {# Ya entró con su huella en la app: la sesión es de xplaya.com, no se piden datos. #}
+            <div class="columns">
+                <div class="column is-half">
+                    <p class="mb-3">Pedido a nombre de <strong>{{ nombre }}</strong>.</p>
+                    <div x-show="error" class="notification is-danger is-light mb-4">
+                        <span x-text="error"></span>
+                    </div>
+                    <button class="button is-success is-fullwidth" type="button"
+                            @click="enviar(true)" :class="{ 'is-loading': enviando }">
+                        Confirmar pedido
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            {# Quien ya tiene la app del monedero entra con la misma passkey: xplaya.com crea su
+               propia sesión (solo de este dominio) y el carrito deja de pedir datos. #}
+            <div class="columns" x-data="entrarHuella('/carrito')" x-show="soportado" x-cloak>
+                <div class="column is-half">
+                    <div class="box">
+                        <p class="mb-3">¿Ya tienes la app del monedero? Entra con tu huella y no escribas tus datos.</p>
+                        <button class="button is-success is-light is-fullwidth" type="button"
+                                @click="entrar()" :class="{ 'is-loading': ocupado }">
+                            Entrar con huella o cara
+                        </button>
+                        <p class="help is-danger mt-2" x-show="error" x-text="error"></p>
+                    </div>
+                </div>
+            </div>
             {# Formulario de contacto #}
             <div class="columns">
                 <div class="column is-half">
@@ -114,6 +145,7 @@
                     </form>
                 </div>
             </div>
+            {% endif %}
         </div>
     </template>
 
@@ -128,12 +160,13 @@ function paginaCarrito() {
         confirmado: false,
         error: null,
 
-        async enviar() {
+        // `conSesion`: ya entró con su huella; el servidor toma el cliente de la sesión.
+        async enviar(conSesion = false) {
             this.error = null;
             this.enviando = true;
 
             const tel = this.telefono.replace(/\D/g, '').slice(-10);
-            if (tel.length !== 10) {
+            if (!conSesion && tel.length !== 10) {
                 this.error = 'Ingresa un número de teléfono de 10 dígitos.';
                 this.enviando = false;
                 return;

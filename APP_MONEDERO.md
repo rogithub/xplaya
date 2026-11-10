@@ -153,7 +153,9 @@ La app tiene una barra abajo: **Monedero · Tienda · Carrito** (`templates/app/
   que **no pide nombre ni teléfono**: entra a nombre de ese cliente (`Origen = 1`, como los de la
   web) y responde el enlace de su cotización. Sin sesión se puede ver todo; para mandar, "Entrar
   con huella" y regresa al carrito.
-- Más adelante: unir app.xplaya.com y xplaya.com en una sola app (pendiente de decidir).
+- No se unen app.xplaya.com y xplaya.com (2026-11-10). El carrito de xplaya.com tiene "Entrar
+  con huella" con la misma passkey y crea su propia sesión (no se comparte la cookie de la app
+  para que la llave no viaje a los demás subdominios); con ella no pide datos.
 
 ### Términos y privacidad
 
