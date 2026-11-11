@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: llaves VAPID (2026-11-11)
+
+Primer paso de las notificaciones: xplaya lee la llave privada VAPID y deriva la pública (la que
+la app le dará al navegador al suscribirse). Todavía no se manda nada.
+
+- `src/push.rs` — `Vapid::desde_base64`: decodifica `VAPID_PRIVATE_KEY` y calcula la pública.
+- `src/config.rs`, `src/main.rs` — `vapid_private_key` y `AppState.vapid` (`None` = apagadas); al
+  arrancar se loguea la pública (con `RUST_LOG=info`).
+- `Cargo.toml` — `web-push-native` (Rust puro) en lugar de `web-push`, que arrastra OpenSSL por su
+  crate de cifrado y complicaría la compilación cruzada. `base64ct` para base64url.
+- `.env.example`, `CLAUDE.md` — la variable y cómo generar la llave con `openssl`.
+
+---
+
 ## Notificaciones: diseño y tabla en el POS (2026-11-11)
 
 Diseño de las notificaciones de la app (pedido listo, abonos, vencimientos) en `APP_MONEDERO.md`,

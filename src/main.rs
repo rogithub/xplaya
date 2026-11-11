@@ -13,6 +13,7 @@ mod kiosko;
 mod middleware;
 mod models;
 mod passkeys;
+mod push;
 mod routes;
 
 #[derive(Clone)]
@@ -31,6 +32,9 @@ pub struct AppState {
     pub entradas: Arc<passkeys::Pendientes<webauthn_rs::prelude::DiscoverableAuthentication>>,
     /// Kiosko: visitas abiertas por el QR, antes de escribir nombre y teléfono.
     pub kiosko_visitas: Arc<passkeys::Pendientes<()>>,
+    /// Llaves VAPID de las notificaciones (`push.rs`). `None`: notificaciones apagadas.
+    #[allow(dead_code)] // la usan las rutas de notificaciones (siguiente paso)
+    pub vapid: Option<Arc<push::Vapid>>,
 }
 
 #[tokio::main]
@@ -61,6 +65,11 @@ async fn main() {
 
     let http = reqwest::Client::new();
     let webauthn = Arc::new(passkeys::webauthn(&cfg));
+    let vapid = push::Vapid::desde_base64(&cfg.vapid_private_key).map(Arc::new);
+    match &vapid {
+        Some(v) => tracing::info!("notificaciones: llave pública VAPID {}", v.publica),
+        None => tracing::info!("notificaciones apagadas (sin VAPID_PRIVATE_KEY)"),
+    }
     let state = AppState {
         tmpl,
         config: cfg,
@@ -71,6 +80,7 @@ async fn main() {
         registros: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
         entradas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
         kiosko_visitas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
+        vapid,
     };
 
     let site = Router::new()

@@ -23,6 +23,9 @@ pub struct Config {
     /// Código de tienda del Perfil de Negocio de Google (feed de inventario local).
     /// Sin él, `/feeds/google-local.xml` responde 404.
     pub google_store_code: Option<String>,
+    /// Llave privada VAPID de las notificaciones Web Push (`push.rs`), base64url de 32 bytes.
+    /// Vacía: la app no ofrece notificaciones.
+    pub vapid_private_key: String,
 }
 
 impl Config {
@@ -53,6 +56,7 @@ impl Config {
                 .ok()
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty()),
+            vapid_private_key: std::env::var("VAPID_PRIVATE_KEY").unwrap_or_default(),
         }
     }
 
