@@ -84,13 +84,20 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
     `Tipo = 'whatsapp'`: las dos solicitudes comprueban el teléfono.
   - Sin tocar nada en un minuto, vuelve al inicio y la vitrina sigue pasando sola.
 - Entre las slides de instrucciones puede mostrar promociones de la semana.
-- **La Raspberry** (`chaac`, Raspberry 4, Raspberry Pi OS con labwc), por si hay que rehacerla:
-  - La Elo no avisa que está conectada (el puerto sale `disconnected`) y el escritorio apagaba la
-    salida. Se fuerza al final de `/boot/firmware/cmdline.txt`: `video=HDMI-A-2:1920x1080@60D`
-    (cable en el puerto lejos de la corriente; respaldo en `cmdline.txt.respaldo`).
+- **La Raspberry del kiosko** (`cajita`, Raspberry Pi OS con labwc), por si hay que rehacerla:
   - `~/.config/labwc/autostart` abre `chromium --kiosk ... "$(cat /home/ro/url.txt)"`. `url.txt`
     (chmod 600) tiene `https://app.xplaya.com/kiosko/activar?t=TOKEN`: cada arranque renueva la
     cookie. Sin la barra del escritorio; se administra por SSH.
+  - Lee la EDID de la Elo (ET2270L) sin ayuda; no necesita nada en `cmdline.txt`.
+- **`chaac`** (Raspberry 4) fue el kiosko hasta el 2026-11-11; ahora es caja alternativa con
+  escritorio normal y teclado en pantalla (squeekboard). El autostart del kiosko quedó como
+  `~/.config/labwc/autostart.kiosko`.
+  - En su puerto la Elo no entrega su EDID: sale `disconnected` y sin medidas físicas.
+    `/boot/firmware/cmdline.txt` lleva al final `video=HDMI-A-2:1920x1080@60D` (fuerza la
+    salida) y `drm.edid_firmware=HDMI-A-2:edid/elo.bin` (EDID copiada de `cajita` a
+    `/lib/firmware/edid/elo.bin`). Sin la EDID, squeekboard cree que es un celular y saca un
+    teclado que tapa media pantalla, sin importar su escala. Respaldos: `cmdline.txt.respaldo`
+    (sin nada) y `cmdline.txt.respaldo2` (solo `video=`).
 
 #### Enlace en el recibo
 

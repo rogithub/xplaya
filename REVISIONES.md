@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: pasa de `chaac` a `cajita` (2026-11-11)
+
+Solo documentación, sin código.
+
+- `APP_MONEDERO.md` — el kiosko ahora corre en `cajita` (mismo autostart y `url.txt`); `chaac`
+  queda como caja con touch. Su Elo no entrega la EDID, así que squeekboard sacaba un teclado
+  enorme: `cmdline.txt` carga la EDID copiada de `cajita` con `drm.edid_firmware`.
+
+---
+
 ## Notificaciones: "pedido listo" con Urgency high (2026-11-11)
 
 Segunda prueba en producción: `enviada (nats)`, y 14.6 s de xplaya al celular (Android junta los
