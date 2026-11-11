@@ -56,7 +56,11 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   cliente de la sesión, sin pedir datos (2026-11-10)
 - ✅ Se quedan separados app.xplaya.com y xplaya.com (2026-11-10); el carrito de xplaya.com
   tiene "Entrar con huella" (su propia sesión) y no pide datos a quien ya tiene la app
-- ⬜ Notificaciones: abonos y vencimiento
+- ⬜ Notificaciones: pedido listo, abonos y vencimiento (diseño en `APP_MONEDERO.md`)
+- ⬜ **Recordatorio de pago de servicios** (más adelante): clientes que pagan agua, luz o teléfono
+  en la tienda reciben aviso antes de su fecha de corte. Usa la misma tabla `Notificaciones` (un
+  tipo nuevo). Falta decidir de dónde sale la fecha: registrada en el POS por servicio del cliente,
+  o deducida de sus pagos anteriores.
 
 ### Ideas para el kiosko (sin fecha)
 
