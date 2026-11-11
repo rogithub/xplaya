@@ -159,6 +159,26 @@ pierde nada. NATS (ya en el cluster) entra si aparece un sistema que no deba con
 como todo pasa por la tabla, bastaría un relevo de la tabla a NATS. El mismo camino sirve para un
 futuro **chat** del POS con clientes de la app (tabla `Mensajes` + `NOTIFY`, SSE en la app).
 
+#### Dónde se pide el permiso
+
+El permiso es del **celular del cliente**, no de cada pedido: una vez que acepta, le llega cualquier
+pedido con su `ClienteId`, lo haya hecho él en la app o la caja en el POS a partir de su WhatsApp.
+Solo se pide con sesión (huella), y nunca sin contexto: un "no" del navegador es difícil de deshacer.
+
+1. **Al hacer un pedido en la app**: después de "Pedido enviado", "¿Te avisamos cuando esté listo?"
+   con el botón **Sí, avísame**.
+2. **Aviso fijo en Monedero** (como "Instala la app"): "🔔 Recibe avisos de tus pedidos y tu saldo".
+   Desaparece al aceptar. Es el camino principal de quien pide por WhatsApp.
+3. **En la cotización** (`/cotizacion/{guid}`, el enlace que la caja manda por WhatsApp): "¿Quieres
+   que te avisemos cuando esté listo? Ábrelo en la app", con enlace a la app.
+
+- **iPhone**: solo con la app instalada (iOS 16.4+). Sin instalar, en lugar del botón: "Primero
+  instala la app" con los pasos de siempre.
+- **Si dijo que no**: no se vuelve a preguntar; el aviso explica cómo activarlo en los ajustes.
+- **En el POS**: el pedido tiene que quedar a nombre del cliente. Sin `ClienteId`, el botón dice
+  "Este pedido no tiene cliente" en lugar de fallar en silencio.
+- Para después: avisar también "Recibimos tu pedido" al capturarlo.
+
 ### Tienda dentro de la app
 
 La app tiene una barra abajo: **Monedero · Tienda · Carrito** (`templates/app/nav.html`).
