@@ -83,6 +83,8 @@ async fn main() {
         kiosko_visitas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
         vapid,
     };
+    // Tareas que entregan los avisos de la app (NATS + revisión periódica).
+    push::vigilar(state.clone());
 
     let site = Router::new()
         .route("/", get(routes::productos::lista))

@@ -4,6 +4,27 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: xplaya entrega los avisos (NATS + revisión periódica) (2026-11-11)
+
+xplaya ya manda por Web Push las filas `pendiente` de `Notificaciones`. Se entera por **NATS**
+(JetStream): el POS publicará el Id en `notificaciones.nueva`, el stream `NOTIFICACIONES` lo
+guarda y xplaya lo lee de su consumer `xplaya` (pull, ack explícito, 5 intentos). Stream,
+consumer y usuarios: `k3s-manifests/CLAUDE.md`, sección NATS.
+
+- `src/push.rs` — `entregar`: toma la fila (`FOR UPDATE SKIP LOCKED`, para que NATS y la
+  revisión no la manden dos veces), busca el celular con suscripción, cifra y firma, y marca:
+  `enviada`, `sin_app`, `fallida` (404/410 borran la suscripción del celular). 429/5xx/red:
+  `Reintentar` → NAK a NATS (otra vez en 30 s). `vigilar`: arranca `escuchar_nats` (se reconecta
+  cada 10 s si se cae) y `revisar` (cada 2 min: rezagadas de 1 min a 1 día; vence las de más de
+  un día). Un mensaje que no es un Id se confirma y se descarta.
+- `src/db/notificaciones.rs` — consultas de la tabla.
+- `src/config.rs` — `NATS_URL`, `NATS_USUARIO`, `NATS_PASSWORD`. `Cargo.toml`: `async-nats`
+  (solo `jetstream`, con `ring`: sin OpenSSL ni aws-lc) y `futures-util`.
+
+Probado en local sin NATS: una fila de un cliente sin celular quedó `sin_app` en la revisión.
+
+---
+
 ## Notificaciones: la app guarda la suscripción del celular (2026-11-11)
 
 En Monedero, con sesión, aparece "🔔 Recibe avisos de tus pedidos y tu saldo" → **Activar** pide

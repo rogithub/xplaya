@@ -26,6 +26,12 @@ pub struct Config {
     /// Llave privada VAPID de las notificaciones Web Push (`push.rs`), base64url de 32 bytes.
     /// Vacía: la app no ofrece notificaciones.
     pub vapid_private_key: String,
+    /// NATS para enterarse al instante de notificaciones nuevas (`push.rs`). Usuario `xplaya`:
+    /// solo puede leer su consumer del stream NOTIFICACIONES. Sin usuario, solo la revisión
+    /// periódica de la tabla.
+    pub nats_url: String,
+    pub nats_usuario: String,
+    pub nats_password: String,
 }
 
 impl Config {
@@ -57,6 +63,10 @@ impl Config {
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty()),
             vapid_private_key: std::env::var("VAPID_PRIVATE_KEY").unwrap_or_default(),
+            nats_url: std::env::var("NATS_URL")
+                .unwrap_or_else(|_| "nats://nats.nats.svc.cluster.local:4222".to_string()),
+            nats_usuario: std::env::var("NATS_USUARIO").unwrap_or_default().trim().to_string(),
+            nats_password: std::env::var("NATS_PASSWORD").unwrap_or_default().trim().to_string(),
         }
     }
 

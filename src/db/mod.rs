@@ -3,6 +3,7 @@ pub mod pedidos;
 pub mod monedero;
 pub mod altas;
 pub mod celulares;
+pub mod notificaciones;
 pub mod kiosko;
 pub mod settings;
 pub mod short_urls;
