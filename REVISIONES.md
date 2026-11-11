@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: fechas en UTC sin importar la sesión; el log dice quién entregó (2026-11-11)
+
+En la primera prueba en producción el aviso llegó, pero `FechaEnviado - FechaCreado` dio
+5 h 0 min 15 s: la fila se insertó desde pgAdmin, con la sesión en hora local, y `NOW()` en un
+`TIMESTAMP` sin zona toma la zona de la sesión. xplaya veía la fila 5 h vieja y la revisión
+periódica podía adelantarse a NATS.
+
+- Repo del POS: `Notificaciones.FechaCreado DEFAULT (NOW() AT TIME ZONE 'UTC')` (schema y
+  `updates.sql`). Aplicado en dev; falta producción.
+- `src/db/notificaciones.rs` — macro `ahora!()`: todas las fechas y comparaciones con
+  `NOW() AT TIME ZONE 'UTC'`, no `NOW()`.
+- `src/push.rs` — `entregar(…, origen)`: log `{id} enviada (nats)` / `(revisión)`, `sin_app`,
+  `fallida`.
+
+Probado en dev: una fila insertada con `PGTZ=America/Mexico_City` nace con 0 s de antigüedad y la
+revisión no la toma antes de un minuto; envejecida 2 min, sale `sin_app (revisión)`.
+
+---
+
 ## Notificaciones: el service worker muestra los avisos (2026-11-11)
 
 El celular muestra el aviso aunque la app esté cerrada y le cuenta al servidor cuándo llegó y

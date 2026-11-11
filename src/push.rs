@@ -55,7 +55,8 @@ const TTL: Duration = Duration::from_secs(24 * 60 * 60);
 
 /// Manda la notificación `id` al celular de su cliente y la marca. Si ya no está pendiente
 /// (otra tarea la mandó, o el Id no existe), no hace nada: se puede llamar de más.
-pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid) -> Result<(), Reintentar> {
+/// `origen` ("nats" o "revisión") solo es para el log: saber quién la entregó.
+pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -> Result<(), Reintentar> {
     let r = |e: sqlx::Error| Reintentar(format!("BD: {e}"));
     // La transacción mantiene la fila bloqueada mientras se manda (ver `tomar`).
     let mut tx = state.pool.begin().await.map_err(r)?;
@@ -64,6 +65,7 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid) -> Result<(), R
     };
     let Some(destino) = db::notificaciones::destino(&mut tx, aviso.cliente_id).await.map_err(r)? else {
         db::notificaciones::marcar(&mut tx, id, "sin_app", None, None).await.map_err(r)?;
+        tracing::info!("notificaciones: {id} sin_app ({origen})");
         return tx.commit().await.map_err(r);
     };
     let celular = Some(destino.celular_id);
@@ -86,11 +88,13 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid) -> Result<(), R
     let status = respuesta.status();
     if status.is_success() {
         db::notificaciones::marcar(&mut tx, id, "enviada", celular, None).await.map_err(r)?;
+        tracing::info!("notificaciones: {id} enviada ({origen})");
     } else if status.as_u16() == 404 || status.as_u16() == 410 {
         // La suscripción ya no existe: desinstaló la app o quitó el permiso.
         db::notificaciones::marcar(&mut tx, id, "fallida", celular,
             Some("La suscripción ya no existe (quitó el permiso o la app)")).await.map_err(r)?;
         db::notificaciones::quitar_push(&mut tx, destino.celular_id).await.map_err(r)?;
+        tracing::info!("notificaciones: {id} fallida, suscripción vencida ({origen})");
     } else if status.as_u16() == 429 || status.is_server_error() {
         return Err(Reintentar(format!("servicio de push respondió {status}")));
     } else {
@@ -98,6 +102,7 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid) -> Result<(), R
         let detalle = respuesta.text().await.unwrap_or_default();
         let error = format!("{status}: {}", detalle.chars().take(200).collect::<String>());
         db::notificaciones::marcar(&mut tx, id, "fallida", celular, Some(&error)).await.map_err(r)?;
+        tracing::warn!("notificaciones: {id} fallida: {error} ({origen})");
     }
     tx.commit().await.map_err(r)
 }
@@ -166,7 +171,7 @@ async fn escuchar_una_vez(state: &AppState, vapid: &Vapid) -> Result<(), Box<dyn
         // El mensaje es solo el Id de la fila; lo demás está en la tabla.
         let id = std::str::from_utf8(&mensaje.payload).ok().and_then(|t| t.trim().parse::<Uuid>().ok());
         let resultado = match id {
-            Some(id) => entregar(state, vapid, id).await,
+            Some(id) => entregar(state, vapid, id, "nats").await,
             None => {
                 // Basura (o una prueba a mano): se confirma para que no vuelva.
                 tracing::warn!("notificaciones: mensaje que no es un Id, se descarta: {:?}",
@@ -194,7 +199,7 @@ async fn revisar(state: AppState, vapid: Arc<Vapid>) {
         match db::notificaciones::rezagadas(&state.pool).await {
             Ok(ids) => {
                 for id in ids {
-                    if let Err(Reintentar(e)) = entregar(&state, &vapid, id).await {
+                    if let Err(Reintentar(e)) = entregar(&state, &vapid, id, "revisión").await {
                         tracing::warn!("notificaciones: rezagada {id}: {e}");
                     }
                 }

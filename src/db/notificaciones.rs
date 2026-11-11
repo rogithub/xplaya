@@ -2,9 +2,16 @@
 //!
 //! Quien quiere avisar (el POS) inserta una fila `pendiente` y publica su Id en NATS; `push.rs`
 //! la toma, la manda por Web Push al celular ligado del cliente y la marca.
+//!
+//! Las fechas son `TIMESTAMP` sin zona y se guardan en UTC. Aquí siempre se usa `AHORA`
+//! (`NOW() AT TIME ZONE 'UTC'`), no `NOW()`: `NOW()` se convierte a la zona de la sesión, y una
+//! sesión en hora local (pgAdmin, por ejemplo) desfasaría las fechas varias horas.
 
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
+
+/// La hora actual en UTC, para comparar y guardar fechas de esta tabla.
+macro_rules! ahora { () => { "(NOW() AT TIME ZONE 'UTC')" } }
 
 /// Lo que se manda al celular.
 pub struct Pendiente {
@@ -56,12 +63,12 @@ pub async fn marcar(
     celular_id: Option<Uuid>,
     error: Option<&str>,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query(concat!(
         "UPDATE notificaciones
             SET estado = $2, celularid = $3, error = LEFT($4, 300),
-                fechaenviado = CASE WHEN $2 = 'enviada' THEN NOW() END
+                fechaenviado = CASE WHEN $2 = 'enviada' THEN ", ahora!(), " END
           WHERE id = $1",
-    )
+    ))
     .bind(id)
     .bind(estado)
     .bind(celular_id)
@@ -88,14 +95,14 @@ pub async fn quitar_push(tx: &mut PgConnection, celular_id: Uuid) -> Result<(), 
 /// Pendientes que NATS no entregó (estaba caído cuando el POS publicó): de más de un minuto,
 /// para no adelantarse a NATS, y de menos de un día.
 pub async fn rezagadas(pool: &PgPool) -> Result<Vec<Uuid>, sqlx::Error> {
-    sqlx::query_scalar(
+    sqlx::query_scalar(concat!(
         "SELECT id FROM notificaciones
           WHERE estado = 'pendiente'
-            AND fechacreado < NOW() - INTERVAL '1 minute'
-            AND fechacreado > NOW() - INTERVAL '1 day'
+            AND fechacreado < ", ahora!(), " - INTERVAL '1 minute'
+            AND fechacreado > ", ahora!(), " - INTERVAL '1 day'
           ORDER BY fechacreado
           LIMIT 100",
-    )
+    ))
     .fetch_all(pool)
     .await
 }
@@ -103,10 +110,10 @@ pub async fn rezagadas(pool: &PgPool) -> Result<Vec<Uuid>, sqlx::Error> {
 /// Lo que lleva más de un día pendiente ya no vale la pena mandarlo ("tu pedido está listo"
 /// de antier confunde más de lo que ayuda).
 pub async fn vencer(pool: &PgPool) -> Result<u64, sqlx::Error> {
-    let r = sqlx::query(
+    let r = sqlx::query(concat!(
         "UPDATE notificaciones SET estado = 'fallida', error = 'No se pudo entregar en un día'
-          WHERE estado = 'pendiente' AND fechacreado <= NOW() - INTERVAL '1 day'",
-    )
+          WHERE estado = 'pendiente' AND fechacreado <= ", ahora!(), " - INTERVAL '1 day'",
+    ))
     .execute(pool)
     .await?;
     Ok(r.rows_affected())
@@ -114,7 +121,7 @@ pub async fn vencer(pool: &PgPool) -> Result<u64, sqlx::Error> {
 
 /// El service worker avisa que el aviso llegó al celular. Solo la primera vez cuenta.
 pub async fn marcar_recibida(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE notificaciones SET fecharecibido = COALESCE(fecharecibido, NOW()) WHERE id = $1")
+    sqlx::query(concat!("UPDATE notificaciones SET fecharecibido = COALESCE(fecharecibido, ", ahora!(), ") WHERE id = $1"))
         .bind(id)
         .execute(pool)
         .await?;
@@ -123,12 +130,12 @@ pub async fn marcar_recibida(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error>
 
 /// El cliente tocó el aviso. Si el aviso de "recibida" se perdió, abrirla también lo prueba.
 pub async fn marcar_abierta(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query(concat!(
         "UPDATE notificaciones
-            SET fechaabierto = COALESCE(fechaabierto, NOW()),
-                fecharecibido = COALESCE(fecharecibido, NOW())
+            SET fechaabierto = COALESCE(fechaabierto, ", ahora!(), "),
+                fecharecibido = COALESCE(fecharecibido, ", ahora!(), ")
           WHERE id = $1",
-    )
+    ))
     .bind(id)
     .execute(pool)
     .await?;
