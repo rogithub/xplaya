@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: diseño y tabla en el POS (2026-11-11)
+
+Diseño de las notificaciones de la app (pedido listo, abonos, vencimientos) en `APP_MONEDERO.md`,
+sección Notificaciones: tabla `Notificaciones` como bandeja de salida + `LISTEN/NOTIFY`, y por qué
+no NATS por ahora.
+
+- Repo del POS, rama `feature/notificaciones-bd`: `Notificaciones`, columnas `Push*` en
+  `ClienteCelulares` y trigger `tr_notificaciones_notify`. Aplicado en `dev_inventario_papeleria`.
+
+---
+
 ## App: heatmaps de Umami (2026-11-11)
 
 app.xplaya.com carga `recorder.js` de Umami para los **heatmaps** (toques y scroll, muestreo

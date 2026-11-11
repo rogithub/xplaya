@@ -135,13 +135,29 @@ instalarla no recibe notificaciones (Web Push en iOS requiere 16.4+ y la app ins
 
 ### Notificaciones
 
+- **Pedido listo**: botón "Avisar que está listo" en el pedido del POS. Si el cliente no tiene la
+  app con notificaciones, el POS ofrece el mensaje de WhatsApp de siempre.
 - Cuando se abona al monedero.
 - 7 días antes de que venza su saldo.
 
-Se envían con Web Push (llaves VAPID). Como los abonos los crea el POS, xplaya se entera con una
-**tarea que cada minuto busca abonos nuevos** en `MonederoGenerados`; la misma tarea revisa una vez
-al día los saldos que vencen en 7 días. Si más adelante el POS publica eventos en NATS, se puede
-cambiar a escucharlos.
+Se envían con Web Push (llaves VAPID) al celular ligado del cliente (`ClienteCelulares.Push*`).
+Todo pasa por la tabla **`Notificaciones`** del repo del POS, que funciona como bandeja de salida:
+
+1. Quien quiere avisar (el POS) inserta una fila: cliente, tipo, título, texto y ruta de la app.
+2. Al hacer commit, un trigger hace `NOTIFY notificaciones` con el Id; xplaya escucha con
+   `LISTEN` (`PgListener` de sqlx) y la manda al instante. Al arrancar, manda las pendientes.
+3. xplaya llena las marcas: `enviada` (el servicio de push la aceptó), `sin_app`, `fallida` (si la
+   suscripción ya no existe, se borra del celular), y `FechaRecibido` / `FechaAbierto`, que avisa
+   el service worker. El POS las muestra en la ficha del cliente y en el pedido.
+
+Abonos y vencimientos entran a la misma tabla (por definir: trigger en `MonederoGenerados` o tarea
+diaria en xplaya).
+
+**Por qué LISTEN/NOTIFY y no NATS** (decidido el 11 de noviembre de 2026): el POS y xplaya ya
+comparten la BD, el aviso solo sale si la transacción se guardó, y si xplaya está caído no se
+pierde nada. NATS (ya en el cluster) entra si aparece un sistema que no deba conectarse a la BD;
+como todo pasa por la tabla, bastaría un relevo de la tabla a NATS. El mismo camino sirve para un
+futuro **chat** del POS con clientes de la app (tabla `Mensajes` + `NOTIFY`, SSE en la app).
 
 ### Tienda dentro de la app
 
