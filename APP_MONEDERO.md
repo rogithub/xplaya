@@ -159,6 +159,16 @@ pierde nada. NATS (ya en el cluster) entra si aparece un sistema que no deba con
 como todo pasa por la tabla, bastaría un relevo de la tabla a NATS. El mismo camino sirve para un
 futuro **chat** del POS con clientes de la app (tabla `Mensajes` + `NOTIFY`, SSE en la app).
 
+#### En el POS: "Avisar por la app"
+
+Los pedidos se guardan **ya terminados** (llega el encargo por WhatsApp, se agregan las líneas y
+el cliente, se imprime y se guarda). Al guardar sale el panel "¡Guardado!" con el mensaje para
+WhatsApp y **Copiar todo** (`savedTicket.ts`, `Views/Ventas/_VentasTemplates.cshtml`). Ahí, junto
+a **Copiar todo**, va **📲 Avisar por la app**, solo si el cliente tiene celular ligado con avisos
+(`ClienteCelulares.FechaPush`). El POS inserta en `Notificaciones` (`pedido_listo`, mismo texto
+que el de WhatsApp, `Url` a la cotización) y publica el Id en NATS (`notificaciones.nueva`, usuario
+`pos`). El botón muestra Enviado ✓ → Recibido ✓✓ → Abierto 👁, o "No llegó" (y queda WhatsApp).
+
 #### Dónde se pide el permiso
 
 El permiso es del **celular del cliente**, no de cada pedido: una vez que acepta, le llega cualquier
