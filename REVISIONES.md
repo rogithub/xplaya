@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: su propio sitio en Umami (2026-11-11)
+
+app.xplaya.com deja de contarse junto con xplaya.com en analytics.xplaya.com: tiene su propio
+*Website ID*.
+
+- `templates/app/base.html` — `data-website-id` de app.xplaya.com (`e301a863…`). El sitio sigue
+  con `8ca14307…` en `templates/base.html`.
+
+---
+
 ## Kiosko: la vitrina ya no pasa "Lleva tu monedero"; turnos descartados (2026-11-11)
 
 La vitrina del inicio pasa **solo productos**. El QR del alta del monedero queda en "Instala
