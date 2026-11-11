@@ -4,6 +4,24 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: el service worker muestra los avisos (2026-11-11)
+
+El celular muestra el aviso aunque la app esté cerrada y le cuenta al servidor cuándo llegó y
+cuándo lo tocó el cliente (`FechaRecibido`, `FechaAbierto`).
+
+- `static/app/sw.js` — `push`: muestra `{titulo, texto}` con el ícono de la app (`tag` = Id, para
+  no duplicar) y hace POST a `/notificaciones/{id}/recibida`. `notificationclick`: abre la `url`
+  (de la app o completa) o trae al frente esa ventana, y POST a `/abierta`.
+- `src/routes/notificaciones.rs` — `recibida` y `abierta` (sin sesión: el service worker corre sin
+  la app abierta; el UUID solo lo conoce ese celular). Siempre 204.
+- `src/db/notificaciones.rs` — `marcar_recibida`, `marcar_abierta` (solo la primera vez cuenta;
+  abrirla también la da por recibida).
+
+Las actualizaciones de `sw.js` llegan solas: el navegador lo vuelve a pedir (`no-cache`) al abrir
+la app, y con `skipWaiting` + `clients.claim` el nuevo toma el control enseguida.
+
+---
+
 ## Notificaciones: xplaya entrega los avisos (NATS + revisión periódica) (2026-11-11)
 
 xplaya ya manda por Web Push las filas `pendiente` de `Notificaciones`. Se entera por **NATS**

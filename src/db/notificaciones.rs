@@ -111,3 +111,26 @@ pub async fn vencer(pool: &PgPool) -> Result<u64, sqlx::Error> {
     .await?;
     Ok(r.rows_affected())
 }
+
+/// El service worker avisa que el aviso llegó al celular. Solo la primera vez cuenta.
+pub async fn marcar_recibida(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE notificaciones SET fecharecibido = COALESCE(fecharecibido, NOW()) WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+/// El cliente tocó el aviso. Si el aviso de "recibida" se perdió, abrirla también lo prueba.
+pub async fn marcar_abierta(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE notificaciones
+            SET fechaabierto = COALESCE(fechaabierto, NOW()),
+                fecharecibido = COALESCE(fecharecibido, NOW())
+          WHERE id = $1",
+    )
+    .bind(id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}

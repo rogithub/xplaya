@@ -1,8 +1,10 @@
 // Service worker de la app de clientes (app.xplaya.com).
 //
-// Se sirve en /sw.js (no en /static) para controlar toda la app. Su trabajo:
-// que la app abra sin señal — en caja el internet a veces falla — mostrando la
-// última versión del monedero y su QR.
+// Se sirve en /sw.js (no en /static) para controlar toda la app. Sus trabajos:
+// 1. Que la app abra sin señal — en caja el internet a veces falla — mostrando la
+//    última versión del monedero y su QR.
+// 2. Mostrar los avisos (Web Push) aunque la app esté cerrada, y contarle al servidor
+//    cuándo llegaron y cuándo los tocó el cliente (routes/notificaciones.rs).
 //
 //  - Páginas: red primero; si no hay red, la última copia guardada.
 //  - /static, Alpine y las fuentes: caché primero (no cambian sin cambiar de URL).
@@ -73,4 +75,47 @@ async function cachePrimero(req) {
                         || (resp.headers.get('Cache-Control') || '').includes('immutable')));
     if (guardable) cache.put(req, resp.clone());
     return resp;
+}
+
+// ── Avisos (Web Push) ───────────────────────────────────────────────────────
+// El servidor (src/push.rs) manda, cifrado, {id, titulo, texto, url}; el navegador lo
+// descifra y despierta a este service worker unos segundos para mostrarlo.
+
+const ICONO = '/static/img/favicon/web-app-manifest-192x192.png?v=4';
+
+self.addEventListener('push', (event) => {
+    let aviso = {};
+    try { aviso = event.data ? event.data.json() : {}; } catch { /* sin JSON: aviso genérico */ }
+    const titulo = aviso.titulo || 'Papelería xplaya';
+    event.waitUntil(Promise.all([
+        self.registration.showNotification(titulo, {
+            body: aviso.texto || '',
+            icon: ICONO,
+            tag: aviso.id,                    // el mismo aviso dos veces se reemplaza, no se duplica
+            data: { id: aviso.id, url: aviso.url || '/' },
+        }),
+        marcar(aviso.id, 'recibida'),
+    ]));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const { id, url } = event.notification.data || {};
+    // La URL puede ser de la app (/…) o completa (https://xplaya.com/cotizacion/…).
+    const destino = new URL(url || '/', self.location.origin).href;
+    event.waitUntil(Promise.all([abrir(destino), marcar(id, 'abierta')]));
+});
+
+// Si la app ya está abierta en esa página, la trae al frente; si no, abre una ventana.
+async function abrir(destino) {
+    const ventanas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const misma = ventanas.find((v) => v.url === destino);
+    if (misma) return misma.focus();
+    return self.clients.openWindow(destino);
+}
+
+// Le avisa al servidor; si no hay red, no pasa nada (el aviso ya se mostró).
+function marcar(id, que) {
+    if (!id) return Promise.resolve();
+    return fetch(`/notificaciones/${id}/${que}`, { method: 'POST' }).catch(() => {});
 }

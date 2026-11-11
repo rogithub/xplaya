@@ -67,6 +67,8 @@ pub fn router() -> Router<AppState> {
         .route("/passkey/entrar/inicio", post(entrar_inicio))
         .route("/passkey/entrar/fin", post(entrar_fin))
         .route("/notificaciones/suscripcion", post(notificaciones::suscribir))
+        .route("/notificaciones/{id}/recibida", post(notificaciones::recibida))
+        .route("/notificaciones/{id}/abierta", post(notificaciones::abierta))
         // El service worker tiene que servirse desde la raíz para controlar toda la
         // app (`scope: /`); por eso no va en `/static`. Se lee del disco como el resto
         // de estáticos, con `no-cache` para que cada despliegue se vea de inmediato.
