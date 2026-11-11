@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: la app guarda la suscripción del celular (2026-11-11)
+
+En Monedero, con sesión, aparece "🔔 Recibe avisos de tus pedidos y tu saldo" → **Activar** pide
+el permiso del navegador, suscribe el celular con la llave pública VAPID y la manda al servidor,
+que la guarda en `ClienteCelulares.Push*`. Todavía no se manda ningún aviso.
+
+- `templates/app/avisos.html` — el aviso y sus estados: ofrecer, instalar (iPhone sin la app),
+  bloqueado, listo. Con ✕ se oculta 30 días. Lo incluye `monedero/app.html` con sesión y llave.
+- `static/app/app.js` — `avisosApp`: si ya aceptó, confirma la suscripción en silencio en cada
+  visita; si la suscripción es de otra llave VAPID, la rehace (así un cambio de llave se cura solo
+  cuando el cliente abre la app).
+- `src/routes/notificaciones.rs` — `POST /notificaciones/suscripcion`: solo con sesión; valida
+  endpoint HTTPS, `p256dh` de 65 bytes y `auth` de 16 antes de guardar.
+- `src/db/celulares.rs` — `celular_de_sesion` y `guardar_push` (`FechaPush` cambia solo si
+  cambia el endpoint).
+- `src/main.rs` — global `vapid_publica` para los templates; `src/routes/app.rs` — `token_sesion`.
+
+---
+
 ## Notificaciones: llaves VAPID (2026-11-11)
 
 Primer paso de las notificaciones: xplaya lee la llave privada VAPID y deriva la pública (la que

@@ -67,6 +67,88 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
+// Notificaciones (templates/app/avisos.html): pide el permiso, suscribe el celular con la
+// llave pública VAPID y le pasa la suscripción al servidor (routes/notificaciones.rs).
+document.addEventListener('alpine:init', () => {
+    const CERRADO = 'xp_avisos_cerrado';
+    const DIAS_OCULTO = 30;
+    Alpine.data('avisosApp', (publica) => ({
+        // '': nada que mostrar · ofrecer · instalar (iPhone sin instalar) · bloqueado · listo
+        estado: '',
+        ocupado: false,
+        error: '',
+        cerrado: false,
+
+        async init() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+                // iPhone en Safari (sin instalar) no tiene PushManager: instalada, sí.
+                const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                this.estado = ios ? 'instalar' : '';
+                this.leerCerrado();
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                // Ya aceptó: confirmarla en silencio (o rehacerla si cambió la llave).
+                try { await this.suscribir(); } catch (e) { console.warn('avisos:', e); }
+                return;
+            }
+            this.estado = Notification.permission === 'denied' ? 'bloqueado' : 'ofrecer';
+            this.leerCerrado();
+        },
+
+        get visible() { return this.estado !== '' && (!this.cerrado || this.estado === 'listo'); },
+
+        leerCerrado() {
+            try {
+                const t = Number(localStorage.getItem(CERRADO) || 0);
+                this.cerrado = Date.now() - t < DIAS_OCULTO * 864e5;
+            } catch { /* sin localStorage: se muestra */ }
+        },
+
+        cerrar() {
+            this.cerrado = true;
+            try { localStorage.setItem(CERRADO, String(Date.now())); } catch { /* nada */ }
+        },
+
+        async activar() {
+            this.error = '';
+            this.ocupado = true;
+            try {
+                const permiso = await Notification.requestPermission();
+                if (permiso === 'granted') {
+                    await this.suscribir();
+                    this.estado = 'listo';
+                } else if (permiso === 'denied') {
+                    this.estado = 'bloqueado';
+                }
+                // 'default': cerró la pregunta sin contestar; el botón sigue ahí.
+            } catch (e) {
+                this.error = e.message || 'No se pudieron activar los avisos.';
+            } finally {
+                this.ocupado = false;
+            }
+        },
+
+        async suscribir() {
+            const reg = await navigator.serviceWorker.ready;
+            let sub = await reg.pushManager.getSubscription();
+            // Suscrita con otra llave (la de otro ambiente o una llave nueva): se rehace.
+            if (sub && sub.options.applicationServerKey
+                && bytesAB64(sub.options.applicationServerKey) !== publica) {
+                await sub.unsubscribe();
+                sub = null;
+            }
+            if (!sub) {
+                sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,             // cada aviso se ve: lo piden Chrome y Safari
+                    applicationServerKey: b64aBytes(publica),
+                });
+            }
+            await postJson('/notificaciones/suscripcion', sub.toJSON());
+        },
+    }));
+});
+
 // Avisa si no hay señal: la página que se ve puede ser la copia guardada.
 document.addEventListener('alpine:init', () => {
     Alpine.data('conexion', () => ({

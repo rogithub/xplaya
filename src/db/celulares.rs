@@ -127,6 +127,19 @@ pub async fn cliente_de_sesion(pool: &PgPool, token: &str) -> Result<Option<Uuid
     .await
 }
 
+/// Celular de la sesión (no el cliente): para guardar cosas de ese aparato, como su
+/// suscripción de notificaciones. Mismas reglas que `cliente_de_sesion`.
+pub async fn celular_de_sesion(pool: &PgPool, token: &str) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT c.id
+           FROM celularsesiones s JOIN clientecelulares c ON c.id = s.celularid
+          WHERE s.tokenhash = $1 AND s.expira > NOW() AND c.fechadesligado IS NULL",
+    )
+    .bind(hash(token))
+    .fetch_optional(pool)
+    .await
+}
+
 pub async fn cerrar_sesion(pool: &PgPool, token: &str) -> Result<(), sqlx::Error> {
     sqlx::query("DELETE FROM celularsesiones WHERE tokenhash = $1")
         .bind(hash(token))
@@ -141,4 +154,31 @@ fn hash(token: &str) -> Vec<u8> {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+// ── Notificaciones (Web Push) ───────────────────────────────────────────────
+
+/// Guarda (o reemplaza) la suscripción Web Push del celular: con ella `push.rs` le puede
+/// mandar avisos. Se llama cada vez que la app confirma su suscripción, así que también
+/// sirve para mantenerla al día si el navegador la renovó.
+pub async fn guardar_push(
+    pool: &PgPool,
+    celular_id: Uuid,
+    endpoint: &str,
+    p256dh: &str,
+    auth: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE clientecelulares
+            SET pushendpoint = $2, pushp256dh = $3, pushauth = $4,
+                fechapush = CASE WHEN pushendpoint = $2 THEN fechapush ELSE NOW() END
+          WHERE id = $1",
+    )
+    .bind(celular_id)
+    .bind(endpoint)
+    .bind(p256dh)
+    .bind(auth)
+    .execute(pool)
+    .await?;
+    Ok(())
 }

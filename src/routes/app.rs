@@ -26,7 +26,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 
 use crate::{
     db,
-    routes::{alta, alta::error_json, kiosko, monedero, tienda},
+    routes::{alta, alta::error_json, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -66,6 +66,7 @@ pub fn router() -> Router<AppState> {
         .route("/passkey/registro/fin", post(alta::registro_fin))
         .route("/passkey/entrar/inicio", post(entrar_inicio))
         .route("/passkey/entrar/fin", post(entrar_fin))
+        .route("/notificaciones/suscripcion", post(notificaciones::suscribir))
         // El service worker tiene que servirse desde la raíz para controlar toda la
         // app (`scope: /`); por eso no va en `/static`. Se lee del disco como el resto
         // de estáticos, con `no-cache` para que cada despliegue se vea de inmediato.
@@ -138,10 +139,15 @@ fn cookie_monedero(headers: &HeaderMap) -> Option<Uuid> {
     leer_cookie(headers, COOKIE_MONEDERO).and_then(|v| v.parse().ok())
 }
 
+/// Token de la cookie de sesión, sin validarlo (eso lo hace la BD).
+pub fn token_sesion(headers: &HeaderMap) -> Option<&str> {
+    leer_cookie(headers, COOKIE_SESION)
+}
+
 /// Cliente de la sesión del celular, si tiene una válida. Un error de BD cuenta como
 /// "sin sesión" (se registra en el log): la app sigue funcionando sin ella.
 pub async fn cliente_sesion(state: &AppState, headers: &HeaderMap) -> Option<Uuid> {
-    let token = leer_cookie(headers, COOKIE_SESION)?;
+    let token = token_sesion(headers)?;
     db::celulares::cliente_de_sesion(&state.pool, token)
         .await
         .inspect_err(|e| tracing::error!("cliente_de_sesion: {e}"))

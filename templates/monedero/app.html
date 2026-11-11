@@ -26,6 +26,8 @@
         <h1 class="app-title">Mis tarjetas</h1>
     </header>
 
+    {% if con_sesion and vapid_publica %}{% include "app/avisos.html" %}{% endif %}
+
     {# ── Tarjeta ── #}
     <section class="card" aria-label="Tarjeta del monedero">
         <div class="card-head">

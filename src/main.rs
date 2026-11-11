@@ -33,7 +33,6 @@ pub struct AppState {
     /// Kiosko: visitas abiertas por el QR, antes de escribir nombre y teléfono.
     pub kiosko_visitas: Arc<passkeys::Pendientes<()>>,
     /// Llaves VAPID de las notificaciones (`push.rs`). `None`: notificaciones apagadas.
-    #[allow(dead_code)] // la usan las rutas de notificaciones (siguiente paso)
     pub vapid: Option<Arc<push::Vapid>>,
 }
 
@@ -70,6 +69,8 @@ async fn main() {
         Some(v) => tracing::info!("notificaciones: llave pública VAPID {}", v.publica),
         None => tracing::info!("notificaciones apagadas (sin VAPID_PRIVATE_KEY)"),
     }
+    // La app la usa para suscribirse; sin llave (vacía) no ofrece notificaciones.
+    tmpl.add_global("vapid_publica", vapid.as_ref().map(|v| v.publica.clone()).unwrap_or_default());
     let state = AppState {
         tmpl,
         config: cfg,

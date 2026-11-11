@@ -1,0 +1,38 @@
+{#
+  Aviso "Recibe avisos de tus pedidos y tu saldo", en Monedero con sesión (lo incluye
+  monedero/app.html si hay llave VAPID). Lógica en `avisosApp` (app.js):
+  - Si ya aceptó, no se ve: en silencio confirma la suscripción con el servidor (y la rehace si
+    cambió la llave VAPID).
+  - iPhone sin la app instalada: los avisos solo llegan instalada (iOS 16.4+).
+  - Si los bloqueó: cómo activarlos en los ajustes (no se puede volver a preguntar).
+  - Con ✕ se oculta 30 días en este celular.
+#}
+<section class="instalar-aviso" x-data="avisosApp('{{ vapid_publica }}')" x-show="visible" x-cloak aria-label="Avisos">
+    <template x-if="estado === 'ofrecer'">
+        <div class="instalar-fila">
+            <span>🔔 <strong>Recibe avisos</strong> de tus pedidos y tu saldo</span>
+            <button type="button" class="btn-chico" @click="activar()" :disabled="ocupado">Activar</button>
+            <button type="button" class="btn-cerrar" @click="cerrar()" aria-label="No mostrar">✕</button>
+        </div>
+    </template>
+    <template x-if="estado === 'instalar'">
+        <div class="instalar-fila">
+            <span>🔔 Para recibir avisos en iPhone, primero <strong>instala la app</strong> (arriba).</span>
+            <button type="button" class="btn-cerrar" @click="cerrar()" aria-label="Cerrar">✕</button>
+        </div>
+    </template>
+    <template x-if="estado === 'bloqueado'">
+        <div class="instalar-fila">
+            <span>🔕 Los avisos están bloqueados. Actívalos en los ajustes de tu celular:
+                <strong>Notificaciones</strong> de esta app.</span>
+            <button type="button" class="btn-cerrar" @click="cerrar()" aria-label="Cerrar">✕</button>
+        </div>
+    </template>
+    <template x-if="estado === 'listo'">
+        <div class="instalar-fila">
+            <span>✅ Listo: te avisaremos aquí.</span>
+            <button type="button" class="btn-cerrar" @click="estado = ''" aria-label="Cerrar">✕</button>
+        </div>
+    </template>
+    <p class="avisos-error" x-show="error" x-text="error" x-cloak></p>
+</section>
