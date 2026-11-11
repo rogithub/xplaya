@@ -65,6 +65,10 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   diseñarlo, revisar cómo guarda el POS la venta mientras se arma.
 - Imprimir: se descartó un flujo propio en imagina (subir archivos, acomodar fotos, Word a PDF):
   los clientes se atoran y le quitan tiempo a la caja. Lo cubre la pestaña "Nuestro WhatsApp".
+- Turnos: se descartó (2026-11-11) un sistema de turnos (tomar turno en el kiosko, seguirlo en la
+  app o en una página web sin app, botón "Siguiente" en el POS). Solo hay fila 2 o 3 días al año:
+  no justifica tocar POS, kiosko y app, y nadie en caja tendría práctica con el botón. Esos días,
+  números de papel. Si la fila se vuelve semanal, retomarlo.
 - ⬜ **Carrito con código**: el pedido entra al momento y el teléfono se confirma con un código
   de 4 dígitos por WhatsApp (aviso en el POS y por ntfy, tema `pedidos`). Después: "Entrar con tu
   huella" para quien ya tiene la app.

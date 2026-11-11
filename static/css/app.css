@@ -460,30 +460,6 @@ a.btn-qr { text-decoration: none; }
     margin: 1.5vh 0 1vh;
 }
 .kiosko-sub { font-size: clamp(1.1rem, 1.8vw, 1.6rem); color: var(--muted); margin: 0 0 3vh; }
-.kiosko-pasos { list-style: none; padding: 0; margin: 0; display: grid; gap: 1vh; }
-.kiosko-pasos li {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    padding: 1.2vh 1.2vw;
-    border-radius: 16px;
-    font-size: clamp(1rem, 1.5vw, 1.35rem);
-    color: var(--muted);
-    transition: background .4s, color .4s;
-}
-.kiosko-pasos li.activo { background: var(--surface); color: var(--ink); box-shadow: 0 4px 18px rgb(0 0 0 / .08); }
-.kiosko-num {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 2.4em;
-    height: 2.4em;
-    border-radius: 50%;
-    background: var(--chip);
-    font-family: var(--font-display);
-    font-weight: 600;
-}
-.kiosko-pasos li.activo .kiosko-num { background: var(--accent); color: var(--accent-ink); }
 .kiosko-qr-lado { display: grid; justify-items: center; gap: 2vh; }
 /* El QR siempre en blanco y negro para que cualquier cámara lo lea. */
 .kiosko-qr {
@@ -556,16 +532,13 @@ a.btn-qr { text-decoration: none; }
     box-shadow: 0 8px 30px rgb(0 0 0 / .08);
     overflow: hidden;
 }
-.vitrina-monedero {
+.vitrina-vacia {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 3vw;
-    align-items: center;
+    place-items: center;
+    height: 100%;
+    font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+    color: var(--muted);
 }
-.vitrina-monedero .kiosko-titulo { font-size: clamp(1.8rem, 3vw, 2.8rem); }
-.vitrina-monedero .kiosko-sub { margin-bottom: 2vh; }
-.vitrina-monedero .kiosko-pasos li { font-size: clamp(.95rem, 1.2vw, 1.2rem); padding: 1vh 1vw; }
-.vitrina-monedero .kiosko-qr { width: min(24vw, 50vh); }
 .vitrina-producto {
     display: grid;
     grid-template-columns: 1.1fr 1fr;

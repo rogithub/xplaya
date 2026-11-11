@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: la vitrina ya no pasa "Lleva tu monedero"; turnos descartados (2026-11-11)
+
+La vitrina del inicio pasa **solo productos**. El QR del alta del monedero queda en "Instala
+nuestra app", que dice lo mismo. Sin productos (sin red), la vitrina dice "Toca un cuadro de la
+derecha 👉".
+
+- `templates/app/kiosko.html` — se quitan la diapositiva del monedero y sus 4 pasos; aviso
+  `vitrina-vacia`.
+- `static/app/app.js` — `kioskoPantalla` sin `pasos` ni `diapositivas()`: `actual()` es el
+  producto en curso o `null`; `nuevoQr` solo llena `qrApp`.
+- `static/css/app.css` — fuera `.vitrina-monedero` y `.kiosko-pasos`; nuevo `.vitrina-vacia`.
+- `ROADMAP.md` — sistema de turnos descartado: solo hay fila 2 o 3 días al año.
+
+---
+
 ## Kiosko: la vitrina mueve el inventario lento (2026-11-10)
 
 En lugar de productos al azar, la vitrina elige al azar entre los **100 productos con foto que no

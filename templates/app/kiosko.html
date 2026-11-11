@@ -2,46 +2,25 @@
 {#
   Pantalla del kiosko de la tienda (routes/kiosko.rs), en Chromium en modo kiosko con pantalla
   táctil. Es pública: nunca muestra nombres, saldos ni teléfonos de clientes.
-  Inicio: a la izquierda la **vitrina**, que alterna el QR del monedero (cambia cada 30 s) con
-  productos al azar con foto y precio (‹ › para moverse); a la derecha, cuadros
+  Inicio: a la izquierda la **vitrina**, con productos al azar con foto y precio (‹ › para
+  moverse); a la derecha, cuadros
   que abren cada vista en pantalla completa (WiFi, "te agregamos a WhatsApp", nuestro WhatsApp,
   instala la app, fotos, reseña) con "← Inicio". Sin tocar nada en un minuto, vuelve al inicio y la
   vitrina sigue pasando sola. Lógica en `kioskoPantalla` (static/app/app.js).
 #}
 {% block title %}Kiosko — Papelería xplaya{% endblock %}
 {% block content %}
-{% set pasos = [
-    ("Abre la cámara de tu celular", "y apúntala al código de la derecha."),
-    ("Escribe tu nombre y tu teléfono", "La caja te manda un código por WhatsApp."),
-    ("Escribe el código y usa tu huella o tu cara", "Sin contraseñas: solo tú abres tu monedero."),
-    ("¡Listo! Tu monedero en el celular", "Ve tu saldo y cuándo vence, cuando quieras."),
-] %}
-<div class="kiosko" x-data="kioskoPantalla({{ pasos | length }})" @pointerdown="actividad()">
+<div class="kiosko" x-data="kioskoPantalla()" @pointerdown="actividad()">
 
     {# ── Inicio: vitrina + cuadros ── #}
     <div class="kiosko-inicio" x-show="vista === 'inicio'">
         <section class="vitrina" aria-label="Vitrina">
-            {# Monedero: el QR siempre está en la página (x-show), para que se renueve solo. #}
-            <div class="vitrina-monedero" x-show="actual().tipo === 'monedero'">
-                <div>
-                    <h1 class="kiosko-titulo">Lleva tu monedero en el celular</h1>
-                    <p class="kiosko-sub">Es gratis: cada compra te devuelve saldo para la siguiente.</p>
-                    <ol class="kiosko-pasos">
-                        {% for titulo, texto in pasos %}
-                        <li :class="paso === {{ loop.index0 }} && 'activo'">
-                            <span class="kiosko-num">{{ loop.index }}</span>
-                            <span><strong>{{ titulo }}</strong><br>{{ texto }}</span>
-                        </li>
-                        {% endfor %}
-                    </ol>
-                </div>
-                <div class="kiosko-qr-lado">
-                    <div class="kiosko-qr" x-ref="qr"></div>
-                    <p class="kiosko-qr-txt">Escanéame con la cámara</p>
-                </div>
+            {# Sin productos (sin red o sin fotos): un aviso en lugar de la vitrina vacía. #}
+            <div class="vitrina-vacia" x-show="!actual()">
+                <p>Toca un cuadro de la derecha 👉</p>
             </div>
 
-            <template x-if="actual().tipo === 'producto'">
+            <template x-if="actual()">
                 <div class="vitrina-producto">
                     <img :src="actual().foto" :alt="actual().nombre" class="vitrina-foto">
                     <div class="vitrina-datos">
@@ -57,7 +36,7 @@
 
             <button type="button" class="vitrina-flecha izq" @click="anterior()" aria-label="Anterior">‹</button>
             <button type="button" class="vitrina-flecha der" @click="siguiente()" aria-label="Siguiente">›</button>
-            <p class="vitrina-cuenta" x-show="diapositivas().length > 1" x-text="(i + 1) + ' / ' + diapositivas().length"></p>
+            <p class="vitrina-cuenta" x-show="productos.length > 1" x-text="(i + 1) + ' / ' + productos.length"></p>
         </section>
 
         <nav class="kiosko-cuadros" aria-label="Menú">
@@ -113,7 +92,7 @@
         </section>
     </div>
 
-    {# ── Instala nuestra app: el mismo QR del monedero (alta con código por WhatsApp). Al
+    {# ── Instala nuestra app: QR del alta del monedero (código por WhatsApp; cambia cada 30 s). Al
        terminar, la app tiene monedero y tienda, y le ofrece instalarla. ── #}
     <div class="kiosko-vista" x-show="vista === 'app'" x-cloak>
         <section class="kiosko-info">

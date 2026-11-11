@@ -124,9 +124,6 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // Pantalla del kiosko: menú (monedero, WiFi, WhatsApp), QR del monedero que se pide justo
-    // cuando vence el anterior, instrucciones que pasan solas y vuelta al monedero tras un
-    // minuto sin que nadie toque la pantalla.
     // ── Tienda (routes/tienda.rs) ──
 
     // Detalle de producto: presentación elegida y "Agregar al carrito" (store de cart.js).
@@ -187,9 +184,10 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    Alpine.data('kioskoPantalla', (pasos) => ({
+    // Pantalla del kiosko: vitrina de productos, cuadros del menú y vuelta al inicio tras un
+    // minuto sin que nadie toque la pantalla.
+    Alpine.data('kioskoPantalla', () => ({
         vista: 'inicio',
-        paso: 0,
         telefono: '',
         enviando: false,
         error: '',
@@ -202,7 +200,6 @@ document.addEventListener('alpine:init', () => {
             this.nuevoQr();
             this.cargarVitrina();
             setInterval(() => this.cargarVitrina(), 10 * 60 * 1000);   // otra tanda al azar
-            setInterval(() => { this.paso = (this.paso + 1) % pasos; }, 6000);
             setInterval(() => {
                 const quieto = Date.now() - this.ultimoToque > 60000;
                 if (!quieto) return;
@@ -220,18 +217,11 @@ document.addEventListener('alpine:init', () => {
             if (tocado) this.actividad();
         },
 
-        // Diapositivas: el monedero y, entre cada 3 productos, otra vez el monedero.
-        diapositivas() {
-            const lista = [{ tipo: 'monedero' }];
-            this.productos.forEach((p, n) => {
-                if (n > 0 && n % 3 === 0) lista.push({ tipo: 'monedero' });
-                lista.push({ tipo: 'producto', ...p });
-            });
-            return lista;
-        },
-        actual() { return this.diapositivas()[this.i] || { tipo: 'monedero' }; },
+        // La diapositiva actual de la vitrina, o null si no hay productos.
+        actual() { return this.productos[this.i] || null; },
         mover(paso, tocado = true) {
-            const n = this.diapositivas().length;
+            const n = this.productos.length;
+            if (!n) return;
             this.i = (this.i + paso + n) % n;
             if (tocado) this.actividad();
         },
@@ -246,7 +236,7 @@ document.addEventListener('alpine:init', () => {
                     this.i = 0;
                 }
             } catch (e) {
-                // Sin red: se queda la tanda anterior (o solo el monedero).
+                // Sin red: se queda la tanda anterior (o el aviso de vitrina vacía).
             }
         },
 
@@ -277,9 +267,8 @@ document.addEventListener('alpine:init', () => {
                 const r = await fetch('/kiosko/qr', { cache: 'no-store' });
                 if (r.ok) {
                     const { svg, ms } = await r.json();
-                    // El mismo QR en la vitrina y en "Instala nuestra app".
-                    this.$refs.qr.innerHTML = svg;
-                    if (this.$refs.qrApp) this.$refs.qrApp.innerHTML = svg;
+                    // QR de "Instala nuestra app" (siempre en la página, para que se renueve solo).
+                    this.$refs.qrApp.innerHTML = svg;
                     espera = ms + 200;
                 }
             } catch (e) {
