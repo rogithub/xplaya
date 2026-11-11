@@ -16,6 +16,8 @@ macro_rules! ahora { () => { "(NOW() AT TIME ZONE 'UTC')" } }
 /// Lo que se manda al celular.
 pub struct Pendiente {
     pub cliente_id: Uuid,
+    /// `pedido_listo`, `monedero_abono`, `monedero_vence`.
+    pub tipo: String,
     pub titulo: String,
     pub texto: String,
     pub url: Option<String>,
@@ -33,15 +35,15 @@ pub struct Destino {
 /// transacción. `SKIP LOCKED`: si otra tarea ya la está mandando (NATS y la revisión
 /// periódica pueden coincidir), aquí sale `None` en lugar de esperar y mandarla dos veces.
 pub async fn tomar(tx: &mut PgConnection, id: Uuid) -> Result<Option<Pendiente>, sqlx::Error> {
-    let fila: Option<(Uuid, String, String, Option<String>)> = sqlx::query_as(
-        "SELECT clienteid, titulo, texto, url FROM notificaciones
+    let fila: Option<(Uuid, String, String, String, Option<String>)> = sqlx::query_as(
+        "SELECT clienteid, tipo, titulo, texto, url FROM notificaciones
           WHERE id = $1 AND estado = 'pendiente'
           FOR UPDATE SKIP LOCKED",
     )
     .bind(id)
     .fetch_optional(&mut *tx)
     .await?;
-    Ok(fila.map(|(cliente_id, titulo, texto, url)| Pendiente { cliente_id, titulo, texto, url }))
+    Ok(fila.map(|(cliente_id, tipo, titulo, texto, url)| Pendiente { cliente_id, tipo, titulo, texto, url }))
 }
 
 pub async fn destino(tx: &mut PgConnection, cliente_id: Uuid) -> Result<Option<Destino>, sqlx::Error> {

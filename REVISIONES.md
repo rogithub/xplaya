@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Notificaciones: "pedido listo" con Urgency high (2026-11-11)
+
+Segunda prueba en producción: `enviada (nats)`, y 14.6 s de xplaya al celular (Android junta los
+avisos de prioridad normal para ahorrar batería). Los `pedido_listo` ahora llevan el encabezado
+Web Push `Urgency: high`, que pide entregarlos de inmediato; los de saldo siguen normales.
+
+- `src/push.rs` — `entregar`: `Urgency: high` si `tipo = 'pedido_listo'`.
+- `src/db/notificaciones.rs` — `Pendiente.tipo`.
+
+---
+
 ## Notificaciones: fechas en UTC sin importar la sesión; el log dice quién entregó (2026-11-11)
 
 En la primera prueba en producción el aviso llegó, pero `FechaEnviado - FechaCreado` dio

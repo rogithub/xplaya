@@ -75,7 +75,15 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -
         "id": id, "titulo": aviso.titulo, "texto": aviso.texto, "url": aviso.url,
     });
     let peticion = match peticion(vapid, &destino, &state.config.site_url, cuerpo.to_string()) {
-        Ok(p) => p,
+        Ok(mut p) => {
+            // `Urgency: high`: Google/Apple lo entregan de inmediato aunque el celular esté
+            // ahorrando batería (si no, lo juntan con otros y llega segundos o minutos después).
+            // Solo para lo que el cliente está esperando; un aviso de saldo puede esperar.
+            if aviso.tipo == "pedido_listo" {
+                p.headers_mut().insert("Urgency", reqwest::header::HeaderValue::from_static("high"));
+            }
+            p
+        }
         Err(e) => {
             // Datos de suscripción que no sirven: no tiene caso reintentar.
             db::notificaciones::marcar(&mut tx, id, "fallida", celular, Some(&e)).await.map_err(r)?;
