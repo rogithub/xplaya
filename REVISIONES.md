@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: heatmaps de Umami (2026-11-11)
+
+app.xplaya.com carga `recorder.js` de Umami para los **heatmaps** (toques y scroll, muestreo
+100 %). El **replay está apagado** en la configuración del sitio en Umami: grabaría el nombre, el
+saldo y el teléfono del cliente. Con el replay apagado, el script solo manda coordenadas de cada
+toque, la URL y la profundidad de scroll; no manda el DOM.
+
+- `templates/app/base.html` — `recorder.js` después de `script.js` (necesita su sesión).
+
+Si algún día se enciende el replay, `maskLevel: "moderate"` solo oculta los campos de texto; el
+nombre y el saldo se verían. Usar `strict` o `blockSelector`.
+
+---
+
 ## App: su propio sitio en Umami (2026-11-11)
 
 app.xplaya.com deja de contarse junto con xplaya.com en analytics.xplaya.com: tiene su propio
