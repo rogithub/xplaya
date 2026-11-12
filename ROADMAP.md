@@ -74,7 +74,8 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   no justifica tocar POS, kiosko y app, y nadie en caja tendría práctica con el botón. Esos días,
   números de papel. Si la fila se vuelve semanal, retomarlo.
 - ⬜ **Carrito con código**: el pedido entra al momento y el teléfono se confirma con un código
-  de 4 dígitos por WhatsApp (aviso en el POS y por ntfy, tema `pedidos`). Después: "Entrar con tu
+  de 4 dígitos por WhatsApp (aviso en el POS y por ntfy, tema `pedidos`; con el puente
+  `nats-ntfy`, ver "Avisos a la papelería"). Después: "Entrar con tu
   huella" para quien ya tiene la app.
 - ✅ **Productos**: hecho como la Vitrina del inicio (2026-11-10); desde el mismo día muestra el
   inventario lento con más dinero parado.
@@ -82,6 +83,25 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   ordenada por dinero parado, para fotografiar primero esos (la vitrina solo muestra con foto).
 - ⬜ **Medir la pantalla**: reporte semanal en Superset (altas de monedero desde el kiosko,
   contactos de WhatsApp, cuántos volvieron a comprar).
+
+### Avisos a la papelería por ntfy (por revisar)
+
+Desde el 12 nov 2026 hay un puente **`nats-ntfy`** (github.com/rogithub/nats-ntfy): cualquier
+programa publica en NATS `avisos.<topic>` el JSON de ntfy y le llega al celular de quien esté
+suscrito. Es para avisar a **personas de la papelería** (a los clientes los avisa el Web Push de la
+app). Para sumar un aviso: publicar desde el programa (patrón en `src/avisos.rs`), dar el permiso
+en NATS y usar un topic `papeleria-*` (así le llega a `dayana` y a `ro` sin tocar ntfy).
+
+- ✅ **Código del alta del kiosko** al celular de la papelería, con botón a WhatsApp (2026-11-12),
+  topic `papeleria-kiosko`.
+- ⬜ **Pedido nuevo en línea** (carrito de xplaya.com y tienda de la app): "Pedido de Juan · $350"
+  con botón a la cotización. Hoy hay que estar viendo el POS para enterarse. El de más impacto.
+- ⬜ **"Agrégame a WhatsApp"** del kiosko: la otra solicitud del kiosko, con botón que abre
+  WhatsApp con el saludo escrito. Casi igual al del código (`src/avisos.rs`).
+- ⬜ **Foto carnet / polaroid de imagina**: pedido nuevo en el kiosko de imagina, con botón al panel
+  admin. Va en el repo de pdfeitor (`kiosko-carnet.md`, "Futuro").
+- ⬜ **POS / agente de la PC de la papelería**: trabajo de impresión fallido o agente sin
+  responder. El POS ya publica en NATS (.NET); le faltaría el permiso de `avisos.>`.
 
 ### Pendiente sin fecha
 
