@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Aviso del kiosko por ntfy: verificado en producción (2026-11-12)
+
+Solo documentación. Probado de punta a punta: kiosko → xplaya → NATS → `nats-ntfy` → ntfy →
+celular → WhatsApp. En la tienda es más rápido que mandar el código desde WhatsApp Web en el POS.
+
+- `APP_MONEDERO.md` ("Kiosko en la tienda") — anotado como verificado.
+- `ROADMAP.md` (sin cambios) — los siguientes avisos por revisar están en "Avisos a la papelería".
+
+---
+
 ## Avisos: el topic pasa a `papeleria-kiosko` (2026-11-12)
 
 En ntfy, `dayana` solo lee `papeleria-*`; con `papeleria-kiosko` le llega a ella y a `ro` sin

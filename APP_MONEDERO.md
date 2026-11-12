@@ -62,7 +62,8 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
   que abre WhatsApp con el mensaje ya escrito: sirve si nadie está viendo el POS. xplaya publica en
   NATS `avisos.papeleria-kiosko` (`src/avisos.rs`) y el puente
   [`nats-ntfy`](https://github.com/rogithub/nats-ntfy) lo pasa a ntfy. Si NATS falla, solo queda el
-  aviso del POS.
+  aviso del POS. **Verificado en producción el 12 nov 2026**: en la tienda es más rápido mandar el
+  código así (dos toques en el celular) que desde WhatsApp Web en la PC del POS.
 - El cliente escribe el código en su celular: así se comprueba que el teléfono es suyo (5 intentos;
   la solicitud vive 15 minutos). Después acepta términos y crea su passkey.
 - **Teléfono nuevo:** su monedero se crea hasta ese momento, no antes. **Teléfono que ya tiene
