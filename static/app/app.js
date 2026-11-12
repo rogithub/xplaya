@@ -364,3 +364,43 @@ document.addEventListener('alpine:init', () => {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW:', e));
 }
+
+// La cuenta de la caja en vivo (recuadro en el monedero, solo con sesión). Escucha
+// /cuenta/eventos (SSE, routes/cuenta.rs): `cuenta` trae el JSON que publicó el POS y
+// `sin-cuenta` lo quita. EventSource se reconecta solo si se corta la señal.
+document.addEventListener('alpine:init', () => {
+    const PESOS = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+    Alpine.data('cuentaCaja', () => ({
+        cuenta: null,
+        // Al cobrar: monedero ganado y saldo nuevo (/cuenta/venta/{id}).
+        premio: null,
+        ventaPremio: null,
+
+        init() {
+            const fuente = new EventSource('/cuenta/eventos');
+            fuente.addEventListener('cuenta', (e) => this.mostrar(JSON.parse(e.data)));
+            fuente.addEventListener('sin-cuenta', () => this.mostrar(null));
+        },
+
+        mostrar(cuenta) {
+            this.cuenta = cuenta;
+            if (cuenta?.estado !== 'cobrada') {
+                this.premio = null;
+                this.ventaPremio = null;
+                return;
+            }
+            if (cuenta.ventaId === this.ventaPremio) return;
+            const venta = cuenta.ventaId;
+            this.ventaPremio = venta;
+            fetch(`/cuenta/venta/${venta}`, { cache: 'no-store' })
+                .then((r) => (r.ok ? r.json() : null))
+                .then((p) => { if (this.ventaPremio === venta) this.premio = p; })
+                .catch(() => {});
+        },
+
+        get cobrada() { return this.cuenta?.estado === 'cobrada'; },
+        pesos(n) { return PESOS.format(n ?? 0); },
+        cantidad(n) { return Number(n).toLocaleString('es-MX', { maximumFractionDigits: 3 }); },
+    }));
+});

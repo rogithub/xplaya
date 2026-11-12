@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/tienda/{nid}", get(tienda::detalle))
         .route("/carrito", get(tienda::carrito))
         .route("/cuenta/eventos", get(cuenta::eventos))
+        .route("/cuenta/venta/{venta_id}", get(cuenta::venta))
         .route("/kiosko", get(kiosko::pantalla))
         .route("/kiosko/activar", get(kiosko::activar))
         .route("/kiosko/qr", get(kiosko::qr))

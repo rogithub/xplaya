@@ -26,6 +26,40 @@
         <h1 class="app-title">Mis tarjetas</h1>
     </header>
 
+    {# ── La cuenta de la caja en vivo (cuentaCaja en app.js): solo aparece mientras la caja
+         te está cobrando y unos minutos después de pagar. ── #}
+    {% if con_sesion %}
+    <section class="caja" x-data="cuentaCaja()" x-show="cuenta" x-cloak x-transition.opacity
+             :class="{ 'caja-cobrada': cobrada }" aria-live="polite" aria-labelledby="caja-titulo">
+        <div class="caja-head">
+            <h2 id="caja-titulo" class="caja-titulo" x-text="cobrada ? '¡Gracias por tu compra!' : 'Tu cuenta en la caja'"></h2>
+            <span class="caja-vivo" x-show="!cobrada">En vivo</span>
+        </div>
+        <ul class="caja-lista">
+            <template x-for="(r, i) in cuenta?.renglones ?? []" :key="i">
+                <li class="caja-renglon">
+                    <span class="caja-cant" x-text="cantidad(r.cantidad) + ' ×'"></span>
+                    <span class="caja-nombre" x-text="r.nombre"></span>
+                    <span class="caja-importe" x-text="pesos(r.importe)"></span>
+                </li>
+            </template>
+        </ul>
+        <p class="caja-espera" x-show="cuenta && !cuenta.renglones.length">La caja está registrando tu compra…</p>
+        <div class="caja-total">
+            <span x-text="cobrada ? 'Pagaste' : 'Total'"></span>
+            <strong x-text="pesos(cuenta?.total)"></strong>
+        </div>
+        <template x-if="premio">
+            <div class="caja-premio">
+                <p x-show="premio.tieneMonedero" class="caja-ganaste">Ganaste <strong x-text="premio.ganado"></strong> en tu monedero</p>
+                <p x-show="premio.usado">Usaste <strong x-text="premio.usado"></strong> de tu monedero</p>
+                <p x-show="premio.tieneMonedero">Tu saldo ahora: <strong x-text="premio.saldo"></strong></p>
+                <a class="caja-recibo" :href="premio.recibo">Ver recibo</a>
+            </div>
+        </template>
+    </section>
+    {% endif %}
+
     {% if con_sesion and vapid_publica %}{% include "app/avisos.html" %}{% endif %}
 
     {# ── Tarjeta ── #}

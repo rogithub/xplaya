@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Cuenta de la caja en vivo: el recuadro en la app (2026-11-12)
+
+Paso 4. Con sesión de passkey, el monedero de la app muestra arriba "Tu cuenta en la caja" mientras
+la caja le está cobrando: renglones, total y un punto "En vivo". Al cobrar cambia a "¡Gracias por
+tu compra!" con lo que ganó y usó de monedero, su saldo nuevo y la liga al recibo. Desaparece si la
+caja quita al cliente, a los 5 min de cobrar o a los 15 min sin cambios.
+
+- `templates/monedero/app.html` — el recuadro (`x-data="cuentaCaja()"`), solo con sesión.
+- `static/app/app.js` — `cuentaCaja`: abre `EventSource('/cuenta/eventos')`; al llegar una
+  `cobrada` pide el premio una sola vez por venta.
+- `src/routes/cuenta.rs` — `GET /cuenta/venta/{venta_id}`: ganado, usado y saldo con el mismo
+  cálculo del recibo (`db::monedero::recibo`); solo para ventas del cliente de la sesión (si no, 404).
+  `sin-cuenta` ahora manda `data: null`: EventSource no entrega eventos sin datos, y con datos
+  vacíos el recuadro nunca se quitaba.
+- `static/css/app.css` — sección "Cuenta de la caja en vivo", con los colores de la app (claro y oscuro).
+
+Probado en Chromium a 390 px, claro y oscuro, con NATS en podman: abierta → cobrada (premio real de
+la BD dev) → cerrada lo quita. La tarjeta de saldo de abajo no se actualiza sola: el saldo nuevo
+está en el recuadro y en la tarjeta al recargar.
+
 ## Cuenta de la caja en vivo: xplaya la recibe y la reparte por SSE (2026-11-12)
 
 Paso 3 de "la cuenta en vivo en la app". El POS publica en NATS `caja.cuenta` la cuenta completa

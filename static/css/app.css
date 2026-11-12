@@ -201,6 +201,116 @@ a { color: var(--accent); }
     font-size: .95rem;
 }
 
+/* ── Cuenta de la caja en vivo ───────────────────────────────────────────── */
+
+.caja {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    background: var(--surface);
+}
+
+.caja-cobrada { border-color: var(--brand-yellow); }
+
+.caja-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.caja-titulo {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.2rem;
+}
+
+/* Punto que late: la cuenta se está armando ahora mismo */
+.caja-vivo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.caja-vivo::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: caja-latido 1.4s ease-in-out infinite;
+}
+
+@keyframes caja-latido {
+    50% { opacity: .25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .caja-vivo::before { animation: none; }
+}
+
+.caja-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.caja-renglon {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: .95rem;
+}
+
+.caja-cant { color: var(--muted); font-variant-numeric: tabular-nums; }
+.caja-nombre { min-width: 0; overflow-wrap: anywhere; }
+.caja-importe { font-variant-numeric: tabular-nums; }
+
+.caja-espera { margin: 4px 0; color: var(--muted); font-size: .95rem; }
+
+.caja-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 10px;
+    font-weight: 600;
+}
+
+.caja-total strong {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.caja-premio {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--ok-bg);
+    color: var(--ok);
+}
+
+.caja-premio p { margin: 0; }
+.caja-premio p + p { margin-top: 4px; }
+.caja-ganaste { font-size: 1.05rem; }
+
+.caja-recibo {
+    display: inline-block;
+    margin-top: 8px;
+    color: inherit;
+    font-weight: 600;
+}
+
 /* ── Historial ──────────────────────────────────────────────────────────── */
 
 .hist { margin-top: 28px; }
