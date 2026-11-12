@@ -21,8 +21,11 @@ caja quita al cliente, a los 5 min de cobrar o a los 15 min sin cambios.
 - `static/css/app.css` — sección "Cuenta de la caja en vivo", con los colores de la app (claro y oscuro).
 
 Probado en Chromium a 390 px, claro y oscuro, con NATS en podman: abierta → cobrada (premio real de
-la BD dev) → cerrada lo quita. La tarjeta de saldo de abajo no se actualiza sola: el saldo nuevo
-está en el recuadro y en la tarjeta al recargar.
+la BD dev) → cerrada lo quita.
+
+Después: la tarjeta de saldo también se pone al día al cobrar. `cuentaCaja` manda el evento
+`saldo-monedero` con el saldo del premio y `.card-amount` lo escucha (`templates/monedero/app.html`).
+El historial sigue igual hasta recargar.
 
 ## Cuenta de la caja en vivo: xplaya la recibe y la reparte por SSE (2026-11-12)
 

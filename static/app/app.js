@@ -395,7 +395,12 @@ document.addEventListener('alpine:init', () => {
             this.ventaPremio = venta;
             fetch(`/cuenta/venta/${venta}`, { cache: 'no-store' })
                 .then((r) => (r.ok ? r.json() : null))
-                .then((p) => { if (this.ventaPremio === venta) this.premio = p; })
+                .then((p) => {
+                    if (this.ventaPremio !== venta || !p) return;
+                    this.premio = p;
+                    // La tarjeta de saldo (monedero/app.html) se pone al día sin recargar.
+                    if (p.tieneMonedero) window.dispatchEvent(new CustomEvent('saldo-monedero', { detail: p.saldo }));
+                })
                 .catch(() => {});
         },
 
