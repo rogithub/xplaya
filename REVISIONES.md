@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Alta desde el celular: pospuesta (2026-11-12)
+
+Solo documentación. Por ahora el alta sigue siendo en la tienda (kiosko) o con el enlace del recibo.
+
+- `APP_MONEDERO.md` — la sección "Alta desde el celular" queda marcada como **pospuesta**, con lo
+  que haría falta si se retoma y lo ya decidido sobre solicitudes falsas (límites + horario).
+- `nats-ntfy` se queda publicado pero sin desplegar, hasta que haya un caso real.
+
+---
+
 ## Alta desde el celular: diseño y puente NATS → ntfy (2026-11-12)
 
 Solo documentación en este repo; el puente vive en su propio repo.
