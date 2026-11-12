@@ -36,8 +36,8 @@ Solo aparece la tarjeta de la papelería. Muestra:
 
 ### Alta y acceso
 
-Hay dos formas de ligar un celular a un monedero: el **kiosko** de la tienda y el **enlace en el
-recibo**. En ambas, aceptar los términos cuenta como el "quiero participar" que hoy se pide en la
+Hay tres formas de ligar un celular a un monedero: el **kiosko** de la tienda, el **alta desde el
+celular** (a distancia, en diseño) y el **enlace en el recibo**. En ambas, aceptar los términos cuenta como el "quiero participar" que hoy se pide en la
 tienda; a partir de ahí puede redimir el monedero, que ya se genera de forma retroactiva en todas
 las ventas.
 
@@ -117,6 +117,31 @@ enlace. Los 4 dígitos admiten **5 intentos**; al quinto fallo el enlace queda b
 
 Si el celular de un cliente nuevo no puede crear passkeys, "Solo abona mi compra" crea su monedero
 y abona la compra sin ligar el celular; lo ve en la web, como hasta hoy.
+
+#### Alta desde el celular (en diseño, 12 nov 2026)
+
+Para quien se quiere registrar sin estar frente a la pantalla del kiosko. Es **el mismo flujo del
+kiosko**; cambian la entrada y por dónde le llega el código a la papelería. Los dos caminos conviven.
+
+| | Kiosko | Desde el celular |
+|---|---|---|
+| Entrada | Escanea el QR de 30 s | Abre `app.xplaya.com/alta` desde donde esté |
+| Captura | Nombre y teléfono | Igual |
+| El código aparece en | Aviso flotante del POS | Notificación ntfy en el **celular de la papelería** |
+| Lo manda | La caja, por WhatsApp | Quien porta ese celular, con el botón **Enviar por WhatsApp** de la notificación |
+| Después | Código (5 intentos, 15 min), términos, passkey | Igual |
+
+- Lo que comprueba el teléfono sigue siendo el **código por WhatsApp**, no un juicio de quien lo
+  recibe (por eso no revive lo descartado el 10 nov: ntfy solo es el canal, no hay Aprobar/Rechazar).
+- Misma tabla `KioskoSolicitudes`, con una columna de **origen** (`kiosko` / `remoto`).
+- xplaya **no habla con ntfy**: publica en NATS `avisos.papeleria` el JSON de ntfy (título, nombre,
+  teléfono, código y una acción `view` a `https://wa.me/52…?text=…`), y el puente
+  [`nats-ntfy`](https://github.com/rogithub/nats-ntfy) lo reenvía. Si ntfy está caído, NATS lo
+  retiene y reintenta. Infra pendiente: `k3s-manifests/CLAUDE.md`, sección "Eventos — NATS".
+- Opción abierta: que las solicitudes del kiosko también avisen por ntfy, por si nadie ve el POS.
+- **Pendiente de decidir:** cómo frenar solicitudes falsas ahora que no hace falta estar frente a
+  la pantalla (cada una le cuesta trabajo a una persona). Ideas: límite por teléfono y por IP,
+  horario de la tienda, o solo desde el enlace de un recibo.
 
 #### Si cambia o pierde el celular
 
@@ -238,6 +263,7 @@ ligado, el kiosko y las notificaciones.
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |
 | Aviso del kiosko con el código | POS | Aviso flotante en todas las pantallas, botón a WhatsApp |
+| Aviso del alta desde el celular | NATS `avisos.papeleria` → `nats-ntfy` → ntfy | Al celular de la papelería, botón a WhatsApp (en diseño) |
 | Ver y desligar el celular | POS | Ficha del cliente |
 
 ## Orden propuesto

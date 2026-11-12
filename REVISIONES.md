@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Alta desde el celular: diseño y puente NATS → ntfy (2026-11-12)
+
+Solo documentación en este repo; el puente vive en su propio repo.
+
+- `APP_MONEDERO.md` — sección nueva "Alta desde el celular (en diseño)": el mismo flujo del kiosko
+  para quien no está frente a la pantalla. El código le llega al celular de la papelería por ntfy
+  y lo reenvía por WhatsApp; lo que comprueba el teléfono sigue siendo el código. xplaya publicará
+  en NATS `avisos.papeleria` y el puente lo pasa a ntfy. Pendiente: cómo frenar solicitudes falsas.
+- Repo nuevo [`rogithub/nats-ntfy`](https://github.com/rogithub/nats-ntfy) — puente genérico:
+  subject `avisos.<topic>` → topic de ntfy, cuerpo = JSON de ntfy. Imagen ya publicada; falta
+  desplegarlo (pendientes en `k3s-manifests/CLAUDE.md`, "Eventos — NATS").
+
+---
+
 ## Kiosko: pasa de `chaac` a `cajita` (2026-11-11)
 
 Solo documentación, sin código.
