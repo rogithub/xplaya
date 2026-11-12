@@ -8,3 +8,4 @@ pub mod alta;
 pub mod kiosko;
 pub mod tienda;
 pub mod notificaciones;
+pub mod cuenta;

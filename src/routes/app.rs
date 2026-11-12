@@ -26,7 +26,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 
 use crate::{
     db,
-    routes::{alta, alta::error_json, kiosko, monedero, notificaciones, tienda},
+    routes::{alta, alta::error_json, cuenta, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
         .route("/tienda/pedido", post(tienda::crear_pedido))
         .route("/tienda/{nid}", get(tienda::detalle))
         .route("/carrito", get(tienda::carrito))
+        .route("/cuenta/eventos", get(cuenta::eventos))
         .route("/kiosko", get(kiosko::pantalla))
         .route("/kiosko/activar", get(kiosko::activar))
         .route("/kiosko/qr", get(kiosko::qr))

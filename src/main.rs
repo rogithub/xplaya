@@ -7,6 +7,7 @@ use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
 mod avisos;
+mod caja;
 mod config;
 mod db;
 mod estaticos;
@@ -37,6 +38,8 @@ pub struct AppState {
     pub vapid: Option<Arc<push::Vapid>>,
     /// Avisos a la papelería por NATS → nats-ntfy → ntfy (`avisos.rs`).
     pub avisos: avisos::Avisos,
+    /// La cuenta de la caja en vivo para la app del cliente (`caja.rs`, `routes/cuenta.rs`).
+    pub cajas: Arc<caja::Cajas>,
 }
 
 #[tokio::main]
@@ -87,9 +90,12 @@ async fn main() {
         kiosko_visitas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
         vapid,
         avisos,
+        cajas: Arc::new(caja::Cajas::new()),
     };
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());
+    // La cuenta de la caja en vivo (NATS caja.cuenta).
+    caja::vigilar(&state.config, state.cajas.clone());
 
     let site = Router::new()
         .route("/", get(routes::productos::lista))

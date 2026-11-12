@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Cuenta de la caja en vivo: xplaya la recibe y la reparte por SSE (2026-11-12)
+
+Paso 3 de "la cuenta en vivo en la app". El POS publica en NATS `caja.cuenta` la cuenta completa
+en cada cambio (rama `feature/cuenta-en-app` del POS). xplaya la escucha, guarda en memoria la
+última de cada cliente y se la empuja a los celulares de ese cliente. Todavía no hay pantalla:
+eso es el paso 4.
+
+- `src/caja.rs` — `Cajas`: la última cuenta por cliente y un canal `broadcast` para avisar a
+  los celulares conectados. Solo lee el encabezado (`cuentaId`, `secuencia`, `clienteId`,
+  `estado`); el JSON se reenvía tal cual. Descarta mensajes viejos de la misma cuenta. Una
+  abierta sin cambios vence a los 15 min (venta cancelada) y una cobrada se muestra 5 min.
+  `vigilar` abre su propia conexión a NATS (NATS núcleo, sin stream). Pruebas al final del archivo.
+- `src/routes/cuenta.rs` — `GET /cuenta/eventos` en app.xplaya.com, solo con sesión de passkey.
+  Es SSE (Server-Sent Events): la petición se queda abierta y manda `cuenta` (el JSON) o
+  `sin-cuenta`. Al conectarse llega lo que hay en ese momento.
+- `src/main.rs` — `AppState.cajas` y arranque de `caja::vigilar`.
+- k3s-manifests: permiso de `pos` para publicar y de `xplaya` para escuchar `caja.cuenta`
+  (reiniciar NATS).
+
+Probado en local con NATS en podman: sin sesión da 401, no llegan cuentas de otro cliente, se
+ignora un mensaje viejo y al reconectarse llega la cobrada.
+
 ## Avisos: "Agrégame a WhatsApp" del kiosko al celular de la papelería (2026-11-12)
 
 La solicitud de WhatsApp de la pantalla del kiosko también llega por ntfy (topic
