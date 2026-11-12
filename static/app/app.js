@@ -277,6 +277,11 @@ document.addEventListener('alpine:init', () => {
         // Vitrina: productos al azar (/kiosko/vitrina) y en qué diapositiva va.
         productos: [],
         i: 0,
+        // Buscar por número: el NID que se escribe, el producto encontrado y su foto actual.
+        nid: '',
+        producto: null,
+        foto: 0,
+        buscando: false,
 
         init() {
             this.nuevoQr();
@@ -295,6 +300,7 @@ document.addEventListener('alpine:init', () => {
         ir(vista, tocado = true) {
             this.vista = vista;
             this.telefono = '';
+            this.nid = '';
             this.error = '';
             if (tocado) this.actividad();
         },
@@ -319,6 +325,26 @@ document.addEventListener('alpine:init', () => {
                 }
             } catch (e) {
                 // Sin red: se queda la tanda anterior (o el aviso de vitrina vacía).
+            }
+        },
+
+        teclaNid(d) { if (this.nid.length < 6) this.nid += d; this.error = ''; },
+
+        async buscarNid() {
+            const nid = this.nid;
+            this.buscando = true;
+            this.error = '';
+            try {
+                const r = await fetch(`/kiosko/producto/${nid}`, { cache: 'no-store' });
+                if (r.status === 404) { this.error = `No encontramos el número ${nid}.`; return; }
+                if (!r.ok) throw new Error();
+                this.producto = await r.json();
+                this.foto = 0;
+                this.ir('producto');
+            } catch (e) {
+                this.error = 'Algo falló. Intenta otra vez.';
+            } finally {
+                this.buscando = false;
             }
         },
 

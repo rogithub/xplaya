@@ -6,7 +6,8 @@
   moverse); a la derecha, cuadros
   que abren cada vista en pantalla completa (WiFi, "te agregamos a WhatsApp", nuestro WhatsApp,
   instala la app, fotos, reseña) con "← Inicio". Sin tocar nada en un minuto, vuelve al inicio y la
-  vitrina sigue pasando sola. Lógica en `kioskoPantalla` (static/app/app.js).
+  vitrina sigue pasando sola. "Buscar por número" enseña un producto por su NID (para mostrárselo
+  a un cliente). Lógica en `kioskoPantalla` (static/app/app.js).
 #}
 {% block title %}Kiosko — Papelería xplaya{% endblock %}
 {% block content %}
@@ -46,6 +47,7 @@
             <button type="button" @click="ir('app')"><span>📲</span>Instala nuestra app</button>
             {% if fotos_qr %}<button type="button" @click="ir('fotos')"><span>📸</span>Fotos credencial</button>{% endif %}
             {% if resena_qr %}<button type="button" @click="ir('resena')"><span>⭐</span>Tu reseña</button>{% endif %}
+            <button type="button" class="cuadro-ancho" @click="ir('buscar')"><span>🔎</span>Buscar por número</button>
         </nav>
     </div>
 
@@ -90,6 +92,59 @@
             </div>
             <p class="kiosko-error" x-show="error" x-text="error" x-cloak></p>
         </section>
+    </div>
+
+    {# ── Buscar un producto por su NID ── #}
+    <div class="kiosko-vista" x-show="vista === 'buscar'" x-cloak>
+        <section class="kiosko-info">
+            <h1 class="kiosko-titulo">Busca un producto</h1>
+            <p class="kiosko-sub">
+                Escribe su número: lo ves en la vitrina, en la etiqueta o te lo damos en la caja.
+            </p>
+        </section>
+        <section class="kiosko-teclado-lado">
+            <div class="kiosko-tel" :class="nid && 'completo'" x-text="nid || 'Número del producto'"></div>
+            <div class="kiosko-teclado">
+                <template x-for="d in ['1','2','3','4','5','6','7','8','9']">
+                    <button type="button" @click="teclaNid(d)" x-text="d"></button>
+                </template>
+                <button type="button" class="borrar" @click="nid = nid.slice(0, -1)" aria-label="Borrar">⌫</button>
+                <button type="button" @click="teclaNid('0')">0</button>
+                <button type="button" class="enviar" @click="buscarNid()" :disabled="!nid || buscando">Ver</button>
+            </div>
+            <p class="kiosko-error" x-show="error" x-text="error" x-cloak></p>
+        </section>
+    </div>
+
+    {# ── El producto buscado, en grande ── #}
+    <div class="kiosko-vista kiosko-producto" x-show="vista === 'producto'" x-cloak>
+        <template x-if="producto">
+            <div class="vitrina-producto">
+                <div class="kiosko-producto-fotos">
+                    <img x-show="producto.fotos.length" :src="producto.fotos[foto]" :alt="producto.nombre" class="vitrina-foto">
+                    <div x-show="!producto.fotos.length" class="kiosko-sin-foto">Sin foto</div>
+                    <div class="kiosko-producto-puntos" x-show="producto.fotos.length > 1">
+                        <template x-for="(f, j) in producto.fotos" :key="j">
+                            <button type="button" :class="j === foto && 'activo'" @click="foto = j" :aria-label="'Foto ' + (j + 1)"></button>
+                        </template>
+                    </div>
+                </div>
+                <div class="vitrina-datos">
+                    <h2 class="vitrina-nombre" x-text="producto.nombre"></h2>
+                    <p class="vitrina-precio" x-text="'$' + producto.precio"></p>
+                    <p class="vitrina-unidad" x-text="'por ' + producto.unidad"></p>
+                    <ul class="kiosko-presentaciones" x-show="producto.presentaciones.length">
+                        <template x-for="pr in producto.presentaciones" :key="pr.nombre">
+                            <li><span x-text="pr.nombre"></span> <strong x-text="'$' + pr.precio"></strong></li>
+                        </template>
+                    </ul>
+                    <p class="kiosko-hay" :class="producto.hay ? 'si' : 'no'"
+                       x-text="producto.hay ? '✅ Hay en tienda' : 'Agotado por ahora · pregunta en caja'"></p>
+                    <p class="vitrina-pedir" x-show="producto.hay">Pídelo en caja 🙋 con el número <span class="vitrina-nid" x-text="producto.nid"></span></p>
+                    <button type="button" class="kiosko-otro" @click="ir('buscar')">🔎 Buscar otro</button>
+                </div>
+            </div>
+        </template>
     </div>
 
     {# ── Instala nuestra app: QR del alta del monedero (código por WhatsApp; cambia cada 30 s). Al

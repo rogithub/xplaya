@@ -746,6 +746,52 @@ a.btn-qr { text-decoration: none; }
 .kiosko-cuadros .ico-whatsapp { color: #25D366; line-height: 1; }
 .kiosko-cuadros .ico-whatsapp svg { width: 1.15em; height: 1.15em; display: block; margin: 0 auto; }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
+.kiosko-cuadros .cuadro-ancho { grid-column: 1 / -1; }
+
+/* Buscar por número: el producto en grande, con la misma tipografía de la vitrina. */
+.kiosko-producto { grid-template-columns: 1fr; }
+.kiosko-producto-fotos { display: grid; gap: 2vh; justify-items: center; min-height: 0; }
+.kiosko-sin-foto {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 20px;
+    background: var(--chip);
+    color: var(--muted);
+    font-size: clamp(1.3rem, 2vw, 1.8rem);
+}
+.kiosko-producto-puntos { display: flex; gap: 1.2vw; }
+.kiosko-producto-puntos button {
+    width: clamp(18px, 1.6vw, 26px);
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: var(--line);
+}
+.kiosko-producto-puntos button.activo { background: var(--accent); }
+.kiosko-presentaciones {
+    list-style: none;
+    margin: 0 0 2vh;
+    padding: 0;
+    display: grid;
+    gap: .8vh;
+    font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+}
+.kiosko-presentaciones strong { color: var(--accent); }
+.kiosko-hay { margin: 0 0 2vh; font-weight: 600; font-size: clamp(1.1rem, 1.7vw, 1.6rem); }
+.kiosko-hay.si { color: var(--ok); }
+.kiosko-hay.no { color: var(--warn); }
+.kiosko-otro {
+    margin-top: 3vh;
+    padding: 1.4vh 2vw;
+    border: 0;
+    border-radius: 16px;
+    background: var(--chip);
+    color: var(--ink);
+    font: 600 clamp(1.1rem, 1.7vw, 1.6rem) var(--font-display);
+}
+.kiosko-otro:active { transform: scale(.97); }
 /* Las demás vistas, en pantalla completa con "← Inicio" arriba a la izquierda. */
 .kiosko-vista { padding-top: 10vh; }
 .kiosko-ventajas {

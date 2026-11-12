@@ -21,7 +21,7 @@ use axum::{
     Json,
 };
 use minijinja::context;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
@@ -127,6 +127,51 @@ pub async fn vitrina(State(state): State<AppState>, headers: HeaderMap) -> Respo
         Ok(productos) => Json(productos).into_response(),
         Err(e) => {
             tracing::error!("Vitrina del kiosko: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+/// Un producto buscado por su NID en la pantalla ("Buscar por número"): para enseñárselo a un
+/// cliente. Montos ya con formato de dos decimales, como la vitrina.
+#[derive(Serialize)]
+pub struct ProductoKiosko {
+    nid: i32,
+    nombre: String,
+    precio: String,
+    unidad: String,
+    /// Sin cantidad exacta: en la pantalla basta con "hay" o "agotado".
+    hay: bool,
+    fotos: Vec<String>,
+    presentaciones: Vec<PresentacionKiosko>,
+}
+
+#[derive(Serialize)]
+pub struct PresentacionKiosko {
+    nombre: String,
+    precio: String,
+}
+
+/// `GET /kiosko/producto/{nid}`: los mismos datos de la página del producto (`db::productos::detalle`).
+pub async fn producto(State(state): State<AppState>, headers: HeaderMap, Path(nid): Path<i32>) -> Response {
+    if !es_kiosko(&state, &headers) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    match db::productos::detalle(&state.pool, nid, &state.config.content_base_url).await {
+        Ok(Some(p)) => Json(ProductoKiosko {
+            nid: p.nid,
+            hay: p.stock.parse::<f64>().is_ok_and(|s| s > 0.0),
+            nombre: p.nombre,
+            precio: p.precio_venta,
+            unidad: p.unidad_medida,
+            fotos: p.fotos,
+            presentaciones: p.presentaciones.into_iter()
+                .map(|pr| PresentacionKiosko { nombre: pr.nombre, precio: pr.precio_venta })
+                .collect(),
+        }).into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => {
+            tracing::error!("Kiosko: producto {nid}: {e}");
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }

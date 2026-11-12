@@ -4,6 +4,27 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: buscar un producto por su número (2026-11-12)
+
+Un cuadro nuevo en el inicio del kiosko, "🔎 Buscar por número" (ocupa las dos columnas, abajo),
+para enseñarle un producto a un cliente. Abre el teclado de la pantalla; con el NID muestra el
+producto en grande: fotos (con puntos para cambiar de foto), nombre, precio, unidad,
+presentaciones, si hay en tienda y "Pídelo en caja con el número…". Si está agotado dice
+"Agotado por ahora · pregunta en caja" y no invita a pedirlo. Un número que no existe da
+"No encontramos el número…". Como las demás vistas, vuelve al inicio tras un minuto sin tocarla.
+
+- `src/routes/kiosko.rs` — `GET /kiosko/producto/{nid}`: solo para la pantalla activada (como la
+  vitrina); reusa `db::productos::detalle` (los datos de la página del producto) y manda solo
+  "hay" o no, sin la cantidad.
+- `templates/app/kiosko.html` — vistas `buscar` y `producto`.
+- `static/app/app.js` — `kioskoPantalla`: `nid`, `teclaNid`, `buscarNid`.
+- `static/css/app.css` — `.cuadro-ancho` y los estilos del producto buscado.
+
+Probado en Chromium a 1280×800 con el teclado de la pantalla: con varias fotos, sin foto y con
+presentaciones, agotado y un número que no existe. Sin el token del kiosko, 403.
+
+---
+
 ## Cuenta de la caja en vivo: aviso por Web Push con la app cerrada (2026-11-12)
 
 Paso 5. Si el cliente no tiene la app en pantalla, le llegan dos notificaciones: al abrirse la
@@ -26,6 +47,8 @@ Una sola vez cada una por venta, aunque la caja quite y vuelva a poner al client
 Probado en local con un servicio de push falso y el aviso descifrado: de 6 mensajes (abierta,
 abierta, cerrada, abierta, cobrada, cobrada) salen 2 avisos; con la app en pantalla, 0; en segundo
 plano (Chromium con `visibilitychange`), 1.
+
+---
 
 ## Cuenta de la caja en vivo: el recuadro en la app (2026-11-12)
 
@@ -50,6 +73,8 @@ Después: la tarjeta de saldo también se pone al día al cobrar. `cuentaCaja` m
 `saldo-monedero` con el saldo del premio y `.card-amount` lo escucha (`templates/monedero/app.html`).
 El historial sigue igual hasta recargar.
 
+---
+
 ## Cuenta de la caja en vivo: xplaya la recibe y la reparte por SSE (2026-11-12)
 
 Paso 3 de "la cuenta en vivo en la app". El POS publica en NATS `caja.cuenta` la cuenta completa
@@ -71,6 +96,8 @@ eso es el paso 4.
 
 Probado en local con NATS en podman: sin sesión da 401, no llegan cuentas de otro cliente, se
 ignora un mensaje viejo y al reconectarse llega la cobrada.
+
+---
 
 ## Avisos: "Agrégame a WhatsApp" del kiosko al celular de la papelería (2026-11-12)
 
@@ -1518,6 +1545,8 @@ La ruta `/` devuelve un redirect 301 permanente a `/productos`. El `nest_service
 El `Containerfile` tiene dos etapas: `builder` compila el binario Rust nativamente en ARM64 (la VM de build ya es ARM64, igual que el cluster); la segunda etapa solo copia el binario compilado + `templates/` + `static/` a una imagen mínima de Debian. El truco del `echo "fn main() {}"` en la primera etapa permite que Docker cachee la compilación de dependencias — si solo cambia código propio, las dependencias no se recompilan.
 
 <!-- Nueva entrada al completar cada paso:
+
+---
 
 ## Paso N — Título
 **Archivos tocados:** `src/main.rs`, `templates/base.html`, ...
