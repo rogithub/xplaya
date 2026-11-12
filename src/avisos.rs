@@ -16,8 +16,9 @@ use serde_json::json;
 
 use crate::config::Config;
 
-/// Topic de ntfy al que está suscrito el celular de la papelería.
-const SUBJECT_PAPELERIA: &str = "avisos.papeleria";
+/// Topic de ntfy (`papeleria-kiosko`) al que se suscribe el celular de la papelería. `dayana`
+/// puede leer `papeleria-*` y `ro` todo.
+const SUBJECT_PAPELERIA: &str = "avisos.papeleria-kiosko";
 
 #[derive(Clone)]
 pub struct Avisos {

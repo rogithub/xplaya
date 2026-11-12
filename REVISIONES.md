@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Avisos: el topic pasa a `papeleria-kiosko` (2026-11-12)
+
+En ntfy, `dayana` solo lee `papeleria-*`; con `papeleria-kiosko` le llega a ella y a `ro` sin
+tocar permisos de ntfy.
+
+- `src/avisos.rs` — subject `avisos.papeleria-kiosko`. Docs al día.
+- Infra en k3s-manifests: usuario NATS `ntfy`, permiso de `xplaya`, puente desplegado
+  (`workloads/nats-ntfy/`).
+
+---
+
 ## Kiosko: el código también llega al celular de la papelería por ntfy (2026-11-12)
 
 Al crear una solicitud del kiosko, xplaya publica en NATS `avisos.papeleria` el JSON de ntfy:

@@ -60,7 +60,7 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
   contactos, con el mensaje ya escrito).
 - El mismo código llega también por **ntfy al celular de la papelería** (12 nov 2026), con un botón
   que abre WhatsApp con el mensaje ya escrito: sirve si nadie está viendo el POS. xplaya publica en
-  NATS `avisos.papeleria` (`src/avisos.rs`) y el puente
+  NATS `avisos.papeleria-kiosko` (`src/avisos.rs`) y el puente
   [`nats-ntfy`](https://github.com/rogithub/nats-ntfy) lo pasa a ntfy. Si NATS falla, solo queda el
   aviso del POS.
 - El cliente escribe el código en su celular: así se comprueba que el teléfono es suyo (5 intentos;
@@ -145,7 +145,7 @@ kiosko**; cambian la entrada y por dónde le llega el código a la papelería. L
 - Lo que comprueba el teléfono sigue siendo el **código por WhatsApp**, no un juicio de quien lo
   recibe (por eso no revive lo descartado el 10 nov: ntfy solo es el canal, no hay Aprobar/Rechazar).
 - Misma tabla `KioskoSolicitudes`, con una columna de **origen** (`kiosko` / `remoto`).
-- xplaya **no habla con ntfy**: publica en NATS `avisos.papeleria` el JSON de ntfy (título, nombre,
+- xplaya **no habla con ntfy**: publica en NATS `avisos.papeleria-kiosko` el JSON de ntfy (título, nombre,
   teléfono, código y una acción `view` a `https://wa.me/52…?text=…`), y el puente
   [`nats-ntfy`](https://github.com/rogithub/nats-ntfy) lo reenvía. Si ntfy está caído, NATS lo
   retiene y reintenta. Infra pendiente: `k3s-manifests/CLAUDE.md`, sección "Eventos — NATS".
@@ -274,7 +274,7 @@ ligado, el kiosko y las notificaciones.
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |
 | Aviso del kiosko con el código | POS | Aviso flotante en todas las pantallas, botón a WhatsApp |
-| Aviso del alta desde el celular | NATS `avisos.papeleria` → `nats-ntfy` → ntfy | Al celular de la papelería, botón a WhatsApp (**pospuesto**) |
+| Aviso del alta desde el celular | NATS `avisos.papeleria-kiosko` → `nats-ntfy` → ntfy | Al celular de la papelería, botón a WhatsApp (**pospuesto**) |
 | Ver y desligar el celular | POS | Ficha del cliente |
 
 ## Orden propuesto
