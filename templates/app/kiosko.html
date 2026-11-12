@@ -120,14 +120,19 @@
     <div class="kiosko-vista kiosko-producto" x-show="vista === 'producto'" x-cloak>
         <template x-if="producto">
             <div class="vitrina-producto">
+                {# Con varias fotos: flechas como las de la vitrina, tocar la foto pasa a la siguiente y
+                   pasan solas mientras nadie toque la pantalla. #}
                 <div class="kiosko-producto-fotos">
-                    <img x-show="producto.fotos.length" :src="producto.fotos[foto]" :alt="producto.nombre" class="vitrina-foto">
+                    <img x-show="producto.fotos.length" :src="producto.fotos[foto]" :alt="producto.nombre"
+                         class="vitrina-foto" @click="moverFoto(1)">
                     <div x-show="!producto.fotos.length" class="kiosko-sin-foto">Sin foto</div>
-                    <div class="kiosko-producto-puntos" x-show="producto.fotos.length > 1">
-                        <template x-for="(f, j) in producto.fotos" :key="j">
-                            <button type="button" :class="j === foto && 'activo'" @click="foto = j" :aria-label="'Foto ' + (j + 1)"></button>
-                        </template>
-                    </div>
+                    <template x-if="producto.fotos.length > 1">
+                        <div>
+                            <button type="button" class="vitrina-flecha izq" @click="moverFoto(-1)" aria-label="Foto anterior">‹</button>
+                            <button type="button" class="vitrina-flecha der" @click="moverFoto(1)" aria-label="Foto siguiente">›</button>
+                            <p class="kiosko-foto-cuenta" x-text="'📷 ' + (foto + 1) + ' / ' + producto.fotos.length"></p>
+                        </div>
+                    </template>
                 </div>
                 <div class="vitrina-datos">
                     <h2 class="vitrina-nombre" x-text="producto.nombre"></h2>

@@ -750,7 +750,14 @@ a.btn-qr { text-decoration: none; }
 
 /* Buscar por número: el producto en grande, con la misma tipografía de la vitrina. */
 .kiosko-producto { grid-template-columns: 1fr; }
-.kiosko-producto-fotos { display: grid; gap: 2vh; justify-items: center; min-height: 0; }
+.kiosko-producto-fotos { position: relative; display: grid; gap: 2vh; justify-items: center; min-height: 0; }
+.kiosko-producto-fotos .vitrina-foto { cursor: pointer; }
+.kiosko-foto-cuenta {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+    color: var(--muted);
+}
 .kiosko-sin-foto {
     display: grid;
     place-items: center;
@@ -761,15 +768,6 @@ a.btn-qr { text-decoration: none; }
     color: var(--muted);
     font-size: clamp(1.3rem, 2vw, 1.8rem);
 }
-.kiosko-producto-puntos { display: flex; gap: 1.2vw; }
-.kiosko-producto-puntos button {
-    width: clamp(18px, 1.6vw, 26px);
-    aspect-ratio: 1;
-    border: 0;
-    border-radius: 50%;
-    background: var(--line);
-}
-.kiosko-producto-puntos button.activo { background: var(--accent); }
 .kiosko-presentaciones {
     list-style: none;
     margin: 0 0 2vh;

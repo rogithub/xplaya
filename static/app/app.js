@@ -287,6 +287,10 @@ document.addEventListener('alpine:init', () => {
             this.nuevoQr();
             this.cargarVitrina();
             setInterval(() => this.cargarVitrina(), 10 * 60 * 1000);   // otra tanda al azar
+            // Producto buscado con varias fotos: pasan solas si nadie toca la pantalla.
+            setInterval(() => {
+                if (this.vista === 'producto' && Date.now() - this.ultimoToque > 4000) this.moverFoto(1, false);
+            }, 4000);
             setInterval(() => {
                 const quieto = Date.now() - this.ultimoToque > 60000;
                 if (!quieto) return;
@@ -328,6 +332,21 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        quitarFoto(url) {
+            const fotos = this.producto?.fotos;
+            const j = fotos ? fotos.indexOf(url) : -1;
+            if (j < 0) return;          // ya se quitó, o ya se buscó otro producto
+            fotos.splice(j, 1);
+            if (this.foto >= fotos.length) this.foto = 0;
+        },
+
+        moverFoto(paso, tocado = true) {
+            const n = this.producto?.fotos.length || 0;
+            if (n < 2) return;
+            this.foto = (this.foto + paso + n) % n;
+            if (tocado) this.actividad();
+        },
+
         teclaNid(d) { if (this.nid.length < 6) this.nid += d; this.error = ''; },
 
         async buscarNid() {
@@ -340,6 +359,13 @@ document.addEventListener('alpine:init', () => {
                 if (!r.ok) throw new Error();
                 this.producto = await r.json();
                 this.foto = 0;
+                // Una foto registrada que no está en MinIO no carga: se quita de la lista para no
+                // dejar flechas que no cambian nada.
+                this.producto.fotos.forEach((url) => {
+                    const img = new Image();
+                    img.onerror = () => this.quitarFoto(url);
+                    img.src = url;
+                });
                 this.ir('producto');
             } catch (e) {
                 this.error = 'Algo falló. Intenta otra vez.';

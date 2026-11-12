@@ -23,6 +23,12 @@ presentaciones, si hay en tienda y "Pídelo en caja con el número…". Si está
 Probado en Chromium a 1280×800 con el teclado de la pantalla: con varias fotos, sin foto y con
 presentaciones, agotado y un número que no existe. Sin el token del kiosko, 403.
 
+Después: con varias fotos solo había unos puntos chicos abajo y no se notaba. Ahora tiene flechas
+‹ › como la vitrina, tocar la foto pasa a la siguiente, las fotos pasan solas cada 4 s si nadie
+toca la pantalla y un contador "📷 2 / 3". Además precarga las fotos y quita las que no cargan: 5
+de las 918 fotos registradas en `FotosProductos` no están en MinIO (`cntnt.xplaya.com` responde
+500), en los NID 221, 1230 y 1679; con eso ya no quedan flechas que no cambian nada.
+
 ---
 
 ## Cuenta de la caja en vivo: aviso por Web Push con la app cerrada (2026-11-12)
