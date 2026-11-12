@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: el código también llega al celular de la papelería por ntfy (2026-11-12)
+
+Al crear una solicitud del kiosko, xplaya publica en NATS `avisos.papeleria` el JSON de ntfy:
+nombre, teléfono, código y un botón que abre WhatsApp con el mismo mensaje del POS. El puente
+`nats-ntfy` lo reenvía a ntfy. El aviso del POS sigue igual. Si NATS falla, solo va al log.
+
+- `src/avisos.rs` — nuevo: conexión propia a NATS (`retry_on_initial_connect`, no espera a NATS al
+  arrancar), arma el aviso y lo publica con acuse de JetStream en una tarea aparte.
+- `src/db/kiosko.rs` — `crear` devuelve también el código.
+- `src/routes/kiosko.rs` — `datos` manda el aviso; `src/main.rs` — `AppState.avisos`.
+- Falta infra (k3s-manifests, "Eventos — NATS"): permiso a `xplaya` de publicar `avisos.papeleria`,
+  stream `AVISOS`, consumer y usuario del puente, y desplegarlo. Hasta entonces el publish falla y
+  solo queda el log.
+
+---
+
 ## Alta desde el celular: pospuesta (2026-11-12)
 
 Solo documentación. Por ahora el alta sigue siendo en la tienda (kiosko) o con el enlace del recibo.

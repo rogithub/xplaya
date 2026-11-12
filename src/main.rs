@@ -6,6 +6,7 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
+mod avisos;
 mod config;
 mod db;
 mod estaticos;
@@ -34,6 +35,8 @@ pub struct AppState {
     pub kiosko_visitas: Arc<passkeys::Pendientes<()>>,
     /// Llaves VAPID de las notificaciones (`push.rs`). `None`: notificaciones apagadas.
     pub vapid: Option<Arc<push::Vapid>>,
+    /// Avisos a la papelería por NATS → nats-ntfy → ntfy (`avisos.rs`).
+    pub avisos: avisos::Avisos,
 }
 
 #[tokio::main]
@@ -71,6 +74,7 @@ async fn main() {
     }
     // La app la usa para suscribirse; sin llave (vacía) no ofrece notificaciones.
     tmpl.add_global("vapid_publica", vapid.as_ref().map(|v| v.publica.clone()).unwrap_or_default());
+    let avisos = avisos::Avisos::conectar(&cfg).await;
     let state = AppState {
         tmpl,
         config: cfg,
@@ -82,6 +86,7 @@ async fn main() {
         entradas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
         kiosko_visitas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
         vapid,
+        avisos,
     };
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());

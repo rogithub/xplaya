@@ -15,16 +15,18 @@ pub const MAX_INTENTOS: i32 = 5;
 /// Condición de "sigue viva": la usan todas las consultas.
 const VIGENTE: &str = "tipo = 'monedero' AND fechacreado > NOW() - INTERVAL '15 minutes'";
 
-pub async fn crear(pool: &PgPool, nombre: &str, telefono: &str) -> Result<Uuid, sqlx::Error> {
+/// Crea la solicitud y devuelve su id y el código (para el aviso al celular de la papelería).
+pub async fn crear(pool: &PgPool, nombre: &str, telefono: &str) -> Result<(Uuid, String), sqlx::Error> {
     let codigo = format!("{:04}", rand::random_range(0..10_000u32));
-    sqlx::query_scalar(
+    let id = sqlx::query_scalar(
         "INSERT INTO kioskosolicitudes (tipo, nombre, telefono, codigo) VALUES ('monedero', $1, $2, $3) RETURNING id",
     )
     .bind(nombre)
     .bind(telefono)
-    .bind(codigo)
+    .bind(&codigo)
     .fetch_one(pool)
-    .await
+    .await?;
+    Ok((id, codigo))
 }
 
 /// Teléfono de la solicitud si sigue esperando el código.

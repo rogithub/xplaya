@@ -2,7 +2,8 @@
 //! con un QR que cambia cada 30 s. El cliente lo escanea con su celular y liga su monedero.
 //!
 //! 1. Escanea el QR → escribe nombre y teléfono → se crea una solicitud (`db/kiosko.rs`).
-//! 2. El POS la muestra con un código de 4 dígitos; la caja se lo manda por WhatsApp.
+//! 2. El POS la muestra con un código de 4 dígitos (y llega por ntfy al celular de la papelería,
+//!    `avisos.rs`); la caja se lo manda por WhatsApp.
 //! 3. El cliente escribe el código: el teléfono es suyo. Crea su passkey y queda ligado (si
 //!    el teléfono era nuevo, se crea su monedero en ese momento).
 //!
@@ -214,7 +215,9 @@ pub async fn datos(
 
     // La visita se gasta aquí: para otra solicitud hay que volver a escanear.
     state.kiosko_visitas.tomar(visita);
-    let solicitud = db::kiosko::crear(&state.pool, &nombre, &tel).await.map_err(alta::error_bd)?;
+    let (solicitud, codigo) = db::kiosko::crear(&state.pool, &nombre, &tel).await.map_err(alta::error_bd)?;
+    // Además del aviso del POS, el código le llega al celular de la papelería (avisos.rs).
+    state.avisos.alta_kiosko(&nombre, &tel, &codigo);
     Ok(Redirect::to(&format!("/kiosko/s/{solicitud}")).into_response())
 }
 

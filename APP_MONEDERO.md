@@ -58,6 +58,11 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
 - En todas las pantallas del POS aparece un aviso con su nombre, su teléfono y un **código de 4
   dígitos**, con el botón **Enviar por WhatsApp** (abre el chat con ese número, aunque no esté en
   contactos, con el mensaje ya escrito).
+- El mismo código llega también por **ntfy al celular de la papelería** (12 nov 2026), con un botón
+  que abre WhatsApp con el mensaje ya escrito: sirve si nadie está viendo el POS. xplaya publica en
+  NATS `avisos.papeleria` (`src/avisos.rs`) y el puente
+  [`nats-ntfy`](https://github.com/rogithub/nats-ntfy) lo pasa a ntfy. Si NATS falla, solo queda el
+  aviso del POS.
 - El cliente escribe el código en su celular: así se comprueba que el teléfono es suyo (5 intentos;
   la solicitud vive 15 minutos). Después acepta términos y crea su passkey.
 - **Teléfono nuevo:** su monedero se crea hasta ese momento, no antes. **Teléfono que ya tiene
@@ -121,7 +126,8 @@ y abona la compra sin ligar el celular; lo ve en la web, como hasta hoy.
 #### Alta desde el celular — POSPUESTA (12 nov 2026)
 
 **Pospuesta:** por ahora el alta es solo en la tienda (kiosko) o con el enlace del recibo. No hay
-código ni cambios de BD de esto; queda el diseño por si se retoma. Si se retoma: Origen en
+código ni cambios de BD de esto; queda el diseño por si se retoma. (Lo que sí se hizo: el aviso por
+ntfy del código **del kiosko**, ver "Kiosko en la tienda".) Si se retoma: Origen en
 `KioskoSolicitudes` y `HORARIO_ALTA_REMOTA` en `Settings` (repo del POS), límites por teléfono y
 global en `src/db/kiosko.rs`, límite por IP en memoria, y publicar en NATS desde xplaya.
 
