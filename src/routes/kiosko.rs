@@ -151,7 +151,11 @@ pub async fn whatsapp(
         return alta::error_json(StatusCode::BAD_REQUEST, "Escribe tu teléfono a 10 dígitos.");
     };
     match db::kiosko::crear_whatsapp(&state.pool, &tel).await {
-        Ok(()) => Json(serde_json::json!({ "ok": true })).into_response(),
+        Ok(()) => {
+            // Además del aviso del POS, al celular de la papelería (avisos.rs).
+            state.avisos.whatsapp_kiosko(&state.pool, &tel);
+            Json(serde_json::json!({ "ok": true })).into_response()
+        }
         Err(e) => {
             tracing::error!("kiosko whatsapp: {e}");
             alta::error_json(StatusCode::INTERNAL_SERVER_ERROR, "Algo falló. Pide ayuda en la caja.")

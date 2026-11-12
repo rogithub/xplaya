@@ -96,8 +96,8 @@ en NATS y usar un topic `papeleria-*` (así le llega a `dayana` y a `ro` sin toc
   topic `papeleria-kiosko`.
 - ✅ **Pedido nuevo en línea** (carrito de xplaya.com y tienda de la app) (2026-11-12), topic
   `pedidos`: número, productos, total y teléfono, con botones a la cotización y a WhatsApp.
-- ⬜ **"Agrégame a WhatsApp"** del kiosko: la otra solicitud del kiosko, con botón que abre
-  WhatsApp con el saludo escrito. Casi igual al del código (`src/avisos.rs`).
+- ✅ **"Agrégame a WhatsApp"** del kiosko (2026-11-12), topic `papeleria-kiosko`: teléfono, si ya
+  es cliente, y botón que abre WhatsApp con el saludo escrito.
 - ⬜ **Foto carnet / polaroid de imagina**: pedido nuevo en el kiosko de imagina, con botón al panel
   admin. Va en el repo de pdfeitor (`kiosko-carnet.md`, "Futuro").
 - ⬜ **POS / agente de la PC de la papelería**: trabajo de impresión fallido o agente sin

@@ -5,6 +5,8 @@
 //! Avisos de hoy:
 //! - `alta_kiosko`: el código de un alta en el kiosko, con botón que abre WhatsApp con el mensaje
 //!   ya escrito (topic `papeleria-kiosko`).
+//! - `whatsapp_kiosko`: "agrégame a WhatsApp" desde la pantalla del kiosko, con botón que abre
+//!   WhatsApp con el saludo ya escrito (topic `papeleria-kiosko`).
 //! - `pedido_nuevo`: un pedido en línea (carrito de xplaya.com o tienda de la app), con botones a
 //!   la cotización y al WhatsApp del cliente (topic `pedidos`).
 //!
@@ -77,6 +79,45 @@ impl Avisos {
             "actions": [{ "action": "view", "label": "Enviar código por WhatsApp", "url": whatsapp }],
         });
         self.publicar(SUBJECT_PAPELERIA, aviso.to_string());
+    }
+
+    /// "Agrégame a WhatsApp" desde la pantalla del kiosko → celular de la papelería, con botón que
+    /// abre el chat con el saludo ya escrito. Si el teléfono ya es de un cliente, dice su nombre.
+    pub fn whatsapp_kiosko(&self, pool: &PgPool, telefono: &str) {
+        if self.js.is_none() {
+            return;
+        }
+        let (avisos, pool, telefono) = (self.clone(), pool.clone(), telefono.to_string());
+        tokio::spawn(async move {
+            // Mismo criterio que el resto: los teléfonos de Clientes pueden traer prefijos.
+            let cliente: Option<Option<String>> =
+                sqlx::query_scalar("SELECT nombre FROM clientes WHERE right(telefono, 10) = $1 LIMIT 1")
+                    .bind(&telefono)
+                    .fetch_optional(&pool)
+                    .await
+                    .unwrap_or_else(|e| {
+                        tracing::warn!("avisos: whatsapp kiosko: {e}");
+                        None
+                    });
+            let quien = match cliente {
+                Some(Some(nombre)) if !nombre.trim().is_empty() => format!("Ya es cliente: {}", nombre.trim()),
+                Some(_) => "Ya es cliente".to_string(),
+                None => "Cliente nuevo".to_string(),
+            };
+            // El mismo saludo que manda el POS (`kioskoMensaje.ts`, `buildSaludoKioskoMessage`).
+            let saludo = "¡Hola! Te escribimos de la *Papelería* 😊\n\
+                Pediste en el kiosko de la tienda que te agregáramos. Guarda este número para tus pedidos, impresiones y dudas.\n\
+                ¿Nos dices tu nombre para registrarte?";
+            let whatsapp = format!("https://wa.me/52{telefono}?text={}", codificar_url(saludo));
+            let aviso = json!({
+                "title": format!("WhatsApp: {}", formato_telefono(&telefono)),
+                "message": format!("Pidió en el kiosko que lo agreguen. {quien}."),
+                "priority": 4,
+                "click": whatsapp,
+                "actions": [{ "action": "view", "label": "Escribirle por WhatsApp", "url": whatsapp }],
+            });
+            avisos.publicar(SUBJECT_PAPELERIA, aviso.to_string());
+        });
     }
 
     /// Pedido en línea recién guardado. `desde`: "la app" o "xplaya.com", para saber por dónde

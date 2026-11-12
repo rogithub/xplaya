@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Avisos: "Agrégame a WhatsApp" del kiosko al celular de la papelería (2026-11-12)
+
+La solicitud de WhatsApp de la pantalla del kiosko también llega por ntfy (topic
+`papeleria-kiosko`): "WhatsApp: 984 123 4567", si ya es cliente (con su nombre) o nuevo, y un
+botón que abre WhatsApp con el mismo saludo del POS. Sin cambios en NATS: el permiso ya existía.
+
+- `src/avisos.rs` — `whatsapp_kiosko`.
+- `src/routes/kiosko.rs` — `whatsapp` lo llama después de guardar la solicitud.
+
+---
+
 ## Avisos: pedido nuevo en línea al celular de la papelería (2026-11-12)
 
 Cada pedido en línea (carrito de xplaya.com, con o sin sesión, y tienda de la app) publica en NATS
