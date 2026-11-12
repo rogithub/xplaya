@@ -74,7 +74,7 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -
     let cuerpo = serde_json::json!({
         "id": id, "titulo": aviso.titulo, "texto": aviso.texto, "url": aviso.url,
     });
-    let peticion = match peticion(vapid, &destino, &state.config.site_url, cuerpo.to_string()) {
+    let peticion = match peticion(vapid, &destino, &state.config.site_url, cuerpo.to_string(), TTL) {
         Ok(mut p) => {
             // `Urgency: high`: Google/Apple lo entregan de inmediato aunque el celular esté
             // ahorrando batería (si no, lo juntan con otros y llega segundos o minutos después).
@@ -115,8 +115,38 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -
     tx.commit().await.map_err(r)
 }
 
+/// Aviso que solo sirve en el momento (la cuenta de la caja, `caja.rs`): sin fila en
+/// `Notificaciones`, sin reintentos, con urgencia alta y caducidad `ttl`. `cuerpo` es lo que lee
+/// el service worker (`titulo`, `texto`, `url`, `tag`). `Ok(false)`: el cliente no tiene un
+/// celular con avisos activos.
+pub async fn mandar_del_momento(
+    state: &AppState,
+    vapid: &Vapid,
+    cliente_id: Uuid,
+    cuerpo: serde_json::Value,
+    ttl: Duration,
+) -> Result<bool, String> {
+    let mut conn = state.pool.acquire().await.map_err(|e| format!("BD: {e}"))?;
+    let Some(destino) = db::notificaciones::destino(&mut conn, cliente_id).await.map_err(|e| format!("BD: {e}"))? else {
+        return Ok(false);
+    };
+    let mut p = peticion(vapid, &destino, &state.config.site_url, cuerpo.to_string(), ttl)?;
+    p.headers_mut().insert("Urgency", reqwest::header::HeaderValue::from_static("high"));
+    let respuesta = state.http.execute(p).await.map_err(|e| format!("servicio de push: {e}"))?;
+    let status = respuesta.status();
+    if status.is_success() {
+        return Ok(true);
+    }
+    if status.as_u16() == 404 || status.as_u16() == 410 {
+        // La suscripción ya no existe: igual que en `entregar`, se olvida.
+        db::notificaciones::quitar_push(&mut conn, destino.celular_id).await.map_err(|e| format!("BD: {e}"))?;
+        return Err("la suscripción ya no existe".into());
+    }
+    Err(format!("servicio de push respondió {status}"))
+}
+
 /// Cifra el aviso para ese celular (aes128gcm con sus llaves) y lo firma con VAPID.
-fn peticion(vapid: &Vapid, d: &Destino, contacto: &str, cuerpo: String) -> Result<reqwest::Request, String> {
+fn peticion(vapid: &Vapid, d: &Destino, contacto: &str, cuerpo: String, ttl: Duration) -> Result<reqwest::Request, String> {
     let p256dh = Base64UrlUnpadded::decode_vec(&d.p256dh).map_err(|e| format!("p256dh: {e}"))?;
     let auth = Base64UrlUnpadded::decode_vec(&d.auth).map_err(|e| format!("auth: {e}"))?;
     if auth.len() != 16 {
@@ -127,7 +157,7 @@ fn peticion(vapid: &Vapid, d: &Destino, contacto: &str, cuerpo: String) -> Resul
         PublicKey::from_sec1_bytes(&p256dh).map_err(|e| format!("p256dh: {e}"))?,
         Auth::clone_from_slice(&auth),
     )
-    .with_valid_duration(TTL)
+    .with_valid_duration(ttl)
     .with_vapid(&vapid.par, contacto)
     .build(cuerpo)
     .map_err(|e| format!("cifrar: {e}"))?;

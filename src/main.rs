@@ -95,7 +95,7 @@ async fn main() {
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());
     // La cuenta de la caja en vivo (NATS caja.cuenta).
-    caja::vigilar(&state.config, state.cajas.clone());
+    caja::vigilar(state.clone());
 
     let site = Router::new()
         .route("/", get(routes::productos::lista))

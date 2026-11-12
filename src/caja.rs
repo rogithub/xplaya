@@ -8,6 +8,10 @@
 //! Aquí se guarda en memoria la última cuenta de cada cliente y se reparte a los celulares
 //! conectados (`routes/cuenta.rs`, por SSE). El JSON se reenvía tal como llegó: xplaya solo
 //! lee el encabezado para saber de quién es y si es más nueva que la que tiene.
+//!
+//! Si el cliente no tiene la app en pantalla, se le avisa por Web Push una vez al abrirse la
+//! cuenta y otra al cobrar (`avisar`). Son avisos del momento: sin fila en `Notificaciones`,
+//! sin reintentos y con caducidad corta.
 
 use std::{
     collections::HashMap,
@@ -20,7 +24,7 @@ use serde::Deserialize;
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
-use crate::config::Config;
+use crate::{db, push, AppState};
 
 const SUBJECT: &str = "caja.cuenta";
 
@@ -49,6 +53,9 @@ pub struct Encabezado {
     pub secuencia: i64,
     pub cliente_id: Uuid,
     pub estado: Estado,
+    /// Solo en `cobrada`.
+    #[serde(default)]
+    pub venta_id: Option<Uuid>,
 }
 
 /// Cada pantalla de venta del POS tiene su `cuentaId` y numera sus mensajes. De la misma
@@ -69,10 +76,47 @@ pub fn se_muestra(estado: Estado, sin_cambios: Duration) -> bool {
     }
 }
 
+/// Qué avisos por Web Push ya se mandaron de una cuenta.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Avisados {
+    abierta: bool,
+    cobrada: bool,
+}
+
+/// Qué avisar con este mensaje: uno al abrirse la cuenta y otro al cobrar, una sola vez por cuenta
+/// (aunque la caja quite y vuelva a poner al cliente). Una cuenta distinta empieza de cero.
+pub fn por_avisar(anterior: Option<(&Encabezado, Avisados)>, nueva: &Encabezado) -> (Option<Estado>, Avisados) {
+    let mut avisados = match anterior {
+        Some((a, avisados)) if a.cuenta_id == nueva.cuenta_id => avisados,
+        _ => Avisados::default(),
+    };
+    let aviso = match nueva.estado {
+        Estado::Abierta if !avisados.abierta => {
+            avisados.abierta = true;
+            Some(Estado::Abierta)
+        }
+        Estado::Cobrada if !avisados.cobrada => {
+            avisados.cobrada = true;
+            Some(Estado::Cobrada)
+        }
+        _ => None,
+    };
+    (aviso, avisados)
+}
+
+/// Un aviso por mandar (lo manda `avisar`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Aviso {
+    pub cliente_id: Uuid,
+    pub estado: Estado,
+    pub venta_id: Option<Uuid>,
+}
+
 struct Ultima {
     encabezado: Encabezado,
     json: Arc<str>,
     recibida: Instant,
+    avisados: Avisados,
 }
 
 /// Un cambio para un cliente: el JSON que va a la app, o `None` si ya no hay cuenta que mostrar.
@@ -85,6 +129,27 @@ pub struct Cambio {
 pub struct Cajas {
     ultimas: Mutex<HashMap<Uuid, Ultima>>,
     cambios: broadcast::Sender<Cambio>,
+    /// Cuántas conexiones SSE tiene abiertas cada cliente. La app solo la abre mientras está en
+    /// pantalla (`cuentaCaja` en app.js), así que con alguna abierta el aviso no hace falta.
+    en_pantalla: Mutex<HashMap<Uuid, usize>>,
+}
+
+/// Mientras exista, cuenta como una app en pantalla de ese cliente (`Cajas::en_pantalla`).
+pub struct EnPantalla {
+    cajas: Arc<Cajas>,
+    cliente_id: Uuid,
+}
+
+impl Drop for EnPantalla {
+    fn drop(&mut self) {
+        let mut abiertas = self.cajas.en_pantalla.lock().unwrap();
+        if let Some(n) = abiertas.get_mut(&self.cliente_id) {
+            *n -= 1;
+            if *n == 0 {
+                abiertas.remove(&self.cliente_id);
+            }
+        }
+    }
 }
 
 impl Cajas {
@@ -92,33 +157,49 @@ impl Cajas {
         // Cada celular conectado tiene su receptor; si se atrasa más de 64 cambios, vuelve a
         // pedir la cuenta actual (`routes/cuenta.rs`).
         let (cambios, _) = broadcast::channel(64);
-        Cajas { ultimas: Mutex::new(HashMap::new()), cambios }
+        Cajas { ultimas: Mutex::new(HashMap::new()), cambios, en_pantalla: Mutex::new(HashMap::new()) }
     }
 
-    /// Un mensaje de `caja.cuenta`. Lo viejo o lo que no se entiende se ignora.
-    pub fn recibir(&self, payload: &[u8], ahora: Instant) {
+    /// Un mensaje de `caja.cuenta`. Lo viejo o lo que no se entiende se ignora. Devuelve el aviso
+    /// por Web Push que toca, si toca.
+    pub fn recibir(&self, payload: &[u8], ahora: Instant) -> Option<Aviso> {
         let encabezado: Encabezado = match serde_json::from_slice(payload) {
             Ok(e) => e,
             Err(e) => {
                 tracing::warn!("caja: mensaje que no es una cuenta, se descarta: {e}");
-                return;
+                return None;
             }
         };
-        let Ok(texto) = std::str::from_utf8(payload) else { return };
+        let texto = std::str::from_utf8(payload).ok()?;
         let json: Arc<str> = Arc::from(texto);
 
-        {
+        let aviso = {
             let mut ultimas = self.ultimas.lock().unwrap();
             ultimas.retain(|_, u| ahora.duration_since(u.recibida) <= VIDA_EN_MEMORIA);
-            if !es_mas_nueva(ultimas.get(&encabezado.cliente_id).map(|u| &u.encabezado), &encabezado) {
-                return;
+            let anterior = ultimas.get(&encabezado.cliente_id);
+            if !es_mas_nueva(anterior.map(|u| &u.encabezado), &encabezado) {
+                return None;
             }
-            ultimas.insert(encabezado.cliente_id, Ultima { encabezado, json: json.clone(), recibida: ahora });
-        }
+            let (aviso, avisados) = por_avisar(anterior.map(|u| (&u.encabezado, u.avisados)), &encabezado);
+            ultimas.insert(encabezado.cliente_id, Ultima { encabezado, json: json.clone(), recibida: ahora, avisados });
+            aviso
+        };
 
         let json = (encabezado.estado != Estado::Cerrada).then_some(json);
         // Sin celulares conectados `send` da error; no pasa nada.
         let _ = self.cambios.send(Cambio { cliente_id: encabezado.cliente_id, json });
+
+        aviso.map(|estado| Aviso { cliente_id: encabezado.cliente_id, estado, venta_id: encabezado.venta_id })
+    }
+
+    /// La app de este cliente abrió su conexión: está en pantalla hasta que se suelte lo devuelto.
+    pub fn en_pantalla(self: &Arc<Self>, cliente_id: Uuid) -> EnPantalla {
+        *self.en_pantalla.lock().unwrap().entry(cliente_id).or_default() += 1;
+        EnPantalla { cajas: self.clone(), cliente_id }
+    }
+
+    pub fn esta_en_pantalla(&self, cliente_id: Uuid) -> bool {
+        self.en_pantalla.lock().unwrap().contains_key(&cliente_id)
     }
 
     /// La cuenta que la app de este cliente debe mostrar ahora, si hay.
@@ -135,15 +216,14 @@ impl Cajas {
 
 /// Escucha `caja.cuenta` en una conexión propia. Sin usuario de NATS no hace nada (la app
 /// simplemente nunca muestra una cuenta). Si se cae, vuelve a empezar.
-pub fn vigilar(cfg: &Config, cajas: Arc<Cajas>) {
-    if cfg.nats_usuario.is_empty() {
+pub fn vigilar(state: AppState) {
+    if state.config.nats_usuario.is_empty() {
         tracing::info!("caja: sin NATS_USUARIO, sin cuenta en vivo");
         return;
     }
-    let cfg = cfg.clone();
     tokio::spawn(async move {
         loop {
-            if let Err(e) = escuchar(&cfg, &cajas).await {
+            if let Err(e) = escuchar(&state).await {
                 tracing::warn!("caja: NATS: {e}; reintento en 10 s");
             }
             tokio::time::sleep(Duration::from_secs(10)).await;
@@ -151,7 +231,8 @@ pub fn vigilar(cfg: &Config, cajas: Arc<Cajas>) {
     });
 }
 
-async fn escuchar(cfg: &Config, cajas: &Cajas) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn escuchar(state: &AppState) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let cfg = &state.config;
     let cliente = async_nats::ConnectOptions::with_user_and_password(
         cfg.nats_usuario.clone(),
         cfg.nats_password.clone(),
@@ -162,9 +243,53 @@ async fn escuchar(cfg: &Config, cajas: &Cajas) -> Result<(), Box<dyn std::error:
     let mut mensajes = cliente.subscribe(SUBJECT).await?;
     tracing::info!("caja: escuchando NATS ({SUBJECT})");
     while let Some(m) = mensajes.next().await {
-        cajas.recibir(&m.payload, Instant::now());
+        let Some(aviso) = state.cajas.recibir(&m.payload, Instant::now()) else { continue };
+        // Sin llave VAPID no hay notificaciones; con la app en pantalla, el recuadro basta.
+        if state.vapid.is_some() && !state.cajas.esta_en_pantalla(aviso.cliente_id) {
+            // Aparte: buscar el premio y llamar al servicio de push no frena los siguientes mensajes.
+            tokio::spawn(avisar(state.clone(), aviso));
+        }
     }
     Ok(())
+}
+
+/// Los dos avisos usan el mismo `tag`: el del cobro reemplaza al de la cuenta abierta.
+const TAG: &str = "cuenta-caja";
+/// Avisos del momento: si el celular está apagado más que esto, ya no se entregan.
+const CADUCIDAD: Duration = Duration::from_secs(10 * 60);
+
+async fn avisar(state: AppState, aviso: Aviso) {
+    let Some(vapid) = state.vapid.clone() else { return };
+    let (titulo, texto) = match aviso.estado {
+        Estado::Abierta => ("La caja te está atendiendo".to_string(), "Toca para ver tu cuenta en vivo.".to_string()),
+        Estado::Cobrada => ("¡Gracias por tu compra!".to_string(), texto_cobrada(&state, aviso).await),
+        Estado::Cerrada => return,
+    };
+    let cuerpo = serde_json::json!({ "titulo": titulo, "texto": texto, "url": "/", "tag": TAG });
+    match push::mandar_del_momento(&state, &vapid, aviso.cliente_id, cuerpo, CADUCIDAD).await {
+        Ok(true) => tracing::info!("caja: aviso {:?} a {}", aviso.estado, aviso.cliente_id),
+        Ok(false) => {} // sin celular con avisos activos
+        Err(e) => tracing::warn!("caja: aviso {:?} a {}: {e}", aviso.estado, aviso.cliente_id),
+    }
+}
+
+/// "Ganaste $0.68 en tu monedero · tu saldo: $12.40", con el mismo cálculo que el recibo. Sin
+/// monedero generado (o si falla la BD), el total pagado.
+async fn texto_cobrada(state: &AppState, aviso: Aviso) -> String {
+    let recibo = match aviso.venta_id {
+        Some(id) => db::monedero::recibo(&state.pool, id).await
+            .inspect_err(|e| tracing::error!("caja: recibo {id}: {e}"))
+            .ok()
+            .flatten(),
+        None => None,
+    };
+    match recibo {
+        Some(r) if r.tiene_monedero && r.monedero_generado != "$0.00" => {
+            format!("Ganaste {} en tu monedero · tu saldo: {}", r.monedero_generado, r.saldo_monedero)
+        }
+        Some(r) => format!("Pagaste {}.", r.total),
+        None => "Toca para ver tu compra.".to_string(),
+    }
 }
 
 #[cfg(test)]
@@ -229,6 +354,65 @@ mod tests {
         let cajas = Cajas::new();
         cajas.recibir(b"hola", Instant::now());
         cajas.recibir(br#"{"estado":"pagada"}"#, Instant::now());
+    }
+
+    fn encabezado(cuenta: &str, estado: Estado) -> Encabezado {
+        Encabezado { cuenta_id: cuenta.parse().unwrap(), secuencia: 1, cliente_id: cliente(), estado, venta_id: None }
+    }
+
+    #[test]
+    fn avisa_una_vez_al_abrir_y_una_al_cobrar() {
+        let abierta = encabezado(CUENTA, Estado::Abierta);
+        let (a1, av) = por_avisar(None, &abierta);
+        let (a2, av) = por_avisar(Some((&abierta, av)), &abierta);
+        let cobrada = encabezado(CUENTA, Estado::Cobrada);
+        let (a3, av) = por_avisar(Some((&abierta, av)), &cobrada);
+        let (a4, _) = por_avisar(Some((&cobrada, av)), &cobrada);
+        assert_eq!([a1, a2, a3, a4], [Some(Estado::Abierta), None, Some(Estado::Cobrada), None]);
+    }
+
+    #[test]
+    fn quitar_y_volver_a_poner_al_cliente_no_avisa_otra_vez() {
+        let abierta = encabezado(CUENTA, Estado::Abierta);
+        let cerrada = encabezado(CUENTA, Estado::Cerrada);
+        let (_, av) = por_avisar(None, &abierta);
+        let (a, av) = por_avisar(Some((&abierta, av)), &cerrada);
+        assert_eq!(a, None);
+        let (a, _) = por_avisar(Some((&cerrada, av)), &abierta);
+        assert_eq!(a, None);
+    }
+
+    #[test]
+    fn otra_venta_vuelve_a_avisar() {
+        let abierta = encabezado(CUENTA, Estado::Abierta);
+        let (_, av) = por_avisar(None, &abierta);
+        let otra = encabezado("33333333-3333-3333-3333-333333333333", Estado::Abierta);
+        assert_eq!(por_avisar(Some((&abierta, av)), &otra).0, Some(Estado::Abierta));
+    }
+
+    #[test]
+    fn recibir_devuelve_el_aviso_con_la_venta() {
+        let cajas = Cajas::new();
+        let ahora = Instant::now();
+        assert_eq!(cajas.recibir(&mensaje(CUENTA, 1, "abierta"), ahora).map(|a| a.estado), Some(Estado::Abierta));
+        assert_eq!(cajas.recibir(&mensaje(CUENTA, 2, "abierta"), ahora), None);
+        let cobrada = format!(
+            r#"{{"cuentaId":"{CUENTA}","secuencia":3,"clienteId":"{CLIENTE}","estado":"cobrada","renglones":[],"total":10,"ventaId":"44444444-4444-4444-4444-444444444444"}}"#
+        );
+        let aviso = cajas.recibir(cobrada.as_bytes(), ahora).unwrap();
+        assert_eq!(aviso.estado, Estado::Cobrada);
+        assert_eq!(aviso.venta_id, Some("44444444-4444-4444-4444-444444444444".parse().unwrap()));
+    }
+
+    #[test]
+    fn en_pantalla_mientras_haya_una_conexion() {
+        let cajas = Arc::new(Cajas::new());
+        let a = cajas.en_pantalla(cliente());
+        let b = cajas.en_pantalla(cliente());
+        drop(a);
+        assert!(cajas.esta_en_pantalla(cliente()));
+        drop(b);
+        assert!(!cajas.esta_en_pantalla(cliente()));
     }
 
     #[test]

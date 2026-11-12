@@ -368,6 +368,8 @@ if ('serviceWorker' in navigator) {
 // La cuenta de la caja en vivo (recuadro en el monedero, solo con sesión). Escucha
 // /cuenta/eventos (SSE, routes/cuenta.rs): `cuenta` trae el JSON que publicó el POS y
 // `sin-cuenta` lo quita. EventSource se reconecta solo si se corta la señal.
+// La conexión solo está abierta con la app en pantalla: así el servidor sabe cuándo avisar por
+// Web Push (caja.rs) y el celular no gasta batería en segundo plano.
 document.addEventListener('alpine:init', () => {
     const PESOS = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
@@ -377,10 +379,30 @@ document.addEventListener('alpine:init', () => {
         premio: null,
         ventaPremio: null,
 
+        fuente: null,
+
         init() {
-            const fuente = new EventSource('/cuenta/eventos');
-            fuente.addEventListener('cuenta', (e) => this.mostrar(JSON.parse(e.data)));
-            fuente.addEventListener('sin-cuenta', () => this.mostrar(null));
+            this.conectar();
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) this.desconectar(); else this.conectar();
+            });
+        },
+
+        conectar() {
+            if (this.fuente) return;
+            this.fuente = new EventSource('/cuenta/eventos');
+            this.fuente.addEventListener('cuenta', (e) => this.mostrar(JSON.parse(e.data)));
+            this.fuente.addEventListener('sin-cuenta', () => this.mostrar(null));
+            // Ya está viendo la app: el aviso de la caja (si llegó) sobra.
+            navigator.serviceWorker?.ready
+                .then((r) => r.getNotifications({ tag: 'cuenta-caja' }))
+                .then((avisos) => avisos.forEach((a) => a.close()))
+                .catch(() => {});
+        },
+
+        desconectar() {
+            this.fuente?.close();
+            this.fuente = null;
         },
 
         mostrar(cuenta) {

@@ -79,7 +79,9 @@ async function cachePrimero(req) {
 
 // ── Avisos (Web Push) ───────────────────────────────────────────────────────
 // El servidor (src/push.rs) manda, cifrado, {id, titulo, texto, url}; el navegador lo
-// descifra y despierta a este service worker unos segundos para mostrarlo.
+// descifra y despierta a este service worker unos segundos para mostrarlo. Los avisos de la
+// cuenta de la caja (caja.rs) no traen `id` (no hay fila que marcar) y sí `tag`: el del cobro
+// reemplaza al de la cuenta abierta y vuelve a sonar.
 
 const ICONO = '/static/img/favicon/web-app-manifest-192x192.png?v=4';
 
@@ -91,7 +93,8 @@ self.addEventListener('push', (event) => {
         self.registration.showNotification(titulo, {
             body: aviso.texto || '',
             icon: ICONO,
-            tag: aviso.id,                    // el mismo aviso dos veces se reemplaza, no se duplica
+            tag: aviso.tag || aviso.id,       // el mismo aviso dos veces se reemplaza, no se duplica
+            renotify: Boolean(aviso.tag),     // reemplazar con `tag` suena otra vez
             data: { id: aviso.id, url: aviso.url || '/' },
         }),
         marcar(aviso.id, 'recibida'),

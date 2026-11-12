@@ -31,7 +31,7 @@ use tokio::sync::broadcast::{error::RecvError, Receiver};
 use uuid::Uuid;
 
 use crate::{
-    caja::{Cajas, Cambio},
+    caja::{Cajas, Cambio, EnPantalla},
     db,
     routes::app::cliente_sesion,
     AppState,
@@ -49,6 +49,8 @@ pub async fn eventos(State(state): State<AppState>, headers: HeaderMap) -> Respo
     let inicial = state.cajas.actual(cliente_id, Instant::now());
     let conexion = Conexion {
         cambios,
+        // Mientras la conexión siga abierta, este cliente no recibe avisos por Web Push.
+        _en_pantalla: state.cajas.en_pantalla(cliente_id),
         cajas: state.cajas.clone(),
         cliente_id,
         mostrando: false,
@@ -63,6 +65,7 @@ pub async fn eventos(State(state): State<AppState>, headers: HeaderMap) -> Respo
 
 struct Conexion {
     cambios: Receiver<Cambio>,
+    _en_pantalla: EnPantalla,
     cajas: Arc<Cajas>,
     cliente_id: Uuid,
     /// Si lo último que se mandó fue una cuenta (para avisar cuando venza).

@@ -4,6 +4,29 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Cuenta de la caja en vivo: aviso por Web Push con la app cerrada (2026-11-12)
+
+Paso 5. Si el cliente no tiene la app en pantalla, le llegan dos notificaciones: al abrirse la
+cuenta ("La caja te está atendiendo · Toca para ver tu cuenta en vivo") y al cobrar ("¡Gracias por
+tu compra! · Ganaste $0.68 en tu monedero · tu saldo: $0.82", o el total si no hubo monedero).
+Una sola vez cada una por venta, aunque la caja quite y vuelva a poner al cliente. Las dos usan el
+`tag` `cuenta-caja`: la del cobro reemplaza a la otra y vuelve a sonar. Al tocarlas abre la app.
+
+- `src/caja.rs` — `por_avisar` decide qué aviso toca (pruebas al final); `Cajas::en_pantalla`
+  cuenta las conexiones SSE abiertas por cliente; `avisar` arma el texto (el del cobro con
+  `db::monedero::recibo`, igual que el recuadro) y lo manda aparte, sin frenar los mensajes.
+- `src/push.rs` — `mandar_del_momento`: sin fila en `Notificaciones` ni reintentos, urgencia alta y
+  caducidad de 10 min (el TTL del servicio de push: si el celular está apagado más, ya no llega).
+- `src/routes/cuenta.rs` — la conexión SSE guarda un `EnPantalla` mientras está abierta.
+- `static/app/app.js` — `cuentaCaja` cierra la conexión cuando la app se va a segundo plano y la
+  reabre al volver (así "conectada" = "en pantalla", y ahorra batería); al conectarse cierra la
+  notificación de la caja si había.
+- `static/app/sw.js` — usa `tag` (y `renotify`) cuando el aviso lo trae.
+
+Probado en local con un servicio de push falso y el aviso descifrado: de 6 mensajes (abierta,
+abierta, cerrada, abierta, cobrada, cobrada) salen 2 avisos; con la app en pantalla, 0; en segundo
+plano (Chromium con `visibilitychange`), 1.
+
 ## Cuenta de la caja en vivo: el recuadro en la app (2026-11-12)
 
 Paso 4. Con sesión de passkey, el monedero de la app muestra arriba "Tu cuenta en la caja" mientras
