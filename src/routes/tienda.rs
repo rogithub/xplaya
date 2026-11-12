@@ -123,10 +123,13 @@ pub async fn crear_pedido(
         return error_json(StatusCode::BAD_REQUEST, "Revisa las cantidades de tu carrito.");
     }
     match db::pedidos::crear_para_cliente(&state.pool, cliente_id, &req.items).await {
-        Ok(uid) => Json(serde_json::json!({
-            "cotizacion": format!("{}/cotizacion/{uid}", state.config.site_url),
-        }))
-        .into_response(),
+        Ok(uid) => {
+            state.avisos.pedido_nuevo(&state.pool, &state.config.site_url, uid, "la app");
+            Json(serde_json::json!({
+                "cotizacion": format!("{}/cotizacion/{uid}", state.config.site_url),
+            }))
+            .into_response()
+        }
         Err(e) => {
             tracing::error!("Pedido de la app del cliente {cliente_id}: {e}");
             error_json(StatusCode::INTERNAL_SERVER_ERROR, "No pudimos mandar tu pedido. Intenta de nuevo.")

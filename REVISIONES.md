@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Avisos: pedido nuevo en línea al celular de la papelería (2026-11-12)
+
+Cada pedido en línea (carrito de xplaya.com, con o sin sesión, y tienda de la app) publica en NATS
+`avisos.pedidos` → `nats-ntfy` → ntfy, topic `pedidos`: "Pedido en línea: Juan", número,
+productos, total, teléfono y por dónde llegó. Tocarlo abre la cotización; botón a WhatsApp.
+
+- `src/avisos.rs` — `pedido_nuevo`: en una tarea aparte lee la cotización
+  (`db::monedero::cotizacion`, mismo total) y el cliente, y publica.
+- `src/routes/carrito.rs`, `src/routes/tienda.rs` — lo llaman después de guardar el pedido.
+- k3s-manifests: permiso de `xplaya` para publicar `avisos.pedidos` (reiniciar NATS).
+
+---
+
 ## Aviso del kiosko por ntfy: verificado en producción (2026-11-12)
 
 Solo documentación. Probado de punta a punta: kiosko → xplaya → NATS → `nats-ntfy` → ntfy →

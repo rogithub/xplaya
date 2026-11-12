@@ -94,8 +94,8 @@ en NATS y usar un topic `papeleria-*` (así le llega a `dayana` y a `ro` sin toc
 
 - ✅ **Código del alta del kiosko** al celular de la papelería, con botón a WhatsApp (2026-11-12),
   topic `papeleria-kiosko`.
-- ⬜ **Pedido nuevo en línea** (carrito de xplaya.com y tienda de la app): "Pedido de Juan · $350"
-  con botón a la cotización. Hoy hay que estar viendo el POS para enterarse. El de más impacto.
+- ✅ **Pedido nuevo en línea** (carrito de xplaya.com y tienda de la app) (2026-11-12), topic
+  `pedidos`: número, productos, total y teléfono, con botones a la cotización y a WhatsApp.
 - ⬜ **"Agrégame a WhatsApp"** del kiosko: la otra solicitud del kiosko, con botón que abre
   WhatsApp con el saludo escrito. Casi igual al del código (`src/avisos.rs`).
 - ⬜ **Foto carnet / polaroid de imagina**: pedido nuevo en el kiosko de imagina, con botón al panel

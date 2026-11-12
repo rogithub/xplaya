@@ -50,6 +50,7 @@ pub async fn crear_pedido(
                 tracing::error!("Error creando pedido con sesión: {}", e);
                 (StatusCode::INTERNAL_SERVER_ERROR, "Error interno del servidor.".into())
             })?;
+        state.avisos.pedido_nuevo(&state.pool, &state.config.site_url, pedido_uid, "xplaya.com");
         return Ok(Json(PedidoCreadoResponse { pedido_uid, cliente_id }));
     }
 
@@ -74,5 +75,6 @@ pub async fn crear_pedido(
             (StatusCode::INTERNAL_SERVER_ERROR, "Error interno del servidor.".into())
         })?;
 
+    state.avisos.pedido_nuevo(&state.pool, &state.config.site_url, pedido_uid, "xplaya.com");
     Ok(Json(PedidoCreadoResponse { pedido_uid, cliente_id }))
 }
