@@ -752,6 +752,15 @@ a.btn-qr { text-decoration: none; }
 .kiosko-producto { grid-template-columns: 1fr; }
 .kiosko-producto-fotos { position: relative; display: grid; gap: 2vh; justify-items: center; min-height: 0; }
 .kiosko-producto-fotos .vitrina-foto { cursor: pointer; }
+/* Video de TikTok: vertical (9:16), tan alto como cabe junto a los datos. */
+.kiosko-video {
+    height: 68vh;
+    max-width: 100%;
+    aspect-ratio: 9 / 16;
+    border: 0;
+    border-radius: 20px;
+    background: #000;
+}
 .kiosko-foto-cuenta {
     margin: 0;
     font-family: var(--font-display);

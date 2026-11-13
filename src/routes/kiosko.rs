@@ -27,6 +27,7 @@ use uuid::Uuid;
 use crate::{
     db::{self, kiosko::Revision},
     kiosko,
+    models::producto::{reproductor_tiktok, tiktok_id},
     routes::{
         alta::{self, AltaPendiente, Origen, Quien},
         monedero::{normalizar_telefono, qr_svg},
@@ -143,6 +144,8 @@ pub struct ProductoKiosko {
     /// Sin cantidad exacta: en la pantalla basta con "hay" o "agotado".
     hay: bool,
     fotos: Vec<String>,
+    /// Reproductores de TikTok (solo videos con liga completa), que arrancan solos y se repiten.
+    videos: Vec<String>,
     presentaciones: Vec<PresentacionKiosko>,
 }
 
@@ -165,6 +168,10 @@ pub async fn producto(State(state): State<AppState>, headers: HeaderMap, Path(ni
             precio: p.precio_venta,
             unidad: p.unidad_medida,
             fotos: p.fotos,
+            videos: p.videos.iter()
+                .filter_map(|v| tiktok_id(&v.url))
+                .map(|id| reproductor_tiktok(&id, true))
+                .collect(),
             presentaciones: p.presentaciones.into_iter()
                 .map(|pr| PresentacionKiosko { nombre: pr.nombre, precio: pr.precio_venta })
                 .collect(),

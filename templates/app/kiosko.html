@@ -120,17 +120,24 @@
     <div class="kiosko-vista kiosko-producto" x-show="vista === 'producto'" x-cloak>
         <template x-if="producto">
             <div class="vitrina-producto">
-                {# Con varias fotos: flechas como las de la vitrina, tocar la foto pasa a la siguiente y
-                   pasan solas mientras nadie toque la pantalla. #}
+                {# Medios: primero los videos de TikTok (arrancan solos, sin sonido y en bucle), luego
+                   las fotos. Flechas como las de la vitrina; tocar la foto pasa a la siguiente, y las
+                   fotos pasan solas mientras nadie toque la pantalla (en un video se queda). #}
                 <div class="kiosko-producto-fotos">
-                    <img x-show="producto.fotos.length" :src="producto.fotos[foto]" :alt="producto.nombre"
-                         class="vitrina-foto" @click="moverFoto(1)">
-                    <div x-show="!producto.fotos.length" class="kiosko-sin-foto">Sin foto</div>
-                    <template x-if="producto.fotos.length > 1">
+                    <template x-if="medioActual()?.tipo === 'foto'">
+                        <img :src="medioActual().src" :alt="producto.nombre" class="vitrina-foto" @click="moverMedio(1)">
+                    </template>
+                    <template x-if="medioActual()?.tipo === 'video'">
+                        <iframe class="kiosko-video" :src="medioActual().src" :title="'Video de ' + producto.nombre"
+                                allow="autoplay; fullscreen"></iframe>
+                    </template>
+                    <div x-show="!medios.length" class="kiosko-sin-foto">Sin foto</div>
+                    <template x-if="medios.length > 1">
                         <div>
-                            <button type="button" class="vitrina-flecha izq" @click="moverFoto(-1)" aria-label="Foto anterior">‹</button>
-                            <button type="button" class="vitrina-flecha der" @click="moverFoto(1)" aria-label="Foto siguiente">›</button>
-                            <p class="kiosko-foto-cuenta" x-text="'📷 ' + (foto + 1) + ' / ' + producto.fotos.length"></p>
+                            <button type="button" class="vitrina-flecha izq" @click="moverMedio(-1)" aria-label="Anterior">‹</button>
+                            <button type="button" class="vitrina-flecha der" @click="moverMedio(1)" aria-label="Siguiente">›</button>
+                            <p class="kiosko-foto-cuenta"
+                               x-text="(medioActual()?.tipo === 'video' ? '▶️ ' : '📷 ') + (medio + 1) + ' / ' + medios.length"></p>
                         </div>
                     </template>
                 </div>

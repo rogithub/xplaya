@@ -1,5 +1,71 @@
 use serde::Serialize;
 
+/// Video de un producto (`UrlContentProductos`). Si es una liga completa de TikTok se puede
+/// incrustar su reproductor; si no (liga corta `vm.tiktok.com`, otra página), solo se enlaza.
+#[derive(Serialize)]
+pub struct Video {
+    pub url: String,
+    /// Reproductor de TikTok para un `<iframe>`, sin reproducción automática.
+    pub reproductor: Option<String>,
+}
+
+impl Video {
+    pub fn desde_url(url: &str) -> Self {
+        let url = url.trim();
+        Video { url: url.to_string(), reproductor: tiktok_id(url).map(|id| reproductor_tiktok(&id, false)) }
+    }
+}
+
+/// El número del video en una liga completa de TikTok: `https://www.tiktok.com/@cuenta/video/7476860515940125970`.
+/// Las ligas cortas (`vm.tiktok.com/…`) no lo traen: hay que abrirlas para saberlo.
+pub fn tiktok_id(url: &str) -> Option<String> {
+    let url = url.trim();
+    let resto = url.strip_prefix("https://").or_else(|| url.strip_prefix("http://"))?;
+    let (host, ruta) = resto.split_once('/')?;
+    if host != "tiktok.com" && !host.ends_with(".tiktok.com") {
+        return None;
+    }
+    let id = ruta.split("/video/").nth(1)?.split(['?', '/', '#']).next()?;
+    (!id.is_empty() && id.bytes().all(|b| b.is_ascii_digit())).then(|| id.to_string())
+}
+
+/// Reproductor oficial de TikTok (developers.tiktok.com/doc/embed-player): sin videos recomendados
+/// de otras cuentas, sin descripción ni música. En el kiosko arranca solo y se repite.
+pub fn reproductor_tiktok(id: &str, en_kiosko: bool) -> String {
+    let base = format!("https://www.tiktok.com/player/v1/{id}?rel=0&description=0&music_info=0");
+    if en_kiosko { format!("{base}&autoplay=1&loop=1") } else { base }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn numero_de_una_liga_completa() {
+        assert_eq!(
+            tiktok_id("https://www.tiktok.com/@papeleria.xplaya.com/video/7476860515940125970").as_deref(),
+            Some("7476860515940125970")
+        );
+        assert_eq!(tiktok_id(" https://www.tiktok.com/@x/video/123?is_from_webapp=1 ").as_deref(), Some("123"));
+        assert_eq!(tiktok_id("https://tiktok.com/@/video/7480529169839869239").as_deref(), Some("7480529169839869239"));
+    }
+
+    #[test]
+    fn sin_numero_no_se_incrusta() {
+        assert_eq!(tiktok_id("https://vm.tiktok.com/ZMkneoMJq/"), None);
+        assert_eq!(tiktok_id("https://papeleria.xplaya.com/Ver/1424"), None);
+        assert_eq!(tiktok_id("https://evil.com/www.tiktok.com/@x/video/1"), None);
+        assert_eq!(tiktok_id("https://www.tiktok.com/@x/video/abc"), None);
+    }
+
+    #[test]
+    fn reproductor() {
+        assert_eq!(reproductor_tiktok("1", false), "https://www.tiktok.com/player/v1/1?rel=0&description=0&music_info=0");
+        assert!(reproductor_tiktok("1", true).ends_with("&autoplay=1&loop=1"));
+        assert!(Video::desde_url("https://vm.tiktok.com/x/").reproductor.is_none());
+    }
+}
+
 #[derive(Serialize)]
 pub struct Presentacion {
     pub id: uuid::Uuid,
@@ -79,7 +145,7 @@ pub struct ProductoDetalle {
     pub unidad_medida: String,
     pub stock: String,
     pub fotos: Vec<String>,
-    pub videos: Vec<String>,
+    pub videos: Vec<Video>,
     pub presentaciones: Vec<Presentacion>,
     pub componentes: Vec<ComponenteKit>,
     pub marca: Option<String>,

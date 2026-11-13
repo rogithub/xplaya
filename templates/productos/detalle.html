@@ -192,8 +192,19 @@
         {% if producto.videos %}
         <div class="mt-4">
             {% for video in producto.videos %}
-            <a href="{{ video }}" target="_blank" rel="noopener"
+            {% if video.reproductor %}
+            {# Reproductor oficial de TikTok (models/producto.rs); vertical como el video. #}
+            <div class="video-tiktok mb-2">
+                <iframe src="{{ video.reproductor | safe }}" title="Video de {{ producto.nombre }}"
+                        loading="lazy" allow="fullscreen" allowfullscreen></iframe>
+            </div>
+            <p class="has-text-centered is-size-7 mb-3">
+                <a href="{{ video.url }}" target="_blank" rel="noopener">Ver en TikTok</a>
+            </p>
+            {% else %}
+            <a href="{{ video.url }}" target="_blank" rel="noopener"
                class="button is-light is-fullwidth mb-2">Ver video</a>
+            {% endif %}
             {% endfor %}
         </div>
         {% endif %}

@@ -277,20 +277,32 @@ document.addEventListener('alpine:init', () => {
         // Vitrina: productos al azar (/kiosko/vitrina) y en qué diapositiva va.
         productos: [],
         i: 0,
-        // Buscar por número: el NID que se escribe, el producto encontrado y su foto actual.
+        // Buscar por número: el NID que se escribe, el producto encontrado, sus medios (primero los
+        // videos de TikTok, luego las fotos) y cuál se ve.
         nid: '',
         producto: null,
-        foto: 0,
+        medios: [],
+        medio: 0,
         buscando: false,
 
         init() {
             this.nuevoQr();
             this.cargarVitrina();
             setInterval(() => this.cargarVitrina(), 10 * 60 * 1000);   // otra tanda al azar
-            // Producto buscado con varias fotos: pasan solas si nadie toca la pantalla.
+            // Producto buscado: las fotos pasan solas si nadie toca la pantalla; en un video se queda.
             setInterval(() => {
-                if (this.vista === 'producto' && Date.now() - this.ultimoToque > 4000) this.moverFoto(1, false);
+                if (this.vista !== 'producto' || this.medioActual()?.tipo === 'video') return;
+                if (Date.now() - this.ultimoToque > 4000) this.moverMedio(1, false);
             }, 4000);
+            // El reproductor de TikTok no tiene parámetro para arrancar sin sonido (solo uno que lo
+            // bloquea): al avisar que está listo se le pide silencio y que reproduzca; así se
+            // puede subir el volumen. developers.tiktok.com/doc/embed-player
+            window.addEventListener('message', (e) => {
+                if (e.origin !== 'https://www.tiktok.com' || e.data?.type !== 'onPlayerReady') return;
+                for (const type of ['mute', 'play']) {
+                    e.source.postMessage({ type, 'x-tiktok-player': true }, e.origin);
+                }
+            });
             setInterval(() => {
                 const quieto = Date.now() - this.ultimoToque > 60000;
                 if (!quieto) return;
@@ -332,18 +344,19 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        medioActual() { return this.medios[this.medio] || null; },
+
         quitarFoto(url) {
-            const fotos = this.producto?.fotos;
-            const j = fotos ? fotos.indexOf(url) : -1;
+            const j = this.medios.findIndex((m) => m.src === url);
             if (j < 0) return;          // ya se quitó, o ya se buscó otro producto
-            fotos.splice(j, 1);
-            if (this.foto >= fotos.length) this.foto = 0;
+            this.medios.splice(j, 1);
+            if (this.medio >= this.medios.length) this.medio = 0;
         },
 
-        moverFoto(paso, tocado = true) {
-            const n = this.producto?.fotos.length || 0;
+        moverMedio(paso, tocado = true) {
+            const n = this.medios.length;
             if (n < 2) return;
-            this.foto = (this.foto + paso + n) % n;
+            this.medio = (this.medio + paso + n) % n;
             if (tocado) this.actividad();
         },
 
@@ -358,7 +371,11 @@ document.addEventListener('alpine:init', () => {
                 if (r.status === 404) { this.error = `No encontramos el número ${nid}.`; return; }
                 if (!r.ok) throw new Error();
                 this.producto = await r.json();
-                this.foto = 0;
+                this.medios = [
+                    ...this.producto.videos.map((src) => ({ tipo: 'video', src })),
+                    ...this.producto.fotos.map((src) => ({ tipo: 'foto', src })),
+                ];
+                this.medio = 0;
                 // Una foto registrada que no está en MinIO no carga: se quita de la lista para no
                 // dejar flechas que no cambian nada.
                 this.producto.fotos.forEach((url) => {

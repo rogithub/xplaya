@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Videos de TikTok incrustados: página del producto y kiosko (2026-11-13)
+
+Los videos de `UrlContentProductos` que son ligas completas de TikTok
+(`tiktok.com/@cuenta/video/123…`) ya no se abren en otra pestaña: se ven dentro de la página con
+el reproductor oficial de TikTok (`tiktok.com/player/v1/{id}`, developers.tiktok.com/doc/embed-player).
+Las demás ligas (cortas `vm.tiktok.com/…`, otras páginas) siguen como botón "Ver video".
+
+- `src/models/producto.rs` — `Video` (liga + reproductor), `tiktok_id` (el número del video;
+  pruebas al final) y `reproductor_tiktok` (sin recomendados de otras cuentas, descripción ni
+  música; en el kiosko arranca solo y se repite). `ProductoDetalle.videos` pasa a `Vec<Video>`.
+- `templates/productos/detalle.html` + `static/css/main.css` — reproductor vertical (9:16, máx.
+  340 px), `loading="lazy"`, con "Ver en TikTok" abajo.
+- `src/routes/kiosko.rs` — `ProductoKiosko.videos`: los reproductores del kiosko.
+- `static/app/app.js`, `templates/app/kiosko.html`, `static/css/app.css` — el producto buscado
+  tiene "medios": primero los videos, luego las fotos, con las mismas flechas y contador
+  (▶️ / 📷). En un video el avance automático se detiene. TikTok no tiene parámetro para arrancar
+  sin sonido (solo `force_muted`, que no deja subirlo): al recibir `onPlayerReady` por
+  `postMessage` se le manda `mute` y `play`.
+
+Probado en Chromium: kiosko a 1920×1080 con el NID 1077 (llegan `onPlayerReady`, `onMute: true`
+y `onStateChange: 1`, y se queda en el video) y la página del producto a 390 px.
+
+---
+
 ## Kiosko: buscar un producto por su número (2026-11-12)
 
 Un cuadro nuevo en el inicio del kiosko, "🔎 Buscar por número" (ocupa las dos columnas, abajo),

@@ -2,7 +2,7 @@ use rust_decimal::{prelude::ToPrimitive, Decimal};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::producto::{ComponenteKit, FeedProducto, Paginacion, Presentacion, ProductoCard, ProductoDetalle};
+use crate::models::producto::{ComponenteKit, FeedProducto, Paginacion, Presentacion, ProductoCard, ProductoDetalle, Video};
 
 #[derive(sqlx::FromRow)]
 struct SitemapRow {
@@ -318,7 +318,10 @@ pub async fn detalle(
     )
     .bind(row.id)
     .fetch_all(pool)
-    .await?;
+    .await?
+    .iter()
+    .map(|url| Video::desde_url(url))
+    .collect();
 
     // Los kits no tienen stock propio: se listan sus componentes para que el
     // cliente vea qué incluye. El POS expande el kit al momento de la venta.
