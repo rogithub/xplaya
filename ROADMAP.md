@@ -56,6 +56,10 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   cliente de la sesión, sin pedir datos (2026-11-10)
 - ✅ Se quedan separados app.xplaya.com y xplaya.com (2026-11-10); el carrito de xplaya.com
   tiene "Entrar con huella" (su propia sesión) y no pide datos a quien ya tiene la app
+- ✅ **Cuenta de la caja en vivo** (2026-11-12): con el cliente elegido al empezar la venta, la app
+  muestra la cuenta mientras se arma y al cobrar el monedero ganado y el saldo nuevo; Web Push al
+  abrirla y al cobrar si la app no está en pantalla. POS → NATS `caja.cuenta` → SSE. Nota de
+  diseño: `inventario_papeleria/docs/decisiones/2026-11-12-cuenta-en-vivo-en-la-app.md`.
 - ⬜ Notificaciones: pedido listo, abonos y vencimiento (diseño en `APP_MONEDERO.md`)
 - ⬜ **Recordatorio de pago de servicios** (más adelante): clientes que pagan agua, luz o teléfono
   en la tienda reciben aviso antes de su fecha de corte. Usa la misma tabla `Notificaciones` (un
@@ -64,9 +68,13 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
 
 ### Ideas para el kiosko (sin fecha)
 
-- ⬜ **Cuenta en vivo**: mientras la caja cobra, el kiosko muestra los productos, el total y "con
-  esta compra ganas $X en tu monedero". Nunca el nombre ni el saldo (pantalla pública). Antes de
-  diseñarlo, revisar cómo guarda el POS la venta mientras se arma.
+- Cuenta en vivo en el kiosko: se hizo en la app de cada cliente en lugar del kiosko (2026-11-12,
+  ver "App de clientes"): solo la ve él y no depende de la pantalla pública.
+- ✅ **Buscar por número** (2026-11-12): el NID en el teclado de la pantalla muestra el producto en
+  grande (fotos, videos de TikTok, precio, presentaciones, si hay). La opción de mandarlo desde el
+  POS ("Mostrar en kiosko") quedó para después.
+- ✅ **Videos de TikTok incrustados** (2026-11-13) en el kiosko y en la página del producto; el POS
+  ya solo acepta ligas de TikTok y guarda la completa.
 - Imprimir: se descartó un flujo propio en imagina (subir archivos, acomodar fotos, Word a PDF):
   los clientes se atoran y le quitan tiempo a la caja. Lo cubre la pestaña "Nuestro WhatsApp".
 - Turnos: se descartó (2026-11-11) un sistema de turnos (tomar turno en el kiosko, seguirlo en la
@@ -83,6 +91,65 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   ordenada por dinero parado, para fotografiar primero esos (la vitrina solo muestra con foto).
 - ⬜ **Medir la pantalla**: reporte semanal en Superset (altas de monedero desde el kiosko,
   contactos de WhatsApp, cuántos volvieron a comprar).
+
+### Ganchos para la app: "Mis encargos" (por probar a mano primero)
+
+**Problema (2026-11-13):** la app no tiene clientes reales; solo la tienen instalada los dueños. La
+gente no la va a instalar si no le resuelve algo que hoy le cuesta. Se revisaron ideas y salió un
+patrón común: **el cliente pide algo, la papelería lo atiende y la app le avisa**. Puede ser una
+sola sección "Mis encargos" con estados y notificaciones, para tres servicios:
+
+| Servicio | El cliente | La papelería | La app avisa |
+|---|---|---|---|
+| Impresiones | manda archivos + "cómo lo quiere" | imprime y acomoda | "Tu impresión está lista" |
+| Paquetes | pone la dirección de la tienda a su nombre | lo guarda, foto de la etiqueta | "Tu paquete llegó" |
+| Encargos | pega la liga de Amazon / Mercado Libre y paga en efectivo | lo compra con su tarjeta, cobra la diferencia | "Tu encargo llegó" |
+
+**Datos que lo justifican (BD, 10 nov 2025 – 9 nov 2026):** copias e impresión fueron $55,599 de
+$210,274 vendidos: **26.4 %** del total y **31.7 %** sin los servicios trasladados (63 pagos de
+servicio por $32,702). Aparecen en **3,212 de 5,352 tickets (60 %)**. Imagina (el editor para
+acomodar imágenes) no lo usan: quieren mandar los archivos y que la papelería los acomode, como por
+WhatsApp. La competencia cercana imprime con chorro de tinta, más lento y cobra aparte el acomodo.
+
+**Plan:**
+- ⬜ **Probar paquetes y encargos sin sistema, un mes:** anuncio (letrero, estado de WhatsApp,
+  TikTok), un producto en el POS ("Resguardo de paquete $X", "Encargo") y libreta o fotos; avisar
+  por WhatsApp. Contar cuántos llegan y cuántos repiten. Antes del anuncio decidir: cuánto se
+  cobra, cuántos días se guarda un paquete, si se aceptan paquetes contra entrega y qué
+  devoluciones se cubren en los encargos.
+- ⬜ **"Mandar a imprimir" en la app (versión mínima):** archivos (compartir desde el celular en
+  Android con *share target*; botón "Subir archivo" en cualquiera, porque iPhone no tiene share
+  target) + texto libre de cómo lo quiere → MinIO (bucket `papeleria-impresiones`) + tabla
+  `TrabajosImpresion` (repo del POS) → aviso por ntfy (`avisos.impresiones`) con liga para ver los
+  archivos y botón a WhatsApp → "Listo" → Web Push al cliente. Sin precios, pagos ni panel en el
+  POS. Falta decidir: solo clientes con passkey (recomendado), días que se guardan los archivos
+  (propuesta: 7 tras "Listo"), tipos y tamaños (PDF, JPG, PNG, HEIC; 10 archivos de 25 MB) y si
+  "Listo" se marca también desde el POS.
+- ⬜ **Después, con números:** cotización y pedido desde el POS, chat por encargo, y fijar fecha
+  para que los trabajos de impresión lleguen por la app.
+
+**Reglas que salieron de la plática:**
+- **WhatsApp se queda** para dudas, clientes nuevos y sobre todo los **estados**, donde la
+  publicidad de TikTok llega gratis porque la gente tiene guardado el número. Una app no iguala
+  ese alcance. Un chat propio sirve ligado a cada encargo, no para reemplazar WhatsApp.
+- **Primero que la app sea tan fácil como WhatsApp, luego pedir que la usen.** Con la ventaja de
+  precio y rapidez frente a la competencia, se puede pedir con fecha, pero no antes de que la
+  versión mínima funcione bien.
+- **Encargos:** revisar antes los términos de Amazon Prime (parecen prohibir comprar para
+  revender) y las condiciones de Mercado Libre; que paguen por adelantado; separar la tarjeta de
+  los gastos de la tienda.
+- **Paquetes:** los programas formales (puntos de entrega de Mercado Libre, Amazon, paqueterías)
+  piden estar registrado como negocio; por cuenta propia se puede desde ya. Hace falta una regla de
+  responsabilidad (valor máximo, "no respondemos por el contenido").
+
+**Descartado o en espera:**
+- **Cobro en línea con Mercado Pago** (2026-11-13): 3.49 % + $4 + IVA por venta al instante; la
+  cuota fija hace caros los trabajos chicos (~$5.68 de recargo en $20, ~$6.95 en $50, contra ~$0.84 y
+  ~$2.11 con la terminal). Los anticipos siguen por transferencia. CoDi: revisar cuando la reforma
+  llegue a los bancos.
+- **Lista de útiles escolares:** se surte una vez al año, poco, y la escuela cercana los regala.
+- **Escáner de código de barras para clientes** (`BarcodeDetector`, solo Chrome de Android): en
+  espera. Solo 706 de 2,083 productos del catálogo (34 %) tienen código capturado.
 
 ### Avisos a la papelería por ntfy (por revisar)
 
