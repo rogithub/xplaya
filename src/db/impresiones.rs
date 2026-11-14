@@ -1,7 +1,8 @@
 //! Trabajos del autoservicio de impresión (`TrabajosImpresion`, definida en el repo del POS).
 //!
 //! Estados: `preparado` (el cliente lo armó; la caja no lo ve) → `por_autorizar` (lo mandó desde
-//! la tienda) → `imprimiendo` → `impreso`; o `rechazado`, `error` y `vencido` (a los 7 días).
+//! la tienda) → `autorizado` (la caja eligió impresora, en el POS) → `imprimiendo` (xplaya lo tomó)
+//! → `impreso`; o `rechazado`, `error` y `vencido` (a los 7 días).
 //! Las fechas van en hora de la tienda, como las del POS.
 
 use rust_decimal::Decimal;

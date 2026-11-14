@@ -99,7 +99,7 @@ async fn pagina_lista(state: &AppState, cliente_id: Uuid, error: Option<String>,
     };
     let preparados = trabajos.iter().filter(|t| t.estado == "preparado").count();
     // Mientras algo está en la caja o imprimiéndose, la página se recarga sola.
-    let en_curso = trabajos.iter().any(|t| matches!(t.estado.as_str(), "por_autorizar" | "imprimiendo"));
+    let en_curso = trabajos.iter().any(|t| matches!(t.estado.as_str(), "por_autorizar" | "autorizado" | "imprimiendo"));
     let trabajos: Vec<_> = trabajos.iter().map(vista).collect();
     render(state, "app/imprimir.html", context! {
         en_app => true,

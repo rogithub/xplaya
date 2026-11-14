@@ -60,7 +60,7 @@
         </div>
         {% elif t.estado == "por_autorizar" %}
         <p class="imp-estado">⏳ En la caja: esperando que lo autoricen.</p>
-        {% elif t.estado == "imprimiendo" %}
+        {% elif t.estado == "autorizado" or t.estado == "imprimiendo" %}
         <p class="imp-estado">🖨️ Imprimiendo…</p>
         {% elif t.estado == "impreso" %}
         <p class="imp-estado ok">✅ Listo. En un momento te llevamos tus hojas y lo pagas ahí.</p>

@@ -4,6 +4,15 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## "Imprime tú solito": estado `autorizado` (2026-11-14)
+
+El POS (paso 3) marca `autorizado` cuando la caja elige impresora; xplaya lo pasará a
+`imprimiendo` al tomarlo (paso 4). En la app se ve igual que "Imprimiendo…" y la lista se sigue
+recargando sola: `templates/app/imprimir.html`, `en_curso` en `src/routes/imprimir.rs` y el
+comentario de estados en `src/db/impresiones.rs`.
+
+---
+
 ## "Imprime tú solito": autoservicio de impresión en la app, paso 2 (2026-11-14)
 
 El cliente con la app sube **un PDF** (b/n, carta), elige páginas, copias y una cara / doble cara,
