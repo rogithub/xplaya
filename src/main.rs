@@ -6,12 +6,14 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
+mod autoservicio;
 mod avisos;
 mod caja;
 mod config;
 mod db;
 mod estaticos;
 mod impresion;
+mod ipp;
 mod kiosko;
 mod middleware;
 mod minio;
@@ -113,6 +115,8 @@ async fn main() {
     caja::vigilar(state.clone());
     // Borra los PDFs del autoservicio de impresión a los 7 días.
     routes::imprimir::limpiar(state.clone());
+    // Imprime los trabajos que la caja autorizó (autoservicio.rs).
+    autoservicio::vigilar(state.clone());
 
     let site = Router::new()
         .route("/", get(routes::productos::lista))

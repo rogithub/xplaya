@@ -37,6 +37,9 @@ pub struct Config {
     pub minio_endpoint: String,
     pub minio_usuario: String,
     pub minio_password: String,
+    /// Loki: cada trabajo del autoservicio de impresión se registra como los de la PC de la
+    /// papelería (`job="papeleria-pc"`, `tipo="impresion"`), para los mismos tableros. Vacío: no.
+    pub loki_url: String,
 }
 
 impl Config {
@@ -76,6 +79,10 @@ impl Config {
                 .unwrap_or_else(|_| "http://minio.minio-system.svc.cluster.local:9000".to_string()),
             minio_usuario: std::env::var("MINIO_USUARIO").unwrap_or_default().trim().to_string(),
             minio_password: std::env::var("MINIO_PASSWORD").unwrap_or_default().trim().to_string(),
+            loki_url: std::env::var("LOKI_URL")
+                .unwrap_or_else(|_| "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push".to_string())
+                .trim()
+                .to_string(),
         }
     }
 

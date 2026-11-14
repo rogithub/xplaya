@@ -192,3 +192,125 @@ pub async fn marcar_vencido(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> 
         .await
         .map(|_| ())
 }
+
+// ── Imprimir (autoservicio.rs) ──────────────────────────────────────────────
+
+/// Impresora del autoservicio (`Settings.AUTOSERVICIO_IMPRESORAS`).
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct Impresora {
+    pub clave: String,
+    pub nombre: String,
+    /// `ipp://…` o `ipps://…`
+    pub uri: String,
+    /// Producto b/n con el que se cobra lo que sale de esta impresora.
+    #[serde(rename = "productoId")]
+    pub producto_id: Uuid,
+}
+
+pub async fn impresoras(pool: &PgPool) -> Result<Vec<Impresora>, sqlx::Error> {
+    let json: Option<String> =
+        sqlx::query_scalar("SELECT value FROM settings WHERE key = 'AUTOSERVICIO_IMPRESORAS'")
+            .fetch_optional(pool)
+            .await?;
+    Ok(json
+        .and_then(|j| {
+            serde_json::from_str(&j)
+                .inspect_err(|e| tracing::error!("AUTOSERVICIO_IMPRESORAS: {e}"))
+                .ok()
+        })
+        .unwrap_or_default())
+}
+
+/// Un trabajo que xplaya ya tomó para imprimir.
+#[derive(Debug, sqlx::FromRow)]
+pub struct PorImprimir {
+    pub id: Uuid,
+    pub cliente_id: Uuid,
+    pub archivo: String,
+    pub objeto: String,
+    pub paginas_pdf: i32,
+    pub paginas: String,
+    pub caras: i32,
+    pub copias: i32,
+    pub doble_cara: bool,
+    pub impresora: String,
+}
+
+/// Los que la caja autorizó y nadie ha tomado.
+pub async fn autorizados(pool: &PgPool) -> Result<Vec<Uuid>, sqlx::Error> {
+    sqlx::query_scalar("SELECT id FROM trabajosimpresion WHERE estado = 'autorizado' ORDER BY fechaautorizado")
+        .fetch_all(pool)
+        .await
+}
+
+/// Lo toma para imprimir (`autorizado` → `imprimiendo`) en una sola sentencia: si llega dos veces
+/// (NATS y la revisión periódica), solo una lo toma y no se imprime doble.
+pub async fn tomar(pool: &PgPool, id: Uuid) -> Result<Option<PorImprimir>, sqlx::Error> {
+    sqlx::query_as(
+        "UPDATE trabajosimpresion SET estado = 'imprimiendo'
+          WHERE id = $1 AND estado = 'autorizado' AND impresora IS NOT NULL
+          RETURNING id, clienteid AS cliente_id, archivo, objeto, paginaspdf AS paginas_pdf, paginas,
+                    caras, copias, doblecara AS doble_cara, impresora",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+}
+
+/// Salió: crea el pedido para cobrarlo (Origen 2, Autoservicio: producto b/n de la impresora ×
+/// caras impresas) y lo marca `impreso`, todo junto. Devuelve el Uid del pedido.
+pub async fn terminar(pool: &PgPool, t: &PorImprimir, producto_id: Uuid) -> Result<Uuid, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let item = crate::models::pedido::PedidoItemRequest {
+        producto_id,
+        cantidad: Decimal::from(t.caras * t.copias),
+        presentacion_id: None,
+    };
+    let pedido = crate::db::pedidos::insertar_autoservicio(&mut tx, t.cliente_id, &item).await?;
+    sqlx::query(
+        "UPDATE trabajosimpresion
+            SET estado = 'impreso', pedidouid = $2, error = NULL,
+                fechaimpreso = NOW() AT TIME ZONE 'America/Cancun'
+          WHERE id = $1",
+    )
+    .bind(t.id)
+    .bind(pedido)
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(pedido)
+}
+
+/// No salió: `error` con el motivo para la cajera (puede mandarlo a la otra impresora).
+pub async fn fallar(pool: &PgPool, id: Uuid, motivo: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE trabajosimpresion SET estado = 'error', error = $2 WHERE id = $1 AND estado = 'imprimiendo'")
+        .bind(id)
+        .bind(motivo.chars().take(500).collect::<String>())
+        .execute(pool)
+        .await
+        .map(|_| ())
+}
+
+/// Los que se quedaron `imprimiendo` (xplaya se reinició a medias) pasan a `error`, para que la
+/// cajera revise si salió antes de mandarlo otra vez. Nunca se reimprimen solos.
+pub async fn interrumpidos(pool: &PgPool) -> Result<u64, sqlx::Error> {
+    sqlx::query(
+        "UPDATE trabajosimpresion
+            SET estado = 'error', error = 'Se interrumpió. Revisa si salió antes de mandarlo otra vez.'
+          WHERE estado = 'imprimiendo'
+            AND fechaautorizado < (NOW() AT TIME ZONE 'America/Cancun') - INTERVAL '20 minutes'",
+    )
+    .execute(pool)
+    .await
+    .map(|r| r.rows_affected())
+}
+
+/// Nombre del cliente, para el registro en Loki.
+pub async fn nombre_cliente(pool: &PgPool, cliente_id: Uuid) -> Option<String> {
+    sqlx::query_scalar("SELECT nombre FROM clientes WHERE id = $1")
+        .bind(cliente_id)
+        .fetch_optional(pool)
+        .await
+        .ok()
+        .flatten()
+}

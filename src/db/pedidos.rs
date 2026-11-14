@@ -58,7 +58,17 @@ pub async fn crear_para_cliente(
     Ok(pedido_uid)
 }
 
-/// INSERT común de pedido + items. `origen`: 0=Tienda, 1=EnLinea (web).
+/// Pedido del autoservicio de impresión (Origen 2): lo que se imprimió, para cobrarlo en caja.
+/// Va dentro de la transacción que marca el trabajo `impreso` (`db::impresiones::terminar`).
+pub async fn insertar_autoservicio(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    cliente_id: Uuid,
+    item: &PedidoItemRequest,
+) -> Result<Uuid, sqlx::Error> {
+    insertar_pedido(tx, cliente_id, std::slice::from_ref(item), 2).await
+}
+
+/// INSERT común de pedido + items. `origen`: 0=Tienda, 1=EnLinea (web), 2=Autoservicio (impresión).
 async fn insertar_pedido(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     cliente_id: Uuid,

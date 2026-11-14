@@ -62,6 +62,14 @@ pub fn calcular(paginas_pdf: u32, opciones: &Opciones, precio_cara: Decimal) -> 
     })
 }
 
+/// Las páginas guardadas ("" o "1-3,5") como rangos para la impresora; vacío = todas.
+pub fn rangos(paginas: &str, paginas_pdf: u32) -> Result<Vec<(u32, u32)>, String> {
+    if paginas.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    leer_paginas(paginas, paginas_pdf)
+}
+
 /// "1-3, 5" → [(1, 3), (5, 5)], ordenados y sin encimarse. Vacío = todas.
 fn leer_paginas(texto: &str, paginas_pdf: u32) -> Result<Vec<(u32, u32)>, String> {
     let texto = texto.trim();
@@ -232,6 +240,12 @@ mod tests {
         assert_eq!(contar_paginas(&pdf(3)), Ok(3));
         assert!(contar_paginas(b"hola").unwrap_err().contains("no es un PDF"));
         assert!(contar_paginas(b"%PDF-1.5 basura").unwrap_err().contains("No pudimos abrir"));
+    }
+
+    #[test]
+    fn rangos_para_la_impresora() {
+        assert_eq!(rangos("", 9), Ok(vec![]));
+        assert_eq!(rangos("1-3,5", 9), Ok(vec![(1, 3), (5, 5)]));
     }
 
     #[test]

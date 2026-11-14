@@ -4,6 +4,33 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## "Imprime tú solito": imprimir en la Kyocera, paso 4 (2026-11-14)
+
+Lo último del autoservicio: lo que la caja autoriza en el POS sale en la impresora elegida y queda
+un pedido para cobrarlo.
+
+- `src/ipp.rs` — IPP mínimo, sin CUPS: Print-Job con el PDF (rangos de páginas, copias
+  intercaladas, una cara / doble cara por el lado largo, carta, b/n, ajustar a la hoja),
+  Get-Job-Attributes para saber cuándo terminó y Get-Printer-Attributes para explicar un error
+  ("Sin papel.", "Papel atorado."…). `ipps://` va por https aceptando el certificado propio de la
+  impresora (la MA5500ifx solo acepta https). Pruebas al final; contra las impresoras, solo
+  lectura: `cargo test consulta_las_kyocera -- --ignored`.
+- `src/autoservicio.rs` — escucha NATS `impresion.autorizada` y revisa la tabla cada 20 s; toma el
+  trabajo (`autorizado` → `imprimiendo`, una sola sentencia: nunca se imprime doble), baja el PDF,
+  lo manda, espera hasta 15 min, y crea el pedido + `impreso` en una transacción. Avisa al cliente
+  ("Tu impresión está lista") y lo registra en Loki (`job="papeleria-pc"`, `tipo="impresion"`).
+  Si falla: `error` con el motivo. Los que se quedan `imprimiendo` 20 min (xplaya se reinició a
+  medias) pasan a `error` para que la cajera revise: nunca se reimprimen solos.
+- `src/db/impresiones.rs` — `impresoras` (de `Settings`), `autorizados`, `tomar`, `terminar`,
+  `fallar`, `interrumpidos`. `src/db/pedidos.rs` — `insertar_autoservicio` (Origen 2).
+- `src/impresion.rs` — `rangos` (las páginas guardadas para la impresora). Config: `LOKI_URL`.
+
+Probado con hojas de verdad desde desarrollo (sin Loki): K2, 2 páginas a doble cara (1 hoja, la 1 al
+frente y la 2 atrás), y K1, solo la página 1 (1 hoja). Las dos salieron bien y cada una dejó su
+pedido (`BN REFK2 × 2`, `BN REFK1 × 1`). Datos de prueba borrados.
+
+---
+
 ## "Imprime tú solito": estado `autorizado` (2026-11-14)
 
 El POS (paso 3) marca `autorizado` cuando la caja elige impresora; xplaya lo pasará a

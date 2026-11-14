@@ -187,11 +187,14 @@ omisión, rangos de páginas, copias, doble cara y `print-scaling` fit):
 - ✅ **1. Datos (repo del POS):** tabla `TrabajosImpresion`, impresoras del autoservicio en
   `Settings`, `OrigenPedido.Autoservicio = 2`. SQL para producción.
 - ✅ **2. App (xplaya, 2026-11-14):** subir, elegir, total, preparado; mandar con el QR del kiosko
-  (`routes/imprimir.rs`). MinIO: bucket, usuario y SealedSecret `xplaya-minio` listos; el respaldo a
-  R2 omite el bucket. **Se prende en producción hasta tener los pasos 3 y 4** (si no, los trabajos
-  llegarían a una caja que no los ve): falta poner `MINIO_USUARIO`/`MINIO_PASSWORD` en el deployment.
-- ⬜ **3. POS:** aviso flotante con [K1] [K2] [Rechazar] → NATS `impresion.autorizada`.
-- ⬜ **4. Imprimir (xplaya):** IPP, esperar el fin, pedido, aviso al cliente, Loki. Permisos NATS.
+  (`routes/imprimir.rs`). MinIO: bucket, usuario y SealedSecret `xplaya-minio`; el respaldo a R2
+  omite el bucket. Se prende con `MINIO_USUARIO`/`MINIO_PASSWORD` en el deployment.
+- ✅ **3. POS (2026-11-14):** aviso flotante con [K1] [K2] [Rechazar] → estado `autorizado` y NATS
+  `impresion.autorizada`.
+- ✅ **4. Imprimir (xplaya, 2026-11-14):** `src/autoservicio.rs` + `src/ipp.rs`: toma el trabajo,
+  IPP a la Kyocera, espera el fin, pedido, aviso al cliente, Loki. Probado con hojas de verdad en
+  K1 (una cara, página 1) y K2 (doble cara). Permisos NATS en k3s-manifests.
+- ⬜ **Prueba en producción** de punta a punta: celular → QR del kiosko → caja → impresora → cobrar.
 - ⬜ **5. Cobrar:** ya existe (Pedidos → Vender).
 - Después: desactivar el botón de una impresora apagada (su `printer-state` por IPP).
 - ⬜ **Siguiente tipo de trabajo: copia de INE / credencial (b/n).** Cuando el autoservicio de PDF
