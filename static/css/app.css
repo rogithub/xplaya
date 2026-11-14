@@ -1230,6 +1230,37 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .imp-opciones { display: grid; gap: 16px; }
 .imp-grupo { margin: 0; padding: 0; border: 0; }
 .imp-radio { display: inline-flex; align-items: center; gap: 6px; margin: 0 18px 8px 2px; }
+.imp-paginas-barra { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 2px 10px; }
+.imp-paginas-cuenta { margin-right: auto; color: var(--muted); font-size: .9rem; }
+.imp-rango { margin-bottom: 10px; }
+/* Cuadrícula de miniaturas: tocar una página la quita o la vuelve a poner. */
+.imp-paginas {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    max-height: 70vh; overflow-y: auto; overscroll-behavior: contain;
+}
+.imp-pagina button {
+    position: relative; display: block; width: 100%; padding: 0; cursor: pointer;
+    aspect-ratio: 17 / 22;             /* carta, mientras se dibuja */
+    background: #fff; border: 1px solid var(--line, #ddd); border-radius: 6px; overflow: hidden;
+}
+.imp-pagina canvas { display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
+.imp-pagina canvas.lista { opacity: 1; }
+.imp-pagina-num {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px; text-align: left;
+    background: rgba(0, 0, 0, .55); color: #fff; font-size: .8rem;
+}
+.imp-pagina-check {
+    position: absolute; right: 6px; bottom: 4px; width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #fff; background: var(--accent);
+}
+.imp-pagina-check::after {
+    content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.imp-pagina.fuera canvas.lista { opacity: .35; }
+.imp-pagina.fuera .imp-pagina-check { background: transparent; }
+.imp-pagina.fuera .imp-pagina-check::after { display: none; }
 .imp-copias { display: flex; align-items: center; justify-content: space-between; }
 .imp-copias .campo-label { margin: 0; }
 .imp-cuenta {

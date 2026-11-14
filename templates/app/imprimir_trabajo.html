@@ -3,7 +3,8 @@
   Opciones de un trabajo de "Imprime tú solito" (routes/imprimir.rs): páginas, copias y una cara /
   doble cara. La cuenta se pide al servidor mientras cambia algo (`/imprimir/{id}/cuenta`, la
   misma de `impresion::calcular` que se guarda). Solo se cambia mientras está `preparado`.
-  Lógica en `opcionesImpresion` (app.js).
+  Las páginas se eligen en una cuadrícula de miniaturas (pdf.js dibuja `/imprimir/{id}/pdf`) o
+  escribiendo el rango. Lógica en `opcionesImpresion` (app.js).
 #}
 {% block title %}{{ trabajo.archivo }} — Imprime tú solito{% endblock %}
 {% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
@@ -19,19 +20,36 @@
 
 {% if trabajo.estado == "preparado" %}
 <form method="post" action="/imprimir/{{ trabajo.id }}" class="imp-opciones"
-      x-data='opcionesImpresion({{ {"id": trabajo.id, "paginas": trabajo.paginas, "copias": trabajo.copias, "doble": trabajo.doble_cara, "caras": trabajo.caras, "hojas": trabajo.hojas, "total": trabajo.total} | tojson }})'
+      x-data='opcionesImpresion({{ {"id": trabajo.id, "paginasPdf": trabajo.paginas_pdf, "paginas": trabajo.paginas, "copias": trabajo.copias, "doble": trabajo.doble_cara, "caras": trabajo.caras, "hojas": trabajo.hojas, "total": trabajo.total} | tojson }})'
       @submit="if (error) $event.preventDefault()">
 
     <fieldset class="imp-grupo">
         <legend class="campo-label">Páginas</legend>
-        <label class="imp-radio"><input type="radio" value="todas" x-model="modo" @change="calcular()"> Todas</label>
-        <label class="imp-radio"><input type="radio" value="algunas" x-model="modo" @change="calcular(); $nextTick(() => $refs.paginas.focus())"> Solo algunas</label>
-        <input type="text" name="paginas" x-ref="paginas" x-show="modo === 'algunas'" x-model="paginas"
-               :disabled="modo !== 'algunas'"
-               @input.debounce.300ms="calcular()" class="campo" inputmode="numeric"
+        <div class="imp-paginas-barra">
+            <span class="imp-paginas-cuenta" x-text="cuantas + ' de ' + n"></span>
+            <button type="button" class="btn-link" @click="todas(true)">Todas</button>
+            <button type="button" class="btn-link" @click="todas(false)">Ninguna</button>
+            <button type="button" class="btn-link" @click="escribir = !escribir; if (escribir) $nextTick(() => $refs.paginas.focus())"
+                    x-text="escribir ? 'Ocultar rango' : 'Escribir rango'"></button>
+        </div>
+        <input type="text" x-ref="paginas" x-show="escribir" x-cloak x-model="paginas"
+               @input.debounce.300ms="desdeTexto()" class="campo imp-rango" inputmode="numeric"
                placeholder="Por ejemplo: 1-3, 5" autocomplete="off">
-        {# Con "Todas", el campo va vacío para que el servidor lo tome como todas. #}
-        <input type="hidden" name="paginas" value="" :disabled="modo !== 'todas'">
+        {# Vacío = todas (impresion.rs). #}
+        <input type="hidden" name="paginas" :value="paginas">
+
+        <ul class="imp-paginas">
+            <template x-for="num in n" :key="num">
+                <li class="imp-pagina" :data-pagina="num" :class="{ fuera: !marcadas[num - 1] }">
+                    <button type="button" @click="alternar(num)" :aria-pressed="marcadas[num - 1]"
+                            :aria-label="'Página ' + num">
+                        <canvas></canvas>
+                        <span class="imp-pagina-num" x-text="num + '/' + n"></span>
+                        <span class="imp-pagina-check" aria-hidden="true"></span>
+                    </button>
+                </li>
+            </template>
+        </ul>
     </fieldset>
 
     <div class="imp-grupo imp-copias">

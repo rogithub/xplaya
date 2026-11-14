@@ -4,6 +4,27 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## "Imprime tú solito": elegir páginas con miniaturas (2026-11-14)
+
+Las páginas del trabajo se eligen como en el diálogo de impresión de Android: una cuadrícula con
+la miniatura de cada página y su palomita (todas marcadas al principio). Arriba: "4 de 12",
+**Todas**, **Ninguna** y **Escribir rango** (el campo de antes, como atajo para PDFs largos).
+
+- `src/routes/imprimir.rs` — `GET /imprimir/{id}/pdf`: el PDF desde MinIO, solo para el dueño
+  (el bucket es privado). Registrada en `src/routes/app.rs`.
+- `static/app/app.js` — `opcionesImpresion`: pdf.js (jsDelivr, sin build step) dibuja las
+  miniaturas una a la vez y solo las que se ven (IntersectionObserver), para que un PDF de 500
+  páginas no trabe el celular. Palomitas y rango escrito se mantienen iguales (`leerPaginas` /
+  `escribirPaginas`); sin páginas marcadas, "Elige al menos una página." y Listo desactivado. El
+  documento de pdf.js vive fuera del objeto de Alpine (su proxy rompe los campos privados).
+- `templates/app/imprimir_trabajo.html`, `static/css/app.css` — la cuadrícula.
+
+El servidor recibe el mismo texto de páginas ("1-3,5"; vacío = todas): cuentas e impresión no
+cambian. Probado con un PDF de 12 páginas en Chromium sin cabeza (fuera de la app): Todas,
+Ninguna, tocar páginas y escribir el rango.
+
+---
+
 ## "Imprime tú solito": imprimir en la Kyocera, paso 4 (2026-11-14)
 
 Lo último del autoservicio: lo que la caja autoriza en el POS sale en la impresora elegida y queda

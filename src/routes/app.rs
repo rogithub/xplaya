@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/imprimir/mandar", post(imprimir::mandar))
         .route("/imprimir/{id}", get(imprimir::trabajo).post(imprimir::guardar))
         .route("/imprimir/{id}/cuenta", get(imprimir::cuenta))
+        .route("/imprimir/{id}/pdf", get(imprimir::pdf))
         .route("/imprimir/{id}/quitar", post(imprimir::quitar))
         .route("/cuenta/eventos", get(cuenta::eventos))
         .route("/cuenta/venta/{venta_id}", get(cuenta::venta))

@@ -621,37 +621,155 @@ document.addEventListener('alpine:init', () => {
 
     // Opciones de un trabajo: la cuenta la saca el servidor (impresion::calcular), la misma que
     // se guarda, para que nunca difiera de lo que se cobra.
-    Alpine.data('opcionesImpresion', (inicial) => ({
-        modo: inicial.paginas ? 'algunas' : 'todas',
-        paginas: inicial.paginas.replaceAll(',', ', '),
-        copias: inicial.copias,
-        doble: inicial.doble,
-        caras: inicial.caras,
-        hojas: inicial.hojas,
-        total: inicial.total,
-        error: '',
-        ocupado: false,
-        pedido: 0,
+    // Opciones de un trabajo de impresión (imprimir_trabajo.html). Las páginas se eligen en una
+    // cuadrícula de miniaturas con palomita (todas marcadas al principio) o escribiendo el rango;
+    // las dos cosas se mantienen iguales. Lo que se manda es el texto `paginas` ("1-3,5"; vacío
+    // = todas), el mismo que valida y guarda el servidor (impresion.rs).
+    Alpine.data('opcionesImpresion', (inicial) => {
+        // El documento de pdf.js va fuera del objeto de Alpine: su proxy reactivo rompe los
+        // campos privados de pdf.js.
+        let documento = null;
+        let observador = null;
+        let cola = Promise.resolve();          // una miniatura a la vez, para no trabar el celular
 
-        async calcular() {
-            const n = ++this.pedido;          // solo vale la respuesta del último cambio
-            const q = new URLSearchParams({
-                paginas: this.modo === 'todas' ? '' : this.paginas,
-                copias: this.copias,
-            });
-            if (this.doble) q.set('doble', '1');
-            this.ocupado = true;
-            try {
-                const r = await fetch(`/imprimir/${inicial.id}/cuenta?${q}`, { cache: 'no-store' });
-                const c = await r.json();
-                if (n !== this.pedido) return;
-                this.error = c.error || '';
-                if (!c.error) Object.assign(this, { caras: c.caras, hojas: c.hojas, total: c.total });
-            } catch {
-                if (n === this.pedido) this.error = 'Sin conexión. Intenta otra vez.';
-            } finally {
-                if (n === this.pedido) this.ocupado = false;
-            }
-        },
-    }));
+        return {
+            n: inicial.paginasPdf,
+            marcadas: leerPaginas(inicial.paginas, inicial.paginasPdf)
+                      || Array(inicial.paginasPdf).fill(true),
+            paginas: inicial.paginas.replaceAll(',', ', '),
+            escribir: false,
+            copias: inicial.copias,
+            doble: inicial.doble,
+            caras: inicial.caras,
+            hojas: inicial.hojas,
+            total: inicial.total,
+            error: '',
+            ocupado: false,
+            pedido: 0,
+
+            get cuantas() { return this.marcadas.filter(Boolean).length; },
+
+            init() {
+                const cuadricula = this.$el.querySelector('.imp-paginas');
+                observador = new IntersectionObserver((entradas) => {
+                    for (const e of entradas) {
+                        if (!e.isIntersecting) continue;
+                        observador.unobserve(e.target);
+                        const num = Number(e.target.dataset.pagina);
+                        cola = cola.then(() => this.dibujar(num, e.target.querySelector('canvas')));
+                    }
+                }, { root: cuadricula, rootMargin: '300px' });
+                this.abrirPdf(cuadricula);
+            },
+
+            async abrirPdf(cuadricula) {
+                try {
+                    const pdfjs = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs');
+                    pdfjs.GlobalWorkerOptions.workerSrc =
+                        'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+                    documento = await pdfjs.getDocument(`/imprimir/${inicial.id}/pdf`).promise;
+                    cuadricula.querySelectorAll('.imp-pagina').forEach((el) => observador.observe(el));
+                } catch (e) {
+                    // Sin miniaturas la cuadrícula sigue sirviendo: cada página con su número.
+                    console.warn('imprimir: sin miniaturas', e);
+                }
+            },
+
+            async dibujar(num, canvas) {
+                if (!documento || !canvas) return;
+                try {
+                    const pagina = await documento.getPage(num);
+                    const base = pagina.getViewport({ scale: 1 });
+                    const ancho = canvas.parentElement.clientWidth * (window.devicePixelRatio || 1);
+                    const vista = pagina.getViewport({ scale: ancho / base.width });
+                    canvas.width = Math.floor(vista.width);
+                    canvas.height = Math.floor(vista.height);
+                    await pagina.render({ canvasContext: canvas.getContext('2d'), viewport: vista }).promise;
+                    canvas.classList.add('lista');
+                    pagina.cleanup();
+                } catch (e) {
+                    console.warn(`imprimir: página ${num}`, e);
+                }
+            },
+
+            // Tocar una página, Todas o Ninguna: el texto se vuelve a escribir desde las palomitas.
+            alternar(num) {
+                this.marcadas[num - 1] = !this.marcadas[num - 1];
+                this.desdeMarcadas();
+            },
+            todas(valor) {
+                this.marcadas = Array(this.n).fill(valor);
+                this.desdeMarcadas();
+            },
+            desdeMarcadas() {
+                this.paginas = escribirPaginas(this.marcadas).replaceAll(',', ', ');
+                this.calcular();
+            },
+
+            // Escribir el rango: si se entiende, mueve las palomitas; si no, el servidor dice qué
+            // está mal.
+            desdeTexto() {
+                const m = leerPaginas(this.paginas, this.n);
+                if (m) this.marcadas = m;
+                this.calcular();
+            },
+
+            async calcular() {
+                const n = ++this.pedido;          // solo vale la respuesta del último cambio
+                if (!this.paginas.trim() && this.cuantas === 0) {
+                    this.error = 'Elige al menos una página.';
+                    this.ocupado = false;
+                    return;
+                }
+                const q = new URLSearchParams({ paginas: this.paginas, copias: this.copias });
+                if (this.doble) q.set('doble', '1');
+                this.ocupado = true;
+                try {
+                    const r = await fetch(`/imprimir/${inicial.id}/cuenta?${q}`, { cache: 'no-store' });
+                    const c = await r.json();
+                    if (n !== this.pedido) return;
+                    this.error = c.error || '';
+                    if (!c.error) Object.assign(this, { caras: c.caras, hojas: c.hojas, total: c.total });
+                } catch {
+                    if (n === this.pedido) this.error = 'Sin conexión. Intenta otra vez.';
+                } finally {
+                    if (n === this.pedido) this.ocupado = false;
+                }
+            },
+        };
+    });
 });
+
+// "1-3, 5" → [true, true, true, false, true, …] para un PDF de `n` páginas; vacío = todas.
+// null si no se entiende (el servidor da el mensaje; impresion.rs::leer_paginas).
+function leerPaginas(texto, n) {
+    const limpio = texto.trim();
+    if (!limpio || /^todas$/i.test(limpio)) return Array(n).fill(true);
+    const m = Array(n).fill(false);
+    const partes = limpio.split(',').map((p) => p.trim()).filter(Boolean);
+    if (!partes.length) return null;
+    for (const parte of partes) {
+        const r = parte.match(/^(\d+)\s*(?:-\s*(\d+))?$/);
+        if (!r) return null;
+        const a = Number(r[1]), b = Number(r[2] ?? r[1]);
+        if (a < 1 || b < a || b > n) return null;
+        for (let i = a; i <= b; i++) m[i - 1] = true;
+    }
+    return m;
+}
+
+// [true, true, true, false, true] → "1-3,5"; todas → "" (así lo guarda el servidor).
+function escribirPaginas(marcadas) {
+    if (marcadas.every(Boolean)) return '';
+    const rangos = [];
+    let inicio = 0;
+    for (let i = 1; i <= marcadas.length + 1; i++) {
+        const dentro = i <= marcadas.length && marcadas[i - 1];
+        if (dentro && !inicio) inicio = i;
+        if (!dentro && inicio) {
+            rangos.push(inicio === i - 1 ? `${inicio}` : `${inicio}-${i - 1}`);
+            inicio = 0;
+        }
+    }
+    return rangos.join(',');
+}

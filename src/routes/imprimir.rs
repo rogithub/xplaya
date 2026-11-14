@@ -10,7 +10,7 @@
 
 use axum::{
     extract::{Multipart, Path, Query, State},
-    http::{HeaderMap, StatusCode},
+    http::{header, HeaderMap, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
     Form, Json,
 };
@@ -227,6 +227,37 @@ pub async fn trabajo(
         error => p.error,
         max_copias => impresion::MAX_COPIAS,
     })
+}
+
+// ── GET /imprimir/{id}/pdf ──────────────────────────────────────────────────
+
+/// El PDF del trabajo, para que el celular dibuje las miniaturas de las páginas (pdf.js en
+/// `opcionesImpresion`, app.js). Solo para el dueño; pasa por aquí porque el bucket es privado.
+pub async fn pdf(State(state): State<AppState>, headers: HeaderMap, Path(id): Path<Uuid>) -> Response {
+    let (minio, cliente_id) = match requisitos(&state, &headers).await {
+        Ok(r) => r,
+        Err(r) => return r.into_response(),
+    };
+    let t = match db::impresiones::uno(&state.pool, id, cliente_id).await {
+        Ok(Some(t)) => t,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(e) => return error_bd(e),
+    };
+    match minio.bajar(&t.objeto).await {
+        Ok(bytes) => (
+            [
+                (header::CONTENT_TYPE, "application/pdf"),
+                // El PDF de un trabajo no cambia: la misma sesión no lo vuelve a bajar.
+                (header::CACHE_CONTROL, "private, max-age=3600"),
+            ],
+            bytes,
+        )
+            .into_response(),
+        Err(e) => {
+            tracing::error!("imprimir pdf: {e}");
+            StatusCode::BAD_GATEWAY.into_response()
+        }
+    }
 }
 
 // ── GET /imprimir/{id}/cuenta?paginas=&copias=&doble=1 ──────────────────────
