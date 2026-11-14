@@ -55,10 +55,19 @@ pub enum Origen {
 
 #[derive(Clone)]
 pub enum Quien {
-    /// Cliente que ya existe (la venta lo tenía); pasó los 4 dígitos.
-    Cliente(Uuid),
+    /// Cliente que ya existe (la venta lo tenía); pasó los 4 dígitos. `acepto`: ya había
+    /// aceptado el programa (`Clientes.AceptoPrograma`).
+    Cliente { id: Uuid, acepto: bool },
     /// Teléfono que no existe: el cliente se crea al terminar.
     Nuevo { telefono: String },
+}
+
+impl Quien {
+    /// Aceptar los términos es el "quiero participar" del programa: se pide la casilla a
+    /// quien todavía no lo ha aceptado. Quien ya lo aceptó solo ve el aviso.
+    pub fn pide_terminos(&self) -> bool {
+        !matches!(self, Quien::Cliente { acepto: true, .. })
+    }
 }
 
 // ── GET /alta/recibo/{venta} ────────────────────────────────────────────────
@@ -118,7 +127,7 @@ pub async fn digitos(
 
     match db::altas::revisar_digitos(&state.pool, ajuste_id, cliente_id, &digitos).await.map_err(error_bd)? {
         Intento::Correcto => {
-            let nombre = db::altas::nombre_cliente(&state.pool, cliente_id)
+            let (nombre, acepto) = db::altas::cliente_alta(&state.pool, cliente_id)
                 .await
                 .map_err(error_bd)?
                 .unwrap_or_default();
@@ -126,7 +135,7 @@ pub async fn digitos(
                 origen: Origen::Recibo(ajuste_id),
                 celular_id: Uuid::new_v4(),
                 nombre,
-                quien: Quien::Cliente(cliente_id),
+                quien: Quien::Cliente { id: cliente_id, acepto },
             };
             pagina_acceso(&state, alta)
         }
@@ -307,10 +316,13 @@ pub async fn registro_fin(
     headers: HeaderMap,
     Json(body): Json<RegistroFin>,
 ) -> Response {
-    if !body.terminos {
+    let Some(alta) = state.altas.ver(body.ticket) else {
+        return error_json(StatusCode::GONE, "Pasó mucho tiempo. Vuelve a empezar.");
+    };
+    if alta.quien.pide_terminos() && !body.terminos {
         return error_json(StatusCode::BAD_REQUEST, "Acepta los términos del monedero para continuar.");
     }
-    let (Some(alta), Some(estado)) = (state.altas.ver(body.ticket), state.registros.tomar(body.ticket)) else {
+    let Some(estado) = state.registros.tomar(body.ticket) else {
         return error_json(StatusCode::GONE, "Pasó mucho tiempo. Vuelve a empezar.");
     };
 
@@ -352,7 +364,7 @@ async fn completar_alta(
     let mut tx = state.pool.begin().await?;
 
     let cliente_id = match &alta.quien {
-        Quien::Cliente(id) => {
+        Quien::Cliente { id, .. } => {
             db::altas::aceptar_programa(&mut tx, *id).await?;
             *id
         }
@@ -397,9 +409,10 @@ pub fn pagina_acceso(state: &AppState, alta: AltaPendiente) -> Result<Response, 
     let origen = alta.origen;
     let nombre = primer_nombre(&alta.nombre);
     let nuevo = matches!(alta.quien, Quien::Nuevo { .. });
+    let pide_terminos = alta.quien.pide_terminos();
     let ticket = state.altas.guardar(alta);
     pagina(state, origen, context! {
-        paso => "acceso", ticket => ticket.to_string(), nombre, nuevo,
+        paso => "acceso", ticket => ticket.to_string(), nombre, nuevo, pide_terminos,
     })
 }
 
@@ -424,8 +437,12 @@ pub fn pagina(state: &AppState, origen: Origen, ctx: Value) -> Result<Response, 
     Ok(Html(html).into_response())
 }
 
+/// "NAYELLI ALVARADO CRUZ" → "Nayelli": en la caja los nombres se capturan completos y en
+/// mayúsculas; para saludar basta el primero.
 pub fn primer_nombre(nombre: &str) -> String {
-    nombre.split_whitespace().next().unwrap_or("").to_string()
+    let primero = nombre.split_whitespace().next().unwrap_or_default().to_lowercase();
+    let mut letras = primero.chars();
+    letras.next().map(|c| c.to_uppercase().chain(letras).collect()).unwrap_or_default()
 }
 
 pub fn error_bd(e: sqlx::Error) -> StatusCode {
@@ -435,4 +452,16 @@ pub fn error_bd(e: sqlx::Error) -> StatusCode {
 
 pub fn error_json(status: StatusCode, mensaje: &str) -> Response {
     (status, Json(serde_json::json!({ "error": mensaje }))).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::primer_nombre;
+
+    #[test]
+    fn primer_nombre_en_tipo_titulo() {
+        assert_eq!(primer_nombre("NAYELLI ALVARADO CRUZ"), "Nayelli");
+        assert_eq!(primer_nombre("  ángel  "), "Ángel");
+        assert_eq!(primer_nombre(""), "");
+    }
 }

@@ -315,15 +315,18 @@ pub async fn codigo(
     let existente = db::altas::cliente_por_telefono(&mut conn, &telefono).await.map_err(alta::error_bd)?;
     drop(conn);
     let alta = match existente {
-        Some(cliente_id) => AltaPendiente {
-            origen,
-            celular_id: Uuid::new_v4(),
-            nombre: db::altas::nombre_cliente(&state.pool, cliente_id)
+        Some(cliente_id) => {
+            let (nombre, acepto) = db::altas::cliente_alta(&state.pool, cliente_id)
                 .await
                 .map_err(alta::error_bd)?
-                .unwrap_or(nombre),
-            quien: Quien::Cliente(cliente_id),
-        },
+                .unwrap_or((nombre, false));
+            AltaPendiente {
+                origen,
+                celular_id: Uuid::new_v4(),
+                nombre,
+                quien: Quien::Cliente { id: cliente_id, acepto },
+            }
+        }
         None => AltaPendiente {
             origen,
             celular_id: Uuid::new_v4(),

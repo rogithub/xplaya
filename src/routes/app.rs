@@ -147,20 +147,12 @@ async fn listo(State(state): State<AppState>, headers: HeaderMap) -> Result<Resp
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { nombre => primer_nombre(&cliente.nombre), en_app => true })
+        .render(context! { nombre => alta::primer_nombre(&cliente.nombre), en_app => true })
         .map_err(|e| {
             tracing::error!("Render app/listo: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Html(html).into_response())
-}
-
-/// "NAYELLI ALVARADO CRUZ" → "Nayelli": en la caja los nombres se capturan completos y en
-/// mayúsculas; para saludar basta el primero.
-fn primer_nombre(nombre: &str) -> String {
-    let primero = nombre.split_whitespace().next().unwrap_or_default().to_lowercase();
-    let mut letras = primero.chars();
-    letras.next().map(|c| c.to_uppercase().chain(letras).collect()).unwrap_or_default()
 }
 
 /// Valor de una cookie de la petición.
@@ -436,14 +428,3 @@ async fn robots_txt() -> Response {
         .into_response()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::primer_nombre;
-
-    #[test]
-    fn primer_nombre_en_tipo_titulo() {
-        assert_eq!(primer_nombre("NAYELLI ALVARADO CRUZ"), "Nayelli");
-        assert_eq!(primer_nombre("  ángel  "), "Ángel");
-        assert_eq!(primer_nombre(""), "");
-    }
-}

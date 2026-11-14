@@ -1,6 +1,6 @@
 //! Enlace de alta en el recibo (`/alta/recibo/{venta}` en la app).
 //!
-//! El enlace no tiene tabla de tokens: está vivo si la venta tiene menos de 24 horas y
+//! El enlace no tiene tabla de tokens: está vivo si la venta tiene menos de `DIAS_ENLACE` días y
 //! no tiene un resultado en `AltasRecibo`. Se gasta con el primer resultado (`ligado`,
 //! `abonado` o `bloqueado`), y ahí también se cuentan los intentos fallidos de los
 //! últimos 4 dígitos del teléfono. Diseño completo en `APP_MONEDERO.md`.
@@ -10,6 +10,10 @@ use uuid::Uuid;
 
 /// Intentos fallidos de los 4 dígitos antes de bloquear el enlace.
 pub const MAX_INTENTOS: i32 = 5;
+
+/// Días que dura vivo el enlace del recibo: el cliente lo recibe por WhatsApp y puede
+/// abrirlo días después.
+pub const DIAS_ENLACE: i32 = 7;
 
 /// Venta con el enlace de alta vivo.
 #[derive(sqlx::FromRow)]
@@ -29,10 +33,11 @@ pub async fn venta_disponible(pool: &PgPool, ajuste_id: Uuid) -> Result<Option<V
            FROM ajustes a
            LEFT JOIN altasrecibo ar ON ar.ajusteid = a.id
           WHERE a.id = $1 AND a.tipoajuste = 0
-            AND a.fechaajuste > (NOW() AT TIME ZONE 'America/Cancun') - INTERVAL '24 hours'
+            AND a.fechaajuste > (NOW() AT TIME ZONE 'America/Cancun') - make_interval(days => $2)
             AND ar.resultado IS NULL",
     )
     .bind(ajuste_id)
+    .bind(DIAS_ENLACE)
     .fetch_optional(pool)
     .await
 }
@@ -137,6 +142,14 @@ pub async fn cliente_por_telefono(tx: &mut PgConnection, tel: &str) -> Result<Op
     sqlx::query_scalar("SELECT id FROM clientes WHERE right(telefono, 10) = $1 LIMIT 1")
         .bind(tel)
         .fetch_optional(&mut *tx)
+        .await
+}
+
+/// Nombre del cliente y si ya aceptó el programa (para no volver a pedirle la casilla).
+pub async fn cliente_alta(pool: &PgPool, cliente_id: Uuid) -> Result<Option<(String, bool)>, sqlx::Error> {
+    sqlx::query_as("SELECT nombre, aceptoprograma FROM clientes WHERE id = $1")
+        .bind(cliente_id)
+        .fetch_optional(pool)
         .await
 }
 

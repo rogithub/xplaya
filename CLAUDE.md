@@ -263,7 +263,7 @@ sitio. Diseño completo de la app en `APP_MONEDERO.md`.
 
 La app usa sesiones con passkey (`src/passkeys.rs`, `routes/alta.rs`, `db/celulares.rs`). Para
 probar el alta en desarrollo: `APP_URL=http://app.localhost:3000 PASSKEY_RP_ID=app.localhost`, y el
-recibo de una venta de las últimas 24 h. Para el kiosko: `KIOSKO_TOKEN=lo-que-sea`, abrir
+recibo de una venta de la última semana. Para el kiosko: `KIOSKO_TOKEN=lo-que-sea`, abrir
 `http://app.localhost:3000/kiosko/activar?t=lo-que-sea`. El código de 4 dígitos de cada solicitud
 está en `KioskoSolicitudes` (en el POS sale en el aviso flotante). Las tablas (`ClienteCelulares`, `CelularSesiones`,
 `AltasRecibo`) y `fn_asignar_cliente_venta` se definen en el repo del POS.

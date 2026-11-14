@@ -231,9 +231,10 @@ document.addEventListener('alpine:init', () => {
 
 document.addEventListener('alpine:init', () => {
     // Alta: crea la passkey del ticket del alta (routes/alta.rs).
-    Alpine.data('crearAcceso', (ticket) => ({
+    // `yaAcepto`: ya es cliente (aceptó el programa en la caja), sin casilla de términos.
+    Alpine.data('crearAcceso', (ticket, yaAcepto) => ({
         soportado: passkeysSoportadas,
-        acepto: false,
+        acepto: yaAcepto,
         ocupado: false,
         error: '',
 

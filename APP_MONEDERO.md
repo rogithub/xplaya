@@ -108,7 +108,7 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
 #### Enlace en el recibo
 
 Los tickets no se imprimen: el recibo se comparte por WhatsApp como `/recibo/{guid}`. Ese recibo
-muestra un enlace de alta de **un solo uso** y válido por **24 horas**, para quien compró y se fue
+muestra un enlace de alta de **un solo uso** y válido por **una semana** (`DIAS_ENLACE`; eran 24 horas hasta el 2026-11-14), para quien compró y se fue
 sin pasar por el kiosko. Si el cliente de la venta ya tiene un celular ligado, el enlace dice
 "¿Cambiaste de celular? Liga el nuevo" (es la forma de recuperar el acceso sin ir a la tienda); si
 quien lo abre ya tiene sesión con ese mismo cliente, la app lo manda a su monedero sin gastar el
@@ -270,7 +270,7 @@ ligado, el kiosko y las notificaciones.
 |---|---|---|
 | Tabla de celulares ligados (passkey, secreto del QR, suscripción push, fechas) | BD compartida | Una fila activa por cliente |
 | Fecha de aceptación de términos | `Clientes` | El "quiero participar" |
-| Tokens de alta (recibo, 24 h, un solo uso) | BD compartida | Parecida a `ShortUrls` |
+| Tokens de alta (recibo, una semana, un solo uso) | BD compartida | Parecida a `ShortUrls` |
 | Solicitudes del kiosko (`KioskoSolicitudes`) | BD compartida | Tipo (`monedero` o `whatsapp`), nombre, teléfono, código, intentos, estado y el cliente que quedó |
 | Passkeys | xplaya | Crate `webauthn-rs` |
 | Web Push | xplaya | Crate `web-push`, llaves VAPID en SealedSecret |

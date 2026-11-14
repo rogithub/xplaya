@@ -4,6 +4,35 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Recibo: invitación a la app más visible y alta más corta (2026-11-14)
+
+El 99 % de los recibos llega por WhatsApp como liga. Cuatro cambios para que más clientes pasen
+de ahí a la app, sin tocar el POS:
+
+1. **Vista previa que invita.** `src/routes/monedero.rs` — `descripcion_recibo`: mientras el enlace
+   de alta está vivo (y el celular no está ligado), la vista previa dice "… Toca para ver tu ticket
+   y guardar tu monedero en el celular 👆" (sin monedero: "… crear tu monedero gratis"). La
+   plantilla usa `{{ descripcion }}` en las tres metas.
+2. **Botón de la app junto al saldo.** `templates/monedero/recibo.html` — "📱 Guarda tu monedero en
+   el celular", grande, debajo del saldo; "Ver Monedero" (la web) pasa a `is-light`. Si el
+   celular ya está ligado, sigue abajo "¿Cambiaste de celular? Liga el nuevo".
+3. **Sin casilla de términos para quien ya aceptó el programa.** `Quien::Cliente { id, acepto }`
+   lleva `Clientes.AceptoPrograma` (`db::altas::cliente_alta`), y `Quien::pide_terminos` decide en
+   la página (`alta.html`, `crearAcceso(ticket, yaAcepto)`) y en `registro_fin`. Quien ya aceptó
+   ve solo "Al continuar aceptas los términos". **Ojo:** a quien es cliente pero no ha aceptado
+   (en dev, 108 de 219) se le sigue pidiendo la casilla: es su "quiero participar".
+4. **Una semana en lugar de 24 horas.** `src/db/altas.rs` — `DIAS_ENLACE = 7`. `fn_asignar_cliente_venta`
+   (POS) no tiene límite de tiempo. Los 4 dígitos y los 5 intentos no cambian.
+
+También: `alta::primer_nombre` pone solo la inicial en mayúscula ("NAYELLI ALVARADO CRUZ" →
+"Nayelli"); la copia de `app.rs` del commit anterior se quitó y la prueba pasó a `alta.rs`.
+
+Probado en Chromium con una venta de dev del 9 nov (más de 24 h): sin cliente, con cliente que ya
+aceptó (sin casilla, botón habilitado) y con cliente que no (casilla, botón deshabilitado); el
+botón cabe en un iPhone SE. La venta se dejó como estaba.
+
+---
+
 ## Pantalla "¡Listo!" al terminar el alta (2026-11-14)
 
 Al crear la passkey (kiosko o recibo), el cliente ya no cae directo al monedero: ve una pantalla

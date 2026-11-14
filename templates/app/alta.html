@@ -65,11 +65,14 @@
         Crea tu acceso con <strong>huella o cara</strong>. Así solo tú abres tu monedero en
         este celular, sin contraseñas.
     </p>
-    <div x-data="crearAcceso('{{ ticket }}')" class="inicio-form">
+    {# Quien ya aceptó el programa (Clientes.AceptoPrograma) no ve la casilla, solo el aviso. #}
+    <div x-data="crearAcceso('{{ ticket }}', {{ 'false' if pide_terminos else 'true' }})" class="inicio-form">
+        {% if pide_terminos %}
         <label class="check">
             <input type="checkbox" x-model="acepto">
             <span>Acepto los <a href="{{ site_url }}/terminos" target="_blank" rel="noopener">términos del monedero</a>.</span>
         </label>
+        {% endif %}
         <button type="button" class="btn-qr" @click="crear()" :disabled="!acepto || ocupado" x-show="soportado">
             <span x-text="ocupado ? 'Esperando tu huella…' : 'Crear acceso'"></span>
         </button>
@@ -77,6 +80,11 @@
         <p class="alerta" role="status" x-show="!soportado" x-cloak>
             Este navegador no puede crear el acceso. Ábrelo en Safari (iPhone) o Chrome (Android).
         </p>
+        {% if not pide_terminos %}
+        <p class="inicio-nota">
+            Al continuar aceptas los <a href="{{ site_url }}/terminos" target="_blank" rel="noopener">términos del monedero</a>.
+        </p>
+        {% endif %}
 
         {% if nuevo %}
         {# Celulares que no pueden crear passkeys: al menos que no pierdan el abono. #}
@@ -145,7 +153,7 @@
     {% else %}
     <h1 class="app-title">Este enlace ya no está disponible</h1>
     <p class="inicio-txt">
-        Los enlaces de los recibos duran 24 horas y se usan una sola vez.
+        Los enlaces de los recibos duran una semana y se usan una sola vez.
     </p>
     {% endif %}
     <a class="btn-sec btn-enlace" href="/">Ir a la app</a>

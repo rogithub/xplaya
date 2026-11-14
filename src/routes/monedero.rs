@@ -7,7 +7,7 @@ use minijinja::context;
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::{db, AppState};
+use crate::{db, models::monedero::VentaRecibo, AppState};
 
 // ── /terminos ─────────────────────────────────────────────────────────────────
 
@@ -181,7 +181,7 @@ pub async fn recibo(
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    // Enlace de alta en la app (24 h, un solo uso). Si la consulta falla, el recibo se
+    // Enlace de alta en la app (una semana, un solo uso). Si la consulta falla, el recibo se
     // muestra igual, sin el enlace.
     let alta = db::altas::venta_disponible(&state.pool, id)
         .await
@@ -196,12 +196,32 @@ pub async fn recibo(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { venta => venta, id => id.to_string(), alta_disponible, alta_cambio })
+        .render(context! {
+            descripcion => descripcion_recibo(&venta, alta_disponible && !alta_cambio),
+            venta => venta,
+            id => id.to_string(),
+            alta_disponible,
+            alta_cambio,
+        })
         .map_err(|e| {
             tracing::error!("Render recibo: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Html(html))
+}
+
+/// Texto de la vista previa del recibo en WhatsApp: es lo primero que lee el cliente, así
+/// que invita a la app mientras el enlace de alta sigue vivo (y el celular no está ligado).
+fn descripcion_recibo(venta: &VentaRecibo, invita_app: bool) -> String {
+    match (venta.tiene_monedero, invita_app) {
+        (true, true) => format!(
+            "👛 {} en tu monedero · Toca para ver tu ticket y guardar tu monedero en el celular 👆",
+            venta.saldo_monedero
+        ),
+        (true, false) => format!("👛 {} en tu monedero · Toca para ver tu ticket 👆", venta.saldo_monedero),
+        (false, true) => "Toca para ver tu compra y crear tu monedero gratis 👆".to_string(),
+        (false, false) => "Toca aquí para ver los detalles de tu compra 👆".to_string(),
+    }
 }
 
 // ── QR de validación ──────────────────────────────────────────────────────────
