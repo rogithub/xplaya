@@ -1021,3 +1021,23 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 }
 .instalar-aviso .pasos { margin-top: 10px; }
 .avisos-error { color: var(--warn); font-size: .9rem; margin: 8px 0 0; }
+
+/* ── "¡Listo!" al terminar el alta (app/listo.html) ─────────────────────── */
+
+.listo-pasos { list-style: none; margin: 0; padding: 0; text-align: left; }
+.listo-paso {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+}
+.listo-paso + .listo-paso { margin-top: 10px; }
+.listo-paso.hecho { border-color: transparent; background: var(--ok-bg); }
+.listo-ico { flex: none; font-size: 1.4rem; }
+.listo-txt { flex: 1; font-size: .92rem; color: var(--muted); }
+.listo-txt strong { color: var(--ink); font-size: 1rem; }
+.listo .pasos { text-align: left; }
+.listo .btn-enlace { margin-top: 20px; }

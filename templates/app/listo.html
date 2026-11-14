@@ -1,0 +1,74 @@
+{% extends "app/base.html" %}
+{#
+  "¡Listo!": sale una vez, al terminar el alta (kiosko o recibo), en lugar de ir directo al
+  monedero. Lista lo que falta para tener la app completa: acceso (ya hecho), avisos e
+  instalar; cada fila se pone ✅. Pensada para que la cajera, con el celular del cliente en
+  la mano, vea de un vistazo si quedó completo. Lógica en `listoApp` (app.js).
+  - Avisos: solo con llave VAPID. En iPhone llegan solo con la app instalada, así que la
+    fila pide instalar primero.
+  - Sin `nav`: aquí no salen los avisos chiquitos de instalar/avisos del monedero.
+#}
+{% block title %}¡Listo! — xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<section class="inicio listo" x-data="listoApp('{{ vapid_publica }}')">
+    <img class="inicio-logo" src="/static/img/logo/v3/papeleria-insignia.svg" alt="Papelería" width="120" height="120">
+    <h1 class="app-title">¡Listo, {{ nombre }}!</h1>
+    <p class="inicio-txt">Tu monedero ya está en este celular. Termina estos pasos:</p>
+
+    <ul class="listo-pasos">
+        <li class="listo-paso hecho">
+            <span class="listo-ico" aria-hidden="true">✅</span>
+            <span class="listo-txt"><strong>Acceso creado</strong><br>Entras con tu huella</span>
+        </li>
+
+        <li class="listo-paso" :class="{ hecho: avisos === 'listo' }" x-show="avisos !== ''" x-cloak>
+            <span class="listo-ico" aria-hidden="true" x-text="avisos === 'listo' ? '✅' : '🔔'"></span>
+            <span class="listo-txt">
+                <strong>Avisos</strong><br>
+                <template x-if="avisos === 'ofrecer'"><span>Te avisamos de tus pedidos y tu saldo</span></template>
+                <template x-if="avisos === 'listo'"><span>Activados</span></template>
+                <template x-if="avisos === 'instalar'"><span>En iPhone, primero instala la app, ábrela y actívalos ahí</span></template>
+                <template x-if="avisos === 'bloqueado'"><span>Están bloqueados: actívalos en los ajustes del celular, en <strong>Notificaciones</strong></span></template>
+            </span>
+            <button type="button" class="btn-chico" x-show="avisos === 'ofrecer'" @click="activarAvisos()" :disabled="ocupado">Activar</button>
+        </li>
+
+        <li class="listo-paso" :class="{ hecho: instalar === 'instalada' }">
+            <span class="listo-ico" aria-hidden="true" x-text="instalar === 'instalada' ? '✅' : '📲'"></span>
+            <span class="listo-txt">
+                <strong>Instalar la app</strong><br>
+                <span x-text="instalar === 'instalada' ? 'Instalada: búscala en tu pantalla de inicio' : 'Queda junto a tus otras apps'"></span>
+            </span>
+            <button type="button" class="btn-chico" x-show="instalar !== 'instalada'" @click="pedirInstalar()">Instalar</button>
+        </li>
+    </ul>
+    <p class="avisos-error" x-show="error" x-text="error" x-cloak></p>
+
+    <ol class="pasos" x-show="instalar === 'pasos' && ios" x-transition x-cloak>
+        <li>Abre esta página en <strong>Safari</strong>.</li>
+        <li>Toca <strong>Compartir</strong>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class="ico"><path fill="currentColor" d="M12 2l4 4-1.4 1.4L13 5.8V15h-2V5.8L9.4 7.4 8 6l4-4zM5 10h3v2H6v8h12v-8h-2v-2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1z"/></svg>
+            (si no lo ves, está dentro del botón <strong>⋯</strong>).</li>
+        <li>Elige <strong>Agregar a pantalla de inicio</strong>; si no aparece, desliza la lista hacia arriba.</li>
+        <li>Deja prendido <strong>Abrir como app web</strong> y toca <strong>Agregar</strong>.</li>
+    </ol>
+    <ol class="pasos" x-show="instalar === 'pasos' && !ios" x-transition x-cloak>
+        <template x-if="navegador === 'firefox'">
+            <li>Toca el menú <strong>⋮</strong> de Firefox (abajo o arriba a la derecha).</li>
+        </template>
+        <template x-if="navegador === 'samsung'">
+            <li>Toca el menú <strong>☰</strong> de Samsung Internet, abajo a la derecha, y luego
+                <strong>Agregar página a</strong>.</li>
+        </template>
+        <template x-if="navegador === 'chrome'">
+            <li>Toca el menú <strong>⋮</strong> de Chrome, arriba a la derecha.</li>
+        </template>
+        <li>Elige <strong>Instalar</strong> o <strong>Agregar a pantalla de inicio</strong>.</li>
+        <li>Confirma. La app queda junto a tus otras apps.</li>
+    </ol>
+
+    <a class="btn-sec btn-enlace" href="/">Ir a mi monedero</a>
+</section>
+{% endblock %}

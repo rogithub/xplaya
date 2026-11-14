@@ -11,67 +11,125 @@ window.addEventListener('beforeinstallprompt', (e) => {
     window.dispatchEvent(new Event('xp-instalable'));
 });
 
+// ── Instalar y avisos: lo comparten los avisos del monedero (instalar.html, avisos.html) y
+// la pantalla "¡Listo!" que sale al terminar el alta (listo.html). ──
+
+const esIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // iPad con iPadOS
+// Para los pasos a mano en Android: cada navegador tiene su menú.
+const navegadorAndroid = () => (/Firefox\//.test(navigator.userAgent) ? 'firefox'
+    : /SamsungBrowser/.test(navigator.userAgent) ? 'samsung' : 'chrome');
+// Abierta desde el ícono: su propia ventana, sin barra del navegador.
+const abiertaComoApp = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+// Chrome de Android: ¿ya está instalada? (manifest con related_applications)
+async function yaInstalada() {
+    if (!navigator.getInstalledRelatedApps) return false;
+    try { return (await navigator.getInstalledRelatedApps()).length > 0; } catch { return false; }
+}
+
+// Pide instalar. 'instalada' · 'cancelada' · 'a-mano' (no hay ventana: toca enseñar los pasos).
+async function pedirInstalar() {
+    // 1) Web Install API (Chrome 158+): la página pide instalar y Chrome muestra su
+    //    ventana, sin esperar a que Chrome "quiera" ofrecerlo.
+    if (navigator.install) {
+        try { await navigator.install(); return 'instalada'; } catch { /* canceló o no se pudo: sigue */ }
+    }
+    // 2) La ventana de siempre de Chrome, si ya la ofreció (beforeinstallprompt).
+    if (avisoInstalar) {
+        avisoInstalar.prompt();
+        const { outcome } = await avisoInstalar.userChoice;
+        avisoInstalar = null;
+        return outcome === 'accepted' ? 'instalada' : 'cancelada';
+    }
+    // 3) A mano.
+    return 'a-mano';
+}
+
+// Estado de los avisos en este celular:
+// '' (no se pueden) · instalar (iPhone sin instalar) · ofrecer · bloqueado · aceptados
+function estadoAvisos() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        // iPhone en Safari (sin instalar) no tiene PushManager: instalada, sí.
+        return esIos() ? 'instalar' : '';
+    }
+    return { granted: 'aceptados', denied: 'bloqueado' }[Notification.permission] || 'ofrecer';
+}
+
+// Pide el permiso y suscribe. 'listo' · 'bloqueado' · 'ofrecer' (cerró la pregunta sin contestar).
+async function activarAvisos(publica) {
+    const permiso = await Notification.requestPermission();
+    if (permiso === 'granted') {
+        await suscribirAvisos(publica);
+        return 'listo';
+    }
+    return permiso === 'denied' ? 'bloqueado' : 'ofrecer';
+}
+
+// Suscribe el celular con la llave pública VAPID y le pasa la suscripción al servidor
+// (routes/notificaciones.rs).
+async function suscribirAvisos(publica) {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    // Suscrita con otra llave (la de otro ambiente o una llave nueva): se rehace.
+    if (sub && sub.options.applicationServerKey
+        && bytesAB64(sub.options.applicationServerKey) !== publica) {
+        await sub.unsubscribe();
+        sub = null;
+    }
+    if (!sub) {
+        sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,             // cada aviso se ve: lo piden Chrome y Safari
+            applicationServerKey: b64aBytes(publica),
+        });
+    }
+    await postJson('/notificaciones/suscripcion', sub.toJSON());
+}
+
+// "No mostrar" por 30 días en este celular.
+const DIAS_OCULTO = 30;
+function ocultoPorAhora(clave) {
+    try { return Date.now() - Number(localStorage.getItem(clave) || 0) < DIAS_OCULTO * 864e5; } catch { return false; }
+}
+function ocultar(clave) {
+    try { localStorage.setItem(clave, String(Date.now())); } catch { /* nada */ }
+}
+
 document.addEventListener('alpine:init', () => {
     // Aviso "Instala la app" (templates/app/instalar.html).
     const CERRADO = 'xp_instalar_cerrado';
-    const DIAS_OCULTO = 30;
     Alpine.data('instalarApp', () => ({
-        ios: /iphone|ipad|ipod/i.test(navigator.userAgent)
-            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),   // iPad con iPadOS
-        // Para los pasos a mano en Android: cada navegador tiene su menú.
-        navegador: /Firefox\//.test(navigator.userAgent) ? 'firefox'
-            : /SamsungBrowser/.test(navigator.userAgent) ? 'samsung' : 'chrome',
-        // Abierta desde el ícono: su propia ventana, sin barra del navegador.
-        enLaApp: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
+        ios: esIos(),
+        navegador: navegadorAndroid(),
+        enLaApp: abiertaComoApp(),
         yaInstalada: false,
         cerrado: false,
         pasos: '',
 
         async init() {
-            try {
-                const t = Number(localStorage.getItem(CERRADO) || 0);
-                this.cerrado = Date.now() - t < DIAS_OCULTO * 864e5;
-            } catch { /* sin localStorage: se muestra */ }
+            this.cerrado = ocultoPorAhora(CERRADO);
             window.addEventListener('appinstalled', () => { this.enLaApp = true; });
-            // Chrome de Android: ¿ya está instalada? (manifest con related_applications)
-            if (!this.enLaApp && navigator.getInstalledRelatedApps) {
-                try {
-                    this.yaInstalada = (await navigator.getInstalledRelatedApps()).length > 0;
-                } catch { /* no responde: se ofrece instalar */ }
-            }
+            if (!this.enLaApp) this.yaInstalada = await yaInstalada();
         },
 
         get visible() { return !this.enLaApp && !this.cerrado; },
 
         cerrar() {
             this.cerrado = true;
-            try { localStorage.setItem(CERRADO, String(Date.now())); } catch { /* nada */ }
+            ocultar(CERRADO);
         },
 
         async instalar() {
-            // 1) Web Install API (Chrome 158+): la página pide instalar y Chrome muestra su
-            //    ventana, sin esperar a que Chrome "quiera" ofrecerlo.
-            if (navigator.install) {
-                try { await navigator.install(); return; } catch { /* canceló o no se pudo: sigue */ }
+            if (await pedirInstalar() === 'a-mano') {
+                this.pasos = this.pasos ? '' : (this.ios ? 'ios' : 'android');
             }
-            // 2) La ventana de siempre de Chrome, si ya la ofreció (beforeinstallprompt).
-            if (avisoInstalar) {
-                avisoInstalar.prompt();
-                await avisoInstalar.userChoice;
-                avisoInstalar = null;
-                return;
-            }
-            // 3) A mano.
-            this.pasos = this.pasos ? '' : (this.ios ? 'ios' : 'android');
         },
     }));
 });
 
-// Notificaciones (templates/app/avisos.html): pide el permiso, suscribe el celular con la
-// llave pública VAPID y le pasa la suscripción al servidor (routes/notificaciones.rs).
 document.addEventListener('alpine:init', () => {
+    // Aviso "Recibe avisos" (templates/app/avisos.html).
     const CERRADO = 'xp_avisos_cerrado';
-    const DIAS_OCULTO = 30;
     Alpine.data('avisosApp', (publica) => ({
         // '': nada que mostrar · ofrecer · instalar (iPhone sin instalar) · bloqueado · listo
         estado: '',
@@ -80,71 +138,79 @@ document.addEventListener('alpine:init', () => {
         cerrado: false,
 
         async init() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-                // iPhone en Safari (sin instalar) no tiene PushManager: instalada, sí.
-                const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-                this.estado = ios ? 'instalar' : '';
-                this.leerCerrado();
-                return;
-            }
-            if (Notification.permission === 'granted') {
+            const estado = estadoAvisos();
+            if (estado === 'aceptados') {
                 // Ya aceptó: confirmarla en silencio (o rehacerla si cambió la llave).
-                try { await this.suscribir(); } catch (e) { console.warn('avisos:', e); }
+                try { await suscribirAvisos(publica); } catch (e) { console.warn('avisos:', e); }
                 return;
             }
-            this.estado = Notification.permission === 'denied' ? 'bloqueado' : 'ofrecer';
-            this.leerCerrado();
+            this.estado = estado;
+            this.cerrado = ocultoPorAhora(CERRADO);
         },
 
         get visible() { return this.estado !== '' && (!this.cerrado || this.estado === 'listo'); },
 
-        leerCerrado() {
-            try {
-                const t = Number(localStorage.getItem(CERRADO) || 0);
-                this.cerrado = Date.now() - t < DIAS_OCULTO * 864e5;
-            } catch { /* sin localStorage: se muestra */ }
-        },
-
         cerrar() {
             this.cerrado = true;
-            try { localStorage.setItem(CERRADO, String(Date.now())); } catch { /* nada */ }
+            ocultar(CERRADO);
         },
 
         async activar() {
             this.error = '';
             this.ocupado = true;
             try {
-                const permiso = await Notification.requestPermission();
-                if (permiso === 'granted') {
-                    await this.suscribir();
-                    this.estado = 'listo';
-                } else if (permiso === 'denied') {
-                    this.estado = 'bloqueado';
-                }
-                // 'default': cerró la pregunta sin contestar; el botón sigue ahí.
+                this.estado = await activarAvisos(publica);
             } catch (e) {
                 this.error = e.message || 'No se pudieron activar los avisos.';
             } finally {
                 this.ocupado = false;
             }
         },
+    }));
+});
 
-        async suscribir() {
-            const reg = await navigator.serviceWorker.ready;
-            let sub = await reg.pushManager.getSubscription();
-            // Suscrita con otra llave (la de otro ambiente o una llave nueva): se rehace.
-            if (sub && sub.options.applicationServerKey
-                && bytesAB64(sub.options.applicationServerKey) !== publica) {
-                await sub.unsubscribe();
-                sub = null;
+document.addEventListener('alpine:init', () => {
+    // Pantalla "¡Listo!" al terminar el alta (templates/app/listo.html): lo que falta para
+    // tener la app completa, en filas que se ponen ✅. Pensada para que la cajera, con el
+    // celular del cliente en la mano, vea de un vistazo qué falta.
+    Alpine.data('listoApp', (publica) => ({
+        ios: esIos(),
+        navegador: navegadorAndroid(),
+        // instalar: '' · instalada · pasos (enseñando los pasos a mano)
+        instalar: abiertaComoApp() ? 'instalada' : '',
+        // avisos: '' (no se ofrecen) · instalar · ofrecer · bloqueado · listo
+        avisos: '',
+        ocupado: false,
+        error: '',
+
+        async init() {
+            window.addEventListener('appinstalled', () => { this.instalar = 'instalada'; });
+            if (!this.instalar && await yaInstalada()) this.instalar = 'instalada';
+            if (!publica) return;                       // sin llave VAPID: no hay avisos
+            const estado = estadoAvisos();
+            if (estado === 'aceptados') {
+                try { await suscribirAvisos(publica); this.avisos = 'listo'; } catch (e) { console.warn('avisos:', e); this.avisos = 'ofrecer'; }
+            } else {
+                this.avisos = estado;
             }
-            if (!sub) {
-                sub = await reg.pushManager.subscribe({
-                    userVisibleOnly: true,             // cada aviso se ve: lo piden Chrome y Safari
-                    applicationServerKey: b64aBytes(publica),
-                });
+        },
+
+        async pedirInstalar() {
+            const r = await pedirInstalar();
+            if (r === 'instalada') this.instalar = 'instalada';
+            else if (r === 'a-mano') this.instalar = this.instalar === 'pasos' ? '' : 'pasos';
+        },
+
+        async activarAvisos() {
+            this.error = '';
+            this.ocupado = true;
+            try {
+                this.avisos = await activarAvisos(publica);
+            } catch (e) {
+                this.error = e.message || 'No se pudieron activar los avisos.';
+            } finally {
+                this.ocupado = false;
             }
-            await postJson('/notificaciones/suscripcion', sub.toJSON());
         },
     }));
 });

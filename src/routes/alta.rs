@@ -327,7 +327,8 @@ pub async fn registro_fin(
         Ok(Some(token)) => {
             state.altas.tomar(body.ticket);
             let cookie = app::cookie_sesion(&state, &token);
-            ([(header::SET_COOKIE, cookie)], Json(serde_json::json!({ "ir": "/" }))).into_response()
+            // A "¡Listo!" (routes/app.rs): lo que falta para la app completa (avisos, instalar).
+            ([(header::SET_COOKIE, cookie)], Json(serde_json::json!({ "ir": "/listo" }))).into_response()
         }
         Ok(None) => error_json(
             StatusCode::CONFLICT,

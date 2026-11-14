@@ -4,6 +4,29 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Pantalla "¡Listo!" al terminar el alta (2026-11-14)
+
+Al crear la passkey (kiosko o recibo), el cliente ya no cae directo al monedero: ve una pantalla
+con lo que falta para tener la app completa, en filas que se ponen ✅ (Acceso creado · Avisos ·
+Instalar la app) y "Ir a mi monedero" abajo. Antes, instalar y avisos eran dos avisos chiquitos
+arriba del monedero que se cerraban con ✕, y el cliente se quedaba a medias. Pensada para que la
+cajera, con el celular del cliente en la mano, vea de un vistazo si quedó completo.
+
+- `src/routes/alta.rs` — `registro_fin` manda a `/listo` en lugar de `/`.
+- `src/routes/app.rs` — `GET /listo` (sin sesión, a la portada) y `primer_nombre` ("NAYELLI
+  ALVARADO CRUZ" → "Nayelli"; prueba al final).
+- `templates/app/listo.html` + `static/css/app.css` (`.listo-*`) — la pantalla. En iPhone sin
+  instalar, la fila de avisos dice que primero instale (ahí solo llegan con la app instalada).
+- `static/app/app.js` — la lógica de instalar y de avisos sale a funciones (`pedirInstalar`,
+  `estadoAvisos`, `activarAvisos`, `suscribirAvisos`…) que usan los avisos de siempre
+  (`instalarApp`, `avisosApp`) y la pantalla nueva (`listoApp`).
+
+Probado en Chromium (Pixel 7 e iPhone 14, claro y oscuro) con un celular de prueba en la BD de
+desarrollo: sin sesión redirige a `/`; "Activar" (permiso simulado) pone la fila en ✅ y manda la
+suscripción; "Instalar" enseña los pasos a mano; los avisos del monedero siguen igual.
+
+---
+
 ## Videos de TikTok incrustados: página del producto y kiosko (2026-11-13)
 
 Los videos de `UrlContentProductos` que son ligas completas de TikTok
