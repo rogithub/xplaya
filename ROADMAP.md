@@ -151,6 +151,58 @@ WhatsApp. La competencia cercana imprime con chorro de tinta, más lento y cobra
 - **Escáner de código de barras para clientes** (`BarcodeDetector`, solo Chrome de Android): en
   espera. Solo 706 de 2,083 productos del catálogo (34 %) tienen código capturado.
 
+### Autoservicio de impresión: "Imprime tú solito" (plan acordado 2026-11-14)
+
+"No hagas filas, imprime tú solito." Una opción más de la app (solo con huella). **Solo PDF, blanco
+y negro, carta.** Lo demás (fotos, color, acomodos) se pide en caja o por WhatsApp.
+
+**Flujo:**
+1. En la app (en casa o en la tienda) sube **un PDF**, elige páginas (todas o "1-3, 5"), copias y
+   una cara / doble cara (por el lado largo). Ve el total: **$1 por cara impresa** (caras × copias;
+   la doble cara solo ahorra papel). El trabajo queda **preparado**.
+2. En la tienda escanea **el QR del kiosko** (firmado, cambia cada 30 s: prueba que está ahí). Si
+   tiene sesión y trabajos preparados: "Estás en la papelería · ¿Mandar tus trabajos? [Imprimir]".
+   Si no tiene la app, el QR sigue al alta como hoy. Si sube el PDF estando en la tienda, el mismo
+   escaneo lo manda.
+3. **En el POS**, aviso flotante: "Nayelli · 14 caras · $14 [K1] [K2] [Rechazar]". La cajera elige
+   impresora; guarda quién autorizó.
+4. **xplaya imprime** por IPP en esa Kyocera (páginas, copias, caras, ajustar a carta), espera a
+   que termine y entonces crea el **pedido a nombre del cliente** (origen 2 = Autoservicio,
+   producto b/n de esa impresora × caras); registra el trabajo en Loki (`job="papeleria-pc"`,
+   `tipo=impresion`). Si falla: estado `error`, el aviso del POS lo dice y se puede mandar a la otra.
+5. **El cliente no va a la impresora:** la cajera le lleva sus hojas y le cobra el pedido ahí
+   (Pedidos → Vender, ya existe). La app le dice "Listo, en un momento te llevamos tus hojas".
+
+**Impresoras** (consultadas por IPP el 2026-11-14; las dos aceptan `application/pdf`, carta por
+omisión, rangos de páginas, copias, doble cara y `print-scaling` fit):
+
+| Clave | Impresora | IPP | Producto b/n |
+|---|---|---|---|
+| K1 | Kyocera ECOSYS M2040dn | `ipp://192.168.0.6:631/ipp/print` | COPIA / IMPRESION BN REFK1 |
+| K2 | Kyocera ECOSYS MA5500ifx | `ipps://192.168.0.9:443/ipp/print` (redirige http → https, certificado propio) | COPIA / IMPRESION BN REFK2 |
+
+**Límites:** 20 MB y 100 hojas por trabajo; el PDF se borra a los 7 días (también si nunca se mandó).
+
+**Pasos:**
+- ⬜ **1. Datos (repo del POS):** tabla `TrabajosImpresion`, impresoras del autoservicio en
+  `Settings`, `OrigenPedido.Autoservicio = 2`. SQL para producción.
+- ⬜ **2. App (xplaya):** subir, elegir, total, preparado; mandar con el QR del kiosko. Escribir en
+  MinIO (bucket `papeleria-impresiones`) pide un usuario de MinIO + SealedSecret (hoy xplaya solo
+  arma URLs de lectura).
+- ⬜ **3. POS:** aviso flotante con [K1] [K2] [Rechazar] → NATS `impresion.autorizada`.
+- ⬜ **4. Imprimir (xplaya):** IPP, esperar el fin, pedido, aviso al cliente, Loki. Permisos NATS.
+- ⬜ **5. Cobrar:** ya existe (Pedidos → Vender).
+- Después: desactivar el botón de una impresora apagada (su `printer-state` por IPP).
+- ⬜ **Siguiente tipo de trabajo: copia de INE / credencial (b/n).** Cuando el autoservicio de PDF
+  ya funcione. En la app, "Copia de INE": la cámara abre con un marco del tamaño de la credencial
+  (ID-1, 8.56 × 5.4 cm; imagina ya encuadra la cámara a una proporción en su kiosko de foto
+  carnet), toma frente y vuelta, se ajustan las 4 esquinas con el dedo si salió chueca y se arma
+  una hoja carta con las dos caras a tamaño real, en b/n. Ese PDF entra a la misma cola (QR del
+  kiosko → la caja autoriza → imprime → pedido). Cuidar: vista previa de la hoja antes de mandar
+  (reflejos, foto borrosa) y **borrar las imágenes en cuanto se imprimen** (CURP, domicilio,
+  firma), no a los 7 días; nunca mostrarlas en el kiosko. Si una oficina pide fotocopia "de
+  verdad", sigue siendo en mostrador.
+
 ### Avisos a la papelería por ntfy (por revisar)
 
 Desde el 12 nov 2026 hay un puente **`nats-ntfy`** (github.com/rogithub/nats-ntfy): cualquier
