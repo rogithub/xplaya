@@ -229,6 +229,19 @@ document.addEventListener('alpine:init', () => {
 // Passkeys: los ayudantes (b64aBytes, bytesAB64, postJson, mensajeCancelado,
 // passkeysSoportadas) y `entrarHuella` están en /static/js/huella.js, que se carga antes.
 
+// Vitrina del kiosko: la diapositiva de la app ('app') después de cada `CADA_APP` productos.
+// Sin productos (sin red o sin fotos), solo la de la app.
+const CADA_APP = 5;
+function conLaApp(productos) {
+    const d = [];
+    productos.forEach((p, k) => {
+        d.push(p);
+        if ((k + 1) % CADA_APP === 0) d.push('app');
+    });
+    if (productos.length % CADA_APP !== 0 || !productos.length) d.push('app');
+    return d;
+}
+
 document.addEventListener('alpine:init', () => {
     // Alta: crea la passkey del ticket del alta (routes/alta.rs).
     // `yaAcepto`: ya es cliente (aceptó el programa en la caja), sin casilla de términos.
@@ -341,9 +354,12 @@ document.addEventListener('alpine:init', () => {
         enviando: false,
         error: '',
         ultimoToque: 0,
-        // Vitrina: productos al azar (/kiosko/vitrina) y en qué diapositiva va.
+        // Vitrina: productos al azar (/kiosko/vitrina); las diapositivas son esos productos con la
+        // de la app cada `CADA_APP`; `i` es la que se ve y `desde`, cuándo empezó a verse.
         productos: [],
+        diapositivas: [],
         i: 0,
+        desde: 0,
         // Buscar por número: el NID que se escribe, el producto encontrado, sus medios (primero los
         // videos de TikTok, luego las fotos) y cuál se ve.
         nid: '',
@@ -374,7 +390,8 @@ document.addEventListener('alpine:init', () => {
                 const quieto = Date.now() - this.ultimoToque > 60000;
                 if (!quieto) return;
                 if (this.vista !== 'inicio') this.ir('inicio', false);
-                else this.mover(1, false);              // la vitrina pasa sola
+                // La vitrina pasa sola; la de la app se queda el doble, para dar tiempo de sacar el celular.
+                else if (!this.esApp() || Date.now() - this.desde >= 29000) this.mover(1, false);
             }, 15000);
         },
 
@@ -388,12 +405,17 @@ document.addEventListener('alpine:init', () => {
             if (tocado) this.actividad();
         },
 
-        // La diapositiva actual de la vitrina, o null si no hay productos.
-        actual() { return this.productos[this.i] || null; },
+        // El producto de la diapositiva actual, o null (no hay productos o se ve la de la app).
+        actual() {
+            const d = this.diapositivas[this.i];
+            return d && d !== 'app' ? d : null;
+        },
+        esApp() { return this.diapositivas[this.i] === 'app'; },
         mover(paso, tocado = true) {
-            const n = this.productos.length;
+            const n = this.diapositivas.length;
             if (!n) return;
             this.i = (this.i + paso + n) % n;
+            this.desde = Date.now();
             if (tocado) this.actividad();
         },
         siguiente() { this.mover(1); },
@@ -404,7 +426,9 @@ document.addEventListener('alpine:init', () => {
                 const r = await fetch('/kiosko/vitrina', { cache: 'no-store' });
                 if (r.ok) {
                     this.productos = await r.json();
+                    this.diapositivas = conLaApp(this.productos);
                     this.i = 0;
+                    this.desde = Date.now();
                 }
             } catch (e) {
                 // Sin red: se queda la tanda anterior (o el aviso de vitrina vacía).
@@ -485,8 +509,10 @@ document.addEventListener('alpine:init', () => {
                 const r = await fetch('/kiosko/qr', { cache: 'no-store' });
                 if (r.ok) {
                     const { svg, ms } = await r.json();
-                    // QR de "Instala nuestra app" (siempre en la página, para que se renueve solo).
+                    // QR de la app: en su ficha y en la vitrina (siempre en la página, para que se
+                    // renueve solo).
                     this.$refs.qrApp.innerHTML = svg;
+                    this.$refs.qrVitrina.innerHTML = svg;
                     espera = ms + 200;
                 }
             } catch (e) {

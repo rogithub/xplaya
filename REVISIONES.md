@@ -4,6 +4,27 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: la app destacada, ficha de tienda de apps y en la vitrina (2026-11-14)
+
+"Instala nuestra app" era un cuadro más del menú, y casi nadie toca el kiosko. Tres cambios:
+
+- **Menú** (`templates/app/kiosko.html`, `.cuadro-app` en `app.css`): la app va primero, a lo
+  ancho, con el fondo oscuro de la marca, el ícono de la app instalada
+  (`web-app-manifest-*.png`, el logo oficial), "Monedero · Pedidos · Gratis" y "Obtener".
+- **Ficha de la app** (vista `app`, `.ficha-*`, `.cel-*`): como en una tienda de apps: ícono,
+  nombre, chips (Gratis · Sin anuncios · Entras con tu huella) y tres celulares dibujados con
+  datos de ejemplo (monedero, cuenta en caja, tienda con fotos reales de la vitrina). El QR del
+  alta va donde iría "Obtener". Sin estrellas ni descargas: serían inventadas.
+- **Vitrina** (`conLaApp` y `esApp` en `static/app/app.js`): después de cada 5 productos sale la
+  diapositiva de la app ("Ve tu cuenta en tu celular mientras te cobramos") con el mismo QR;
+  cuando pasa sola se queda ~30 s en lugar de 15. El QR se pinta en los dos lugares
+  (`qrApp`, `qrVitrina`) cada vez que cambia.
+
+Probado en Chromium a 1920×1080 con los productos de dev (29 diapositivas: 24 productos + 5 de
+la app) y el QR en la vitrina.
+
+---
+
 ## Saldo por teléfono: solo lo básico, sin llevar al monedero completo (2026-11-14)
 
 Antes, quien escribiera cualquier teléfono en `xplaya.com/saldo` o en "Entrar" de la app llegaba

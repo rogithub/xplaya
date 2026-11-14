@@ -5,7 +5,8 @@
   Inicio: a la izquierda la **vitrina**, con productos al azar con foto y precio (‹ › para
   moverse); a la derecha, cuadros
   que abren cada vista en pantalla completa (WiFi, "te agregamos a WhatsApp", nuestro WhatsApp,
-  instala la app, fotos, reseña) con "← Inicio". Sin tocar nada en un minuto, vuelve al inicio y la
+  fotos, reseña) con "← Inicio". La app va primero y destacada, abre una ficha como de tienda de
+  apps, y además sale en la vitrina cada 5 productos. Sin tocar nada en un minuto, vuelve al inicio y la
   vitrina sigue pasando sola. "Buscar por número" enseña un producto por su NID (para mostrárselo
   a un cliente). Lógica en `kioskoPantalla` (static/app/app.js).
 #}
@@ -17,7 +18,7 @@
     <div class="kiosko-inicio" x-show="vista === 'inicio'">
         <section class="vitrina" aria-label="Vitrina">
             {# Sin productos (sin red o sin fotos): un aviso en lugar de la vitrina vacía. #}
-            <div class="vitrina-vacia" x-show="!actual()">
+            <div class="vitrina-vacia" x-show="!diapositivas.length">
                 <p>Toca un cuadro de la derecha 👉</p>
             </div>
 
@@ -35,16 +36,36 @@
                 </div>
             </template>
 
+            {# Cada 5 productos, la app: así la ve también quien no toca el kiosko. Con x-show y no
+               x-if: el QR (que cambia cada 30 s) se pinta aquí aunque no se esté viendo. #}
+            <div class="vitrina-producto vitrina-app" x-show="esApp()" x-cloak>
+                <div class="kiosko-qr vitrina-qr" x-ref="qrVitrina"></div>
+                <div class="vitrina-datos">
+                    <p class="vitrina-etiqueta">Nuestra app · Gratis</p>
+                    <h2 class="vitrina-nombre vitrina-app-titulo">Ve tu cuenta en tu celular mientras te cobramos</h2>
+                    <p class="vitrina-app-sub">Y tu monedero, tus pedidos y avisos.</p>
+                    <p class="vitrina-pedir">📲 Escanéame con la cámara</p>
+                </div>
+            </div>
+
             <button type="button" class="vitrina-flecha izq" @click="anterior()" aria-label="Anterior">‹</button>
             <button type="button" class="vitrina-flecha der" @click="siguiente()" aria-label="Siguiente">›</button>
-            <p class="vitrina-cuenta" x-show="productos.length > 1" x-text="(i + 1) + ' / ' + productos.length"></p>
+            <p class="vitrina-cuenta" x-show="diapositivas.length > 1" x-text="(i + 1) + ' / ' + diapositivas.length"></p>
         </section>
 
         <nav class="kiosko-cuadros" aria-label="Menú">
+            {# La app va primero, a lo ancho y con el color de la marca, como en una tienda de apps. #}
+            <button type="button" class="cuadro-ancho cuadro-app" @click="ir('app')">
+                <img src="/static/img/favicon/web-app-manifest-192x192.png?v=4" alt="" class="app-icono" width="192" height="192">
+                <span class="cuadro-app-txt">
+                    <strong>App de la Papelería</strong>
+                    <small>Monedero · Pedidos · Gratis</small>
+                    <span class="app-obtener">Obtener</span>
+                </span>
+            </button>
             {% if wifi_qr %}<button type="button" @click="ir('wifi')"><span>📶</span>WiFi gratis</button>{% endif %}
             <button type="button" @click="ir('whatsapp')"><span>💬</span>Te agregamos a WhatsApp</button>
             <button type="button" @click="ir('contacto')"><span class="ico-whatsapp">{# Font Awesome Free 6.5.0, CC BY 4.0 (el mismo ícono de xplaya.com) #}<svg viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>Nuestro WhatsApp</button>
-            <button type="button" @click="ir('app')"><span>📲</span>Instala nuestra app</button>
             {% if fotos_qr %}<button type="button" @click="ir('fotos')"><span>📸</span>Fotos credencial</button>{% endif %}
             {% if resena_qr %}<button type="button" @click="ir('resena')"><span>⭐</span>Tu reseña</button>{% endif %}
             <button type="button" class="cuadro-ancho" @click="ir('buscar')"><span>🔎</span>Buscar por número</button>
@@ -159,21 +180,70 @@
         </template>
     </div>
 
-    {# ── Instala nuestra app: QR del alta del monedero (código por WhatsApp; cambia cada 30 s). Al
-       terminar, la app tiene monedero y tienda, y le ofrece instalarla. ── #}
-    <div class="kiosko-vista" x-show="vista === 'app'" x-cloak>
-        <section class="kiosko-info">
-            <h1 class="kiosko-titulo">Instala nuestra app</h1>
-            <p class="kiosko-sub">Gratis, en tu celular:</p>
-            <ul class="kiosko-ventajas">
-                <li>💳 <strong>Tu monedero</strong>: cada compra te devuelve saldo.</li>
-                <li>🛍️ <strong>Haz tus pedidos</strong> sin escribir tus datos y te los tenemos listos.</li>
-                <li>👆 <strong>Entras con tu huella</strong>, sin contraseñas.</li>
-            </ul>
+    {# ── Instala nuestra app, como ficha de tienda de apps: ícono (el de la app instalada),
+       nombre, lo que trae y tres celulares de ejemplo; el QR del alta (código por WhatsApp; cambia
+       cada 30 s) va donde iría "Obtener". Los celulares son ilustraciones: sin estrellas ni
+       descargas, que serían inventadas. ── #}
+    <div class="kiosko-vista kiosko-tienda-app" x-show="vista === 'app'" x-cloak>
+        <section class="ficha-app">
+            <header class="ficha-cabeza">
+                <img src="/static/img/favicon/web-app-manifest-512x512.png?v=4" alt="" class="app-icono ficha-icono" width="512" height="512">
+                <div>
+                    <h1 class="kiosko-titulo">App de la Papelería</h1>
+                    <p class="ficha-de">Papelería xplaya · Playa del Carmen</p>
+                    <p class="ficha-chips"><span>Gratis</span><span>Sin anuncios</span><span>👆 Entras con tu huella</span></p>
+                </div>
+            </header>
+
+            <div class="ficha-capturas" aria-hidden="true">
+                <figure>
+                    <div class="cel">
+                        <div class="cel-tarjeta">
+                            <span class="cel-label">Saldo disponible</span>
+                            <span class="cel-monto">$86.40</span>
+                            <span class="cel-label">Tu nombre</span>
+                        </div>
+                        <div class="cel-boton">Mostrar en caja</div>
+                        <div class="cel-fila"><span>Compra 12 nov</span><b>+$4.20</b></div>
+                        <div class="cel-fila"><span>Compra 8 nov</span><b>+$2.75</b></div>
+                        <div class="cel-fila"><span>Compra 3 nov</span><b>+$6.10</b></div>
+                    </div>
+                    <figcaption>💳 Tu monedero: cada compra te devuelve saldo</figcaption>
+                </figure>
+                <figure>
+                    <div class="cel">
+                        <p class="cel-titulo">🧾 Tu cuenta en caja</p>
+                        <div class="cel-fila"><span>Copias b/n ×12</span><b>$12.00</b></div>
+                        <div class="cel-fila"><span>Folder ×2</span><b>$14.00</b></div>
+                        <div class="cel-fila"><span>Pluma ×1</span><b>$35.00</b></div>
+                        <div class="cel-fila cel-total"><span>Total</span><b>$61.00</b></div>
+                        <div class="cel-premio">+$3.05 a tu monedero</div>
+                    </div>
+                    <figcaption>👀 Ves tu cuenta mientras te cobramos</figcaption>
+                </figure>
+                <figure>
+                    <div class="cel">
+                        <p class="cel-titulo">🛍️ Tienda</p>
+                        {# Fotos reales de la vitrina; sin vitrina, cuadros vacíos. #}
+                        <div class="cel-tienda">
+                            <template x-for="n in 4" :key="n">
+                                <div class="cel-prod">
+                                    <img x-show="productos[n - 1]" :src="productos[n - 1]?.foto" alt="">
+                                    <span x-text="productos[n - 1] ? '$' + productos[n - 1].precio : ''"></span>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="cel-boton">Mandar pedido</div>
+                    </div>
+                    <figcaption>📦 Pides desde tu casa y te lo tenemos listo</figcaption>
+                </figure>
+            </div>
         </section>
+
         <section class="kiosko-qr-lado" aria-label="Código para instalar la app">
+            <p class="app-obtener app-obtener-grande">Obtener</p>
             <div class="kiosko-qr" x-ref="qrApp"></div>
-            <p class="kiosko-qr-txt">Escanéame con la cámara</p>
+            <p class="kiosko-qr-txt">Escanéame con la cámara de tu celular</p>
         </section>
     </div>
 

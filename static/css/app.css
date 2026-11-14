@@ -748,6 +748,137 @@ a.btn-qr { text-decoration: none; }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
 .kiosko-cuadros .cuadro-ancho { grid-column: 1 / -1; }
 
+/* La app, destacada como en una tienda de apps: el ícono de la app instalada (logo oficial), el
+   nombre y "Obtener". Fondo oscuro de la marca para que se distinga de los demás cuadros. */
+.app-icono { border-radius: 22%; box-shadow: 0 4px 14px rgb(0 0 0 / .18); }
+.kiosko-cuadros .cuadro-app {
+    display: flex;
+    align-items: center;
+    gap: 1.4vw;
+    padding: 1.5vh 1.6vw;
+    background: var(--brand-dark);
+    color: #F7F1EC;
+    text-align: left;
+    box-shadow: 0 6px 22px rgb(35 25 22 / .35);
+}
+.kiosko-cuadros .cuadro-app:active { background: #3a2a25; }
+.cuadro-app .app-icono { width: clamp(80px, 8.5vw, 150px); height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
+.cuadro-app-txt { display: grid; gap: .4vh; flex: 1; font-size: inherit; }
+.cuadro-app-txt strong { font-size: clamp(1.4rem, 2.05vw, 2.2rem); font-weight: 600; line-height: 1.05; white-space: nowrap; }
+.cuadro-app-txt small { font-family: var(--font-body); font-size: clamp(1rem, 1.35vw, 1.35rem); color: var(--brand-teal); }
+.kiosko-cuadros .cuadro-app span.app-obtener { justify-self: start; margin-top: .8vh; font-size: clamp(1.1rem, 1.5vw, 1.5rem); }
+.app-obtener {
+    flex: none;
+    margin: 0;
+    padding: .5em 1.2em;
+    border-radius: 999px;
+    background: var(--brand-yellow);
+    color: var(--brand-dark);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.app-obtener-grande { font-size: clamp(1.3rem, 2vw, 1.9rem); }
+
+/* Ficha de la app (vista 'app'): cabeza con el ícono, y tres celulares de ejemplo. */
+.kiosko-tienda-app { grid-template-columns: 1.6fr 1fr; gap: 3vw; padding-top: 11vh; }
+.kiosko-tienda-app .kiosko-qr { width: min(28vw, 48vh); }
+.ficha-app { display: grid; gap: 3.5vh; min-height: 0; }
+.ficha-cabeza { display: flex; align-items: center; gap: 2vw; }
+.ficha-icono { width: clamp(96px, 9vw, 168px); height: auto; }
+.ficha-cabeza .kiosko-titulo { margin: 0; }
+.ficha-de { margin: .6vh 0 1.2vh; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
+.ficha-chips { display: flex; flex-wrap: wrap; gap: .6vw; margin: 0; }
+.ficha-chips span {
+    padding: .3em .8em;
+    border-radius: 999px;
+    background: var(--chip);
+    font-weight: 600;
+    font-size: clamp(.9rem, 1.2vw, 1.15rem);
+}
+.ficha-capturas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vw; }
+.ficha-capturas figure { margin: 0; display: grid; gap: 1.4vh; justify-items: center; }
+.ficha-capturas figcaption {
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.35vw, 1.3rem);
+    line-height: 1.2;
+}
+
+/* Un celular dibujado: marco oscuro y pantalla con lo que vería el cliente (datos de ejemplo). */
+.cel {
+    width: min(100%, 15vw);
+    aspect-ratio: 9 / 17;
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+    padding: 2.2vh .9vw;
+    border: .55vw solid var(--brand-dark);
+    border-radius: 2.2vw;
+    background: #EEF2F1;
+    color: #18211F;
+    font-size: clamp(.6rem, .82vw, .85rem);
+    box-shadow: 0 10px 30px rgb(0 0 0 / .18);
+    overflow: hidden;
+}
+.cel-tarjeta {
+    display: grid;
+    gap: .3vh;
+    padding: 1.4vh .8vw;
+    border-radius: 1vw;
+    background: linear-gradient(135deg, #231916, #4a2f25);
+    color: #F7F1EC;
+}
+.cel-label { font-size: .85em; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+.cel-monto { font-family: var(--font-display); font-weight: 600; font-size: 2.2em; color: var(--brand-teal); }
+.cel-boton {
+    padding: .9vh 0;
+    border-radius: .7vw;
+    background: #1F7A76;
+    color: #fff;
+    text-align: center;
+    font-weight: 600;
+}
+.cel-titulo { margin: 0 0 .4vh; font-family: var(--font-display); font-weight: 600; font-size: 1.2em; }
+.cel-fila {
+    display: flex;
+    justify-content: space-between;
+    gap: .4vw;
+    padding: .7vh .6vw;
+    border-radius: .6vw;
+    background: #fff;
+}
+.cel-fila b { color: #1F7A76; }
+.cel-total { background: #DDEFEE; font-weight: 600; }
+.cel-premio {
+    margin-top: auto;
+    padding: .9vh 0;
+    border-radius: .7vw;
+    background: var(--brand-yellow);
+    text-align: center;
+    font-weight: 600;
+}
+.cel-tienda { display: grid; grid-template-columns: 1fr 1fr; gap: .5vw; flex: 1; }
+.cel-prod {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding: .4vw;
+    border-radius: .6vw;
+    background: #fff;
+    min-height: 0;
+    text-align: center;
+    font-weight: 600;
+    color: #1F7A76;
+}
+.cel-prod img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+
+/* La app en la vitrina: el QR donde va la foto del producto. */
+.vitrina-app { height: 100%; }
+.vitrina-qr { width: min(26vw, 52vh); justify-self: center; }
+.vitrina-app-titulo { font-size: clamp(2rem, 3.2vw, 3.2rem); }
+.vitrina-app-sub { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1.1rem, 1.6vw, 1.5rem); }
+
 /* Buscar por número: el producto en grande, con la misma tipografía de la vitrina. */
 .kiosko-producto { grid-template-columns: 1fr; }
 .kiosko-producto-fotos { position: relative; display: grid; gap: 2vh; justify-items: center; min-height: 0; }
