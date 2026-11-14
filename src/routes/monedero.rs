@@ -4,10 +4,14 @@ use axum::{
     response::{Html, IntoResponse, Redirect, Response},
 };
 use minijinja::context;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{db, models::monedero::VentaRecibo, AppState};
+use crate::{
+    db,
+    models::monedero::{AlertaVencimiento, VentaRecibo},
+    AppState,
+};
 
 // ── /terminos ─────────────────────────────────────────────────────────────────
 
@@ -37,33 +41,36 @@ pub struct SaldoParams {
     pub p: Option<String>,
 }
 
+/// Consultar con solo el teléfono muestra lo básico ([`saldo_por_telefono`]): cualquiera
+/// puede escribir un número, así que no lleva al monedero completo.
 pub async fn saldo_get(
     State(state): State<AppState>,
     Query(params): Query<SaldoParams>,
 ) -> Result<Response, StatusCode> {
-    // Si viene ?p=telefono, busca directamente sin mostrar el formulario
+    // ?p=telefono: el QR de las tarjetas impresas del POS (`tarjetasMonedero.ts`).
     if let Some(raw) = params.p {
-        if let Some(tel) = normalizar_telefono(&raw) {
-            let cliente_id = db::monedero::buscar_cliente(&state.pool, &tel)
-                .await
-                .map_err(|e| {
-                    tracing::error!("buscar_cliente (param p): {e}");
-                    StatusCode::INTERNAL_SERVER_ERROR
-                })?;
-            if let Some(id) = cliente_id {
-                return Ok(Redirect::to(&format!("/monedero/{}", id)).into_response());
-            }
+        if let Some(tel) = normalizar_telefono(&raw)
+            && let Some(resultado) = saldo_por_telefono(&state, &tel).await?
+        {
+            return render_saldo(&state, None, Some(resultado));
         }
         // Teléfono inválido o no encontrado → cae al formulario sin error (el QR simplemente no funcionó)
         return Ok(Redirect::to("/saldo").into_response());
     }
+    render_saldo(&state, params.error, None)
+}
 
+fn render_saldo(
+    state: &AppState,
+    error: Option<String>,
+    resultado: Option<SaldoPorTelefono>,
+) -> Result<Response, StatusCode> {
     let tmpl = state.tmpl.get_template("monedero/saldo.html").map_err(|e| {
         tracing::error!("Template saldo: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { error => params.error })
+        .render(context! { error, resultado })
         .map_err(|e| {
             tracing::error!("Render saldo: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
@@ -76,28 +83,62 @@ pub struct SaldoForm {
     pub telefono: String,
 }
 
+/// El resultado se pinta en la respuesta del POST, sin redirigir: así el teléfono no queda en
+/// la URL (ni en el historial ni en las estadísticas).
 pub async fn saldo_post(
     State(state): State<AppState>,
     Form(form): Form<SaldoForm>,
-) -> Result<Redirect, StatusCode> {
+) -> Result<Response, StatusCode> {
     let Some(tel) = normalizar_telefono(&form.telefono) else {
         return Ok(Redirect::to(
             "/saldo?error=Ingresa+un+número+de+teléfono+de+10+dígitos.",
-        ));
+        )
+        .into_response());
     };
-
-    let cliente_id = db::monedero::buscar_cliente(&state.pool, &tel)
-        .await
-        .map_err(|e| {
-            tracing::error!("buscar_cliente: {e}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-
-    match cliente_id {
+    match saldo_por_telefono(&state, &tel).await? {
+        Some(resultado) => render_saldo(&state, None, Some(resultado)),
         None => Ok(Redirect::to(
             "/saldo?error=Número+no+registrado.+Visítanos+en+la+papelería+para+unirte.",
-        )),
-        Some(id) => Ok(Redirect::to(&format!("/monedero/{}", id))),
+        )
+        .into_response()),
+    }
+}
+
+/// Lo que se ve consultando con solo el teléfono (`/saldo` y "Ver mi saldo" en la app): el
+/// saldo y lo que está por vencer, con el nombre tapado para que no sirva para averiguar de
+/// quién es un número. Sin historial, sin QR de caja y sin el enlace al monedero completo
+/// (ese solo llega por el recibo, el POS o la app con huella).
+#[derive(Serialize)]
+pub struct SaldoPorTelefono {
+    pub nombre: String,
+    pub saldo: String,
+    pub alerta: Option<AlertaVencimiento>,
+}
+
+pub async fn saldo_por_telefono(state: &AppState, tel: &str) -> Result<Option<SaldoPorTelefono>, StatusCode> {
+    let error = |e: sqlx::Error| {
+        tracing::error!("Saldo por teléfono: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    };
+    let Some(id) = db::monedero::buscar_cliente(&state.pool, tel).await.map_err(error)? else {
+        return Ok(None);
+    };
+    Ok(db::monedero::monedero(&state.pool, id).await.map_err(error)?.map(|c| SaldoPorTelefono {
+        nombre: nombre_oculto(&c.nombre),
+        saldo: c.saldo,
+        alerta: c.alerta,
+    }))
+}
+
+/// "NAYELLI ALVARADO CRUZ" → "N••••• A.": la inicial del nombre y la del primer apellido. Los
+/// puntos son siempre cinco para no dar el largo del nombre.
+pub fn nombre_oculto(nombre: &str) -> String {
+    let mut palabras = nombre.split_whitespace();
+    let inicial = |p: &str| p.chars().next().map(|c| c.to_uppercase().collect::<String>()).unwrap_or_default();
+    match (palabras.next(), palabras.next()) {
+        (Some(n), Some(a)) => format!("{}••••• {}.", inicial(n), inicial(a)),
+        (Some(n), None) => format!("{}•••••", inicial(n)),
+        _ => String::new(),
     }
 }
 
@@ -392,4 +433,16 @@ pub async fn redirigir(
     };
 
     Ok(Redirect::permanent(&url))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::nombre_oculto;
+
+    #[test]
+    fn nombre_oculto_deja_las_iniciales() {
+        assert_eq!(nombre_oculto("NAYELLI ALVARADO CRUZ"), "N••••• A.");
+        assert_eq!(nombre_oculto("ángel"), "Á•••••");
+        assert_eq!(nombre_oculto("  "), "");
+    }
 }

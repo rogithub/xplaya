@@ -10,6 +10,21 @@
     <p class="alerta" role="alert">{{ error }}</p>
     {% endif %}
 
+    {# Consulta con solo el teléfono (POST /entrar): saldo y vencimiento, con el nombre
+       tapado. El monedero completo, con huella o con el enlace del recibo. #}
+    {% if resultado %}
+    <section class="saldo-tel" aria-label="Tu saldo">
+        <span class="card-label">Monedero de {{ resultado.nombre }}</span>
+        <span class="saldo-tel-monto">${{ resultado.saldo }}</span>
+        {% if resultado.alerta %}
+        <p class="alerta" role="status">
+            <strong>${{ resultado.alerta.monto }}</strong> vencen el <strong>{{ resultado.alerta.fecha }}</strong>.
+        </p>
+        {% endif %}
+        <p class="saldo-tel-nota">Para ver tu historial y mostrar tu tarjeta en caja, entra con tu huella.</p>
+    </section>
+    {% endif %}
+
     {# Entrar con la passkey del celular ligado. Si el navegador no las soporta, no se muestra. #}
     <div x-data="entrarHuella" x-show="soportado" x-cloak class="entrar">
         <button type="button" class="btn-qr" @click="entrar()" :disabled="ocupado">
@@ -21,14 +36,14 @@
     </div>
 
     <p class="inicio-txt">
-        O abre el enlace de tu monedero que te enviamos por WhatsApp, o búscalo con tu teléfono.
+        O abre el enlace de tu monedero que te enviamos por WhatsApp, o consulta tu saldo con tu teléfono.
     </p>
 
     <form method="post" action="/entrar" class="inicio-form">
         <label for="telefono" class="campo-label">Teléfono a 10 dígitos</label>
         <input id="telefono" name="telefono" type="tel" inputmode="numeric" autocomplete="tel"
                placeholder="984 123 4567" required class="campo">
-        <button type="submit" class="btn-qr">Ver mi monedero</button>
+        <button type="submit" class="btn-sec btn-enlace">Ver mi saldo</button>
     </form>
 
     <p class="inicio-nota">¿Aún no tienes monedero? Pídelo en caja, o ábrelo desde el enlace de tu ticket digital.</p>

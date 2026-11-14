@@ -115,12 +115,21 @@ async fn inicio(
         return Ok(Redirect::to(&format!("/monedero/{id}")).into_response());
     }
 
+    render_inicio(&state, params.error, None)
+}
+
+/// Portada sin sesión: entrar con huella o consultar el saldo con el teléfono (`resultado`).
+fn render_inicio(
+    state: &AppState,
+    error: Option<String>,
+    resultado: Option<monedero::SaldoPorTelefono>,
+) -> Result<Response, StatusCode> {
     let tmpl = state.tmpl.get_template("app/inicio.html").map_err(|e| {
         tracing::error!("Template app/inicio: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let html = tmpl
-        .render(context! { error => params.error, en_app => true })
+        .render(context! { error, resultado, en_app => true })
         .map_err(|e| {
             tracing::error!("Render app/inicio: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
@@ -208,27 +217,21 @@ pub struct EntrarForm {
     pub telefono: String,
 }
 
-/// Igual que `/saldo` en xplaya.com, pero los errores vuelven a la portada de la app.
+/// Igual que `/saldo` en xplaya.com: con solo el teléfono, el saldo en la misma portada
+/// (`SaldoPorTelefono`), no el monedero completo. Los errores vuelven a la portada.
 async fn entrar(
     State(state): State<AppState>,
     Form(form): Form<EntrarForm>,
-) -> Result<Redirect, StatusCode> {
+) -> Result<Response, StatusCode> {
     let Some(tel) = monedero::normalizar_telefono(&form.telefono) else {
-        return Ok(Redirect::to("/?error=Escribe+tu+teléfono+a+10+dígitos."));
+        return Ok(Redirect::to("/?error=Escribe+tu+teléfono+a+10+dígitos.").into_response());
     };
-
-    let cliente_id = db::monedero::buscar_cliente(&state.pool, &tel)
-        .await
-        .map_err(|e| {
-            tracing::error!("buscar_cliente (app): {e}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-
-    match cliente_id {
-        Some(id) => Ok(Redirect::to(&format!("/monedero/{id}"))),
+    match monedero::saldo_por_telefono(&state, &tel).await? {
+        Some(resultado) => render_inicio(&state, None, Some(resultado)),
         None => Ok(Redirect::to(
             "/?error=Ese+teléfono+no+tiene+monedero.+Pídelo+en+caja+en+tu+próxima+compra.",
-        )),
+        )
+        .into_response()),
     }
 }
 

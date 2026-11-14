@@ -1041,3 +1041,21 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .listo-txt strong { color: var(--ink); font-size: 1rem; }
 .listo .pasos { text-align: left; }
 .listo .btn-enlace { margin-top: 20px; }
+
+/* ── Saldo con solo el teléfono (app/inicio.html, POST /entrar) ─────────── */
+
+.saldo-tel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 22px;
+    padding: 18px 16px;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+.saldo-tel .card-label { color: var(--muted); opacity: 1; }
+.saldo-tel-monto { font: 600 2.2rem var(--font-display); color: var(--accent); }
+.saldo-tel .alerta { margin: 8px 0 0; }
+.saldo-tel-nota { margin: 6px 0 0; font-size: .88rem; color: var(--muted); }

@@ -23,11 +23,32 @@
 <div class="columns is-centered">
     <div class="column is-narrow" style="max-width: 480px;">
 
+        {# Resultado de consultar con solo el teléfono (routes/monedero.rs, SaldoPorTelefono):
+           saldo y vencimiento, con el nombre tapado. Sin historial ni QR de caja. #}
+        {% if resultado %}
+        <div class="box has-text-centered mb-5">
+            <p class="has-text-grey is-size-7 mb-1">Monedero de {{ resultado.nombre }}</p>
+            <p class="has-text-grey mb-0">Saldo disponible</p>
+            <p class="title is-2 has-text-success mb-3">${{ resultado.saldo }}</p>
+            {% if resultado.alerta %}
+            <p class="notification is-warning is-light is-size-7 py-2 px-3 mb-3">
+                <strong>${{ resultado.alerta.monto }}</strong> vencen el <strong>{{ resultado.alerta.fecha }}</strong>.
+                ¡Úsalos pronto en la tienda!
+            </p>
+            {% endif %}
+            <p class="is-size-7 has-text-grey mb-0">
+                📱 Para ver tu historial y mostrar tu tarjeta en caja, guarda tu monedero en el
+                celular: abre la liga de tu último ticket o escanea la pantalla de la tienda.
+            </p>
+        </div>
+        <p class="has-text-centered has-text-grey mb-3">¿Otro número?</p>
+        {% else %}
         <div class="has-text-centered mb-5">
             <span style="font-size: 3rem;">💳</span>
             <h1 class="title is-4 mt-3">Monedero electrónico</h1>
             <p class="has-text-grey">Ingresa tu número de teléfono para consultar tu saldo y cashback.</p>
         </div>
+        {% endif %}
 
         {% if error %}
         <div class="notification is-danger is-light mb-4">{{ error }}</div>
@@ -41,7 +62,7 @@
                            placeholder="10 dígitos"
                            maxlength="15"
                            inputmode="numeric"
-                           autofocus>
+                           {% if not resultado %}autofocus{% endif %}>
                 </div>
             </div>
             <div class="field">
@@ -53,6 +74,7 @@
             </div>
         </form>
 
+        {% if not resultado %}
         <div class="box has-text-centered mt-5">
             <p class="has-text-weight-semibold mb-2">💳 ¿Aún no tienes Monedero?</p>
             <a href="https://wa.me/524522018336?text=%23monedero%20"
@@ -60,6 +82,7 @@
                 Manda <strong>#monedero</strong> y tu nombre para registrarte.
             </a>
         </div>
+        {% endif %}
 
         <p class="has-text-centered mt-3">
             <a href="/terminos" class="is-size-7 has-text-grey">Términos y condiciones</a>

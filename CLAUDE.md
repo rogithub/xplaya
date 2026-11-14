@@ -140,7 +140,7 @@ Un archivo por tema en `db/` y un archivo por grupo de rutas en `routes/`.
 | `/recibo/{guid}` | `Ajustes.Id` | Ticket de venta | `/Recibo/{id:guid}` |
 | `/cotizacion/{guid}` | `Pedidos.Id` | Cotización/pedido | `/Cotizacion/{id:guid}` |
 | `/monedero/{guid}` | `Clientes.Id` | Monedero del cliente (cashback) | `/App/{clienteId:guid}` |
-| `/saldo` | — | Busca cliente por teléfono → redirige a `/monedero/{guid}` | `/saldo` |
+| `/saldo` | — | Busca cliente por teléfono → solo saldo y vencimiento, nombre tapado (no lleva a `/monedero/{guid}`) | `/saldo` |
 | `/terminos` | — | Lee `Settings`: `DIAS_VIGENCIA_MONEDERO`, `TIPO_CAMBIO_MONEDERO` | `/Terminos` |
 
 **Ninguna ruta requiere autenticación.** El acceso al monedero se protege solo con el GUID del cliente.

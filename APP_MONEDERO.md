@@ -260,7 +260,9 @@ ligado, el kiosko y las notificaciones.
 
 - La consulta de saldo por teléfono (`/saldo`) y el monedero público (`/monedero/{guid}`) **se
   quedan por un tiempo**, para no dejar fuera a quien no quiera usar la app. Más adelante se revisa
-  si se quitan.
+  si se quitan. Desde el 2026-11-14, consultar por teléfono (`/saldo`, `?p=` de las tarjetas
+  impresas y "Ver mi saldo" en la app) solo muestra el saldo y lo que vence, con el nombre tapado:
+  ya no lleva a `/monedero/{guid}`, que solo llega por el recibo o el POS.
 - **Se quedan públicos** como están: recibos, cotizaciones y enlaces cortos (`/recibo`,
   `/cotizacion`, `/r/:code`). El recibo suma el enlace de alta descrito arriba.
 

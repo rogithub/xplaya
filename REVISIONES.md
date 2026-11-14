@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Saldo por teléfono: solo lo básico, sin llevar al monedero completo (2026-11-14)
+
+Antes, quien escribiera cualquier teléfono en `xplaya.com/saldo` o en "Entrar" de la app llegaba
+al monedero completo (`/monedero/{guid}`): nombre, historial, QR de caja y la liga permanente.
+Ahora la consulta por teléfono solo muestra el saldo y lo que vence, con el nombre tapado.
+
+- `src/routes/monedero.rs` — `SaldoPorTelefono`, `saldo_por_telefono` (reusa
+  `db::monedero::monedero`) y `nombre_oculto` ("NAYELLI ALVARADO CRUZ" → "N••••• A."; siempre
+  cinco puntos para no dar el largo; prueba al final). `saldo_get` (`?p=` de las tarjetas impresas
+  del POS) y `saldo_post` pintan el resultado en la misma página, sin redirigir: el teléfono del
+  formulario no queda en la URL.
+- `templates/monedero/saldo.html` — el resultado arriba, con la invitación a la app, y "¿Otro número?".
+- `src/routes/app.rs` — `POST /entrar` pinta el saldo en la portada (`render_inicio`) en lugar de
+  redirigir; `templates/app/inicio.html` + `.saldo-tel` en `app.css`. "Entrar con huella" queda
+  como botón principal y "Ver mi saldo" como secundario.
+- `/monedero/{guid}` no cambia: llega por el recibo ("Ver Monedero") y por el POS (Clientes).
+
+Probado en Chromium con un cliente de dev con saldo: sitio, `?p=` y app (claro y oscuro); en
+ninguno aparece el GUID ni el teléfono, y un número sin monedero sigue dando el aviso de siempre.
+
+---
+
 ## Recibo: invitación a la app más visible y alta más corta (2026-11-14)
 
 El 99 % de los recibos llega por WhatsApp como liga. Cuatro cambios para que más clientes pasen
