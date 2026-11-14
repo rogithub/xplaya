@@ -79,11 +79,6 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
     if !es_kiosko(&state, &headers) {
         return Ok((StatusCode::FORBIDDEN, "Este kiosko no está activado.").into_response());
     }
-    let cfg = &state.config;
-    let wifi_qr = (!cfg.kiosko_wifi_ssid.is_empty())
-        .then(|| qr_svg(&kiosko::texto_qr_wifi(&cfg.kiosko_wifi_ssid, &cfg.kiosko_wifi_password)))
-        .flatten()
-        .map(minijinja::Value::from_safe_string);
     let resena_qr = qr_svg(URL_RESENA_GOOGLE).map(minijinja::Value::from_safe_string);
     let fotos_qr = qr_svg(URL_IMAGINA_KIOSKO).map(minijinja::Value::from_safe_string);
     let html = state
@@ -91,9 +86,6 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
         .get_template("app/kiosko.html")
         .and_then(|t| t.render(context! {
             en_app => true,
-            wifi_qr,
-            wifi_ssid => &cfg.kiosko_wifi_ssid,
-            wifi_password => &cfg.kiosko_wifi_password,
             resena_qr,
             fotos_qr,
         }))

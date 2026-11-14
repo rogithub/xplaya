@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: sin WiFi ni "Nuestro WhatsApp"; "Buscar por número" en una celda (2026-11-14)
+
+Los QR del WiFi y del WhatsApp de la papelería ya están impresos en la pared, así que salen del
+menú. Quedan la app (a lo ancho) y cuatro cuadros de 2×2.
+
+- `templates/app/kiosko.html` — sin los cuadros ni las vistas `wifi` y `contacto`; "Buscar por
+  número" sin `cuadro-ancho`.
+- Lo que solo servía para eso: `texto_qr_wifi` (`src/kiosko.rs`), el QR en
+  `src/routes/kiosko.rs`, `KIOSKO_WIFI_SSID` / `KIOSKO_WIFI_PASSWORD` (`src/config.rs`,
+  `.env.example`, `CLAUDE.md`), `.kiosko-wifi` y `.ico-whatsapp` del CSS y
+  `static/img/kiosko/whatsapp-contacto.png`. En k3s-manifests también salen del deployment y del
+  SealedSecret.
+
+---
+
 ## "Imprime tú solito": elegir páginas con miniaturas (2026-11-14)
 
 Las páginas del trabajo se eligen como en el diálogo de impresión de Android: una cuadrícula con

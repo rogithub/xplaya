@@ -81,7 +81,6 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
   (foto, precio y QR para pedirlo en la app; ‹ › para moverse). A la derecha, cuadros grandes (es
   táctil) que abren cada vista en pantalla completa con "← Inicio":
   - **Monedero**: lo de arriba.
-  - **WiFi gratis**: QR de la red para clientes, con nombre y contraseña (`KIOSKO_WIFI_*`).
   - **Te agregamos a WhatsApp**: para quien no sabe agregar un contacto. Escribe su teléfono con
     un teclado de números en la pantalla (sin usar su celular). En el POS aparece un aviso con el
     botón para escribirle; cuando contesta (eso comprueba que el teléfono es suyo), la caja escribe
