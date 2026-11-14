@@ -27,7 +27,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 use crate::{
     db,
     impresion,
-    routes::{alta, alta::error_json, cuenta, imprimir, kiosko, monedero, notificaciones, tienda},
+    routes::{alta, alta::error_json, cuenta, google, imprimir, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -79,6 +79,9 @@ pub fn router() -> Router<AppState> {
         .route("/passkey/registro/fin", post(alta::registro_fin))
         .route("/passkey/entrar/inicio", post(entrar_inicio))
         .route("/passkey/entrar/fin", post(entrar_fin))
+        .route("/google/alta", post(google::alta))
+        .route("/google/entrar", get(google::entrar))
+        .route("/google/regreso", get(google::regreso))
         .route("/notificaciones/suscripcion", post(notificaciones::suscribir))
         .route("/notificaciones/{id}/recibida", post(notificaciones::recibida))
         .route("/notificaciones/{id}/abierta", post(notificaciones::abierta))
@@ -173,6 +176,12 @@ async fn listo(State(state): State<AppState>, headers: HeaderMap) -> Result<Resp
     Ok(Html(html).into_response())
 }
 
+/// A la portada con un aviso (`?error=`). El texto va codificado: con los acentos tal cual,
+/// el navegador lee la cabecera `Location` como Latin-1 y "está" sale "estÃ¡".
+pub fn inicio_con_error(mensaje: &str) -> Response {
+    Redirect::to(&format!("/?error={}", crate::avisos::codificar_url(mensaje))).into_response()
+}
+
 /// Valor de una cookie de la petición.
 fn leer_cookie<'a>(headers: &'a HeaderMap, nombre: &str) -> Option<&'a str> {
     headers
@@ -233,14 +242,11 @@ async fn entrar(
     Form(form): Form<EntrarForm>,
 ) -> Result<Response, StatusCode> {
     let Some(tel) = monedero::normalizar_telefono(&form.telefono) else {
-        return Ok(Redirect::to("/?error=Escribe+tu+teléfono+a+10+dígitos.").into_response());
+        return Ok(inicio_con_error("Escribe tu teléfono a 10 dígitos."));
     };
     match monedero::saldo_por_telefono(&state, &tel).await? {
         Some(resultado) => render_inicio(&state, None, Some(resultado)),
-        None => Ok(Redirect::to(
-            "/?error=Ese+teléfono+no+tiene+monedero.+Pídelo+en+caja+en+tu+próxima+compra.",
-        )
-        .into_response()),
+        None => Ok(inicio_con_error("Ese teléfono no tiene monedero. Pídelo en caja en tu próxima compra.")),
     }
 }
 

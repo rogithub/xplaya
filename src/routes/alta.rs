@@ -335,7 +335,8 @@ pub async fn registro_fin(
     };
 
     let ua = headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok());
-    match completar_alta(&state, &alta, &passkey, passkeys::dispositivo(ua)).await {
+    let acceso = db::celulares::Acceso::Passkey(&passkey);
+    match completar_alta(&state, &alta, acceso, passkeys::dispositivo(ua)).await {
         Ok(Some(token)) => {
             state.altas.tomar(body.ticket);
             let cookie = app::cookie_sesion(&state, &token);
@@ -355,10 +356,11 @@ pub async fn registro_fin(
 
 /// `Ok(None)` si el enlace se gastó mientras tanto (o el teléfono se registró): no se
 /// escribe nada. Desde el kiosko no hay venta que abonar: se cierra la solicitud.
-async fn completar_alta(
+/// `acceso`: la passkey nueva o la cuenta de Google (`routes/google.rs`).
+pub async fn completar_alta(
     state: &AppState,
     alta: &AltaPendiente,
-    passkey: &webauthn_rs::prelude::Passkey,
+    acceso: db::celulares::Acceso<'_>,
     dispositivo: &str,
 ) -> Result<Option<String>, sqlx::Error> {
     let mut tx = state.pool.begin().await?;
@@ -396,7 +398,7 @@ async fn completar_alta(
             "kiosko"
         }
     };
-    db::celulares::ligar(&mut tx, alta.celular_id, cliente_id, passkey, origen, dispositivo).await?;
+    db::celulares::ligar(&mut tx, alta.celular_id, cliente_id, acceso, origen, dispositivo).await?;
     let token = db::celulares::crear_sesion(&mut tx, alta.celular_id).await?;
     tx.commit().await?;
     Ok(Some(token))

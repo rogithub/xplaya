@@ -245,11 +245,13 @@ function conLaApp(productos) {
 document.addEventListener('alpine:init', () => {
     // Alta: crea la passkey del ticket del alta (routes/alta.rs).
     // `yaAcepto`: ya es cliente (aceptó el programa en la caja), sin casilla de términos.
-    Alpine.data('crearAcceso', (ticket, yaAcepto) => ({
+    // `fallo`: la huella no funcionó (o falló el regreso de Google); entonces se ofrece Google.
+    Alpine.data('crearAcceso', (ticket, yaAcepto, falloInicial) => ({
         soportado: passkeysSoportadas,
         acepto: yaAcepto,
         ocupado: false,
         error: '',
+        fallo: falloInicial,
 
         async crear() {
             this.error = '';
@@ -280,6 +282,8 @@ document.addEventListener('alpine:init', () => {
                 location.href = fin.ir;
             } catch (e) {
                 this.error = mensajeCancelado(e, 'Se canceló. Toca el botón para intentarlo otra vez.');
+                // Android sin bloqueo de pantalla no puede crear passkeys: aquí aparece Google.
+                this.fallo = true;
             } finally {
                 this.ocupado = false;
             }

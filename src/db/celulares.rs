@@ -14,13 +14,20 @@ use webauthn_rs::prelude::Passkey;
 /// es tocar la huella.
 const DIAS_SESION: i32 = 365;
 
-/// Liga la passkey al cliente, reemplazando el celular que tuviera. Va dentro de la
-/// transacción del alta.
+/// Con qué entra el celular: su passkey o, si no pudo crearla, su cuenta de Google (`google.rs`).
+pub enum Acceso<'a> {
+    Passkey(&'a Passkey),
+    /// El `sub` del usuario en Keycloak.
+    Google(&'a str),
+}
+
+/// Liga el celular al cliente, reemplazando el que tuviera. Va dentro de la transacción del
+/// alta.
 pub async fn ligar(
     tx: &mut PgConnection,
     celular_id: Uuid,
     cliente_id: Uuid,
-    passkey: &Passkey,
+    acceso: Acceso<'_>,
     origen: &str,
     dispositivo: &str,
 ) -> Result<(), sqlx::Error> {
@@ -41,20 +48,41 @@ pub async fn ligar(
     .execute(&mut *tx)
     .await?;
 
-    let json = serde_json::to_string(passkey).map_err(|e| sqlx::Error::Encode(Box::new(e)))?;
+    let (credential_id, passkey, google_sub) = match acceso {
+        Acceso::Passkey(p) => {
+            let json = serde_json::to_string(p).map_err(|e| sqlx::Error::Encode(Box::new(e)))?;
+            (Some(AsRef::<[u8]>::as_ref(p.cred_id()).to_vec()), Some(json), None)
+        }
+        Acceso::Google(sub) => (None, None, Some(sub)),
+    };
     sqlx::query(
-        "INSERT INTO clientecelulares (id, clienteid, credentialid, passkey, origen, dispositivo)
-         VALUES ($1, $2, $3, $4::jsonb, $5, $6)",
+        "INSERT INTO clientecelulares (id, clienteid, credentialid, passkey, googlesub, origen, dispositivo)
+         VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)",
     )
     .bind(celular_id)
     .bind(cliente_id)
-    .bind(AsRef::<[u8]>::as_ref(passkey.cred_id()))
-    .bind(json)
+    .bind(credential_id)
+    .bind(passkey)
+    .bind(google_sub)
     .bind(origen)
     .bind(dispositivo)
     .execute(&mut *tx)
     .await?;
     Ok(())
+}
+
+/// Celular activo ligado a esta cuenta de Google: `(celular_id, cliente_id)`.
+pub async fn por_google(
+    conn: &mut PgConnection,
+    sub: &str,
+) -> Result<Option<(Uuid, Uuid)>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT id, clienteid FROM clientecelulares
+          WHERE googlesub = $1 AND fechadesligado IS NULL",
+    )
+    .bind(sub)
+    .fetch_optional(conn)
+    .await
 }
 
 /// Celular activo dueño de esta passkey: `(celular_id, passkey)`.

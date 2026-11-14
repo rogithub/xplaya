@@ -66,7 +66,8 @@
         este celular, sin contraseñas.
     </p>
     {# Quien ya aceptó el programa (Clientes.AceptoPrograma) no ve la casilla, solo el aviso. #}
-    <div x-data="crearAcceso('{{ ticket }}', {{ 'false' if pide_terminos else 'true' }})" class="inicio-form">
+    {% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+    <div x-data="crearAcceso('{{ ticket }}', {{ 'false' if pide_terminos else 'true' }}, {{ 'true' if error else 'false' }})" class="inicio-form">
         {% if pide_terminos %}
         <label class="check">
             <input type="checkbox" x-model="acepto">
@@ -84,6 +85,17 @@
         <p class="inicio-nota">
             Al continuar aceptas los <a href="{{ site_url }}/terminos" target="_blank" rel="noopener">términos del monedero</a>.
         </p>
+        {% endif %}
+
+        {% if google_activo %}
+        {# Celulares que no pueden crear passkeys (Android sin bloqueo de pantalla): su cuenta de
+           Google en lugar de la huella (routes/google.rs). Solo si la huella falló. #}
+        <form method="post" action="/google/alta" class="solo-abonar" x-show="fallo || !soportado" x-cloak>
+            <input type="hidden" name="ticket" value="{{ ticket }}">
+            <input type="hidden" name="terminos" value="si" :disabled="!acepto">
+            <p class="inicio-nota">¿Tu celular no tiene bloqueo de pantalla?</p>
+            <button type="submit" class="btn-sec" :disabled="!acepto">Entrar con Google</button>
+        </form>
         {% endif %}
 
         {% if nuevo %}

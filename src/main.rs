@@ -12,6 +12,7 @@ mod caja;
 mod config;
 mod db;
 mod estaticos;
+mod google;
 mod impresion;
 mod ipp;
 mod kiosko;
@@ -49,6 +50,10 @@ pub struct AppState {
     /// Clientes que escanearon el QR del kiosko en los últimos 30 min (por id de cliente): pueden
     /// mandar sus trabajos de impresión a la caja (`routes/imprimir.rs`).
     pub en_tienda: Arc<passkeys::Pendientes<()>>,
+    /// "Entrar con Google" por Keycloak (`google.rs`). `None`: el botón no aparece.
+    pub google: Option<google::Google>,
+    /// Idas a Google que esperan el regreso, con el `state` como id.
+    pub google_idas: Arc<passkeys::Pendientes<google::Ida>>,
 }
 
 #[tokio::main]
@@ -93,6 +98,11 @@ async fn main() {
     }
     // La pestaña "Imprimir" de la app solo existe con MinIO.
     tmpl.add_global("imprimir_activo", minio.is_some());
+    let google = google::Google::desde_config(&cfg);
+    if google.is_none() {
+        tracing::info!("google: sin KEYCLOAK_ISSUER o KEYCLOAK_CLIENT_SECRET, entrar con Google apagado");
+    }
+    tmpl.add_global("google_activo", google.is_some());
     let state = AppState {
         tmpl,
         config: cfg,
@@ -108,6 +118,8 @@ async fn main() {
         cajas: Arc::new(caja::Cajas::new()),
         minio,
         en_tienda: Arc::new(passkeys::Pendientes::new(Duration::from_secs(30 * 60))),
+        google,
+        google_idas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(10 * 60))),
     };
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());

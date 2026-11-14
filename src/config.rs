@@ -36,6 +36,10 @@ pub struct Config {
     /// Loki: cada trabajo del autoservicio de impresión se registra como los de la PC de la
     /// papelería (`job="papeleria-pc"`, `tipo="impresion"`), para los mismos tableros. Vacío: no.
     pub loki_url: String,
+    /// Keycloak para "Entrar con Google" (`google.rs`): `https://…/realms/xplaya` y el secreto
+    /// del cliente `xplaya`. Sin los dos, el botón no aparece.
+    pub keycloak_issuer: String,
+    pub keycloak_client_secret: String,
 }
 
 impl Config {
@@ -77,6 +81,8 @@ impl Config {
                 .unwrap_or_else(|_| "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push".to_string())
                 .trim()
                 .to_string(),
+            keycloak_issuer: std::env::var("KEYCLOAK_ISSUER").unwrap_or_default().trim().to_string(),
+            keycloak_client_secret: std::env::var("KEYCLOAK_CLIENT_SECRET").unwrap_or_default().trim().to_string(),
         }
     }
 

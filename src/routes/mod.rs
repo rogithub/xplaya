@@ -5,6 +5,7 @@ pub mod monedero;
 pub mod feeds;
 pub mod app;
 pub mod alta;
+pub mod google;
 pub mod kiosko;
 pub mod tienda;
 pub mod notificaciones;

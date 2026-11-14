@@ -35,6 +35,11 @@
         <p class="inicio-txt entrar-nota">Si ya ligaste tu celular desde el enlace de un recibo.</p>
     </div>
 
+    {% if google_activo %}
+    {# Quien ligó su celular con Google (no pudo crear passkey) vuelve a entrar aquí. #}
+    <a class="btn-sec btn-enlace" href="/google/entrar">Entrar con Google</a>
+    {% endif %}
+
     <p class="inicio-txt">
         O abre el enlace de tu monedero que te enviamos por WhatsApp, o consulta tu saldo con tu teléfono.
     </p>

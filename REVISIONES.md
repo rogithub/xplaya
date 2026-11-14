@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Entrar con Google si el celular no puede crear passkey (2026-11-14)
+
+Un Android sin PIN ni bloqueo de pantalla no puede crear passkeys. En el alta, si la huella falla
+aparece **Entrar con Google**; el celular queda ligado con la cuenta de Google (su `sub` en
+Keycloak) en lugar de la passkey. En la portada, **Entrar con Google** recupera la sesión.
+
+- `src/google.rs` — habla con Keycloak: URL de ida (PKCE, `kc_idp_hint=google`), cambio del `code`
+  por el token y `userinfo` para el `sub`.
+- `src/routes/google.rs` — `POST /google/alta`, `GET /google/entrar`, `GET /google/regreso`. Lo
+  pendiente vive en memoria con el `state` como id (no en cookie: en iPhone la app no comparte
+  cookies con Safari).
+- `src/db/celulares.rs` — `ligar` recibe `Acceso::Passkey` o `Acceso::Google`; `por_google`.
+- `src/routes/alta.rs` — `completar_alta` recibe el `Acceso` (lo usa también Google).
+- `templates/app/alta.html`, `static/app/app.js` — el botón aparece solo si la huella falló.
+  `templates/app/inicio.html` — "Entrar con Google" en la portada.
+- `src/routes/app.rs` — `inicio_con_error`: los avisos de la portada van codificados (con "á" tal
+  cual salían como "Ã¡"). Arregla también los de `/entrar`.
+- BD (repo del POS): `ClienteCelulares.GoogleSub`; `CredentialId`/`Passkey` opcionales.
+- Variables `KEYCLOAK_ISSUER` / `KEYCLOAK_CLIENT_SECRET`.
+
+---
+
 ## Kiosko: sin WiFi ni "Nuestro WhatsApp"; "Buscar por número" en una celda (2026-11-14)
 
 Los QR del WiFi y del WhatsApp de la papelería ya están impresos en la pared, así que salen del

@@ -151,6 +151,29 @@ WhatsApp. La competencia cercana imprime con chorro de tinta, más lento y cobra
 - **Escáner de código de barras para clientes** (`BarcodeDetector`, solo Chrome de Android): en
   espera. Solo 706 de 2,083 productos del catálogo (34 %) tienen código capturado.
 
+### Entrar con Google si el celular no puede crear passkey (plan acordado 2026-11-14)
+
+Caso real: cliente con Android **sin PIN ni bloqueo de pantalla**; el celular se niega a crear
+passkeys. Google no pide bloqueo, así que sirve. Orden en el alta: **passkey** → si falla,
+**"Entrar con Google"** → si tampoco, **"Solo crea mi monedero"** (ya existe). Quien crea su
+passkey no ve cambios. Seguridad: igual que una passkey en un celular sin bloqueo; ventaja extra,
+si pierde la sesión vuelve a entrar con Google sin ir a la tienda.
+
+Va por el **Keycloak del cluster** (realm `xplaya`, Google como proveedor), como ya estaba previsto
+en `k3s-manifests` (*Identidad — Keycloak*). Se guarda el `sub` del usuario, no el correo, en la
+fila del celular ligado (sigue la regla de un celular por cliente).
+
+**Pasos:**
+- ✅ **1. Google Cloud (a mano, 2026-11-14):** cliente OAuth y pantalla de consentimiento (solo `openid`).
+- ✅ **2. Realm `xplaya-dev` (2026-11-14):** Google como proveedor, cliente `xplaya`, ir directo a Google
+  (`kc_idp_hint`). Se desarrolla contra la URL de Tailscale.
+- ✅ **3. Datos (repo del POS, en dev 2026-11-14; producción con el paso 5):** `GoogleSub` en `ClienteCelulares`; `CredentialId`/`Passkey`
+  pasan a opcionales.
+- ✅ **4. xplaya (2026-11-14, probado en dev):** botón en el alta (si falla la passkey) y en la entrada, ruta de regreso que
+  valida el token, ligar y crear sesión como con passkey.
+- ⬜ **5. Producción:** `auth.xplaya.com` por el túnel solo con las rutas del realm (fase 3 de
+  Keycloak), realm `xplaya`, secret en SealedSecret.
+
 ### Autoservicio de impresión: "Imprime tú solito" (plan acordado 2026-11-14)
 
 "No hagas filas, imprime tú solito." Una opción más de la app (solo con huella). **Solo PDF, blanco
