@@ -1190,3 +1190,53 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .saldo-tel-monto { font: 600 2.2rem var(--font-display); color: var(--accent); }
 .saldo-tel .alerta { margin: 8px 0 0; }
 .saldo-tel-nota { margin: 6px 0 0; font-size: .88rem; color: var(--muted); }
+
+/* ── "Imprime tú solito" (app/imprimir.html, app/imprimir_trabajo.html) ─── */
+
+.imp-intro { margin: 0 2px 16px; color: var(--muted); }
+.imp-intro strong { color: var(--ink); }
+.imp-aviso {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--chip);
+}
+.imp-aviso.ok { background: var(--ok-bg); color: var(--ok); }
+.imp-subir { margin-bottom: 18px; }
+.imp-elegir { position: relative; }
+/* El input real, invisible encima del botón: tocar el botón abre el selector de archivos. */
+.imp-archivo { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.imp-lista { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
+.imp-trabajo {
+    padding: 14px;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+.imp-trabajo.estado-impreso { background: var(--ok-bg); border-color: transparent; }
+.imp-cabeza { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.imp-nombre { font-weight: 600; overflow-wrap: anywhere; }
+.imp-total { flex: none; font-family: var(--font-display); font-size: 1.2rem; color: var(--accent); }
+.imp-detalle { margin: 4px 0 0; font-size: .88rem; color: var(--muted); }
+.imp-acciones { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.imp-acciones form { margin: 0; }
+.imp-acciones a.btn-chico { text-decoration: none; }
+.imp-estado { margin: 10px 0 0; font-weight: 600; }
+.imp-estado.ok { color: var(--ok); }
+.imp-estado.mal { color: var(--warn); }
+.imp-mandar { margin-top: 4px; }
+.imp-volver { display: inline-block; margin-bottom: 6px; }
+.imp-titulo { overflow-wrap: anywhere; }
+.imp-opciones { display: grid; gap: 16px; }
+.imp-grupo { margin: 0; padding: 0; border: 0; }
+.imp-radio { display: inline-flex; align-items: center; gap: 6px; margin: 0 18px 8px 2px; }
+.imp-copias { display: flex; align-items: center; justify-content: space-between; }
+.imp-copias .campo-label { margin: 0; }
+.imp-cuenta {
+    padding: 14px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+.imp-cuenta p { margin: 0; display: flex; align-items: baseline; gap: 6px; }
+.imp-cuenta-total { margin-left: auto; font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); }

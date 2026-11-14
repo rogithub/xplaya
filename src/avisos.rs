@@ -202,7 +202,7 @@ fn formato_telefono(tel: &str) -> String {
 
 /// Codifica para el `?text=` de wa.me (como `encodeURIComponent` en JS): deja letras, números
 /// y `-_.~`, y todo lo demás va como `%XX` de sus bytes UTF-8.
-fn codificar_url(texto: &str) -> String {
+pub fn codificar_url(texto: &str) -> String {
     let mut salida = String::with_capacity(texto.len() * 3);
     for b in texto.bytes() {
         if b.is_ascii_alphanumeric() || b"-_.~".contains(&b) {

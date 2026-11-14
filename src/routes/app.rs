@@ -11,7 +11,7 @@
 //!   como en el paso 2. Se queda mientras haya clientes sin celular ligado.
 
 use axum::{
-    extract::{Form, Path, Query, State},
+    extract::{DefaultBodyLimit, Form, Path, Query, State},
     http::{header, HeaderMap, HeaderValue, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
@@ -26,7 +26,8 @@ use webauthn_rs::prelude::PublicKeyCredential;
 
 use crate::{
     db,
-    routes::{alta, alta::error_json, cuenta, kiosko, monedero, notificaciones, tienda},
+    impresion,
+    routes::{alta, alta::error_json, cuenta, imprimir, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -53,6 +54,13 @@ pub fn router() -> Router<AppState> {
         .route("/tienda/pedido", post(tienda::crear_pedido))
         .route("/tienda/{nid}", get(tienda::detalle))
         .route("/carrito", get(tienda::carrito))
+        .route("/imprimir", get(imprimir::lista))
+        // El PDF puede pesar hasta 20 MB (+ lo del formulario); el resto de la app, 2 MB.
+        .route("/imprimir", post(imprimir::subir).layer(DefaultBodyLimit::max(impresion::MAX_BYTES + 512 * 1024)))
+        .route("/imprimir/mandar", post(imprimir::mandar))
+        .route("/imprimir/{id}", get(imprimir::trabajo).post(imprimir::guardar))
+        .route("/imprimir/{id}/cuenta", get(imprimir::cuenta))
+        .route("/imprimir/{id}/quitar", post(imprimir::quitar))
         .route("/cuenta/eventos", get(cuenta::eventos))
         .route("/cuenta/venta/{venta_id}", get(cuenta::venta))
         .route("/kiosko", get(kiosko::pantalla))

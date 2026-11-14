@@ -593,3 +593,65 @@ document.addEventListener('alpine:init', () => {
         cantidad(n) { return Number(n).toLocaleString('es-MX', { maximumFractionDigits: 3 }); },
     }));
 });
+
+// "Imprime tú solito" (templates/app/imprimir*.html, routes/imprimir.rs).
+document.addEventListener('alpine:init', () => {
+    // Subir el PDF: el tamaño se revisa antes de mandarlo (el servidor lo revisa otra vez).
+    Alpine.data('subirPdf', (maxMb) => ({
+        ocupado: false,
+        error: '',
+
+        elegido(e) {
+            this.error = '';
+            const archivo = e.target.files[0];
+            if (!archivo) return;
+            if (archivo.size > maxMb * 1024 * 1024) {
+                this.error = `Tu PDF pesa más de ${maxMb} MB. Pídelo en caja.`;
+                e.target.value = '';
+                return;
+            }
+            e.target.form.requestSubmit();
+        },
+
+        enviar(e) {
+            if (this.error) { e.preventDefault(); return; }
+            this.ocupado = true;
+        },
+    }));
+
+    // Opciones de un trabajo: la cuenta la saca el servidor (impresion::calcular), la misma que
+    // se guarda, para que nunca difiera de lo que se cobra.
+    Alpine.data('opcionesImpresion', (inicial) => ({
+        modo: inicial.paginas ? 'algunas' : 'todas',
+        paginas: inicial.paginas.replaceAll(',', ', '),
+        copias: inicial.copias,
+        doble: inicial.doble,
+        caras: inicial.caras,
+        hojas: inicial.hojas,
+        total: inicial.total,
+        error: '',
+        ocupado: false,
+        pedido: 0,
+
+        async calcular() {
+            const n = ++this.pedido;          // solo vale la respuesta del último cambio
+            const q = new URLSearchParams({
+                paginas: this.modo === 'todas' ? '' : this.paginas,
+                copias: this.copias,
+            });
+            if (this.doble) q.set('doble', '1');
+            this.ocupado = true;
+            try {
+                const r = await fetch(`/imprimir/${inicial.id}/cuenta?${q}`, { cache: 'no-store' });
+                const c = await r.json();
+                if (n !== this.pedido) return;
+                this.error = c.error || '';
+                if (!c.error) Object.assign(this, { caras: c.caras, hojas: c.hojas, total: c.total });
+            } catch {
+                if (n === this.pedido) this.error = 'Sin conexión. Intenta otra vez.';
+            } finally {
+                if (n === this.pedido) this.ocupado = false;
+            }
+        },
+    }));
+});

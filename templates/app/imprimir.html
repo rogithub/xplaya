@@ -1,0 +1,88 @@
+{% extends "app/base.html" %}
+{#
+  "Imprime tú solito" (routes/imprimir.rs): sube un PDF, lo deja preparado y, en la tienda
+  (después de escanear el QR del kiosko: `en_tienda`), lo manda a la caja. Mientras algo está en
+  la caja o imprimiéndose, la página se recarga sola cada 10 s.
+#}
+{% block title %}Imprime tú solito — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{# Dentro de <head>: la base de la app no tiene bloque head. #}
+{% block meta_description %}{% if en_curso %}<meta http-equiv="refresh" content="10">{% endif %}{% endblock %}
+{% block content %}
+
+<header class="app-top">
+    <h1 class="app-title">Imprime tú solito</h1>
+</header>
+<p class="imp-intro">Sin hacer fila. <strong>PDF en blanco y negro, tamaño carta</strong>, $1 por cara.
+    Fotos, color u otros tamaños: pídelos en caja.</p>
+
+{% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+{% if enviados %}
+<p class="imp-aviso ok" role="status">✅ Mandamos {{ enviados }} trabajo{% if enviados != 1 %}s{% endif %} a la caja. En cuanto lo autoricen, se imprime.</p>
+{% endif %}
+
+{% if en_tienda %}
+<p class="imp-aviso" role="status">📍 <strong>Estás en la papelería.</strong> Ya puedes mandar tus trabajos a imprimir.</p>
+{% endif %}
+
+{# Subir: el archivo se revisa aquí (tamaño) y en el servidor (páginas, que sea PDF). #}
+<form method="post" action="/imprimir" enctype="multipart/form-data" class="imp-subir"
+      x-data="subirPdf({{ max_mb }})" @submit="enviar($event)">
+    <label class="btn-qr imp-elegir">
+        📄 <span x-text="ocupado ? 'Subiendo…' : 'Elegir PDF'">Elegir PDF</span>
+        <input type="file" name="archivo" accept="application/pdf,.pdf" required
+               @change="elegido($event)" :disabled="ocupado" class="imp-archivo">
+    </label>
+    <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+    <p class="inicio-nota">Hasta {{ max_mb }} MB y {{ max_hojas }} hojas por trabajo. Se borra a los 7 días.</p>
+</form>
+
+{% if trabajos %}
+<ul class="imp-lista">
+    {% for t in trabajos %}
+    <li class="imp-trabajo estado-{{ t.estado }}">
+        <div class="imp-cabeza">
+            <span class="imp-nombre">📄 {{ t.archivo }}</span>
+            <strong class="imp-total">${{ t.total }}</strong>
+        </div>
+        <p class="imp-detalle">
+            {% if t.paginas %}Páginas {{ t.paginas | replace(",", ", ") }}{% else %}Todo ({{ t.paginas_pdf }} pág.){% endif %}
+            · {{ t.copias }} copia{% if t.copias != 1 %}s{% endif %}
+            · {% if t.doble_cara %}doble cara{% else %}una cara{% endif %}
+            · {{ t.hojas }} hoja{% if t.hojas != 1 %}s{% endif %}
+        </p>
+        {% if t.estado == "preparado" %}
+        <div class="imp-acciones">
+            <a href="/imprimir/{{ t.id }}" class="btn-chico">Cambiar</a>
+            <form method="post" action="/imprimir/{{ t.id }}/quitar">
+                <button type="submit" class="btn-link">Quitar</button>
+            </form>
+        </div>
+        {% elif t.estado == "por_autorizar" %}
+        <p class="imp-estado">⏳ En la caja: esperando que lo autoricen.</p>
+        {% elif t.estado == "imprimiendo" %}
+        <p class="imp-estado">🖨️ Imprimiendo…</p>
+        {% elif t.estado == "impreso" %}
+        <p class="imp-estado ok">✅ Listo. En un momento te llevamos tus hojas y lo pagas ahí.</p>
+        {% elif t.estado == "rechazado" %}
+        <p class="imp-estado mal">La caja no lo pudo imprimir. Pregunta en caja.</p>
+        <form method="post" action="/imprimir/{{ t.id }}/quitar"><button type="submit" class="btn-link">Quitar</button></form>
+        {% elif t.estado == "error" %}
+        <p class="imp-estado mal">Hubo un problema al imprimir. Pregunta en caja.</p>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if preparados %}
+    {% if en_tienda %}
+    <form method="post" action="/imprimir/mandar">
+        <button type="submit" class="btn-qr imp-mandar">🖨️ Mandar a imprimir ({{ preparados }})</button>
+    </form>
+    {% else %}
+    <p class="imp-aviso">📍 Al llegar a la papelería, <strong>escanea el QR de la pantalla</strong> con la cámara de tu celular para mandarlos a imprimir.</p>
+    {% endif %}
+{% endif %}
+
+{% endblock %}

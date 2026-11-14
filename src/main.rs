@@ -11,8 +11,10 @@ mod caja;
 mod config;
 mod db;
 mod estaticos;
+mod impresion;
 mod kiosko;
 mod middleware;
+mod minio;
 mod models;
 mod passkeys;
 mod push;
@@ -40,6 +42,11 @@ pub struct AppState {
     pub avisos: avisos::Avisos,
     /// La cuenta de la caja en vivo para la app del cliente (`caja.rs`, `routes/cuenta.rs`).
     pub cajas: Arc<caja::Cajas>,
+    /// MinIO del autoservicio de impresión (`minio.rs`). `None`: "Imprime tú solito" apagado.
+    pub minio: Option<minio::Minio>,
+    /// Clientes que escanearon el QR del kiosko en los últimos 30 min (por id de cliente): pueden
+    /// mandar sus trabajos de impresión a la caja (`routes/imprimir.rs`).
+    pub en_tienda: Arc<passkeys::Pendientes<()>>,
 }
 
 #[tokio::main]
@@ -78,6 +85,12 @@ async fn main() {
     // La app la usa para suscribirse; sin llave (vacía) no ofrece notificaciones.
     tmpl.add_global("vapid_publica", vapid.as_ref().map(|v| v.publica.clone()).unwrap_or_default());
     let avisos = avisos::Avisos::conectar(&cfg).await;
+    let minio = minio::Minio::desde_config(&cfg);
+    if minio.is_none() {
+        tracing::info!("imprimir: sin MINIO_USUARIO, autoservicio de impresión apagado");
+    }
+    // La pestaña "Imprimir" de la app solo existe con MinIO.
+    tmpl.add_global("imprimir_activo", minio.is_some());
     let state = AppState {
         tmpl,
         config: cfg,
@@ -91,11 +104,15 @@ async fn main() {
         vapid,
         avisos,
         cajas: Arc::new(caja::Cajas::new()),
+        minio,
+        en_tienda: Arc::new(passkeys::Pendientes::new(Duration::from_secs(30 * 60))),
     };
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());
     // La cuenta de la caja en vivo (NATS caja.cuenta).
     caja::vigilar(state.clone());
+    // Borra los PDFs del autoservicio de impresión a los 7 días.
+    routes::imprimir::limpiar(state.clone());
 
     let site = Router::new()
         .route("/", get(routes::productos::lista))

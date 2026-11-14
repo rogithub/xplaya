@@ -4,6 +4,43 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## "Imprime tú solito": autoservicio de impresión en la app, paso 2 (2026-11-14)
+
+El cliente con la app sube **un PDF** (b/n, carta), elige páginas, copias y una cara / doble cara,
+y ve el total: **$1 por cara impresa** (la doble cara solo ahorra papel). El trabajo queda
+`preparado`. En la tienda escanea el QR del kiosko y "Mandar a imprimir" lo pasa a la caja
+(`por_autorizar`). La caja lo autoriza en el POS e imprime (pasos 3 y 4, pendientes). Plan
+completo en `ROADMAP.md`; tabla `TrabajosImpresion` y decisión en el repo del POS.
+
+- `src/impresion.rs` — las cuentas, sin BD ni red: `calcular` (rango "1-3, 5" ordenado y sin
+  repetir, caras, hojas, total, topes de 100 hojas y 50 copias), `contar_paginas` (lopdf; rechaza
+  lo que no es PDF y los PDF con contraseña), `nombre_archivo`. Pruebas al final.
+- `src/minio.rs` — cliente S3 mínimo con la firma SigV4 a mano (como imagina): subir, bajar,
+  borrar en `papeleria-impresiones`. Prueba contra el MinIO de desarrollo:
+  `cargo test minio -- --ignored`.
+- `src/db/impresiones.rs` — precio de la cara (producto de la primera impresora de
+  `AUTOSERVICIO_IMPRESORAS`), crear, listar, cambiar opciones (solo `preparado`), quitar, mandar,
+  vencidos. Fechas en hora de la tienda.
+- `src/routes/imprimir.rs` — `/imprimir` (lista y subir; límite de cuerpo de 20.5 MB solo en esa
+  ruta), `/imprimir/{id}` (opciones), `/imprimir/{id}/cuenta` (la cuenta al instante, la misma que
+  se guarda), `/imprimir/{id}/quitar`, `/imprimir/mandar` (solo "en la tienda") y `limpiar` (cada
+  hora: borra los PDF de 7 días y marca `vencido`).
+- `src/routes/kiosko.rs` — `escaneo`: con sesión (y MinIO) el QR marca al cliente "en la tienda"
+  30 min (`AppState::en_tienda`) y lo lleva a `/imprimir`; sin sesión, el alta de siempre.
+- `templates/app/imprimir.html`, `imprimir_trabajo.html`, pestaña 🖨️ Imprimir en `nav.html` (solo
+  con MinIO, global `imprimir_activo`), `subirPdf` y `opcionesImpresion` en `app.js`, `.imp-*` en
+  `app.css`. Mientras algo está en la caja, la lista se recarga cada 10 s.
+- Config: `MINIO_ENDPOINT`, `MINIO_USUARIO`, `MINIO_PASSWORD`. **Sin usuario todo esto está apagado**,
+  y así se queda en producción hasta los pasos 3 y 4.
+
+Probado en Chromium (Pixel 7) contra la BD y el MinIO de desarrollo: archivo que no es PDF,
+subir, página inexistente (botón deshabilitado), 3 copias a doble cara, mandar sin QR (rechazado),
+QR del kiosko → "Estás en la papelería" → mandar (`por_autorizar` en la BD, PDF en MinIO), quitar
+(fila y PDF borrados), sin sesión → portada, y la limpieza de 7 días (estado `vencido`, PDF
+borrado). Datos de prueba borrados.
+
+---
+
 ## Kiosko: la app destacada, ficha de tienda de apps y en la vitrina (2026-11-14)
 
 "Instala nuestra app" era un cuadro más del menú, y casi nadie toca el kiosko. Tres cambios:

@@ -184,11 +184,12 @@ omisión, rangos de páginas, copias, doble cara y `print-scaling` fit):
 **Límites:** 20 MB y 100 hojas por trabajo; el PDF se borra a los 7 días (también si nunca se mandó).
 
 **Pasos:**
-- ⬜ **1. Datos (repo del POS):** tabla `TrabajosImpresion`, impresoras del autoservicio en
+- ✅ **1. Datos (repo del POS):** tabla `TrabajosImpresion`, impresoras del autoservicio en
   `Settings`, `OrigenPedido.Autoservicio = 2`. SQL para producción.
-- ⬜ **2. App (xplaya):** subir, elegir, total, preparado; mandar con el QR del kiosko. Escribir en
-  MinIO (bucket `papeleria-impresiones`) pide un usuario de MinIO + SealedSecret (hoy xplaya solo
-  arma URLs de lectura).
+- ✅ **2. App (xplaya, 2026-11-14):** subir, elegir, total, preparado; mandar con el QR del kiosko
+  (`routes/imprimir.rs`). MinIO: bucket, usuario y SealedSecret `xplaya-minio` listos; el respaldo a
+  R2 omite el bucket. **Se prende en producción hasta tener los pasos 3 y 4** (si no, los trabajos
+  llegarían a una caja que no los ve): falta poner `MINIO_USUARIO`/`MINIO_PASSWORD` en el deployment.
 - ⬜ **3. POS:** aviso flotante con [K1] [K2] [Rechazar] → NATS `impresion.autorizada`.
 - ⬜ **4. Imprimir (xplaya):** IPP, esperar el fin, pedido, aviso al cliente, Loki. Permisos NATS.
 - ⬜ **5. Cobrar:** ya existe (Pedidos → Vender).

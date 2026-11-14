@@ -32,6 +32,11 @@ pub struct Config {
     pub nats_url: String,
     pub nats_usuario: String,
     pub nats_password: String,
+    /// MinIO del autoservicio de impresión (`minio.rs`), usuario `xplaya-impresiones`: solo el
+    /// bucket `papeleria-impresiones`. Sin usuario, "Imprime tú solito" no aparece en la app.
+    pub minio_endpoint: String,
+    pub minio_usuario: String,
+    pub minio_password: String,
 }
 
 impl Config {
@@ -67,6 +72,10 @@ impl Config {
                 .unwrap_or_else(|_| "nats://nats.nats.svc.cluster.local:4222".to_string()),
             nats_usuario: std::env::var("NATS_USUARIO").unwrap_or_default().trim().to_string(),
             nats_password: std::env::var("NATS_PASSWORD").unwrap_or_default().trim().to_string(),
+            minio_endpoint: std::env::var("MINIO_ENDPOINT")
+                .unwrap_or_else(|_| "http://minio.minio-system.svc.cluster.local:9000".to_string()),
+            minio_usuario: std::env::var("MINIO_USUARIO").unwrap_or_default().trim().to_string(),
+            minio_password: std::env::var("MINIO_PASSWORD").unwrap_or_default().trim().to_string(),
         }
     }
 

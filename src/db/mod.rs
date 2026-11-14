@@ -5,6 +5,7 @@ pub mod altas;
 pub mod celulares;
 pub mod notificaciones;
 pub mod kiosko;
+pub mod impresiones;
 pub mod settings;
 pub mod short_urls;
 // pub mod visitas;     // Fase 7

@@ -1,0 +1,68 @@
+{% extends "app/base.html" %}
+{#
+  Opciones de un trabajo de "Imprime tú solito" (routes/imprimir.rs): páginas, copias y una cara /
+  doble cara. La cuenta se pide al servidor mientras cambia algo (`/imprimir/{id}/cuenta`, la
+  misma de `impresion::calcular` que se guarda). Solo se cambia mientras está `preparado`.
+  Lógica en `opcionesImpresion` (app.js).
+#}
+{% block title %}{{ trabajo.archivo }} — Imprime tú solito{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<header class="app-top">
+    <a href="/imprimir" class="btn-link imp-volver">← Mis impresiones</a>
+    <h1 class="app-title imp-titulo">📄 {{ trabajo.archivo }}</h1>
+</header>
+<p class="imp-intro">Tu PDF tiene <strong>{{ trabajo.paginas_pdf }} página{% if trabajo.paginas_pdf != 1 %}s{% endif %}</strong>. Se imprime en blanco y negro, tamaño carta.</p>
+
+{% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+
+{% if trabajo.estado == "preparado" %}
+<form method="post" action="/imprimir/{{ trabajo.id }}" class="imp-opciones"
+      x-data='opcionesImpresion({{ {"id": trabajo.id, "paginas": trabajo.paginas, "copias": trabajo.copias, "doble": trabajo.doble_cara, "caras": trabajo.caras, "hojas": trabajo.hojas, "total": trabajo.total} | tojson }})'
+      @submit="if (error) $event.preventDefault()">
+
+    <fieldset class="imp-grupo">
+        <legend class="campo-label">Páginas</legend>
+        <label class="imp-radio"><input type="radio" value="todas" x-model="modo" @change="calcular()"> Todas</label>
+        <label class="imp-radio"><input type="radio" value="algunas" x-model="modo" @change="calcular(); $nextTick(() => $refs.paginas.focus())"> Solo algunas</label>
+        <input type="text" name="paginas" x-ref="paginas" x-show="modo === 'algunas'" x-model="paginas"
+               :disabled="modo !== 'algunas'"
+               @input.debounce.300ms="calcular()" class="campo" inputmode="numeric"
+               placeholder="Por ejemplo: 1-3, 5" autocomplete="off">
+        {# Con "Todas", el campo va vacío para que el servidor lo tome como todas. #}
+        <input type="hidden" name="paginas" value="" :disabled="modo !== 'todas'">
+    </fieldset>
+
+    <div class="imp-grupo imp-copias">
+        <span class="campo-label">Copias</span>
+        <div class="carrito-cant">
+            <button type="button" @click="copias = Math.max(1, copias - 1); calcular()" aria-label="Una copia menos">−</button>
+            <span x-text="copias"></span>
+            <button type="button" @click="copias = Math.min({{ max_copias }}, copias + 1); calcular()" aria-label="Una copia más">+</button>
+        </div>
+        <input type="hidden" name="copias" :value="copias">
+    </div>
+
+    <label class="check imp-grupo">
+        <input type="checkbox" name="doble" value="1" x-model="doble" @change="calcular()">
+        <span><strong>Doble cara</strong> (por los dos lados): mismo precio, menos papel.</span>
+    </label>
+
+    <div class="imp-cuenta" aria-live="polite">
+        <template x-if="!error">
+            <p><span x-text="caras * copias === 1 ? '1 cara' : (caras * copias) + ' caras'"></span> ·
+               <span x-text="hojas === 1 ? '1 hoja' : hojas + ' hojas'"></span>
+               <strong class="imp-cuenta-total" x-text="'$' + total"></strong></p>
+        </template>
+        <p class="alerta" x-show="error" x-text="error" x-cloak></p>
+    </div>
+
+    <button type="submit" class="btn-qr" :disabled="!!error || ocupado">Listo</button>
+</form>
+{% else %}
+<p class="imp-aviso">Este trabajo ya está en la caja; no se puede cambiar.</p>
+<a href="/imprimir" class="btn-sec btn-enlace">Ver mis impresiones</a>
+{% endif %}
+
+{% endblock %}
