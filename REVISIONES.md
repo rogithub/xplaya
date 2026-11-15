@@ -4,6 +4,14 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Aviso de privacidad: datos de Google (2026-11-14)
+
+- `templates/pages/terminos.html` — "Datos recabados" suma lo que se guarda al entrar con Google;
+  la sección lleva `id="privacidad"`, que es la URL del aviso en Google Cloud
+  (`xplaya.com/terminos#privacidad`).
+
+---
+
 ## Entrar con Google si el celular no puede crear passkey (2026-11-14)
 
 Un Android sin PIN ni bloqueo de pantalla no puede crear passkeys. En el alta, si la huella falla
