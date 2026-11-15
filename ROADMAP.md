@@ -167,11 +167,11 @@ fila del celular ligado (sigue la regla de un celular por cliente).
 - ✅ **1. Google Cloud (a mano, 2026-11-14):** cliente OAuth y pantalla de consentimiento (solo `openid`).
 - ✅ **2. Realm `xplaya-dev` (2026-11-14):** Google como proveedor, cliente `xplaya`, ir directo a Google
   (`kc_idp_hint`). Se desarrolla contra la URL de Tailscale.
-- ✅ **3. Datos (repo del POS, en dev 2026-11-14; producción con el paso 5):** `GoogleSub` en `ClienteCelulares`; `CredentialId`/`Passkey`
+- ✅ **3. Datos (repo del POS, 2026-11-14):** `GoogleSub` en `ClienteCelulares`; `CredentialId`/`Passkey`
   pasan a opcionales.
 - ✅ **4. xplaya (2026-11-14, probado en dev):** botón en el alta (si falla la passkey) y en la entrada, ruta de regreso que
   valida el token, ligar y crear sesión como con passkey.
-- ⬜ **5. Producción:** `auth.xplaya.com` por el túnel solo con las rutas del realm (fase 3 de
+- ✅ **5. Producción (2026-11-14):** `auth.xplaya.com` por el túnel solo con las rutas del realm (fase 3 de
   Keycloak), realm `xplaya`, secret en SealedSecret.
 
 ### Autoservicio de impresión: "Imprime tú solito" (plan acordado 2026-11-14)
