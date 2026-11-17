@@ -315,6 +315,38 @@ a { color: var(--accent); }
 
 .hist { margin-top: 28px; }
 
+/* Monedero: renglones que abren el historial, la hoja de pago y los términos. */
+.mon-menu {
+    margin-top: 22px; display: grid; border: 1px solid var(--line); border-radius: 16px;
+    background: var(--surface); overflow: hidden;
+}
+.mon-fila {
+    display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px;
+    border: 0; background: none; color: var(--ink); font: inherit; text-align: left;
+    text-decoration: none; cursor: pointer;
+}
+.mon-fila + .mon-fila { border-top: 1px solid var(--line); }
+.mon-fila:active { background: var(--chip); }
+.mon-fila-ico { flex: none; font-size: 1.4rem; }
+.mon-fila-txt { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.mon-fila-txt small { color: var(--muted); font-size: .85rem; }
+.mon-fila-flecha { flex: none; font-size: 1.5rem; color: var(--muted); }
+
+/* Hoja de pago por transferencia (sobre .qr-box): cada dato con su "Copiar". */
+.qr-box.pago-box { text-align: left; }
+.pago-box .qr-name { text-align: center; }
+.pago-datos { margin: 12px 0 4px; }
+.pago-dato {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px;
+    padding: 10px 0; border-bottom: 1px solid #E3E8E6;
+}
+.pago-dato dt { grid-column: 1; font-size: .8rem; color: #56635F; }
+.pago-dato dd { grid-column: 1; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.pago-dato button { grid-column: 2; grid-row: 1 / span 2; min-width: 88px; }
+.pago-clabe { font-family: ui-monospace, monospace; font-size: .95rem; white-space: nowrap; }
+.pago-box .btn-enlace { margin-bottom: 8px; }
+.pago-box .qr-hint, .pago-box .btn-enlace { text-align: center; }
+
 .sec-title {
     margin: 0 2px 10px;
     font-family: var(--font-display);

@@ -19,9 +19,11 @@
 {% block manifest %}{% if con_sesion %}<link rel="manifest" href="/manifest.webmanifest">{% else %}<link rel="manifest" href="/monedero/{{ cliente_id }}/manifest.webmanifest">{% endif %}{% endblock %}
 {% block content %}
 
-{# x-data: estado de Alpine para abrir/cerrar el QR a pantalla completa. #}
-<div x-data="{ qr: false }" @keydown.escape.window="qr = false">
+{# x-data (monederoPantalla en app.js): el QR a pantalla completa, la hoja de pago por
+   transferencia y la vista del historial (en la misma página, con "← Monedero"). #}
+<div x-data="monederoPantalla()" @keydown.escape.window="qr = false; pago = false">
 
+<div x-show="vista === 'inicio'">
     <header class="app-top">
         <h1 class="app-title">Mis tarjetas</h1>
     </header>
@@ -104,9 +106,48 @@
     </p>
     {% endif %}
 
+    {# ── Lo demás, en renglones que abren su pantalla u hoja ── #}
+    <nav class="mon-menu" aria-label="Más del monedero">
+        <button type="button" class="mon-fila" @click="verHistorial()">
+            <span class="mon-fila-ico" aria-hidden="true">🧾</span>
+            <span class="mon-fila-txt">
+                <strong>Historial</strong>
+                {% if cliente.historial %}<small>Último: +${{ cliente.historial[0].dinero_generado }}, {{ cliente.historial[0].fecha }}</small>
+                {% else %}<small>Aún no tienes compras registradas</small>{% endif %}
+            </span>
+            <span class="mon-fila-flecha" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="mon-fila" @click="pago = true">
+            <span class="mon-fila-ico" aria-hidden="true">💸</span>
+            <span class="mon-fila-txt"><strong>Pagar por transferencia</strong><small>Copia la CLABE y paga desde tu banco</small></span>
+            <span class="mon-fila-flecha" aria-hidden="true">›</span>
+        </button>
+        <a class="mon-fila" href="{{ site_url }}/terminos">
+            <span class="mon-fila-ico" aria-hidden="true">📄</span>
+            <span class="mon-fila-txt"><strong>Términos del monedero</strong></span>
+            <span class="mon-fila-flecha" aria-hidden="true">›</span>
+        </a>
+    </nav>
+
+    <footer class="app-foot">
+        <a href="{{ site_url }}/">xplaya.com</a>
+        {% if con_sesion %}
+        {# Cierra la sesión en este celular; vuelve a entrar con su huella. #}
+        <form method="post" action="/salir" class="form-salir">
+            <button type="submit" class="btn-link">Salir</button>
+        </form>
+        {% endif %}
+    </footer>
+</div>
+
+{# ── Historial: su propia vista, con "← Monedero" para regresar ── #}
+<div x-show="vista === 'historial'" x-cloak>
+    <header class="app-top">
+        <button type="button" class="btn-link imp-volver" @click="vista = 'inicio'">← Monedero</button>
+        <h1 class="app-title">Historial</h1>
+    </header>
     {# ── Historial ── #}
-    <section class="hist" aria-labelledby="hist-titulo">
-        <h2 id="hist-titulo" class="sec-title">Historial</h2>
+    <section class="hist" aria-label="Historial del monedero">
         {% if cliente.historial %}
         <ul class="hist-list">
             {% for row in cliente.historial %}
@@ -140,16 +181,37 @@
         {% endif %}
     </section>
 
-    <footer class="app-foot">
-        <a href="{{ site_url }}/terminos">Términos del monedero</a>
-        <a href="{{ site_url }}/">xplaya.com</a>
-        {% if con_sesion %}
-        {# Cierra la sesión en este celular; vuelve a entrar con su huella. #}
-        <form method="post" action="/salir" class="form-salir">
-            <button type="submit" class="btn-link">Salir</button>
-        </form>
-        {% endif %}
-    </footer>
+</div>
+
+    {# ── Pagar por transferencia: cada dato con su botón de copiar ── #}
+    <div class="qr-sheet" x-show="pago" x-cloak x-transition.opacity
+         role="dialog" aria-modal="true" aria-labelledby="pago-titulo" @click="pago = false">
+        <div class="qr-box pago-box" @click.stop>
+            <p class="qr-name" id="pago-titulo">💸 Pagar por transferencia</p>
+            <dl class="pago-datos">
+                <div class="pago-dato">
+                    <dt>Beneficiario</dt>
+                    <dd>Rodrigo Damian Jimenez Garcia</dd>
+                    <button type="button" class="btn-chico" @click="copiar('nombre', 'Rodrigo Damian Jimenez Garcia')"
+                            x-text="copiado === 'nombre' ? '¡Copiado!' : 'Copiar'">Copiar</button>
+                </div>
+                <div class="pago-dato">
+                    <dt>CLABE</dt>
+                    <dd class="pago-clabe">722969070972068008</dd>
+                    <button type="button" class="btn-chico" @click="copiar('clabe', '722969070972068008')"
+                            x-text="copiado === 'clabe' ? '¡Copiado!' : 'Copiar'">Copiar</button>
+                </div>
+                <div class="pago-dato">
+                    <dt>Banco</dt>
+                    <dd>Mercado Pago</dd>
+                </div>
+            </dl>
+            <p class="qr-hint">Después de pagar, mándanos tu comprobante para apartar tu pedido.</p>
+            <a class="btn-qr btn-enlace" href="https://wa.me/524522018336?text=Hola%2C%20les%20mando%20mi%20comprobante%20de%20transferencia"
+               target="_blank" rel="noopener">Mandar comprobante por WhatsApp</a>
+            <button type="button" class="btn-close" @click="pago = false">Cerrar</button>
+        </div>
+    </div>
 
     {# ── QR a pantalla completa: fondo blanco para que el lector de caja lo lea bien. ── #}
     {% if qr_caja %}

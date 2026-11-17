@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Monedero: menú de renglones, historial aparte y pagar por transferencia (2026-11-17)
+
+La pantalla del monedero crecía hacia abajo con el historial. Ahora arriba queda lo de la caja
+(tarjeta y "Mostrar en caja") y lo demás va en renglones: **Historial** (su propia vista con
+"← Monedero", en la misma página), **Pagar por transferencia** (hoja con el beneficiario y la
+CLABE, cada uno con su botón "Copiar", el banco y "Mandar comprobante por WhatsApp") y
+**Términos del monedero**. La barra de abajo no cambia. Sin Dimo (nadie lo usa).
+
+- `templates/monedero/app.html` — los renglones, la vista del historial y la hoja de pago. Sirve
+  igual en la app y en xplaya.com/monedero/{id}.
+- `static/app/app.js` — `monederoPantalla` (QR, hoja de pago, vista, `copiar` con respaldo para
+  navegadores sin API de portapapeles).
+- `static/css/app.css` — `.mon-menu`, `.mon-fila`, `.pago-*`.
+
+Probado con el servidor local a 360 px: copiar el nombre y la CLABE (llegan al portapapeles),
+cerrar la hoja, abrir el historial y regresar.
+
+---
+
 ## "Imprime tú solito" sin QR: se manda desde donde esté y se ven los pasos (2026-11-17)
 
 El cliente ya no tiene que estar en la tienda: "Mandar a la papelería" pasa sus trabajos a la caja
