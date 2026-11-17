@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## "Imprime tú solito" sin QR: se manda desde donde esté y se ven los pasos (2026-11-17)
+
+El cliente ya no tiene que estar en la tienda: "Mandar a la papelería" pasa sus trabajos a la caja
+desde donde esté, como si los mandara por WhatsApp (la caja decide cuándo imprimirlos). Cada
+trabajo enseña en qué va: mandado → imprimiendo → listo → recogido. Va junto con el POS
+(Impresoras → Impresiones y "Dejar para después"): subir los dos.
+
+- `src/db/impresiones.rs` — `Trabajo::paso` (con pruebas): lo dejado para después o con error se
+  ve como "mandado"; listo / recogido sale del pedido (`de_cliente` trae su estatus: Nuevo = listo,
+  Pagado = pagado y pasa después, Entregado o borrado por el POS = recogido) y `fecha_impreso`.
+- `src/routes/imprimir.rs` — sin `en_tienda`; la lista ordenada (por mandar, listo, en camino,
+  recogido) y el botón dice qué archivos manda.
+- `templates/app/imprimir.html`, `templates/app/imprimir_renglon.html` (nuevo), `static/css/app.css`
+  — la línea de pasos (cabe en 360 px).
+- `src/routes/kiosko.rs`, `src/main.rs` — el QR del kiosko ya no marca "en la tienda" (vuelve a
+  ser solo el alta); fuera `AppState::en_tienda`. `templates/app/kiosko.html`, `static/app/app.js`
+  — sin el cuadro Imprimir.
+- `src/autoservicio.rs` — la notificación dice "Pasa por tus hojas a la papelería y págalas en caja."
+
+Probado con el servidor local y la BD de desarrollo (cliente de prueba con sesión, ya borrado):
+un trabajo en cada paso a 360 px y "Mandar a la papelería".
+
+---
+
 ## Kiosko: cuadro "Imprimir" (2026-11-17)
 
 El QR que prueba que el cliente está en la tienda solo salía en la ficha de la app y en la vitrina:

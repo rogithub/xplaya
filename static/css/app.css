@@ -570,9 +570,6 @@ a.btn-qr { text-decoration: none; }
     margin: 1.5vh 0 1vh;
 }
 .kiosko-sub { font-size: clamp(1.1rem, 1.8vw, 1.6rem); color: var(--muted); margin: 0 0 3vh; }
-.kiosko-pasos { margin: 0 0 3vh; padding-left: 1.4em; font-size: clamp(1.2rem, 2vw, 1.8rem); line-height: 1.35; }
-.kiosko-pasos li { margin-bottom: 1.6vh; }
-.kiosko-pasos li::marker { color: var(--accent); font-weight: 700; }
 .kiosko-qr-lado { display: grid; justify-items: center; gap: 2vh; }
 /* El QR siempre en blanco y negro para que cualquier cámara lo lea. */
 .kiosko-qr {
@@ -739,11 +736,6 @@ a.btn-qr { text-decoration: none; }
 .kiosko-cuadros button span { font-size: clamp(2rem, 3.4vw, 3.2rem); }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
 .kiosko-cuadros .cuadro-ancho { grid-column: 1 / -1; }
-/* Imprimir: a lo ancho, ícono a la izquierda y la explicación al lado. */
-.kiosko-cuadros .cuadro-imprimir { display: flex; align-items: center; justify-content: center; gap: 1.4vw; text-align: left; }
-.cuadro-imprimir-txt { display: grid; gap: .4vh; font-size: inherit; }
-.cuadro-imprimir-txt strong { font-size: clamp(1.4rem, 2.05vw, 2.2rem); font-weight: 600; }
-.cuadro-imprimir-txt small { font-family: var(--font-body); font-size: clamp(1rem, 1.35vw, 1.35rem); color: var(--muted); }
 
 /* La app, destacada como en una tienda de apps: el ícono de la app instalada (logo oficial), el
    nombre y "Obtener". Fondo oscuro de la marca para que se distinga de los demás cuadros. */
@@ -1210,7 +1202,6 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     background: var(--surface);
     border: 1px solid var(--line);
 }
-.imp-trabajo.estado-impreso { background: var(--ok-bg); border-color: transparent; }
 .imp-cabeza { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .imp-nombre { font-weight: 600; overflow-wrap: anywhere; }
 .imp-total { flex: none; font-family: var(--font-display); font-size: 1.2rem; color: var(--accent); }
@@ -1218,10 +1209,32 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .imp-acciones { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
 .imp-acciones form { margin: 0; }
 .imp-acciones a.btn-chico { text-decoration: none; }
-.imp-estado { margin: 10px 0 0; font-weight: 600; }
-.imp-estado.ok { color: var(--ok); }
-.imp-estado.mal { color: var(--warn); }
 .imp-mandar { margin-top: 4px; }
+.imp-mandar-form { margin-bottom: 18px; }
+.imp-mandar-que { margin-top: 6px; overflow-wrap: anywhere; }
+/* En qué va cada trabajo: mandado → imprimiendo → listo → recogido (Trabajo::paso). */
+.imp-pasos {
+    list-style: none; margin: 12px 0 6px; padding: 0; position: relative;
+    display: grid; grid-template-columns: repeat(4, 1fr); align-items: start;
+}
+.imp-pasos::before {   /* la línea que une los círculos, a la altura de su centro */
+    content: ""; position: absolute; top: 8px; left: 12.5%; right: 12.5%; height: 2px; background: var(--line);
+}
+.imp-pasos li {
+    position: relative; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: .72rem; color: var(--muted); text-align: center;
+}
+.imp-pasos li::before {
+    content: ""; flex: none; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%;
+    background: var(--surface); border: 2px solid var(--line);
+}
+.imp-pasos li.hecho::before { background: var(--accent); border-color: var(--accent); }
+.imp-pasos li.actual { color: var(--ink); font-weight: 700; }
+.imp-pasos li.actual:not(.hecho)::before { border: 5px solid var(--accent); }
+.imp-paso-txt { margin: 6px 0 0; }
+.imp-cuando { display: block; margin-top: 2px; font-size: .85rem; color: var(--muted); }
+.imp-trabajo.paso-3 { border-color: var(--accent); }
+.imp-trabajo.paso-4 { opacity: .75; }
 .imp-volver { display: inline-block; margin-bottom: 6px; }
 .imp-titulo { overflow-wrap: anywhere; }
 .imp-opciones { display: grid; gap: 16px; }

@@ -183,18 +183,18 @@ y negro, carta.** Lo demás (fotos, color, acomodos) se pide en caja o por Whats
 1. En la app (en casa o en la tienda) sube **un PDF**, elige páginas (todas o "1-3, 5"), copias y
    una cara / doble cara (por el lado largo). Ve el total: **$1 por cara impresa** (caras × copias;
    la doble cara solo ahorra papel). El trabajo queda **preparado**.
-2. En la tienda escanea **el QR del kiosko** (firmado, cambia cada 30 s: prueba que está ahí). Si
-   tiene sesión y trabajos preparados: "Estás en la papelería · ¿Mandar tus trabajos? [Imprimir]".
-   Si no tiene la app, el QR sigue al alta como hoy. Si sube el PDF estando en la tienda, el mismo
-   escaneo lo manda.
-3. **En el POS**, aviso flotante: "Nayelli · 14 caras · $14 [K1] [K2] [Rechazar]". La cajera elige
-   impresora; guarda quién autorizó.
+2. Toca **"Mandar a la papelería"** desde donde esté, como si lo mandara por WhatsApp (sin QR
+   del kiosko desde el 2026-11-17: la caja decide cuándo imprimir).
+3. **En el POS**, aviso flotante: "Nayelli · 14 caras · $14 [K1] [K2] [Dejar para después]". La
+   cajera elige impresora; guarda quién autorizó. Lo dejado para después, con error o ya impreso
+   sigue en **Impresoras → Impresiones** (imprimir, descargar el PDF, borrar).
 4. **xplaya imprime** por IPP en esa Kyocera (páginas, copias, caras, ajustar a carta), espera a
    que termine y entonces crea el **pedido a nombre del cliente** (origen 2 = Autoservicio,
    producto b/n de esa impresora × caras); registra el trabajo en Loki (`job="papeleria-pc"`,
    `tipo=impresion`). Si falla: estado `error`, el aviso del POS lo dice y se puede mandar a la otra.
-5. **El cliente no va a la impresora:** la cajera le lleva sus hojas y le cobra el pedido ahí
-   (Pedidos → Vender, ya existe). La app le dice "Listo, en un momento te llevamos tus hojas".
+5. **El cliente pasa por sus hojas** y se cobra el pedido (Pedidos → Vender, ya existe). En la app
+   cada trabajo enseña sus pasos: mandado → imprimiendo → listo → recogido (recogido = el pedido
+   se cobró y se entregó).
 
 **Impresoras** (consultadas por IPP el 2026-11-14; las dos aceptan `application/pdf`, carta por
 omisión, rangos de páginas, copias, doble cara y `print-scaling` fit):
@@ -217,7 +217,10 @@ omisión, rangos de páginas, copias, doble cara y `print-scaling` fit):
 - ✅ **4. Imprimir (xplaya, 2026-11-14):** `src/autoservicio.rs` + `src/ipp.rs`: toma el trabajo,
   IPP a la Kyocera, espera el fin, pedido, aviso al cliente, Loki. Probado con hojas de verdad en
   K1 (una cara, página 1) y K2 (doble cara). Permisos NATS en k3s-manifests.
-- ⬜ **Prueba en producción** de punta a punta: celular → QR del kiosko → caja → impresora → cobrar.
+- ✅ **Sin QR (2026-11-17):** se manda desde donde esté; pasos en la app; Impresoras → Impresiones
+  en el POS (pendientes y ya impresos, descargar PDF, borrar); "Dejar para después" en lugar de
+  "Rechazar"; sin el cuadro Imprimir del kiosko.
+- ⬜ **Prueba en producción** de punta a punta: celular → caja → impresora → recoger y cobrar.
 - ⬜ **5. Cobrar:** ya existe (Pedidos → Vender).
 - Después: desactivar el botón de una impresora apagada (su `printer-state` por IPP).
 - ⬜ **Siguiente tipo de trabajo: copia de INE / credencial (b/n).** Cuando el autoservicio de PDF

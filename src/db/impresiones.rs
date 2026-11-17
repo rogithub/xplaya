@@ -1,8 +1,9 @@
 //! Trabajos del autoservicio de impresión (`TrabajosImpresion`, definida en el repo del POS).
 //!
-//! Estados: `preparado` (el cliente lo armó; la caja no lo ve) → `por_autorizar` (lo mandó desde
-//! la tienda) → `autorizado` (la caja eligió impresora, en el POS) → `imprimiendo` (xplaya lo tomó)
-//! → `impreso`; o `rechazado`, `error` y `vencido` (a los 7 días).
+//! Estados: `preparado` (el cliente lo armó; la caja no lo ve) → `por_autorizar` (lo mandó, desde
+//! donde esté) → `autorizado` (la caja eligió impresora, en el POS) → `imprimiendo` (xplaya lo
+//! tomó) → `impreso`; o `rechazado` (la caja lo dejó para después), `error` y `vencido` (a los 7
+//! días). La caja puede borrarlo desde Impresoras → Impresiones (pendiente o ya impreso).
 //! Las fechas van en hora de la tienda, como las del POS.
 
 use rust_decimal::Decimal;
@@ -29,9 +30,40 @@ pub struct Trabajo {
     pub precio_cara: Decimal,
     pub estado: String,
     pub error: Option<String>,
+    /// Solo en la lista del cliente (`de_cliente`): cuándo se imprimió y en qué va su pedido.
+    #[sqlx(default)]
+    pub fecha_impreso: Option<chrono::NaiveDateTime>,
+    #[sqlx(default)]
+    pub entrega: Option<String>,
+}
+
+/// En qué va un trabajo, como lo ve el cliente: la línea de pasos de su lista.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct Paso {
+    /// 0 = por mandar (sin línea de pasos), 1 = mandado, 2 = imprimiendo, 3 = listo, 4 = recogido.
+    pub numero: u8,
+    pub texto: &'static str,
 }
 
 impl Trabajo {
+    /// La caja ve "dejado para después" y "con error" como pendientes; el cliente, igual que
+    /// "mandado": ya está en la papelería y la caja lo resuelve. Listo/recogido sale de su pedido:
+    /// Nuevo = falta cobrar; Pagado = cobrado, pasa después; Entregado o borrado (así lo deja el
+    /// POS al cobrar y entregar) = recogido.
+    pub fn paso(&self) -> Paso {
+        let (numero, texto) = match self.estado.as_str() {
+            "preparado" => (0, "Revisa páginas y copias y mándalo a la papelería."),
+            "autorizado" | "imprimiendo" => (2, "Estamos imprimiendo tu trabajo."),
+            "impreso" => match self.entrega.as_deref() {
+                Some("listo") => (3, "Pasa por tus hojas a la papelería y págalas en caja."),
+                Some("pagado") => (3, "Ya está pagado. Pasa por tus hojas a la papelería."),
+                _ => (4, "Recogido. ¡Gracias!"),
+            },
+            _ => (1, "Ya lo tenemos. Te avisamos cuando esté impreso."),
+        };
+        Paso { numero, texto }
+    }
+
     pub fn total(&self) -> Decimal {
         Decimal::from(self.caras * self.copias) * self.precio_cara
     }
@@ -92,9 +124,16 @@ pub async fn crear(pool: &PgPool, t: &Nuevo<'_>) -> Result<(), sqlx::Error> {
 }
 
 /// Los trabajos vivos del cliente, el más nuevo primero.
+/// La lista del cliente, con cuándo se imprimió y en qué va su pedido (`Trabajo::paso`): el POS
+/// marca el pedido Pagado si el cliente pasa después, y lo borra al cobrarlo y entregarlo.
 pub async fn de_cliente(pool: &PgPool, cliente_id: Uuid) -> Result<Vec<Trabajo>, sqlx::Error> {
     sqlx::query_as(&format!(
-        "SELECT {COLUMNAS} FROM trabajosimpresion
+        "SELECT {COLUMNAS}, fechaimpreso AS fecha_impreso,
+                CASE WHEN estado <> 'impreso' THEN NULL
+                     ELSE CASE (SELECT p.estatus FROM pedidos p WHERE p.uid = trabajosimpresion.pedidouid)
+                               WHEN 0 THEN 'listo' WHEN 1 THEN 'pagado' ELSE 'recogido' END
+                END AS entrega
+           FROM trabajosimpresion
           WHERE clienteid = $1 AND estado <> 'vencido'
             AND fechacreado > (NOW() AT TIME ZONE 'America/Cancun') - make_interval(days => $2)
           ORDER BY fechacreado DESC"
@@ -154,8 +193,7 @@ pub async fn quitar(pool: &PgPool, id: Uuid, cliente_id: Uuid) -> Result<Option<
     .await
 }
 
-/// El cliente está en la tienda (escaneó el QR del kiosko): sus trabajos preparados pasan a la
-/// caja. Devuelve cuántos.
+/// Sus trabajos preparados pasan a la caja (desde donde esté). Devuelve cuántos.
 pub async fn mandar(pool: &PgPool, cliente_id: Uuid) -> Result<u64, sqlx::Error> {
     sqlx::query(
         "UPDATE trabajosimpresion
@@ -313,4 +351,49 @@ pub async fn nombre_cliente(pool: &PgPool, cliente_id: Uuid) -> Option<String> {
         .await
         .ok()
         .flatten()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn trabajo(estado: &str, entrega: Option<&str>) -> Trabajo {
+        Trabajo {
+            id: Uuid::nil(),
+            archivo: "tarea.pdf".into(),
+            objeto: String::new(),
+            paginas_pdf: 3,
+            paginas: String::new(),
+            caras: 3,
+            copias: 1,
+            doble_cara: false,
+            hojas: 3,
+            precio_cara: Decimal::ONE,
+            estado: estado.into(),
+            error: None,
+            fecha_impreso: None,
+            entrega: entrega.map(Into::into),
+        }
+    }
+
+    #[test]
+    fn pasos_del_cliente() {
+        assert_eq!(trabajo("preparado", None).paso().numero, 0);
+        // Lo que la caja deja para después o falla, el cliente lo ve como mandado.
+        for estado in ["por_autorizar", "rechazado", "error"] {
+            assert_eq!(trabajo(estado, None).paso().numero, 1, "{estado}");
+        }
+        assert_eq!(trabajo("autorizado", None).paso().numero, 2);
+        assert_eq!(trabajo("imprimiendo", None).paso().numero, 2);
+    }
+
+    #[test]
+    fn listo_o_recogido_segun_el_pedido() {
+        let listo = trabajo("impreso", Some("listo")).paso();
+        assert_eq!((listo.numero, listo.texto), (3, "Pasa por tus hojas a la papelería y págalas en caja."));
+        assert_eq!(trabajo("impreso", Some("pagado")).paso().numero, 3);
+        // Entregado, o el POS ya borró el pedido al cobrarlo y entregarlo.
+        assert_eq!(trabajo("impreso", Some("recogido")).paso().numero, 4);
+        assert_eq!(trabajo("impreso", None).paso().numero, 4);
+    }
 }

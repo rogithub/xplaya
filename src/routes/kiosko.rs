@@ -210,22 +210,10 @@ pub async fn whatsapp(
 // ── En el celular del cliente ───────────────────────────────────────────────
 
 /// Lo que abre el QR: si el código está vigente, empieza una visita de 15 minutos.
-pub async fn escaneo(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Path(codigo): Path<String>,
-) -> Result<Response, StatusCode> {
+pub async fn escaneo(State(state): State<AppState>, Path(codigo): Path<String>) -> Result<Response, StatusCode> {
     let (ventana, _) = kiosko::ventana_actual();
     if !kiosko::codigo_valido(&state.config.kiosko_token, &codigo, ventana) {
         return alta::pagina(&state, Origen::Kiosko(Uuid::nil()), context! { paso => "no_disponible" });
-    }
-    // Ya tiene la app en este celular: el QR prueba que está en la tienda. Con el autoservicio de
-    // impresión, eso le deja mandar sus trabajos a la caja (routes/imprimir.rs).
-    if state.minio.is_some()
-        && let Some(cliente_id) = crate::routes::app::cliente_sesion(&state, &headers).await
-    {
-        state.en_tienda.guardar_con(cliente_id, ());
-        return Ok(Redirect::to("/imprimir").into_response());
     }
     let visita = state.kiosko_visitas.guardar(());
     Ok(Redirect::to(&format!("/kiosko/s/{visita}")).into_response())

@@ -47,9 +47,6 @@ pub struct AppState {
     pub cajas: Arc<caja::Cajas>,
     /// MinIO del autoservicio de impresión (`minio.rs`). `None`: "Imprime tú solito" apagado.
     pub minio: Option<minio::Minio>,
-    /// Clientes que escanearon el QR del kiosko en los últimos 30 min (por id de cliente): pueden
-    /// mandar sus trabajos de impresión a la caja (`routes/imprimir.rs`).
-    pub en_tienda: Arc<passkeys::Pendientes<()>>,
     /// "Entrar con Google" por Keycloak (`google.rs`). `None`: el botón no aparece.
     pub google: Option<google::Google>,
     /// Idas a Google que esperan el regreso, con el `state` como id.
@@ -117,7 +114,6 @@ async fn main() {
         avisos,
         cajas: Arc::new(caja::Cajas::new()),
         minio,
-        en_tienda: Arc::new(passkeys::Pendientes::new(Duration::from_secs(30 * 60))),
         google,
         google_idas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(10 * 60))),
     };

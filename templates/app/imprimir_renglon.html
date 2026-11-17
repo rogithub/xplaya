@@ -1,0 +1,33 @@
+{#
+  Un trabajo de la lista de "Imprime tú solito" (imprimir.html): lo que pidió y, ya mandado, su
+  línea de pasos (`Trabajo::paso`: 1 mandado, 2 imprimiendo, 3 listo, 4 recogido).
+#}
+    <li class="imp-trabajo paso-{{ t.paso.numero }}">
+        <div class="imp-cabeza">
+            <span class="imp-nombre">📄 {{ t.archivo }}</span>
+            <strong class="imp-total">${{ t.total }}</strong>
+        </div>
+        <p class="imp-detalle">
+            {% if t.paginas %}Solo págs. {{ t.paginas | replace(",", ", ") }}{% else %}Todo ({{ t.paginas_pdf }} pág.){% endif %}
+            · {{ t.copias }} copia{% if t.copias != 1 %}s{% endif %}
+            · {% if t.doble_cara %}doble cara{% else %}una cara{% endif %}
+        </p>
+        {% if t.paso.numero == 0 %}
+        <p class="imp-paso-txt">{{ t.paso.texto }}</p>
+        <div class="imp-acciones">
+            <a href="/imprimir/{{ t.id }}" class="btn-chico">Cambiar</a>
+            <form method="post" action="/imprimir/{{ t.id }}/quitar">
+                <button type="submit" class="btn-link">Quitar</button>
+            </form>
+        </div>
+        {% else %}
+        <ol class="imp-pasos" aria-label="En qué va">
+            {% for nombre in ["Mandado", "Imprimiendo", "Listo", "Recogido"] %}
+            <li class="{% if loop.index < t.paso.numero or t.paso.numero == 4 %}hecho{% endif %}{% if loop.index == t.paso.numero %} actual{% endif %}"
+                {% if loop.index == t.paso.numero %}aria-current="step"{% endif %}>{{ nombre }}</li>
+            {% endfor %}
+        </ol>
+        <p class="imp-paso-txt">{% if t.paso.numero == 3 %}<strong>{{ t.paso.texto }}</strong>{% else %}{{ t.paso.texto }}{% endif %}
+            {% if t.impreso %}<span class="imp-cuando">Impreso {{ t.impreso }}.</span>{% endif %}</p>
+        {% endif %}
+    </li>

@@ -184,7 +184,7 @@ async fn avisar_cliente(state: AppState, cliente_id: Uuid) {
     let Some(vapid) = state.vapid.clone() else { return };
     let cuerpo = serde_json::json!({
         "titulo": "🖨️ Tu impresión está lista",
-        "texto": "En un momento te llevamos tus hojas y lo pagas ahí.",
+        "texto": "Pasa por tus hojas a la papelería y págalas en caja.",
         "url": "/imprimir",
         "tag": "imprimir",
     });

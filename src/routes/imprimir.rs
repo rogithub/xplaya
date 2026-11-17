@@ -1,10 +1,10 @@
 //! "Imprime tú solito": autoservicio de impresión en la app (app.xplaya.com), solo con sesión.
 //!
 //! El cliente sube **un PDF** (b/n, carta), elige páginas, copias y una cara / doble cara, y ve
-//! el total ($1 por cara). El trabajo queda `preparado`. Al llegar a la tienda escanea el QR del
-//! kiosko (`routes/kiosko.rs::escaneo`), que lo marca "en la tienda" 30 min (`AppState::en_tienda`);
-//! con eso "Mandar a imprimir" pasa sus trabajos a la caja (`por_autorizar`). La caja lo autoriza
-//! en el POS y xplaya lo imprime (pasos 3 y 4 de `ROADMAP.md`).
+//! el total ($1 por cara). El trabajo queda `preparado`. "Mandar a la papelería" lo pasa a la
+//! caja (`por_autorizar`) desde donde esté, como si lo mandara por WhatsApp: la caja decide cuándo
+//! imprimirlo (en el POS) y xplaya lo imprime. El cliente sigue cada trabajo con una línea de
+//! pasos (`Trabajo::paso`) y pasa por sus hojas.
 //!
 //! Las cuentas, en `impresion.rs`; la BD, en `db/impresiones.rs`; el PDF, en MinIO (`minio.rs`).
 
@@ -14,6 +14,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect, Response},
     Form, Json,
 };
+use chrono::Datelike;
 use minijinja::{context, Value};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -70,10 +71,41 @@ struct Vista<'a> {
     #[serde(flatten)]
     t: &'a Trabajo,
     total: String,
+    paso: db::impresiones::Paso,
+    /// "hoy 11:40" o "17/nov 11:40".
+    impreso: Option<String>,
 }
 
 fn vista(t: &Trabajo) -> Vista<'_> {
-    Vista { t, total: format!("{:.2}", t.total()) }
+    Vista {
+        t,
+        total: format!("{:.2}", t.total()),
+        paso: t.paso(),
+        impreso: t.fecha_impreso.map(cuando),
+    }
+}
+
+fn cuando(f: chrono::NaiveDateTime) -> String {
+    const MESES: [&str; 12] = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    // Cancún está en UTC-5 todo el año (sin horario de verano); las fechas de la BD, también.
+    let cancun = chrono::FixedOffset::west_opt(5 * 3600).expect("UTC-5");
+    let hoy = chrono::Utc::now().with_timezone(&cancun).date_naive();
+    if f.date() == hoy {
+        format!("hoy {}", f.format("%H:%M"))
+    } else {
+        format!("{}/{} {}", f.day(), MESES[f.month0() as usize], f.format("%H:%M"))
+    }
+}
+
+/// Arriba lo que espera algo del cliente (por mandar, listo para recoger); luego lo que va en
+/// camino; al final lo recogido. Dentro de cada grupo, lo más nuevo primero (como llega de la BD).
+fn orden(paso: u8) -> u8 {
+    match paso {
+        0 => 0,
+        3 => 1,
+        1 | 2 => 2,
+        _ => 3,
+    }
 }
 
 // ── GET /imprimir ───────────────────────────────────────────────────────────
@@ -97,17 +129,19 @@ async fn pagina_lista(state: &AppState, cliente_id: Uuid, error: Option<String>,
         Ok(t) => t,
         Err(e) => return error_bd(e),
     };
-    let preparados = trabajos.iter().filter(|t| t.estado == "preparado").count();
-    // Mientras algo está en la caja o imprimiéndose, la página se recarga sola.
-    let en_curso = trabajos.iter().any(|t| matches!(t.estado.as_str(), "por_autorizar" | "autorizado" | "imprimiendo"));
-    let trabajos: Vec<_> = trabajos.iter().map(vista).collect();
+    // Para el botón: qué archivos manda.
+    let por_mandar: Vec<&str> =
+        trabajos.iter().filter(|t| t.estado == "preparado").map(|t| t.archivo.as_str()).collect();
+    let mut trabajos: Vec<_> = trabajos.iter().map(vista).collect();
+    trabajos.sort_by_key(|v| orden(v.paso.numero));
+    // Mientras algo está en la papelería o imprimiéndose, la página se recarga sola.
+    let en_curso = trabajos.iter().any(|v| matches!(v.paso.numero, 1 | 2));
     render(state, "app/imprimir.html", context! {
         en_app => true,
         nav => "imprimir",
         trabajos,
-        preparados,
+        por_mandar,
         en_curso,
-        en_tienda => state.en_tienda.ver(cliente_id).is_some(),
         error,
         enviados,
         max_mb => impresion::MAX_BYTES / (1024 * 1024),
@@ -223,7 +257,6 @@ pub async fn trabajo(
         en_app => true,
         nav => "imprimir",
         trabajo => vista(&t),
-        en_tienda => state.en_tienda.ver(cliente_id).is_some(),
         error => p.error,
         max_copias => impresion::MAX_COPIAS,
     })
@@ -355,16 +388,12 @@ pub async fn quitar(State(state): State<AppState>, headers: HeaderMap, Path(id):
 
 // ── POST /imprimir/mandar ───────────────────────────────────────────────────
 
-/// Sus trabajos preparados pasan a la caja. Solo "en la tienda" (escaneó el QR del kiosko).
+/// Sus trabajos preparados pasan a la caja, desde donde esté.
 pub async fn mandar(State(state): State<AppState>, headers: HeaderMap) -> Response {
     let cliente_id = match requisitos(&state, &headers).await {
         Ok((_, id)) => id,
         Err(r) => return r.into_response(),
     };
-    if state.en_tienda.ver(cliente_id).is_none() {
-        let msg = "Para mandarlos, escanea el QR de la pantalla de la papelería.";
-        return pagina_lista(&state, cliente_id, Some(msg.into()), None).await;
-    }
     match db::impresiones::mandar(&state.pool, cliente_id).await {
         Ok(n) => Redirect::to(&format!("/imprimir?enviados={n}")).into_response(),
         Err(e) => error_bd(e),
