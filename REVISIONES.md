@@ -10,6 +10,8 @@ Al quitar la vista "Nuestro WhatsApp" (467924a) quedaron tres líneas sueltas co
 más en `templates/app/kiosko.html`: cerraba el contenedor de Alpine antes de tiempo y dejaba fuera
 "← Inicio" y la pantalla "¡Listo!" de "Te agregamos a WhatsApp". Se quitaron las líneas sueltas.
 
+---
+
 ## Aviso de privacidad: datos de Google (2026-11-14)
 
 - `templates/pages/terminos.html` — "Datos recabados" suma lo que se guarda al entrar con Google;
