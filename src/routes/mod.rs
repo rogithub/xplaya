@@ -1,3 +1,4 @@
+pub mod anuncio;
 pub mod productos;
 pub mod carrito;
 pub mod pages;

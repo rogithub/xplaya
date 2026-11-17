@@ -6,6 +6,7 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
+mod anuncio;
 mod autoservicio;
 mod avisos;
 mod caja;
@@ -123,6 +124,8 @@ async fn main() {
     caja::vigilar(state.clone());
     // Borra los PDFs del autoservicio de impresión a los 7 días.
     routes::imprimir::limpiar(state.clone());
+    // Borra los anuncios del kiosko rechazados o vencidos de hace más de 30 días.
+    routes::anuncio::limpiar(state.clone());
     // Imprime los trabajos que la caja autorizó (autoservicio.rs).
     autoservicio::vigilar(state.clone());
 

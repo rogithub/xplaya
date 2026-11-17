@@ -810,3 +810,77 @@ function escribirPaginas(marcadas) {
     }
     return rangos.join(',');
 }
+
+// ── Anuncios del kiosko (anuncio.html y la franja del kiosko) ──
+
+// Letra de un anuncio de texto, como los estados de WhatsApp: la más grande con la que todo cabe
+// sin partir palabras (poco texto, letra enorme). En % del ancho, así se ve igual en el celular
+// que en el kiosko. Si ni con la más chica cabe, entonces sí parte palabras.
+window.ajustarTexto = (el) => {
+    if (!el.clientWidth) return;           // oculto: se ajusta cuando se vea
+    el.style.overflowWrap = 'normal';
+    for (let t = 16; t >= 4; t -= 0.5) {
+        el.style.fontSize = (el.clientWidth * t / 100) + 'px';
+        if (el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth) return;
+    }
+    el.style.overflowWrap = 'anywhere';
+};
+
+document.addEventListener('alpine:init', () => {
+    // Poner o cambiar el anuncio: imagen (vista previa local antes de subirla) o texto con color.
+    Alpine.data('anuncioForm', (o) => ({
+        tipo: o.tipo,
+        texto: o.texto,
+        color: o.color,
+        abierto: o.abierto,
+        foto: '',
+        error: '',
+        ocupado: false,
+
+        elegida(e) {
+            this.error = '';
+            const archivo = e.target.files[0];
+            if (this.foto) URL.revokeObjectURL(this.foto);
+            this.foto = '';
+            if (!archivo) return;
+            if (archivo.size > o.maxMb * 1024 * 1024) {
+                this.error = `Tu imagen pesa más de ${o.maxMb} MB.`;
+                e.target.value = '';
+                return;
+            }
+            this.foto = URL.createObjectURL(archivo);
+        },
+
+        enviar(e) {
+            if (this.tipo === 'imagen' && !this.foto) this.error = 'Elige una imagen.';
+            else if (this.tipo === 'texto' && !this.texto.trim()) this.error = 'Escribe tu anuncio.';
+            else this.error = '';
+            if (this.error) { e.preventDefault(); return; }
+            this.ocupado = true;
+        },
+    }));
+});
+
+document.addEventListener('alpine:init', () => {
+    // Franja derecha del kiosko (kiosko.html): los anuncios aprobados, uno cada 10 s, y al final
+    // de la vuelta la invitación a poner el suyo (i === anuncios.length). Pide la lista cada 2 min.
+    Alpine.data('kioskoAnuncios', () => ({
+        anuncios: [],
+        i: 0,
+
+        init() {
+            this.cargar();
+            setInterval(() => this.cargar(), 2 * 60 * 1000);
+            setInterval(() => { this.i = (this.i + 1) % (this.anuncios.length + 1); }, 10000);
+        },
+
+        async cargar() {
+            try {
+                const r = await fetch('/kiosko/anuncios');
+                if (!r.ok) return;
+                this.anuncios = await r.json();
+                if (this.i > this.anuncios.length) this.i = 0;
+            } catch { /* sin red: sigue con los que tenía */ }
+        },
+    }));
+});

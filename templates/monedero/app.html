@@ -122,6 +122,13 @@
             <span class="mon-fila-txt"><strong>Pagar por transferencia</strong><small>Copia la CLABE y paga desde tu banco</small></span>
             <span class="mon-fila-flecha" aria-hidden="true">›</span>
         </button>
+        {% if anuncio %}
+        <a class="mon-fila" href="/anuncio">
+            <span class="mon-fila-ico" aria-hidden="true">📣</span>
+            <span class="mon-fila-txt"><strong>Tu anuncio en la tienda</strong><small>{{ anuncio }}</small></span>
+            <span class="mon-fila-flecha" aria-hidden="true">›</span>
+        </a>
+        {% endif %}
         <a class="mon-fila" href="{{ site_url }}/terminos">
             <span class="mon-fila-ico" aria-hidden="true">📄</span>
             <span class="mon-fila-txt"><strong>Términos del monedero</strong></span>

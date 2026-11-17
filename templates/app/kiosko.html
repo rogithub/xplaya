@@ -273,4 +273,28 @@
 
     <button type="button" class="kiosko-volver" x-show="vista !== 'inicio'" x-cloak @click="ir('inicio')">← Inicio</button>
 </div>
+
+{# ── Franja derecha: anuncios de clientes (routes/anuncio.rs), 9:16 a todo lo alto, uno cada
+     10 s. Solo lo que la caja aprobó y sigue vigente; al final de la vuelta, la invitación a
+     poner el suyo. Lógica en `kioskoAnuncios` (app.js). ── #}
+<aside class="kiosko-anuncios" x-data="kioskoAnuncios()" aria-label="Anuncios de clientes">
+    <template x-for="(a, n) in anuncios" :key="a.id + '-' + a.version">
+        <div class="kan-slide" :class="n === i && 'activo'">
+            <template x-if="a.tipo === 'imagen'">
+                <img :src="'/kiosko/anuncio/' + a.id + '?v=' + a.version" alt="Anuncio de un cliente">
+            </template>
+            <template x-if="a.tipo === 'texto'">
+                <div class="anu-texto" :style="'background-color:' + a.color" x-text="a.texto"
+                     x-init="$nextTick(() => ajustarTexto($el))"></div>
+            </template>
+            <p class="kan-etiqueta">Anuncio de un cliente</p>
+        </div>
+    </template>
+    <div class="kan-slide kan-promo" :class="i === anuncios.length && 'activo'">
+        <img src="/static/img/favicon/web-app-manifest-192x192.png?v=4" alt="" width="192" height="192">
+        <h2>¿Tu anuncio aquí?</h2>
+        <p>Gratis por 7 días con la app de la Papelería.</p>
+        <p class="kan-ruta">Monedero → Tu anuncio en la tienda</p>
+    </div>
+</aside>
 {% endblock %}

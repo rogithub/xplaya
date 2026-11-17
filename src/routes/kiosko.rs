@@ -63,7 +63,7 @@ pub async fn activar(State(state): State<AppState>, Query(params): Query<Activar
     ([(header::SET_COOKIE, cookie)], Redirect::to("/kiosko")).into_response()
 }
 
-fn es_kiosko(state: &AppState, headers: &HeaderMap) -> bool {
+pub fn es_kiosko(state: &AppState, headers: &HeaderMap) -> bool {
     let esperado = &state.config.kiosko_token;
     !esperado.is_empty()
         && headers
