@@ -4,6 +4,23 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: cuadro "Imprimir" (2026-11-17)
+
+El QR que prueba que el cliente está en la tienda solo salía en la ficha de la app y en la vitrina:
+quien llegaba a imprimir no sabía cuál escanear. Ahora hay un cuadro **Imprimir** a lo ancho,
+debajo de la app, con una vista "Imprime tú solito": tres pasos y el mismo QR firmado de 30 s (con
+sesión lleva a mandar los trabajos; sin la app, al alta). Solo con el autoservicio encendido
+(`imprimir_activo`).
+
+- `templates/app/kiosko.html` — el cuadro y la vista `imprimir`.
+- `static/app/app.js` — `nuevoQr` pinta también `qrImprimir`.
+- `static/css/app.css` — `.cuadro-imprimir`, `.kiosko-pasos`.
+
+Probado con el servidor local en 1920×1080: el cuadro, la vista con su QR y "← Inicio" desde
+Imprimir, WhatsApp, Buscar y la app.
+
+---
+
 ## Kiosko: vuelve el botón "← Inicio" (2026-11-17)
 
 Al quitar la vista "Nuestro WhatsApp" (467924a) quedaron tres líneas sueltas con un `</div>` de

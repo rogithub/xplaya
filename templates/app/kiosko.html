@@ -63,6 +63,8 @@
                     <span class="app-obtener">Obtener</span>
                 </span>
             </button>
+            {# Imprimir, también a lo ancho: el mismo QR firmado que la app, explicado para imprimir. #}
+            {% if imprimir_activo %}<button type="button" class="cuadro-ancho cuadro-imprimir" @click="ir('imprimir')"><span>🖨️</span><span class="cuadro-imprimir-txt"><strong>Imprimir</strong><small>Sube tu PDF en la app y escanea aquí</small></span></button>{% endif %}
             <button type="button" @click="ir('whatsapp')"><span>💬</span>Te agregamos a WhatsApp</button>
             {% if fotos_qr %}<button type="button" @click="ir('fotos')"><span>📸</span>Fotos credencial</button>{% endif %}
             {% if resena_qr %}<button type="button" @click="ir('resena')"><span>⭐</span>Tu reseña</button>{% endif %}
@@ -226,6 +228,27 @@
             <p class="kiosko-qr-txt">Escanéame con la cámara de tu celular</p>
         </section>
     </div>
+
+    {# ── Imprime tú solito: el QR firmado de 30 s (el mismo de la app) prueba que el cliente está
+       en la tienda; con sesión lo lleva a mandar sus trabajos (routes/kiosko.rs::escaneo), sin la
+       app, al alta. ── #}
+    {% if imprimir_activo %}
+    <div class="kiosko-vista" x-show="vista === 'imprimir'" x-cloak>
+        <section class="kiosko-info">
+            <h1 class="kiosko-titulo">Imprime tú solito</h1>
+            <ol class="kiosko-pasos">
+                <li>En la <strong>App de la Papelería</strong>, entra a <strong>Imprimir</strong> y sube tu PDF.</li>
+                <li>Escanea este código con la cámara de tu celular.</li>
+                <li>Toca <strong>Mandar a imprimir</strong>. Te llevamos tus hojas y pagas en caja.</li>
+            </ol>
+            <p class="kiosko-sub">¿Todavía no tienes la app? Escanea el código y te damos de alta.</p>
+        </section>
+        <section class="kiosko-qr-lado" aria-label="Código para mandar tus impresiones">
+            <div class="kiosko-qr" x-ref="qrImprimir"></div>
+            <p class="kiosko-qr-txt">Escanéame con la cámara de tu celular</p>
+        </section>
+    </div>
+    {% endif %}
 
     {# ── Fotos en imagina (credencial y polaroid) ── #}
     {% if fotos_qr %}

@@ -513,10 +513,11 @@ document.addEventListener('alpine:init', () => {
                 const r = await fetch('/kiosko/qr', { cache: 'no-store' });
                 if (r.ok) {
                     const { svg, ms } = await r.json();
-                    // QR de la app: en su ficha y en la vitrina (siempre en la página, para que se
-                    // renueve solo).
+                    // QR de la app: en su ficha, en la vitrina y en Imprimir (siempre en la página,
+                    // para que se renueve solo; Imprimir solo con el autoservicio encendido).
                     this.$refs.qrApp.innerHTML = svg;
                     this.$refs.qrVitrina.innerHTML = svg;
+                    if (this.$refs.qrImprimir) this.$refs.qrImprimir.innerHTML = svg;
                     espera = ms + 200;
                 }
             } catch (e) {
