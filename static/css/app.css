@@ -651,14 +651,15 @@ a.btn-qr { text-decoration: none; }
 .kiosko-teclado .enviar:disabled { opacity: .35; }
 .kiosko-error { color: var(--warn); font-size: 1.2rem; margin: 0; text-align: center; }
 
-/* Inicio: la vitrina a todo lo ancho y, abajo, la barra de botones. */
+/* Inicio: la vitrina a todo lo ancho y, abajo, la barra de botones. Dos medidas de espacio:
+   3vh contra el borde de la pantalla y 2vh entre cajas (vitrina/barra y entre botones). */
 .kiosko-inicio {
     flex: 1;
     min-height: 0;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     gap: 2vh;
-    padding: 2.5vh 2.5cqw 4vh;
+    padding: 3vh;
 }
 .vitrina {
     position: relative;
@@ -754,7 +755,7 @@ a.btn-qr { text-decoration: none; }
     display: grid;
     grid-template-columns: 1.7fr 1fr 1fr;
     height: 13vh;
-    gap: 1.5cqw;
+    gap: 2vh;
 }
 .kiosko-cuadros button {
     display: grid;

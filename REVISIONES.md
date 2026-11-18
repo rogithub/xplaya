@@ -4,6 +4,14 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: espacios parejos en el inicio (2026-11-18)
+
+- `static/css/app.css` — `.kiosko-inicio` con 3vh en los cuatro lados (antes 2.5vh / 2.5cqw / 4vh)
+  y 2vh entre cajas: entre la vitrina y la barra, y entre botones (`.kiosko-cuadros`, antes 1.5cqw).
+  Afuera un poco más que adentro, todo en `vh`.
+
+---
+
 ## Kiosko: la barra de abajo más baja y separada del borde (2026-11-18)
 
 - `static/css/app.css` — `.kiosko-cuadros` de 17vh a 13vh (ícono de la app de 12vh a 9vh) y
