@@ -275,9 +275,10 @@
 </div>
 
 {# ── Franja derecha: anuncios de clientes (routes/anuncio.rs), 9:16 a todo lo alto, uno cada
-     10 s. Solo lo que la caja aprobó y sigue vigente; al final de la vuelta, la invitación a
+     10 s; se recorren con flechas o deslizando (y se quedan quietos 30 s). Solo lo que la caja aprobó y sigue vigente; al final de la vuelta, la invitación a
      poner el suyo. Lógica en `kioskoAnuncios` (app.js). ── #}
-<aside class="kiosko-anuncios" x-data="kioskoAnuncios()" aria-label="Anuncios de clientes">
+<aside class="kiosko-anuncios" x-data="kioskoAnuncios()" aria-label="Anuncios de clientes"
+       @pointerdown="tocar($event)" @pointerup="soltar($event)" @pointercancel="xToque = null">
     <template x-for="(a, n) in anuncios" :key="a.id + '-' + a.version">
         <div class="kan-slide" :class="n === i && 'activo'">
             <template x-if="a.tipo === 'imagen'">
@@ -296,5 +297,13 @@
         <p>Gratis por 7 días con la app de la Papelería.</p>
         <p class="kan-ruta">Monedero → Tu anuncio en la tienda</p>
     </div>
+    {# Para recorrerlos: flechas, deslizar el dedo y cuál va. Solo si hay anuncios. #}
+    <template x-if="anuncios.length">
+        <div>
+            <button type="button" class="kan-flecha izq" @click="mover(-1)" aria-label="Anuncio anterior">‹</button>
+            <button type="button" class="kan-flecha der" @click="mover(1)" aria-label="Anuncio siguiente">›</button>
+            <p class="kan-cuenta" x-show="i < anuncios.length" x-text="(i + 1) + ' / ' + anuncios.length"></p>
+        </div>
+    </template>
 </aside>
 {% endblock %}

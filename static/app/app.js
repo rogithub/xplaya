@@ -869,11 +869,33 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('kioskoAnuncios', () => ({
         anuncios: [],
         i: 0,
+        desde: Date.now(),      // cuándo empezó el actual: cambia a los 10 s
+        pausaHasta: 0,          // si alguien lo tocó, se queda quieto hasta entonces
+        xToque: null,           // dónde empezó a deslizar el dedo
 
         init() {
             this.cargar();
             setInterval(() => this.cargar(), 2 * 60 * 1000);
-            setInterval(() => { this.i = (this.i + 1) % (this.anuncios.length + 1); }, 10000);
+            setInterval(() => {
+                const ahora = Date.now();
+                if (ahora >= this.pausaHasta && ahora - this.desde >= 10000) this.mover(1, false);
+            }, 1000);
+        },
+
+        // Con los anuncios más la invitación del final.
+        mover(paso, tocado = true) {
+            const n = this.anuncios.length + 1;
+            this.i = (this.i + paso + n) % n;
+            this.desde = Date.now();
+            // Quien lo recorre con el dedo lo quiere leer: 30 s quieto.
+            if (tocado) this.pausaHasta = this.desde + 30000;
+        },
+        tocar(e) { this.xToque = e.clientX; },
+        soltar(e) {
+            if (this.xToque === null) return;
+            const dx = e.clientX - this.xToque;
+            this.xToque = null;
+            if (Math.abs(dx) > 50) this.mover(dx < 0 ? 1 : -1);
         },
 
         async cargar() {

@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Anuncios del kiosko: se recorren con el dedo (2026-11-18)
+
+La franja de anuncios de clientes ya no solo avanza sola: tiene flechas ‹ › abajo, a los lados de
+"3 / 12", y se desliza con el dedo. Si alguien la toca, se queda quieta 30 s para leer con calma;
+luego sigue cada 10 s. Así no importa cuántos anuncios haya: quien quiera, los recorre. La vitrina
+de la izquierda (productos y la app) sigue igual: esa es la parte de la papelería.
+
+- `static/app/app.js` — `kioskoAnuncios`: `mover(paso)`, `pausaHasta` y el deslizar
+  (`tocar`/`soltar`, más de 50 px).
+- `templates/app/kiosko.html` — flechas y contador (solo si hay anuncios; en la invitación del final
+  no sale el contador).
+- `static/css/app.css` — `.kan-flecha`, `.kan-cuenta`; abajo, para no tapar el anuncio.
+
+---
+
 ## Anuncios del kiosko: reglas que se aceptan al mandarlo (2026-11-18)
 
 Antes de mandar su anuncio, el cliente ve las reglas (nada de política, alcohol, préstamos ni
