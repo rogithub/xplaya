@@ -143,7 +143,7 @@ async fn guardar(state: &AppState, e: &Evento) -> Result<(), sqlx::Error> {
         let cuerpo = serde_json::json!({
             "titulo": "Papelería xplaya",
             "texto": texto,
-            "url": "/",
+            "url": "/fotos",
             "tag": format!("fotos-{}", e.codigo),
         });
         if let Err(err) = push::mandar_del_momento(state, vapid, e.cliente_id, cuerpo, Duration::from_secs(24 * 60 * 60)).await {

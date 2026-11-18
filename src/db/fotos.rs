@@ -36,3 +36,25 @@ pub async fn datos_cliente(pool: &PgPool, cliente_id: Uuid) -> Result<Option<(Op
         .fetch_optional(pool)
         .await
 }
+
+/// Un pedido de fotos como lo ve el cliente en su app.
+#[derive(Debug, serde::Serialize, sqlx::FromRow)]
+pub struct PedidoFoto {
+    pub codigo: String,
+    pub tipo: String,
+    pub estado: String,
+    pub fechacreado: chrono::NaiveDateTime,
+    pub fechacambio: chrono::NaiveDateTime,
+}
+
+/// Los pedidos de fotos del cliente de los últimos 30 días, el más nuevo arriba.
+pub async fn de_cliente(pool: &PgPool, cliente_id: Uuid) -> Result<Vec<PedidoFoto>, sqlx::Error> {
+    sqlx::query_as(&format!(
+        "SELECT codigo, tipo, estado, fechacreado, fechacambio FROM pedidosfotos
+          WHERE clienteid = $1 AND fechacreado > {AHORA} - INTERVAL '30 days'
+          ORDER BY fechacreado DESC"
+    ))
+    .bind(cliente_id)
+    .fetch_all(pool)
+    .await
+}

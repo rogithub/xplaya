@@ -1,0 +1,55 @@
+{% extends "app/base.html" %}
+{#
+  Pestaña Fotos (routes/fotos.rs): qué foto hacer y en qué van sus pedidos. El pedido vive en
+  imagina (la operadora lo corrige, imprime y marca); aquí se ve su estado, que llega por NATS
+  (src/fotos.rs → PedidosFotos). Recién mandado, NATS tarda un instante: la página se recarga sola
+  hasta que aparece.
+#}
+{% block title %}Fotos — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block meta_description %}{% if falta_el_mandado %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
+{% block content %}
+
+<header class="app-top">
+    <h1 class="app-title">Fotos</h1>
+</header>
+<p class="imp-intro">Hazlas desde tu celular y pasa por ellas a la papelería. Te escribimos por WhatsApp para coordinar.</p>
+
+{% if mandado %}
+<p class="imp-aviso ok" role="status">✅ Recibimos tu foto (pedido <strong>{{ mandado }}</strong>). Te avisamos por aquí cuando esté lista.</p>
+{% endif %}
+
+<div class="fot-opciones">
+    <a href="/fotos/credencial" class="fot-opcion">
+        <span class="fot-ico" aria-hidden="true">🪪</span>
+        <span class="fot-txt">
+            <strong>Foto de credencial</strong>
+            <small>Infantil, credencial o pasaporte</small>
+        </span>
+        <span class="fot-ir" aria-hidden="true">›</span>
+    </a>
+    <div class="fot-opcion pronto" aria-disabled="true">
+        <span class="fot-ico" aria-hidden="true">🖼️</span>
+        <span class="fot-txt">
+            <strong>Fotos polaroid</strong>
+            <small>Con marco y tu texto</small>
+        </span>
+        <span class="fot-pronto">Pronto</span>
+    </div>
+</div>
+
+<h2 class="fot-sub">Tus pedidos</h2>
+{% if pedidos %}
+<ul class="fot-pedidos">
+    {% for p in pedidos %}
+    <li class="fot-pedido">
+        <span class="fot-p-que"><strong>{{ p.que }}</strong><small>{{ p.codigo }} · {{ p.fecha }}</small></span>
+        <span class="fot-estado {{ p.clase }}">{{ p.etiqueta }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="inicio-nota">Aquí vas a ver en qué va cada foto que nos mandes.</p>
+{% endif %}
+
+{% endblock %}

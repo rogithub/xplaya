@@ -1,0 +1,127 @@
+{% extends "app/base.html" %}
+{#
+  Foto de credencial (routes/fotos.rs). Todo pasa en el celular (`fotoCredencial` en app.js):
+  tamaño → cámara con guías (o una foto de la galería) → acomodarla en el marco → revisar →
+  mandarla DIRECTO a imagina (`/api/v1/kiosko/carnet`) con el permiso firmado de xplaya
+  (`GET /fotos/permiso`). Sale ya al tamaño real a 300 dpi; la operadora arma la hoja en imagina.
+  Basado en el kiosko de imagina (`kiosko/carnet`, `CameraCapture.svelte`).
+#}
+{% block title %}Foto de credencial — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+<div class="fot-cred" x-data="fotoCredencial()" @pagehide.window="apagarCamara()">
+
+{# ── 1. Tamaño ── #}
+<section x-show="paso === 'tamano'">
+    <header class="app-top">
+        <a href="/fotos" class="btn-link imp-volver">← Fotos</a>
+        <h1 class="app-title">Foto de credencial</h1>
+    </header>
+
+    <div class="fot-tamanos" role="radiogroup" aria-label="Tamaño">
+        <template x-for="(tm, i) in tamanos" :key="tm.clave">
+            <label class="fot-tamano" :class="t === i && 'activo'">
+                <input type="radio" name="tamano" :value="i" x-model.number="t">
+                <span class="fot-muestra" :style="`width:${tm.w * 1.6}px;height:${tm.h * 1.6}px`" aria-hidden="true"></span>
+                <strong x-text="tm.nombre"></strong>
+                <small x-text="cm(tm.w) + ' × ' + cm(tm.h) + ' cm'"></small>
+                <small class="fot-nota" x-show="tm.nota" x-text="tm.nota"></small>
+            </label>
+        </template>
+    </div>
+
+    <ul class="fot-consejos">
+        <li>Fondo blanco o muy claro, sin sombras.</li>
+        <li>De frente, con la cara completa y sin lentes oscuros.</li>
+        <li>Con buena luz de frente (cerca de una ventana).</li>
+    </ul>
+
+    <div class="fot-acciones">
+        <button type="button" class="btn-qr" @click="abrirCamara()">📷 Tomar la foto</button>
+        <label class="btn-sec fot-galeria">
+            🖼️ Elegir de mis fotos
+            <input type="file" accept="image/*" class="imp-archivo" @change="elegida($event)">
+        </label>
+    </div>
+    <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+</section>
+
+{# ── 2. Cámara: pantalla completa, con la ventana del tamaño y las guías de la cara ── #}
+<section class="fot-camara" x-show="paso === 'camara'" x-cloak x-ref="camara">
+    <video x-ref="video" autoplay playsinline muted class="fot-video" :class="camaraError && 'oculto'"></video>
+
+    <template x-if="!camaraError">
+        <div>
+            <div class="fot-ventana" :style="ventana()"></div>
+            <svg class="fot-guias" :style="ventana()" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <ellipse cx="50" cy="48" rx="27" ry="37" vector-effect="non-scaling-stroke" />
+                <line x1="18" y1="42" x2="82" y2="42" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
+                <line x1="30" y1="12" x2="70" y2="12" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
+            </svg>
+        </div>
+    </template>
+
+    <div class="fot-cam-arriba">
+        <button type="button" class="fot-cam-btn" @click="cerrarCamara()">← Atrás</button>
+        <button type="button" class="fot-cam-btn" x-show="puedeVoltear && !camaraError" @click="voltear()" aria-label="Cambiar de cámara">🔄</button>
+    </div>
+
+    <template x-if="camaraError">
+        <div class="fot-cam-error">
+            <p x-text="camaraError"></p>
+            <label class="btn-qr">
+                🖼️ Elegir o tomar foto
+                <input type="file" accept="image/*" capture="environment" class="imp-archivo" @change="elegida($event)">
+            </label>
+        </div>
+    </template>
+
+    <div class="fot-cam-abajo" x-show="!camaraError">
+        <p>La cara dentro del óvalo y los ojos sobre la línea</p>
+        <button type="button" class="fot-disparo" @click="disparar()" :disabled="iniciando" aria-label="Tomar foto"></button>
+    </div>
+</section>
+
+{# ── 3. Acomodar: arrastra la foto y acércala ── #}
+<section x-show="paso === 'ajuste'" x-cloak>
+    <header class="app-top">
+        <button type="button" class="btn-link imp-volver" @click="paso = 'tamano'">← Otra foto</button>
+        <h1 class="app-title">Acomódala</h1>
+    </header>
+    <p class="imp-intro">Arrastra la foto para centrar la cara y acércala si hace falta.</p>
+    <div class="fot-marco" x-ref="marco" :style="`aspect-ratio:${tam.w}/${tam.h}`"
+         @pointerdown="tomar($event)" @pointermove="mover($event)" @pointerup="soltar()" @pointercancel="soltar()">
+        <img x-ref="fuente" :src="fuenteUrl" alt="Tu foto" draggable="false"
+             :style="`width:${img.w * escala()}px;height:${img.h * escala()}px;transform:translate(${pos.x}px,${pos.y}px)`">
+        <svg class="fot-guias" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <ellipse cx="50" cy="48" rx="27" ry="37" vector-effect="non-scaling-stroke" />
+            <line x1="18" y1="42" x2="82" y2="42" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
+        </svg>
+    </div>
+    <label class="fot-zoom">
+        <span aria-hidden="true">➖</span>
+        <input type="range" min="1" max="3" step="0.01" x-model.number="zoom" @input="acercar()" aria-label="Acercar">
+        <span aria-hidden="true">➕</span>
+    </label>
+    <button type="button" class="btn-qr" @click="hornear()">Listo</button>
+</section>
+
+{# ── 4. Revisar y mandar ── #}
+<section x-show="paso === 'revisar' || paso === 'enviando'" x-cloak>
+    <header class="app-top">
+        <button type="button" class="btn-link imp-volver" @click="paso = 'ajuste'" :disabled="paso === 'enviando'">← Acomodar</button>
+        <h1 class="app-title">¿Así está bien?</h1>
+    </header>
+    <div class="fot-revisar">
+        <img :src="finalUrl" alt="Tu foto de credencial" :style="`width:${tam.w * 5}px;height:${tam.h * 5}px`">
+        <p class="inicio-nota" x-text="tam.nombre + ' · ' + cm(tam.w) + ' × ' + cm(tam.h) + ' cm'"></p>
+    </div>
+    <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+    <button type="button" class="btn-qr" @click="mandar()" :disabled="paso === 'enviando'">
+        <span x-text="paso === 'enviando' ? 'Mandando…' : 'Mandar a la papelería'"></span>
+    </button>
+    <p class="inicio-nota">La imprimimos y te escribimos por WhatsApp. Pagas al recogerla.</p>
+</section>
+
+</div>
+{% endblock %}
