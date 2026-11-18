@@ -4,7 +4,7 @@
   táctil. Es pública: nunca muestra nombres, saldos ni teléfonos de clientes.
   Inicio: a la izquierda la **vitrina**, con productos al azar con foto y precio (‹ › para
   moverse); a la derecha, cuadros
-  que abren cada vista en pantalla completa ("te agregamos a WhatsApp", fotos,
+  que abren cada vista en pantalla completa ("te agregamos a WhatsApp",
   reseña, buscar por número) con "← Inicio". La app va primero y destacada, abre una ficha como de tienda de
   apps, y además sale en la vitrina cada 5 productos. Sin tocar nada en un minuto, vuelve al inicio y la
   vitrina sigue pasando sola. "Buscar por número" enseña un producto por su NID (para mostrárselo
@@ -64,7 +64,6 @@
                 </span>
             </button>
             <button type="button" @click="ir('whatsapp')"><span>💬</span>Te agregamos a WhatsApp</button>
-            {% if fotos_qr %}<button type="button" @click="ir('fotos')"><span>📸</span>Fotos credencial</button>{% endif %}
             {% if resena_qr %}<button type="button" @click="ir('resena')"><span>⭐</span>Tu reseña</button>{% endif %}
             <button type="button" @click="ir('buscar')"><span>🔎</span>Buscar por número</button>
         </nav>
@@ -226,23 +225,6 @@
             <p class="kiosko-qr-txt">Escanéame con la cámara de tu celular</p>
         </section>
     </div>
-
-    {# ── Fotos en imagina (credencial y polaroid) ── #}
-    {% if fotos_qr %}
-    <div class="kiosko-vista" x-show="vista === 'fotos'" x-cloak>
-        <section class="kiosko-info">
-            <h1 class="kiosko-titulo">Tus fotos desde el celular</h1>
-            <p class="kiosko-sub">
-                Tómate tu foto de credencial (infantil, pasaporte, visa…) o arma tus fotos
-                polaroid con marco y texto. Te las imprimimos aquí.
-            </p>
-        </section>
-        <section class="kiosko-qr-lado" aria-label="Código de fotos de credencial y polaroid">
-            <div class="kiosko-qr">{{ fotos_qr }}</div>
-            <p class="kiosko-qr-txt">imagina.xplaya.com</p>
-        </section>
-    </div>
-    {% endif %}
 
     {# ── Reseña en Google ── #}
     {% if resena_qr %}

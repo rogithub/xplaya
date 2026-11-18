@@ -927,8 +927,9 @@ document.addEventListener('alpine:init', () => {
         // Infantil primero: es la que más se pide.
         tamanos: [
             { clave: 'infantil', nombre: 'Infantil', w: 25, h: 30, nota: 'La más pedida' },
-            { clave: 'credencial', nombre: 'Credencial', w: 35, h: 45, nota: '' },
-            { clave: 'pasaporte', nombre: 'Pasaporte', w: 35, h: 45, nota: '' },
+            // También la del título profesional. Sin pasaporte ni visa: el consulado casi siempre
+            // rechaza una foto de celular (xplaya.com/foto-credencial); esas, en la papelería.
+            { clave: 'credencial', nombre: 'Credencial', w: 35, h: 45, nota: 'También título' },
         ],
         t: 0,
         paso: 'tamano',          // tamano → camara → ajuste → revisar → enviando

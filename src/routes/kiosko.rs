@@ -40,9 +40,6 @@ const COOKIE_KIOSKO: &str = "kiosko_token";
 /// Formulario de reseña de la ficha de Google de la papelería (el mismo de `/resena`).
 const URL_RESENA_GOOGLE: &str = "https://search.google.com/local/writereview?placeid=ChIJVw8jFnxDTo8RnF2hE0foXRw";
 
-/// Kiosko de fotos de imagina (credencial y polaroid), en el celular del cliente.
-const URL_IMAGINA_KIOSKO: &str = "https://imagina.xplaya.com/kiosko";
-
 // ── Pantalla del kiosko ─────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -80,14 +77,12 @@ pub async fn pantalla(State(state): State<AppState>, headers: HeaderMap) -> Resu
         return Ok((StatusCode::FORBIDDEN, "Este kiosko no está activado.").into_response());
     }
     let resena_qr = qr_svg(URL_RESENA_GOOGLE).map(minijinja::Value::from_safe_string);
-    let fotos_qr = qr_svg(URL_IMAGINA_KIOSKO).map(minijinja::Value::from_safe_string);
     let html = state
         .tmpl
         .get_template("app/kiosko.html")
         .and_then(|t| t.render(context! {
             en_app => true,
             resena_qr,
-            fotos_qr,
         }))
         .map_err(|e| {
             tracing::error!("Render app/kiosko: {e}");
