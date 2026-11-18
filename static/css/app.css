@@ -658,7 +658,7 @@ a.btn-qr { text-decoration: none; }
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     gap: 2vh;
-    padding: 2.5vh 2.5cqw;
+    padding: 2.5vh 2.5cqw 4vh;
 }
 .vitrina {
     position: relative;
@@ -753,7 +753,7 @@ a.btn-qr { text-decoration: none; }
 .kiosko-cuadros {
     display: grid;
     grid-template-columns: 1.7fr 1fr 1fr;
-    height: 17vh;
+    height: 13vh;
     gap: 1.5cqw;
 }
 .kiosko-cuadros button {
@@ -789,7 +789,7 @@ a.btn-qr { text-decoration: none; }
     box-shadow: 0 6px 22px rgb(35 25 22 / .35);
 }
 .kiosko-cuadros .cuadro-app:active { background: #3a2a25; }
-.cuadro-app .app-icono { width: auto; height: 12vh; height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
+.cuadro-app .app-icono { width: auto; height: 9vh; height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
 .cuadro-app-txt { display: grid; gap: .4vh; flex: 1; font-size: inherit; }
 .cuadro-app-txt strong { font-size: clamp(1.4rem, 2.05cqw, 2.2rem); font-weight: 600; line-height: 1.05; white-space: nowrap; }
 .cuadro-app-txt small { font-family: var(--font-body); font-size: clamp(1rem, 1.35cqw, 1.35rem); color: var(--brand-teal); }

@@ -4,6 +4,13 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: la barra de abajo más baja y separada del borde (2026-11-18)
+
+- `static/css/app.css` — `.kiosko-cuadros` de 17vh a 13vh (ícono de la app de 12vh a 9vh) y
+  `.kiosko-inicio` con 4vh de espacio abajo, para que los botones no queden pegados al borde.
+
+---
+
 ## Kiosko: fuera Reseñas; los botones en una barra abajo (2026-11-18)
 
 Con menos cuadros, la columna de la derecha desperdiciaba pantalla. Ahora la vitrina va a todo lo
