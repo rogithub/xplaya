@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fotos en la app, etapa 4: se quita lo viejo (2026-11-18)
+
+El kiosko de fotos de imagina (`imagina.xplaya.com/kiosko`) ya no existe: credencial y polaroid se
+hacen solo en la app.
+
+- `templates/app/kiosko.html`, `src/routes/kiosko.rs` — fuera el cuadro "Fotos credencial" y su
+  QR a imagina. `static/css/app.css`: si el último cuadro queda solo en su renglón, va a lo ancho
+  ("Buscar por número").
+- `static/app/app.js`, `templates/app/fotos.html` — la credencial ya no ofrece **Pasaporte**: el
+  consulado casi siempre rechaza una foto de celular (lo dice xplaya.com/foto-credencial). Quedan
+  Infantil (por omisión) y Credencial 3.5 × 4.5 ("también título").
+- `templates/pages/foto-credencial.html`, `templates/pages/fotos.html` — los botones llevan a la app
+  (`{{ app_url }}/fotos/credencial` y `/fotos/polaroid`), y el texto dice que es en la app gratis
+  de la Papelería, que se instala en la tienda (QR del kiosko o en caja). Fuera "sin instalar
+  nada" y "sin cuenta"; las medidas que la app no tiene (credencial grande, licencia, otra medida)
+  dicen "en la papelería". También el JSON-LD (pasos y preguntas).
+- `src/routes/pages.rs` — el texto para buscadores e IA (`llms.txt`).
+
+---
+
 ## Fotos en la app, etapa 3: fotos polaroid (2026-11-18)
 
 "Fotos polaroid" en la pestaña Fotos. Es el kiosko polaroid de imagina pasado a Alpine, con el mismo

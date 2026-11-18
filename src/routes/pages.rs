@@ -52,9 +52,10 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 - [Centro de copiado]({site}/impresiones): precios de copias, impresiones, papel especial,
   enmicados, engargolados, escáner y trámites oficiales (CURP, acta de nacimiento).
 - [Impresión de fotos]({site}/fotos): fotos carnet, de trámites y estilo polaroid.
-- [Foto para credencial desde casa]({site}/foto-credencial): herramienta web gratuita para tomarte la
-  foto tamaño credencial, infantil o de título con el celular y recogerla impresa el mismo día. Para
-  credencial escolar, gafete de trabajo y título profesional. No aplica para pasaporte ni visa.
+- [Foto para credencial desde casa]({site}/foto-credencial): con la app gratuita de la papelería
+  (se instala en la tienda) te tomas la foto tamaño infantil o credencial con el celular y la recoges
+  impresa el mismo día. Para credencial escolar, gafete de trabajo y título profesional. No aplica
+  para pasaporte ni visa. En la misma app se arman fotos estilo polaroid con texto.
 
 ## Información
 

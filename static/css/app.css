@@ -755,6 +755,8 @@ a.btn-qr { text-decoration: none; }
     grid-auto-rows: 1fr;
     gap: 1.5cqw;
 }
+/* Si el último cuadro queda solo en su renglón, a lo ancho. */
+.kiosko-cuadros > button:last-child:nth-child(even) { grid-column: span 2; }
 .kiosko-cuadros button {
     display: grid;
     place-content: center;
@@ -1507,7 +1509,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .fot-estado.cancelado { background: var(--warn-bg); color: var(--warn); }
 
 /* Credencial: tamaños dibujados a escala */
-.fot-tamanos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.fot-tamanos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
 .fot-tamano {
     position: relative;
     display: grid;
