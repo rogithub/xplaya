@@ -1382,6 +1382,11 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     box-shadow: inset 0 0 0 2px rgb(255 255 255 / .35);
 }
 .anu-colores label.activo { outline: 3px solid var(--ink); outline-offset: 3px; }
+.anu-reglas { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: .9rem; }
+.anu-reglas-titulo { font-weight: 700; margin: 0 0 6px; }
+.anu-reglas ul { margin: 0 0 10px; padding-left: 1.2em; display: grid; gap: 4px; }
+.anu-acepto { display: flex; align-items: center; gap: 10px; font-weight: 600; min-height: 44px; }
+.anu-acepto input { width: 22px; height: 22px; }
 
 /* Franja derecha del kiosko: anuncios de clientes, uno cada 10 s (kioskoAnuncios en app.js). */
 .kiosko-anuncios {

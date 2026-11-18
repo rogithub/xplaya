@@ -834,6 +834,7 @@ document.addEventListener('alpine:init', () => {
         color: o.color,
         abierto: o.abierto,
         foto: '',
+        acepto: false,
         error: '',
         ocupado: false,
 
@@ -854,6 +855,7 @@ document.addEventListener('alpine:init', () => {
         enviar(e) {
             if (this.tipo === 'imagen' && !this.foto) this.error = 'Elige una imagen.';
             else if (this.tipo === 'texto' && !this.texto.trim()) this.error = 'Escribe tu anuncio.';
+            else if (!this.acepto) this.error = 'Para mandarlo, acepta las reglas.';
             else this.error = '';
             if (this.error) { e.preventDefault(); return; }
             this.ocupado = true;

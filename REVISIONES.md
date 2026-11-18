@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Anuncios del kiosko: reglas que se aceptan al mandarlo (2026-11-18)
+
+Antes de mandar su anuncio, el cliente ve las reglas (nada de política, alcohol, préstamos ni
+contenido para adultos; nada de otras papelerías o centros de copiado; que sea verdad; la
+papelería puede no aprobarlo o quitarlo sin explicación) y marca "Acepto las reglas". Sin tope de
+anuncios en la pantalla: la papelería lo controlará metiendo anuncios suyos entre los de clientes.
+
+- `templates/app/anuncio.html` — el cuadro de reglas con la casilla `acepto`.
+- `static/app/app.js` — `anuncioForm` no envía sin la casilla.
+- `src/routes/anuncio.rs` — `guardar` también lo revisa (sin `acepto=si`, no sube nada).
+- `static/css/app.css` — `.anu-reglas`, `.anu-acepto`.
+
+---
+
 ## Anuncios del kiosko: "Tu anuncio en la tienda" (2026-11-17)
 
 Cada cliente con la app pone un anuncio en la pantalla de la tienda: una **imagen 9:16** (la de

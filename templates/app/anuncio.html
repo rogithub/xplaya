@@ -95,6 +95,21 @@
         </div>
     </template>
 
+    {# Reglas: se aceptan en cada envío (el servidor lo revisa también, routes/anuncio.rs). #}
+    <div class="anu-reglas">
+        <p class="anu-reglas-titulo">Reglas de los anuncios</p>
+        <ul>
+            <li>Nada de política, alcohol, préstamos ni contenido para adultos.</li>
+            <li>Nada de otras papelerías, centros de copiado o impresión.</li>
+            <li>Que sea verdad: lo que ofreces existe y es tuyo.</li>
+            <li>La papelería puede no aprobarlo o quitarlo cuando quiera, sin dar explicación.</li>
+        </ul>
+        <label class="anu-acepto">
+            <input type="checkbox" name="acepto" value="si" x-model="acepto">
+            Acepto las reglas
+        </label>
+    </div>
+
     <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
     <button type="submit" class="btn-qr anu-mandar" :disabled="ocupado">
         <span x-text="ocupado ? 'Mandando…' : 'Mandar para aprobación'">Mandar para aprobación</span>

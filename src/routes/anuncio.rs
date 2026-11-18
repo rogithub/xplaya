@@ -119,6 +119,7 @@ pub async fn guardar(State(state): State<AppState>, headers: HeaderMap, mut mult
     };
     const GRANDE: &str = "Tu imagen es muy grande o no llegó completa. Máximo 10 MB.";
     let (mut tipo, mut imagen, mut texto, mut color) = (String::new(), None, String::new(), String::new());
+    let mut acepto = false;
     loop {
         let campo = match multipart.next_field().await {
             Ok(Some(c)) => c,
@@ -138,10 +139,15 @@ pub async fn guardar(State(state): State<AppState>, headers: HeaderMap, mut mult
                     "tipo" => tipo = valor,
                     "texto" => texto = valor,
                     "color" => color = valor,
+                    "acepto" => acepto = valor == "si",
                     _ => {}
                 }
             }
         }
+    }
+    // Antes de subir nada: sin aceptar las reglas no se guarda.
+    if !acepto {
+        return con_error("Para mandarlo, acepta las reglas.");
     }
 
     let contenido_imagen;
