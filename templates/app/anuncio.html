@@ -1,0 +1,124 @@
+{% extends "app/base.html" %}
+{#
+  "Tu anuncio en la tienda" (routes/anuncio.rs): un anuncio por cliente en la franja derecha del
+  kiosko. Imagen 9:16 (la de su estado de WhatsApp; el servidor la deja en 1080×1920 sin recortar)
+  o texto sobre un color. La caja lo aprueba en el POS y sale 7 días. Arriba, el que tiene y en qué
+  va; abajo, el formulario para ponerlo o cambiarlo (`anuncioForm` en app.js).
+#}
+{% block title %}Tu anuncio en la tienda — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+
+<header class="app-top">
+    <a href="/" class="btn-link imp-volver">← Monedero</a>
+    <h1 class="app-title">Tu anuncio en la tienda</h1>
+</header>
+<p class="imp-intro">Gratis en la pantalla de la papelería por <strong>7 días</strong>, después de que lo revisemos.
+    Una imagen (la misma de tu estado de WhatsApp) o un texto. Uno por persona.</p>
+
+{% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+{% if ok == "mandado" %}<p class="imp-aviso ok" role="status">✅ Lo recibimos. En cuanto lo aprobemos sale en la pantalla de la tienda.</p>{% endif %}
+{% if ok == "quitado" %}<p class="imp-aviso ok" role="status">Listo, quitamos tu anuncio de la pantalla.</p>{% endif %}
+
+<div x-data='anuncioForm({{ {"tipo": anuncio.tipo if anuncio else "imagen", "texto": anuncio.texto if anuncio and anuncio.texto else "", "color": anuncio.color if anuncio and anuncio.color else colores[0], "maxMb": max_mb, "abierto": not anuncio} | tojson }})'>
+
+{% if anuncio %}
+<section class="anu-actual" x-show="!abierto">
+    {% if anuncio.tipo == "imagen" %}
+    <div class="anu-vista"><img src="/anuncio/imagen?v={{ version }}" alt="Tu anuncio"></div>
+    {% else %}
+    <div class="anu-vista anu-texto" style="background-color: {{ anuncio.color }}"
+         x-init="$nextTick(() => ajustarTexto($el))">{{ anuncio.texto }}</div>
+    {% endif %}
+
+    <div class="anu-estado">
+        {% if situacion.clave == "Esperando" %}
+        <p class="anu-badge espera">⏳ Esperando aprobación</p>
+        <p class="inicio-nota">Lo revisamos en la papelería y te sale aquí en cuanto lo aprobemos.</p>
+        {% elif situacion.clave == "EnKiosko" %}
+        <p class="anu-badge si">📺 En la pantalla de la tienda</p>
+        <p class="inicio-nota">{% if situacion.dias == 1 %}Queda 1 día{% else %}Quedan {{ situacion.dias }} días{% endif %}.</p>
+        {% elif situacion.clave == "NoAprobado" %}
+        <p class="anu-badge no">No lo aprobamos</p>
+        {% if situacion.motivo %}<p class="anu-motivo">“{{ situacion.motivo }}”</p>{% endif %}
+        <p class="inicio-nota">Cámbialo y lo revisamos otra vez.</p>
+        {% else %}
+        <p class="anu-badge fin">Ya terminaron sus 7 días</p>
+        <form method="post" action="/anuncio/volver-a-mandar">
+            <button type="submit" class="btn-qr anu-otra-vez">🔁 Volver a mandarlo</button>
+        </form>
+        {% endif %}
+
+        <button type="button" class="btn-sec anu-cambiar" @click="abierto = true">✏️ Cambiar mi anuncio</button>
+        <form method="post" action="/anuncio/quitar"
+              @submit="if (!confirm('¿Quitar tu anuncio? Deja de salir en la pantalla de la tienda.')) $event.preventDefault()">
+            <button type="submit" class="btn-link anu-quitar">Quitar mi anuncio</button>
+        </form>
+    </div>
+</section>
+{% endif %}
+
+{# Poner o cambiar: imagen o texto, con la vista previa como sale en la pantalla. #}
+<form method="post" action="/anuncio" enctype="multipart/form-data" class="anu-form"
+      x-show="abierto" {% if anuncio %}x-cloak{% endif %} @submit="enviar($event)">
+    <div class="anu-tipos" role="radiogroup" aria-label="Tipo de anuncio">
+        <label :class="tipo === 'imagen' && 'activo'"><input type="radio" name="tipo" value="imagen" x-model="tipo"> 🖼️ Imagen</label>
+        <label :class="tipo === 'texto' && 'activo'"><input type="radio" name="tipo" value="texto" x-model="tipo"> 🔤 Texto</label>
+    </div>
+
+    <template x-if="tipo === 'imagen'">
+        <div class="anu-campos">
+            <div class="anu-vista anu-vacia" x-show="!foto">Aquí se ve tu imagen</div>
+            <div class="anu-vista" x-show="foto"><img :src="foto" alt="Vista previa"></div>
+            <label class="btn-qr anu-elegir">
+                🖼️ <span x-text="foto ? 'Elegir otra' : 'Elegir imagen'"></span>
+                <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" @change="elegida($event)" class="imp-archivo">
+            </label>
+            <p class="inicio-nota">Vertical, como tu estado de WhatsApp (1080 × 1920). Si es de otra forma la acomodamos sin recortarla. Hasta {{ max_mb }} MB.</p>
+        </div>
+    </template>
+
+    <template x-if="tipo === 'texto'">
+        <div class="anu-campos">
+            <div class="anu-vista anu-texto" :style="'background-color:' + color"
+                 x-text="texto.trim() || 'Escribe tu anuncio'" x-effect="texto; $nextTick(() => ajustarTexto($el))"></div>
+            <textarea name="texto" maxlength="{{ max_texto }}" rows="4" class="campo anu-escribir" x-model="texto"
+                      placeholder="Ej. Rento departamento 2 recámaras · 984 123 4567"></textarea>
+            <p class="inicio-nota anu-cuenta" x-text="texto.length + ' / {{ max_texto }}'"></p>
+            <div class="anu-colores" role="radiogroup" aria-label="Color de fondo">
+                {% for c in colores %}
+                <label style="background-color: {{ c }}" :class="color === '{{ c }}' && 'activo'">
+                    <input type="radio" name="color" value="{{ c }}" x-model="color" aria-label="Color {{ loop.index }}">
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </template>
+
+    {# Reglas: se aceptan en cada envío (el servidor lo revisa también, routes/anuncio.rs). #}
+    <div class="anu-reglas">
+        <p class="anu-reglas-titulo">Reglas de los anuncios</p>
+        <ul>
+            <li>Nada de política, alcohol, préstamos ni contenido para adultos.</li>
+            <li>Nada de otras papelerías, centros de copiado o impresión.</li>
+            <li>Que sea verdad: lo que ofreces existe y es tuyo.</li>
+            <li>La papelería puede no aprobarlo o quitarlo cuando quiera, sin dar explicación.</li>
+        </ul>
+        <label class="anu-acepto">
+            <input type="checkbox" name="acepto" value="si" x-model="acepto">
+            Acepto las reglas
+        </label>
+    </div>
+
+    <p class="alerta" role="alert" x-show="error" x-text="error" x-cloak></p>
+    <button type="submit" class="btn-qr anu-mandar" :disabled="ocupado">
+        <span x-text="ocupado ? 'Mandando…' : 'Mandar para aprobación'">Mandar para aprobación</span>
+    </button>
+    {% if anuncio %}
+    <p class="inicio-nota">Al cambiarlo, vuelve a esperar aprobación.
+        <button type="button" class="btn-link" @click="abierto = false">Cancelar</button></p>
+    {% endif %}
+</form>
+
+</div>
+{% endblock %}

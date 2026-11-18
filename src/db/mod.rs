@@ -1,3 +1,4 @@
+pub mod anuncios;
 pub mod productos;
 pub mod pedidos;
 pub mod monedero;

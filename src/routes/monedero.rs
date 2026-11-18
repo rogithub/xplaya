@@ -175,6 +175,9 @@ pub async fn render_monedero(
     // impresas (el POS ya lo lee). En el paso 4 se cambia por ID + código que caduca.
     let qr_caja = qr_svg(&cliente.telefono);
 
+    // Renglón "Tu anuncio en la tienda": solo con sesión (se pone desde el celular ligado).
+    let anuncio = if con_sesion { crate::routes::anuncio::resumen(state, cliente_id).await } else { None };
+
     let tmpl = state.tmpl.get_template("monedero/app.html").map_err(|e| {
         tracing::error!("Template app: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
@@ -186,6 +189,7 @@ pub async fn render_monedero(
             qr_caja => qr_caja,
             en_app => en_app,
             con_sesion => con_sesion,
+            anuncio => anuncio,
             // Barra de abajo (Monedero · Tienda · Carrito), solo en la app.
             nav => en_app.then_some("monedero"),
         })

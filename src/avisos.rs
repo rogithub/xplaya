@@ -7,6 +7,8 @@
 //!   ya escrito (topic `papeleria-kiosko`).
 //! - `whatsapp_kiosko`: "agrégame a WhatsApp" desde la pantalla del kiosko, con botón que abre
 //!   WhatsApp con el saludo ya escrito (topic `papeleria-kiosko`).
+//! - `anuncio_nuevo`: un cliente puso o cambió su anuncio del kiosko y espera aprobación en el
+//!   POS (topic `papeleria-kiosko`).
 //! - `pedido_nuevo`: un pedido en línea (carrito de xplaya.com o tienda de la app), con botones a
 //!   la cotización y al WhatsApp del cliente (topic `pedidos`).
 //!
@@ -118,6 +120,18 @@ impl Avisos {
             });
             avisos.publicar(SUBJECT_PAPELERIA, aviso.to_string());
         });
+    }
+
+    /// Un anuncio del kiosko espera aprobación (Contactos → Anuncios del kiosko, en el POS).
+    pub fn anuncio_nuevo(&self, nombre: &str, tipo: &str) {
+        let primer_nombre = nombre.split_whitespace().next().unwrap_or("Un cliente");
+        let que = if tipo == "imagen" { "una imagen" } else { "un texto" };
+        let aviso = json!({
+            "title": format!("Anuncio por aprobar: {primer_nombre}"),
+            "message": format!("{nombre} quiere poner {que} en el kiosko. Apruébalo en el POS: Contactos → Anuncios del kiosko."),
+            "priority": 3,
+        });
+        self.publicar(SUBJECT_PAPELERIA, aviso.to_string());
     }
 
     /// Pedido en línea recién guardado. `desde`: "la app" o "xplaya.com", para saber por dónde

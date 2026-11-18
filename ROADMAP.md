@@ -233,6 +233,14 @@ omisión, rangos de páginas, copias, doble cara y `print-scaling` fit):
   firma), no a los 7 días; nunca mostrarlas en el kiosko. Si una oficina pide fotocopia "de
   verdad", sigue siendo en mostrador.
 
+### Anuncios del kiosko: "Tu anuncio en la tienda" (2026-11-17)
+
+- [x] POS: tabla `Anuncios` y Contactos → Anuncios del kiosko (aprobar, no aprobar con motivo, quitar).
+- [x] App: poner imagen 9:16 o texto con color, cambiarlo, quitarlo, volver a mandarlo.
+- [x] Kiosko: franja derecha 9:16, un anuncio cada 10 s y la invitación.
+- [ ] Producción: `anuncios-minio.sh` en curicaueri, la tabla en la BD y probar en la Elo.
+- [ ] Sin fecha: videos de TikTok por link (descartado por ahora).
+
 ### Avisos a la papelería por ntfy (por revisar)
 
 Desde el 12 nov 2026 hay un puente **`nats-ntfy`** (github.com/rogithub/nats-ntfy): cualquier

@@ -4,6 +4,75 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Anuncios del kiosko: se recorren con el dedo (2026-11-18)
+
+La franja de anuncios de clientes ya no solo avanza sola: tiene flechas ‹ › abajo, a los lados de
+"3 / 12", y se desliza con el dedo. Si alguien la toca, se queda quieta 30 s para leer con calma;
+luego sigue cada 10 s. Así no importa cuántos anuncios haya: quien quiera, los recorre. La vitrina
+de la izquierda (productos y la app) sigue igual: esa es la parte de la papelería.
+
+- `static/app/app.js` — `kioskoAnuncios`: `mover(paso)`, `pausaHasta` y el deslizar
+  (`tocar`/`soltar`, más de 50 px).
+- `templates/app/kiosko.html` — flechas y contador (solo si hay anuncios; en la invitación del final
+  no sale el contador).
+- `static/css/app.css` — `.kan-flecha`, `.kan-cuenta`; abajo, para no tapar el anuncio.
+
+---
+
+## Anuncios del kiosko: reglas que se aceptan al mandarlo (2026-11-18)
+
+Antes de mandar su anuncio, el cliente ve las reglas (nada de política, alcohol, préstamos ni
+contenido para adultos; nada de otras papelerías o centros de copiado; que sea verdad; la
+papelería puede no aprobarlo o quitarlo sin explicación) y marca "Acepto las reglas". Sin tope de
+anuncios en la pantalla: la papelería lo controlará metiendo anuncios suyos entre los de clientes.
+
+- `templates/app/anuncio.html` — el cuadro de reglas con la casilla `acepto`.
+- `static/app/app.js` — `anuncioForm` no envía sin la casilla.
+- `src/routes/anuncio.rs` — `guardar` también lo revisa (sin `acepto=si`, no sube nada).
+- `static/css/app.css` — `.anu-reglas`, `.anu-acepto`.
+
+---
+
+## Anuncios del kiosko: "Tu anuncio en la tienda" (2026-11-17)
+
+Cada cliente con la app pone un anuncio en la pantalla de la tienda: una **imagen 9:16** (la de
+su estado de WhatsApp) o un **texto sobre un color**. Uno por cliente. La caja lo aprueba en el
+POS (Contactos → Anuncios del kiosko, rama `feature/anuncios-kiosko` del POS, tabla `Anuncios`)
+y sale **7 días** en una franja derecha del kiosko de 608 × 1080 (9:16 a todo lo alto); el resto
+del kiosko se acomoda en los 1312 px que quedan. El cliente lo cambia (vuelve a esperar
+aprobación), lo quita cuando quiera o, vencido, lo vuelve a mandar igual.
+
+- `src/anuncio.rs` — deja la imagen en 1080 × 1920 JPEG con el crate `image`: respeta la rotación
+  de la cámara (EXIF) y, si no es 9:16, no la recorta: la pone completa sobre la misma foto
+  borrosa (se emborrona en 54 × 96 y se agranda, mucho más rápido). Los 8 colores del texto y en
+  qué va el anuncio (`situacion`). Con pruebas.
+- `src/db/anuncios.rs` — poner o reemplazar (devuelve la imagen anterior para borrarla), volver a
+  mandar, quitar, lo del kiosko (sin datos del cliente) y la limpieza.
+- `src/routes/anuncio.rs` — `/anuncio` (pantalla, guardar, quitar, volver a mandar, su imagen) y
+  `/kiosko/anuncios` + `/kiosko/anuncio/{id}` (solo con la cookie del kiosko, solo lo aprobado y
+  vigente). Limpieza diaria: rechazados y vencidos de hace más de 30 días, con su imagen.
+- `src/minio.rs` — `Minio::en(bucket)`: el mismo usuario en el bucket `papeleria-anuncios`.
+- `src/avisos.rs` — `anuncio_nuevo`: aviso al celular de la papelería (ntfy `papeleria-kiosko`)
+  cuando hay un anuncio por aprobar.
+- `templates/app/anuncio.html`, `anuncioForm` y `ajustarTexto` en `static/app/app.js` — vista
+  previa como sale en la pantalla; la letra del texto es la más grande con la que todo cabe sin
+  partir palabras, igual en el celular y en el kiosko.
+- `templates/monedero/app.html` — renglón "Tu anuncio en la tienda" con en qué va (solo con sesión).
+- `templates/app/kiosko.html`, `kioskoAnuncios` — la franja: un anuncio cada 10 s con la etiqueta
+  "Anuncio de un cliente" y, al final de cada vuelta, la invitación "¿Tu anuncio aquí?".
+- `static/css/app.css` — las medidas del kiosko pasan de `vw` a `cqw` (ancho de `.kiosko`, que es
+  contenedor) para caber junto a la franja.
+
+En producción: el script `/home/ro/srv/share/xplaya-minio/anuncios-minio.sh` (crea el bucket y amplía la política de
+`xplaya-impresiones`) y la tabla de `dbchanges/updates.sql` del POS.
+
+Probado con el servidor local: a 360 px poner un texto (vista previa, color, "Esperando
+aprobación"), aprobarlo en la BD y verlo en el kiosko a 1920 × 1080 junto con la invitación y la
+vista de WhatsApp; quitarlo. La subida de imagen no se probó contra MinIO de desarrollo (falta el
+bucket); el redimensionado, con las pruebas de `anuncio.rs`.
+
+---
+
 ## Monedero: menú de renglones, historial aparte y pagar por transferencia (2026-11-17)
 
 La pantalla del monedero crecía hacia abajo con el historial. Ahora arriba queda lo de la caja

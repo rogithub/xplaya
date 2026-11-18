@@ -810,3 +810,101 @@ function escribirPaginas(marcadas) {
     }
     return rangos.join(',');
 }
+
+// ── Anuncios del kiosko (anuncio.html y la franja del kiosko) ──
+
+// Letra de un anuncio de texto, como los estados de WhatsApp: la más grande con la que todo cabe
+// sin partir palabras (poco texto, letra enorme). En % del ancho, así se ve igual en el celular
+// que en el kiosko. Si ni con la más chica cabe, entonces sí parte palabras.
+window.ajustarTexto = (el) => {
+    if (!el.clientWidth) return;           // oculto: se ajusta cuando se vea
+    el.style.overflowWrap = 'normal';
+    for (let t = 16; t >= 4; t -= 0.5) {
+        el.style.fontSize = (el.clientWidth * t / 100) + 'px';
+        if (el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth) return;
+    }
+    el.style.overflowWrap = 'anywhere';
+};
+
+document.addEventListener('alpine:init', () => {
+    // Poner o cambiar el anuncio: imagen (vista previa local antes de subirla) o texto con color.
+    Alpine.data('anuncioForm', (o) => ({
+        tipo: o.tipo,
+        texto: o.texto,
+        color: o.color,
+        abierto: o.abierto,
+        foto: '',
+        acepto: false,
+        error: '',
+        ocupado: false,
+
+        elegida(e) {
+            this.error = '';
+            const archivo = e.target.files[0];
+            if (this.foto) URL.revokeObjectURL(this.foto);
+            this.foto = '';
+            if (!archivo) return;
+            if (archivo.size > o.maxMb * 1024 * 1024) {
+                this.error = `Tu imagen pesa más de ${o.maxMb} MB.`;
+                e.target.value = '';
+                return;
+            }
+            this.foto = URL.createObjectURL(archivo);
+        },
+
+        enviar(e) {
+            if (this.tipo === 'imagen' && !this.foto) this.error = 'Elige una imagen.';
+            else if (this.tipo === 'texto' && !this.texto.trim()) this.error = 'Escribe tu anuncio.';
+            else if (!this.acepto) this.error = 'Para mandarlo, acepta las reglas.';
+            else this.error = '';
+            if (this.error) { e.preventDefault(); return; }
+            this.ocupado = true;
+        },
+    }));
+});
+
+document.addEventListener('alpine:init', () => {
+    // Franja derecha del kiosko (kiosko.html): los anuncios aprobados, uno cada 10 s, y al final
+    // de la vuelta la invitación a poner el suyo (i === anuncios.length). Pide la lista cada 2 min.
+    Alpine.data('kioskoAnuncios', () => ({
+        anuncios: [],
+        i: 0,
+        desde: Date.now(),      // cuándo empezó el actual: cambia a los 10 s
+        pausaHasta: 0,          // si alguien lo tocó, se queda quieto hasta entonces
+        xToque: null,           // dónde empezó a deslizar el dedo
+
+        init() {
+            this.cargar();
+            setInterval(() => this.cargar(), 2 * 60 * 1000);
+            setInterval(() => {
+                const ahora = Date.now();
+                if (ahora >= this.pausaHasta && ahora - this.desde >= 10000) this.mover(1, false);
+            }, 1000);
+        },
+
+        // Con los anuncios más la invitación del final.
+        mover(paso, tocado = true) {
+            const n = this.anuncios.length + 1;
+            this.i = (this.i + paso + n) % n;
+            this.desde = Date.now();
+            // Quien lo recorre con el dedo lo quiere leer: 30 s quieto.
+            if (tocado) this.pausaHasta = this.desde + 30000;
+        },
+        tocar(e) { this.xToque = e.clientX; },
+        soltar(e) {
+            if (this.xToque === null) return;
+            const dx = e.clientX - this.xToque;
+            this.xToque = null;
+            if (Math.abs(dx) > 50) this.mover(dx < 0 ? 1 : -1);
+        },
+
+        async cargar() {
+            try {
+                const r = await fetch('/kiosko/anuncios');
+                if (!r.ok) return;
+                this.anuncios = await r.json();
+                if (this.i > this.anuncios.length) this.i = 0;
+            } catch { /* sin red: sigue con los que tenía */ }
+        },
+    }));
+});

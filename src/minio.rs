@@ -1,9 +1,11 @@
-//! MinIO para el autoservicio de impresión: los PDFs de los clientes, en el bucket privado
-//! `papeleria-impresiones` (se borran a los 7 días; MinIO los borra a los 8 por si acaso).
+//! MinIO de xplaya: los PDFs del autoservicio de impresión, en el bucket privado
+//! `papeleria-impresiones` (se borran a los 7 días; MinIO los borra a los 8 por si acaso), y las
+//! imágenes de los anuncios del kiosko, en `papeleria-anuncios` (`Minio::en(BUCKET_ANUNCIOS)`).
 //!
 //! Cliente S3 mínimo con la firma SigV4 hecha a mano, como en imagina (`pdfeitor/src/r2.rs`):
 //! path-style (`{endpoint}/{bucket}/{llave}`), sin SDK de AWS. El usuario `xplaya-impresiones`
-//! solo puede leer, escribir y borrar en ese bucket (`sellar-minio-xplaya.sh`).
+//! solo puede leer, escribir y borrar en esos dos buckets (`sellar-minio-xplaya.sh`,
+//! `anuncios-minio.sh`).
 
 use chrono::Utc;
 use hmac::{Hmac, KeyInit, Mac};
@@ -12,6 +14,7 @@ use sha2::{Digest, Sha256};
 use crate::config::Config;
 
 pub const BUCKET: &str = "papeleria-impresiones";
+pub const BUCKET_ANUNCIOS: &str = "papeleria-anuncios";
 /// En las firmas; MinIO acepta cualquiera si no tiene región configurada.
 const REGION: &str = "us-east-1";
 
@@ -24,6 +27,7 @@ pub struct Minio {
     host: String,
     usuario: String,
     password: String,
+    bucket: &'static str,
 }
 
 impl Minio {
@@ -39,7 +43,19 @@ impl Minio {
             .timeout(std::time::Duration::from_secs(60))
             .build()
             .ok()?;
-        Some(Self { http, endpoint, host, usuario: cfg.minio_usuario.clone(), password: cfg.minio_password.clone() })
+        Some(Self {
+            http,
+            endpoint,
+            host,
+            usuario: cfg.minio_usuario.clone(),
+            password: cfg.minio_password.clone(),
+            bucket: BUCKET,
+        })
+    }
+
+    /// El mismo cliente, en otro bucket.
+    pub fn en(&self, bucket: &'static str) -> Self {
+        Self { bucket, ..self.clone() }
     }
 
     pub async fn subir(&self, llave: &str, bytes: Vec<u8>, content_type: &str) -> Result<(), String> {
@@ -83,7 +99,7 @@ impl Minio {
     }
 
     fn url(&self, llave: &str) -> String {
-        format!("{}/{BUCKET}/{llave}", self.endpoint)
+        format!("{}/{}/{llave}", self.endpoint, self.bucket)
     }
 
     /// Encabezados firmados (SigV4). Las llaves son `{cliente}/{trabajo}.pdf`: solo caracteres
@@ -101,7 +117,7 @@ impl Minio {
                 format!("host:{}\nx-amz-content-sha256:{sha_cuerpo}\nx-amz-date:{fecha_hora}\n", self.host),
             ),
         };
-        let canonica = format!("{metodo}\n/{BUCKET}/{llave}\n\n{encabezados}\n{nombres}\n{sha_cuerpo}");
+        let canonica = format!("{metodo}\n/{}/{llave}\n\n{encabezados}\n{nombres}\n{sha_cuerpo}", self.bucket);
         let alcance = format!("{fecha}/{REGION}/s3/aws4_request");
         let a_firmar = format!("AWS4-HMAC-SHA256\n{fecha_hora}\n{alcance}\n{}", sha256_hex(canonica.as_bytes()));
         let llave_firma = ["s3", "aws4_request"].iter().fold(

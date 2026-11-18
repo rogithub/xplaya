@@ -27,7 +27,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 use crate::{
     db,
     impresion,
-    routes::{alta, alta::error_json, cuenta, google, imprimir, kiosko, monedero, notificaciones, tienda},
+    routes::{alta, alta::error_json, anuncio, cuenta, google, imprimir, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -62,12 +62,20 @@ pub fn router() -> Router<AppState> {
         .route("/imprimir/{id}/cuenta", get(imprimir::cuenta))
         .route("/imprimir/{id}/pdf", get(imprimir::pdf))
         .route("/imprimir/{id}/quitar", post(imprimir::quitar))
+        .route("/anuncio", get(anuncio::pagina))
+        // Imagen de hasta 10 MB y los campos de texto.
+        .route("/anuncio", post(anuncio::guardar).layer(DefaultBodyLimit::max(crate::anuncio::MAX_BYTES + 512 * 1024)))
+        .route("/anuncio/imagen", get(anuncio::imagen))
+        .route("/anuncio/quitar", post(anuncio::quitar))
+        .route("/anuncio/volver-a-mandar", post(anuncio::volver_a_mandar))
         .route("/cuenta/eventos", get(cuenta::eventos))
         .route("/cuenta/venta/{venta_id}", get(cuenta::venta))
         .route("/kiosko", get(kiosko::pantalla))
         .route("/kiosko/activar", get(kiosko::activar))
         .route("/kiosko/qr", get(kiosko::qr))
         .route("/kiosko/vitrina", get(kiosko::vitrina))
+        .route("/kiosko/anuncios", get(anuncio::kiosko_lista))
+        .route("/kiosko/anuncio/{id}", get(anuncio::kiosko_imagen))
         .route("/kiosko/producto/{nid}", get(kiosko::producto))
         .route("/kiosko/whatsapp", post(kiosko::whatsapp))
         .route("/kiosko/k/{codigo}", get(kiosko::escaneo))

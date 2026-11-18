@@ -574,9 +574,14 @@ a.btn-qr { text-decoration: none; }
 .form-salir { display: inline; margin: 0; }
 
 /* ── Kiosko de la tienda (templates/app/kiosko.html): pantalla táctil horizontal completa ── */
+/* La franja de anuncios de clientes (9:16 a todo lo alto) va fija a la derecha; el kiosko usa el
+   resto. Sus medidas van en cqw (ancho de .kiosko), no en vw, para que quepan en lo que queda. */
+:root { --franja-anuncios: calc(100vh * 9 / 16); }
 .kiosko {
     position: fixed;
     inset: 0;
+    right: var(--franja-anuncios);
+    container-type: size;
     display: flex;
     flex-direction: column;
     background: var(--bg);
@@ -589,50 +594,50 @@ a.btn-qr { text-decoration: none; }
     min-height: 0;
     display: grid;
     grid-template-columns: 1.3fr 1fr;
-    gap: 4vw;
+    gap: 4cqw;
     align-items: center;
-    padding: 3vh 5vw 1vh;
+    padding: 3vh 5cqw 1vh;
 }
 .kiosko-gracias { grid-template-columns: 1fr; text-align: center; }
-.kiosko-logo { width: clamp(56px, 7vw, 100px); height: auto; }
+.kiosko-logo { width: clamp(56px, 7cqw, 100px); height: auto; }
 .kiosko-titulo {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 4vw, 3.4rem);
+    font-size: clamp(2rem, 4cqw, 3.4rem);
     line-height: 1.1;
     margin: 1.5vh 0 1vh;
 }
-.kiosko-sub { font-size: clamp(1.1rem, 1.8vw, 1.6rem); color: var(--muted); margin: 0 0 3vh; }
+.kiosko-sub { font-size: clamp(1.1rem, 1.8cqw, 1.6rem); color: var(--muted); margin: 0 0 3vh; }
 .kiosko-qr-lado { display: grid; justify-items: center; gap: 2vh; }
 /* El QR siempre en blanco y negro para que cualquier cámara lo lea. */
 .kiosko-qr {
     background: #fff;
-    padding: 2vw;
+    padding: 2cqw;
     border-radius: 24px;
-    width: min(34vw, 60vh);
+    width: min(34cqw, 60vh);
     aspect-ratio: 1;
     box-shadow: 0 8px 30px rgb(0 0 0 / .12);
 }
 .kiosko-qr svg, .kiosko-qr img { width: 100%; height: 100%; display: block; }
-.kiosko-qr-txt { font-family: var(--font-display); font-size: clamp(1.2rem, 2vw, 1.8rem); margin: 0; }
+.kiosko-qr-txt { font-family: var(--font-display); font-size: clamp(1.2rem, 2cqw, 1.8rem); margin: 0; }
 
 
 /* Teclado de números en pantalla: botones grandes para dedos. */
 .kiosko-teclado-lado { display: grid; gap: 2vh; }
 .kiosko-tel {
     font-family: ui-monospace, monospace;
-    font-size: clamp(1.6rem, 3.2vw, 2.8rem);
+    font-size: clamp(1.6rem, 3.2cqw, 2.8rem);
     text-align: center;
-    padding: 1.5vh 1vw;
+    padding: 1.5vh 1cqw;
     border-radius: 16px;
     background: var(--surface);
     border: 3px solid var(--line);
     color: var(--muted);
 }
 .kiosko-tel.completo { border-color: var(--accent); color: var(--ink); }
-.kiosko-teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4vh 1vw; }
+.kiosko-teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4vh 1cqw; }
 .kiosko-teclado button {
     font-family: var(--font-display);
-    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    font-size: clamp(1.6rem, 3cqw, 2.6rem);
     padding: 1.6vh 0;
     border: 0;
     border-radius: 16px;
@@ -642,7 +647,7 @@ a.btn-qr { text-decoration: none; }
 }
 .kiosko-teclado button:active { transform: scale(.96); }
 .kiosko-teclado .borrar { background: var(--chip); }
-.kiosko-teclado .enviar { background: var(--accent); color: var(--accent-ink); font-size: clamp(1.1rem, 2vw, 1.7rem); }
+.kiosko-teclado .enviar { background: var(--accent); color: var(--accent-ink); font-size: clamp(1.1rem, 2cqw, 1.7rem); }
 .kiosko-teclado .enviar:disabled { opacity: .35; }
 .kiosko-error { color: var(--warn); font-size: 1.2rem; margin: 0; text-align: center; }
 
@@ -651,15 +656,15 @@ a.btn-qr { text-decoration: none; }
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr minmax(0, 34vw);
-    gap: 2vw;
-    padding: 3vh 2.5vw;
+    grid-template-columns: 1fr minmax(0, 34cqw);
+    gap: 2cqw;
+    padding: 3vh 2.5cqw;
 }
 .vitrina {
     position: relative;
     min-height: 0;
     display: grid;
-    padding: 3vh 5vw;
+    padding: 3vh 5cqw;
     border-radius: 28px;
     background: var(--surface);
     box-shadow: 0 8px 30px rgb(0 0 0 / .08);
@@ -669,13 +674,13 @@ a.btn-qr { text-decoration: none; }
     display: grid;
     place-items: center;
     height: 100%;
-    font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+    font-size: clamp(1.4rem, 2.4cqw, 2.2rem);
     color: var(--muted);
 }
 .vitrina-producto {
     display: grid;
     grid-template-columns: 1.1fr 1fr;
-    gap: 3vw;
+    gap: 3cqw;
     align-items: center;
     min-height: 0;
 }
@@ -690,7 +695,7 @@ a.btn-qr { text-decoration: none; }
 .vitrina-etiqueta {
     margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(1rem, 1.4vw, 1.3rem);
+    font-size: clamp(1rem, 1.4cqw, 1.3rem);
     letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--brand-orange);
@@ -698,18 +703,18 @@ a.btn-qr { text-decoration: none; }
 .vitrina-nombre {
     margin: 1vh 0;
     font-family: var(--font-display);
-    font-size: clamp(1.6rem, 2.6vw, 2.6rem);
+    font-size: clamp(1.6rem, 2.6cqw, 2.6rem);
     line-height: 1.15;
 }
 .vitrina-precio {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: clamp(2.6rem, 5vw, 4.6rem);
+    font-size: clamp(2.6rem, 5cqw, 4.6rem);
     color: var(--accent);
 }
-.vitrina-unidad { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
-.vitrina-pedir { margin: 0; font-family: var(--font-display); font-size: clamp(1.3rem, 2vw, 1.9rem); }
+.vitrina-unidad { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1rem, 1.4cqw, 1.3rem); }
+.vitrina-pedir { margin: 0; font-family: var(--font-display); font-size: clamp(1.3rem, 2cqw, 1.9rem); }
 .vitrina-nid {
     display: inline-block;
     padding: .1em .5em;
@@ -722,18 +727,18 @@ a.btn-qr { text-decoration: none; }
     position: absolute;
     top: 50%;
     translate: 0 -50%;
-    width: clamp(48px, 4.5vw, 72px);
-    height: clamp(48px, 4.5vw, 72px);
+    width: clamp(48px, 4.5cqw, 72px);
+    height: clamp(48px, 4.5cqw, 72px);
     border: 0;
     border-radius: 50%;
     background: var(--chip);
     color: var(--ink);
-    font-size: clamp(2rem, 3.4vw, 3rem);
+    font-size: clamp(2rem, 3.4cqw, 3rem);
     line-height: 1;
     box-shadow: 0 4px 14px rgb(0 0 0 / .1);
 }
-.vitrina-flecha.izq { left: 1vw; }
-.vitrina-flecha.der { right: 1vw; }
+.vitrina-flecha.izq { left: 1cqw; }
+.vitrina-flecha.der { right: 1cqw; }
 .vitrina-flecha:active { transform: scale(.94); }
 .vitrina-cuenta {
     position: absolute;
@@ -748,24 +753,24 @@ a.btn-qr { text-decoration: none; }
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: 1fr;
-    gap: 1.5vw;
+    gap: 1.5cqw;
 }
 .kiosko-cuadros button {
     display: grid;
     place-content: center;
     gap: 1vh;
-    padding: 1.5vh 1vw;
+    padding: 1.5vh 1cqw;
     border: 0;
     border-radius: 22px;
     background: var(--surface);
     color: var(--ink);
     font-family: var(--font-display);
-    font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+    font-size: clamp(1.1rem, 1.7cqw, 1.6rem);
     line-height: 1.15;
     text-align: center;
     box-shadow: 0 4px 14px rgb(0 0 0 / .08);
 }
-.kiosko-cuadros button span { font-size: clamp(2rem, 3.4vw, 3.2rem); }
+.kiosko-cuadros button span { font-size: clamp(2rem, 3.4cqw, 3.2rem); }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
 .kiosko-cuadros .cuadro-ancho { grid-column: 1 / -1; }
 
@@ -775,19 +780,19 @@ a.btn-qr { text-decoration: none; }
 .kiosko-cuadros .cuadro-app {
     display: flex;
     align-items: center;
-    gap: 1.4vw;
-    padding: 1.5vh 1.6vw;
+    gap: 1.4cqw;
+    padding: 1.5vh 1.6cqw;
     background: var(--brand-dark);
     color: #F7F1EC;
     text-align: left;
     box-shadow: 0 6px 22px rgb(35 25 22 / .35);
 }
 .kiosko-cuadros .cuadro-app:active { background: #3a2a25; }
-.cuadro-app .app-icono { width: clamp(80px, 8.5vw, 150px); height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
+.cuadro-app .app-icono { width: clamp(80px, 8.5cqw, 150px); height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
 .cuadro-app-txt { display: grid; gap: .4vh; flex: 1; font-size: inherit; }
-.cuadro-app-txt strong { font-size: clamp(1.4rem, 2.05vw, 2.2rem); font-weight: 600; line-height: 1.05; white-space: nowrap; }
-.cuadro-app-txt small { font-family: var(--font-body); font-size: clamp(1rem, 1.35vw, 1.35rem); color: var(--brand-teal); }
-.kiosko-cuadros .cuadro-app span.app-obtener { justify-self: start; margin-top: .8vh; font-size: clamp(1.1rem, 1.5vw, 1.5rem); }
+.cuadro-app-txt strong { font-size: clamp(1.4rem, 2.05cqw, 2.2rem); font-weight: 600; line-height: 1.05; white-space: nowrap; }
+.cuadro-app-txt small { font-family: var(--font-body); font-size: clamp(1rem, 1.35cqw, 1.35rem); color: var(--brand-teal); }
+.kiosko-cuadros .cuadro-app span.app-obtener { justify-self: start; margin-top: .8vh; font-size: clamp(1.1rem, 1.5cqw, 1.5rem); }
 .app-obtener {
     flex: none;
     margin: 0;
@@ -800,54 +805,54 @@ a.btn-qr { text-decoration: none; }
     letter-spacing: .06em;
     text-transform: uppercase;
 }
-.app-obtener-grande { font-size: clamp(1.3rem, 2vw, 1.9rem); }
+.app-obtener-grande { font-size: clamp(1.3rem, 2cqw, 1.9rem); }
 
 /* Ficha de la app (vista 'app'): cabeza con el ícono, y tres celulares de ejemplo. */
-.kiosko-tienda-app { grid-template-columns: 1.6fr 1fr; gap: 3vw; padding-top: 11vh; }
-.kiosko-tienda-app .kiosko-qr { width: min(28vw, 48vh); }
+.kiosko-tienda-app { grid-template-columns: 1.6fr 1fr; gap: 3cqw; padding-top: 11vh; }
+.kiosko-tienda-app .kiosko-qr { width: min(28cqw, 48vh); }
 .ficha-app { display: grid; gap: 3.5vh; min-height: 0; }
-.ficha-cabeza { display: flex; align-items: center; gap: 2vw; }
-.ficha-icono { width: clamp(96px, 9vw, 168px); height: auto; }
+.ficha-cabeza { display: flex; align-items: center; gap: 2cqw; }
+.ficha-icono { width: clamp(96px, 9cqw, 168px); height: auto; }
 .ficha-cabeza .kiosko-titulo { margin: 0; }
-.ficha-de { margin: .6vh 0 1.2vh; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.3rem); }
-.ficha-chips { display: flex; flex-wrap: wrap; gap: .6vw; margin: 0; }
+.ficha-de { margin: .6vh 0 1.2vh; color: var(--muted); font-size: clamp(1rem, 1.4cqw, 1.3rem); }
+.ficha-chips { display: flex; flex-wrap: wrap; gap: .6cqw; margin: 0; }
 .ficha-chips span {
     padding: .3em .8em;
     border-radius: 999px;
     background: var(--chip);
     font-weight: 600;
-    font-size: clamp(.9rem, 1.2vw, 1.15rem);
+    font-size: clamp(.9rem, 1.2cqw, 1.15rem);
 }
-.ficha-capturas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vw; }
+.ficha-capturas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw; }
 .ficha-capturas figure { margin: 0; display: grid; gap: 1.4vh; justify-items: center; }
 .ficha-capturas figcaption {
     text-align: center;
     font-family: var(--font-display);
-    font-size: clamp(1rem, 1.35vw, 1.3rem);
+    font-size: clamp(1rem, 1.35cqw, 1.3rem);
     line-height: 1.2;
 }
 
 /* Un celular dibujado: marco oscuro y pantalla con lo que vería el cliente (datos de ejemplo). */
 .cel {
-    width: min(100%, 15vw);
+    width: min(100%, 15cqw);
     aspect-ratio: 9 / 17;
     display: flex;
     flex-direction: column;
     gap: 1vh;
-    padding: 2.2vh .9vw;
-    border: .55vw solid var(--brand-dark);
-    border-radius: 2.2vw;
+    padding: 2.2vh .9cqw;
+    border: .55cqw solid var(--brand-dark);
+    border-radius: 2.2cqw;
     background: #EEF2F1;
     color: #18211F;
-    font-size: clamp(.6rem, .82vw, .85rem);
+    font-size: clamp(.6rem, .82cqw, .85rem);
     box-shadow: 0 10px 30px rgb(0 0 0 / .18);
     overflow: hidden;
 }
 .cel-tarjeta {
     display: grid;
     gap: .3vh;
-    padding: 1.4vh .8vw;
-    border-radius: 1vw;
+    padding: 1.4vh .8cqw;
+    border-radius: 1cqw;
     background: linear-gradient(135deg, #231916, #4a2f25);
     color: #F7F1EC;
 }
@@ -855,7 +860,7 @@ a.btn-qr { text-decoration: none; }
 .cel-monto { font-family: var(--font-display); font-weight: 600; font-size: 2.2em; color: var(--brand-teal); }
 .cel-boton {
     padding: .9vh 0;
-    border-radius: .7vw;
+    border-radius: .7cqw;
     background: #1F7A76;
     color: #fff;
     text-align: center;
@@ -865,9 +870,9 @@ a.btn-qr { text-decoration: none; }
 .cel-fila {
     display: flex;
     justify-content: space-between;
-    gap: .4vw;
-    padding: .7vh .6vw;
-    border-radius: .6vw;
+    gap: .4cqw;
+    padding: .7vh .6cqw;
+    border-radius: .6cqw;
     background: #fff;
 }
 .cel-fila b { color: #1F7A76; }
@@ -875,17 +880,17 @@ a.btn-qr { text-decoration: none; }
 .cel-premio {
     margin-top: auto;
     padding: .9vh 0;
-    border-radius: .7vw;
+    border-radius: .7cqw;
     background: var(--brand-yellow);
     text-align: center;
     font-weight: 600;
 }
-.cel-tienda { display: grid; grid-template-columns: 1fr 1fr; gap: .5vw; flex: 1; }
+.cel-tienda { display: grid; grid-template-columns: 1fr 1fr; gap: .5cqw; flex: 1; }
 .cel-prod {
     display: grid;
     grid-template-rows: 1fr auto;
-    padding: .4vw;
-    border-radius: .6vw;
+    padding: .4cqw;
+    border-radius: .6cqw;
     background: #fff;
     min-height: 0;
     text-align: center;
@@ -896,9 +901,9 @@ a.btn-qr { text-decoration: none; }
 
 /* La app en la vitrina: el QR donde va la foto del producto. */
 .vitrina-app { height: 100%; }
-.vitrina-qr { width: min(26vw, 52vh); justify-self: center; }
-.vitrina-app-titulo { font-size: clamp(2rem, 3.2vw, 3.2rem); }
-.vitrina-app-sub { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1.1rem, 1.6vw, 1.5rem); }
+.vitrina-qr { width: min(26cqw, 52vh); justify-self: center; }
+.vitrina-app-titulo { font-size: clamp(2rem, 3.2cqw, 3.2rem); }
+.vitrina-app-sub { margin: 0 0 3vh; color: var(--muted); font-size: clamp(1.1rem, 1.6cqw, 1.5rem); }
 
 /* Buscar por número: el producto en grande, con la misma tipografía de la vitrina. */
 .kiosko-producto { grid-template-columns: 1fr; }
@@ -916,7 +921,7 @@ a.btn-qr { text-decoration: none; }
 .kiosko-foto-cuenta {
     margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+    font-size: clamp(1.1rem, 1.6cqw, 1.5rem);
     color: var(--muted);
 }
 .kiosko-sin-foto {
@@ -927,7 +932,7 @@ a.btn-qr { text-decoration: none; }
     border-radius: 20px;
     background: var(--chip);
     color: var(--muted);
-    font-size: clamp(1.3rem, 2vw, 1.8rem);
+    font-size: clamp(1.3rem, 2cqw, 1.8rem);
 }
 .kiosko-presentaciones {
     list-style: none;
@@ -935,20 +940,20 @@ a.btn-qr { text-decoration: none; }
     padding: 0;
     display: grid;
     gap: .8vh;
-    font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+    font-size: clamp(1.1rem, 1.6cqw, 1.5rem);
 }
 .kiosko-presentaciones strong { color: var(--accent); }
-.kiosko-hay { margin: 0 0 2vh; font-weight: 600; font-size: clamp(1.1rem, 1.7vw, 1.6rem); }
+.kiosko-hay { margin: 0 0 2vh; font-weight: 600; font-size: clamp(1.1rem, 1.7cqw, 1.6rem); }
 .kiosko-hay.si { color: var(--ok); }
 .kiosko-hay.no { color: var(--warn); }
 .kiosko-otro {
     margin-top: 3vh;
-    padding: 1.4vh 2vw;
+    padding: 1.4vh 2cqw;
     border: 0;
     border-radius: 16px;
     background: var(--chip);
     color: var(--ink);
-    font: 600 clamp(1.1rem, 1.7vw, 1.6rem) var(--font-display);
+    font: 600 clamp(1.1rem, 1.7cqw, 1.6rem) var(--font-display);
 }
 .kiosko-otro:active { transform: scale(.97); }
 /* Las demás vistas, en pantalla completa con "← Inicio" arriba a la izquierda. */
@@ -959,19 +964,19 @@ a.btn-qr { text-decoration: none; }
     padding: 0;
     display: grid;
     gap: 2vh;
-    font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+    font-size: clamp(1.2rem, 1.9cqw, 1.7rem);
 }
 .kiosko-volver {
     position: absolute;
     top: 3vh;
-    left: 3vw;
-    padding: 1.4vh 2vw;
+    left: 3cqw;
+    padding: 1.4vh 2cqw;
     border: 0;
     border-radius: 16px;
     background: var(--accent);
     color: var(--accent-ink);
     font-family: var(--font-display);
-    font-size: clamp(1.2rem, 2vw, 1.8rem);
+    font-size: clamp(1.2rem, 2cqw, 1.8rem);
     box-shadow: 0 4px 14px rgb(0 0 0 / .12);
 }
 
@@ -1313,3 +1318,152 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 }
 .imp-cuenta p { margin: 0; display: flex; align-items: baseline; gap: 6px; }
 .imp-cuenta-total { margin-left: auto; font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); }
+
+/* ── Tu anuncio en la tienda (app/anuncio.html) y su franja en el kiosko ─── */
+/* Vista 9:16 como sale en el kiosko (la letra del texto la ajusta ajustarTexto, app.js). */
+.anu-vista {
+    width: min(62vw, 240px);
+    aspect-ratio: 9 / 16;
+    margin: 0 auto;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #111;
+    box-shadow: 0 6px 22px rgb(0 0 0 / .18);
+}
+.anu-vista img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.anu-vacia { display: grid; place-items: center; color: #bbb; font-size: .95rem; background: var(--chip); color: var(--muted); }
+.anu-texto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9%;
+    color: #fff;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.anu-actual { display: grid; gap: 14px; margin: 8px 0 24px; }
+.anu-estado { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.anu-estado .inicio-nota { margin: 0; }
+.anu-badge { margin: 0; padding: 6px 14px; border-radius: 999px; font-weight: 700; background: var(--chip); }
+.anu-badge.si { background: var(--ok-bg); color: var(--ok); }
+.anu-badge.no { background: var(--warn-bg, var(--chip)); color: var(--warn); }
+.anu-motivo { margin: 0; font-style: italic; }
+.anu-cambiar { margin-top: 8px; }
+.anu-quitar { color: var(--warn); }
+
+.anu-form { display: grid; gap: 14px; margin-top: 8px; }
+.anu-tipos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.anu-tipos label {
+    padding: 12px;
+    border-radius: 14px;
+    background: var(--chip);
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+}
+.anu-tipos label.activo { background: var(--accent); color: var(--accent-ink); }
+.anu-tipos input, .anu-colores input { position: absolute; opacity: 0; pointer-events: none; }
+.anu-campos { display: grid; gap: 12px; }
+.anu-elegir { position: relative; }
+.anu-escribir { resize: vertical; font: inherit; }
+.anu-cuenta { margin: -6px 0 0; text-align: right; }
+.anu-colores { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.anu-colores label {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / .35);
+}
+.anu-colores label.activo { outline: 3px solid var(--ink); outline-offset: 3px; }
+.anu-reglas { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: .9rem; }
+.anu-reglas-titulo { font-weight: 700; margin: 0 0 6px; }
+.anu-reglas ul { margin: 0 0 10px; padding-left: 1.2em; display: grid; gap: 4px; }
+.anu-acepto { display: flex; align-items: center; gap: 10px; font-weight: 600; min-height: 44px; }
+.anu-acepto input { width: 22px; height: 22px; }
+
+/* Franja derecha del kiosko: anuncios de clientes, uno cada 10 s (kioskoAnuncios en app.js). */
+.kiosko-anuncios {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: var(--franja-anuncios);
+    background: #111;
+    overflow: hidden;
+}
+.kan-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .8s ease;
+}
+.kan-slide.activo { opacity: 1; }
+.kan-slide img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.kan-slide .anu-texto { width: 100%; height: 100%; }
+.kan-promo {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 3vh;
+    padding: 4.5vh;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-align: center;
+    font-family: var(--font-display);
+}
+.kan-promo img { width: 19vh; height: auto; border-radius: 22%; }
+.kan-promo h2 { margin: 0; font-size: 6.2vh; line-height: 1.1; }
+.kan-promo p { margin: 0; font-size: 3.7vh; line-height: 1.3; }
+.kan-promo .kan-ruta { padding: 1.2vh 2.8vh; border-radius: 999px; background: rgb(0 0 0 / .18); font-size: 3vh; }
+.kiosko-anuncios { touch-action: none; user-select: none; }
+.kan-slide img { -webkit-user-drag: none; }
+.kan-flecha {
+    position: absolute;
+    bottom: 1.5vh;
+    width: 7vh;
+    height: 7vh;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(0 0 0 / .4);
+    color: #fff;
+    font-size: 5vh;
+    line-height: 1;
+}
+.kan-flecha.izq { left: calc(50% - 15vh); }
+.kan-flecha.der { right: calc(50% - 15vh); }
+.kan-flecha:active { transform: scale(.94); }
+.kan-cuenta {
+    position: absolute;
+    bottom: 3.2vh;
+    left: 50%;
+    translate: -50% 0;
+    margin: 0;
+    padding: .4vh 1.4vh;
+    border-radius: 999px;
+    background: rgb(0 0 0 / .45);
+    color: #fff;
+    font-size: 2vh;
+    pointer-events: none;
+}
+/* Que se note que es de un cliente, no de la papelería. */
+.kan-etiqueta {
+    position: absolute;
+    top: 1.5vh;
+    left: 50%;
+    translate: -50% 0;
+    margin: 0;
+    padding: .4vh 1.2vh;
+    border-radius: 999px;
+    background: rgb(0 0 0 / .45);
+    color: #fff;
+    font-size: 1.6vh;
+    letter-spacing: .04em;
+    pointer-events: none;
+}
