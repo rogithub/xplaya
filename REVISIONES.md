@@ -4,6 +4,14 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: el ícono de la app sí se achica (2026-11-18)
+
+- `static/css/app.css` — `.cuadro-app .app-icono` tenía un `height: auto` viejo después del
+  `height` nuevo, así que el ícono salía a 192 px y sacaba la barra de botones por abajo de la
+  pantalla (por eso se veía pegada al borde y cortada). Ahora mide 9vh.
+
+---
+
 ## Kiosko: espacios parejos en el inicio (2026-11-18)
 
 - `static/css/app.css` — `.kiosko-inicio` con 3vh en los cuatro lados (antes 2.5vh / 2.5cqw / 4vh)
