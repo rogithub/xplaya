@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fuera xplaya.com/fotos y xplaya.com/foto-credencial (2026-11-18)
+
+Las fotos de credencial y polaroid ya solo se hacen en la app; esas dos páginas mandaban a algo que
+ya no existe (el kiosko de imagina) o a la app sin sesión. Se quitan, con su menú.
+
+- `templates/pages/fotos.html`, `templates/pages/foto-credencial.html` — borradas; las rutas
+  (`src/main.rs`, `src/routes/pages.rs`) también: ahora dan 404.
+- `templates/base.html` — fuera "Fotos" del menú (con su submenú), del pie y del JSON-LD de la
+  tienda.
+- `src/routes/pages.rs` — fuera del sitemap y de `llms.txt`.
+- `templates/pages/faq.html`, `templates/pages/impresiones.html` — sin enlaces a `/fotos`; dicen que
+  las polaroid se arman en la app de la Papelería.
+
+---
+
 ## Fotos en la app, etapa 4: se quita lo viejo (2026-11-18)
 
 El kiosko de fotos de imagina (`imagina.xplaya.com/kiosko`) ya no existe: credencial y polaroid se
