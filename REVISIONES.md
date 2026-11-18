@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## El kiosko se recarga solo después de un deploy (2026-11-18)
+
+Después de subir los anuncios, la pantalla del kiosko siguió con la página vieja hasta reiniciar la
+Elo (no tiene teclado para Ctrl+Shift+R). Ahora el servidor calcula al arrancar una **versión de las
+páginas** (huellas de CSS/JS + contenido de las plantillas) y la manda con cada QR (`/kiosko/qr`,
+cada ~30 s). Si no es la de la página, el kiosko se recarga en cuanto lleva 1 min sin que nadie lo
+toque.
+
+- `src/estaticos.rs` — `Huellas::version("templates")`.
+- `src/main.rs` — `AppState.version_paginas` y la global `version_paginas` de las plantillas.
+- `src/routes/kiosko.rs` — `qr` devuelve también `version`.
+- `templates/app/kiosko.html` — `data-version` en `.kiosko`.
+- `static/app/app.js` — `nuevoQr` marca `nuevaVersion`; el reloj de "sin tocar 1 min" recarga.
+
+---
+
 ## Anuncios del kiosko: se recorren con el dedo (2026-11-18)
 
 La franja de anuncios de clientes ya no solo avanza sola: tiene flechas ‹ › abajo, a los lados de

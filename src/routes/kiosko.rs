@@ -105,7 +105,7 @@ pub async fn qr(State(state): State<AppState>, headers: HeaderMap) -> Response {
     let codigo = kiosko::codigo(&state.config.kiosko_token, ventana);
     let url = format!("{}/kiosko/k/{codigo}", state.config.app_url);
     match qr_svg(&url) {
-        Some(svg) => Json(serde_json::json!({ "svg": svg, "ms": ms })).into_response(),
+        Some(svg) => Json(serde_json::json!({ "svg": svg, "ms": ms, "version": state.version_paginas })).into_response(),
         None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
 }

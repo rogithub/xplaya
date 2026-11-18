@@ -51,6 +51,29 @@ impl Huellas {
         }
     }
 
+    /// Versión de lo que ve el navegador: huellas de los CSS/JS más el contenido de las
+    /// plantillas (`dir_plantillas`). Cambia con cada deploy que toque algo de eso. El kiosko la
+    /// compara con la de su página para recargarse solo (nadie le puede dar Ctrl+Shift+R).
+    pub fn version(&self, dir_plantillas: &str) -> String {
+        let mut hasher = Sha256::new();
+        let mut huellas: Vec<_> = self.0.iter().collect();
+        huellas.sort();
+        for (ruta, h) in huellas {
+            hasher.update(ruta.as_bytes());
+            hasher.update(h.as_bytes());
+        }
+        let mut plantillas = Vec::new();
+        archivos(Path::new(dir_plantillas), &mut plantillas);
+        plantillas.sort();
+        for ruta in plantillas {
+            if let Ok(bytes) = std::fs::read(&ruta) {
+                hasher.update(ruta.to_string_lossy().as_bytes());
+                hasher.update(&bytes);
+            }
+        }
+        hasher.finalize().iter().take(5).map(|b| format!("{b:02x}")).collect()
+    }
+
     /// `Cache-Control` según la huella pedida: la de este pod → un año; otra → `no-store`;
     /// sin huella (imágenes con `?v=`) → un año, como siempre.
     fn cache_control(&self, ruta: &str, pedida: Option<&str>) -> &'static str {
@@ -58,6 +81,18 @@ impl Huellas {
             None => UN_ANIO,
             Some(h) if self.0.get(ruta).is_some_and(|actual| actual == h) => UN_ANIO,
             Some(_) => "no-store",
+        }
+    }
+}
+
+fn archivos(dir: &Path, lista: &mut Vec<std::path::PathBuf>) {
+    let Ok(entradas) = std::fs::read_dir(dir) else { return };
+    for entrada in entradas.flatten() {
+        let ruta = entrada.path();
+        if ruta.is_dir() {
+            archivos(&ruta, lista);
+        } else {
+            lista.push(ruta);
         }
     }
 }
