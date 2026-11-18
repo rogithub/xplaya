@@ -651,14 +651,14 @@ a.btn-qr { text-decoration: none; }
 .kiosko-teclado .enviar:disabled { opacity: .35; }
 .kiosko-error { color: var(--warn); font-size: 1.2rem; margin: 0; text-align: center; }
 
-/* Inicio: vitrina a la izquierda, cuadros a la derecha. */
+/* Inicio: la vitrina a todo lo ancho y, abajo, la barra de botones. */
 .kiosko-inicio {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr minmax(0, 34cqw);
-    gap: 2cqw;
-    padding: 3vh 2.5cqw;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 2vh;
+    padding: 2.5vh 2.5cqw;
 }
 .vitrina {
     position: relative;
@@ -749,14 +749,13 @@ a.btn-qr { text-decoration: none; }
     color: var(--muted);
     font-size: 1rem;
 }
+/* Barra de abajo: un renglón; la app más ancha. */
 .kiosko-cuadros {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 1fr;
+    grid-template-columns: 1.7fr 1fr 1fr;
+    height: 17vh;
     gap: 1.5cqw;
 }
-/* Si el último cuadro queda solo en su renglón, a lo ancho. */
-.kiosko-cuadros > button:last-child:nth-child(even) { grid-column: span 2; }
 .kiosko-cuadros button {
     display: grid;
     place-content: center;
@@ -772,9 +771,9 @@ a.btn-qr { text-decoration: none; }
     text-align: center;
     box-shadow: 0 4px 14px rgb(0 0 0 / .08);
 }
+.kiosko-cuadros button { grid-auto-flow: column; align-items: center; gap: 1cqw; }
 .kiosko-cuadros button span { font-size: clamp(2rem, 3.4cqw, 3.2rem); }
 .kiosko-cuadros button:active { transform: scale(.97); background: var(--chip); }
-.kiosko-cuadros .cuadro-ancho { grid-column: 1 / -1; }
 
 /* La app, destacada como en una tienda de apps: el ícono de la app instalada (logo oficial), el
    nombre y "Obtener". Fondo oscuro de la marca para que se distinga de los demás cuadros. */
@@ -790,11 +789,11 @@ a.btn-qr { text-decoration: none; }
     box-shadow: 0 6px 22px rgb(35 25 22 / .35);
 }
 .kiosko-cuadros .cuadro-app:active { background: #3a2a25; }
-.cuadro-app .app-icono { width: clamp(80px, 8.5cqw, 150px); height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
+.cuadro-app .app-icono { width: auto; height: 12vh; height: auto; flex: none; outline: 2px solid rgb(255 255 255 / .14); }
 .cuadro-app-txt { display: grid; gap: .4vh; flex: 1; font-size: inherit; }
 .cuadro-app-txt strong { font-size: clamp(1.4rem, 2.05cqw, 2.2rem); font-weight: 600; line-height: 1.05; white-space: nowrap; }
 .cuadro-app-txt small { font-family: var(--font-body); font-size: clamp(1rem, 1.35cqw, 1.35rem); color: var(--brand-teal); }
-.kiosko-cuadros .cuadro-app span.app-obtener { justify-self: start; margin-top: .8vh; font-size: clamp(1.1rem, 1.5cqw, 1.5rem); }
+.kiosko-cuadros .cuadro-app span.app-obtener { justify-self: start; margin-top: .3vh; font-size: clamp(1.1rem, 1.5cqw, 1.5rem); }
 .app-obtener {
     flex: none;
     margin: 0;

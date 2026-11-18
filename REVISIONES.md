@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Kiosko: fuera Reseñas; los botones en una barra abajo (2026-11-18)
+
+Con menos cuadros, la columna de la derecha desperdiciaba pantalla. Ahora la vitrina va a todo lo
+ancho y los botones en un solo renglón abajo.
+
+- `templates/app/kiosko.html`, `src/routes/kiosko.rs` — fuera el cuadro "Tu reseña", su vista y el
+  QR a Google (la página `/resena` de xplaya.com sigue).
+- `static/css/app.css` — `.kiosko-inicio` en dos renglones (vitrina / barra); `.kiosko-cuadros` es
+  una barra de 17vh con la app más ancha (1.7fr) y WhatsApp y Buscar con el ícono a un lado.
+
+---
+
 ## Fuera xplaya.com/fotos y xplaya.com/foto-credencial (2026-11-18)
 
 Las fotos de credencial y polaroid ya solo se hacen en la app; esas dos páginas mandaban a algo que
