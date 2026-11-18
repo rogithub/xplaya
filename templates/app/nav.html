@@ -1,5 +1,6 @@
 {#
-  Barra de abajo de la app: Monedero · Tienda · Imprimir (si el autoservicio está prendido) · Carrito. La incluye app/base.html cuando la
+  Barra de abajo de la app: Monedero · Tienda · Imprimir (si el autoservicio está prendido) · Fotos (si hay llave de
+  fotos) · Carrito. La incluye app/base.html cuando la
   página pasa `nav` (la pestaña activa). El número del carrito sale del store de cart.js.
 #}
 <nav class="app-nav" aria-label="Secciones de la app">
@@ -12,6 +13,11 @@
     {% if imprimir_activo %}
     <a href="/imprimir" {% if nav == "imprimir" %}class="activo" aria-current="page"{% endif %}>
         <span class="app-nav-ico" aria-hidden="true">🖨️</span>Imprimir
+    </a>
+    {% endif %}
+    {% if fotos_activo %}
+    <a href="/fotos" {% if nav == "fotos" %}class="activo" aria-current="page"{% endif %}>
+        <span class="app-nav-ico" aria-hidden="true">📸</span>Fotos
     </a>
     {% endif %}
     <a href="/carrito" {% if nav == "carrito" %}class="activo" aria-current="page"{% endif %} x-data>

@@ -913,3 +913,294 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 });
+
+// Foto de credencial (fotos_credencial.html, routes/fotos.rs). Basado en el kiosko de imagina
+// (CameraCapture.svelte): la cámara llena la pantalla y una ventana al tamaño elegido marca lo que
+// sale; al disparar se toma ese rectángulo del sensor. Luego se acomoda (arrastrar y acercar) en un
+// marco del tamaño, se hornea a los px de impresión (300 dpi) y se manda DIRECTO a imagina con el
+// permiso firmado de xplaya (encabezado X-Permiso). imagina lo deja en el panel de la operadora.
+document.addEventListener('alpine:init', () => {
+    const DPI = 300;
+    const px = (mm) => Math.round((mm / 25.4) * DPI);
+
+    Alpine.data('fotoCredencial', () => ({
+        // Infantil primero: es la que más se pide.
+        tamanos: [
+            { clave: 'infantil', nombre: 'Infantil', w: 25, h: 30, nota: 'La más pedida' },
+            { clave: 'credencial', nombre: 'Credencial', w: 35, h: 45, nota: '' },
+            { clave: 'pasaporte', nombre: 'Pasaporte', w: 35, h: 45, nota: '' },
+        ],
+        t: 0,
+        paso: 'tamano',          // tamano → camara → ajuste → revisar → enviando
+        error: '',
+
+        // Cámara
+        stream: null,
+        facing: 'environment',   // la de atrás: casi siempre alguien más toma la foto
+        puedeVoltear: false,
+        iniciando: false,
+        camaraError: '',
+        cont: { w: 0, h: 0 },    // medidas de la pantalla de la cámara
+
+        // Foto fuente y su acomodo en el marco
+        fuenteUrl: '',
+        img: { w: 0, h: 0 },     // px naturales
+        marco: { w: 0, h: 0 },   // px del marco en pantalla
+        zoom: 1,
+        pos: { x: 0, y: 0 },     // esquina de la foto respecto al marco (≤ 0)
+        arrastre: null,
+
+        finalBlob: null,
+        finalUrl: '',
+
+        get tam() { return this.tamanos[this.t]; },
+        cm(mm) { return String(mm / 10); },
+
+        // ── Cámara ─────────────────────────────────────────────────────────
+        async abrirCamara() {
+            this.error = '';
+            this.paso = 'camara';
+            await this.$nextTick();
+            this.medirCamara();
+            await this.encender(this.facing);
+        },
+
+        medirCamara() {
+            const c = this.$refs.camara;
+            this.cont = { w: c.clientWidth, h: c.clientHeight };
+        },
+
+        // La ventana: el rectángulo más grande al tamaño elegido que deja aire para las barras.
+        rect() {
+            const { w: cw, h: ch } = this.cont;
+            if (!cw || !ch) return { left: 0, top: 0, w: 0, h: 0 };
+            const aspecto = this.tam.w / this.tam.h;
+            let w = cw * 0.86;
+            let h = w / aspecto;
+            if (h > ch * 0.62) { h = ch * 0.62; w = h * aspecto; }
+            return { left: (cw - w) / 2, top: (ch - h) / 2, w, h };
+        },
+        ventana() {
+            const r = this.rect();
+            return `left:${r.left}px;top:${r.top}px;width:${r.w}px;height:${r.h}px`;
+        },
+
+        async encender(quiere) {
+            this.iniciando = true;
+            this.camaraError = '';
+            if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+                this.camaraError = 'Este navegador no deja usar la cámara aquí. Elige una foto o tómala con la cámara del celular.';
+                this.iniciando = false;
+                return;
+            }
+            try {
+                // 1080p sobra para una credencial (3.5 × 4.5 cm a 300 dpi = 413 × 531 px); pedir el
+                // máximo del sensor deja a algunos celulares con el autofoco lento.
+                const nuevo = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: quiere }, width: { ideal: 1920 }, height: { ideal: 1080 },
+                             advanced: [{ focusMode: 'continuous' }] },
+                    audio: false,
+                });
+                this.apagarCamara();
+                this.stream = nuevo;
+                this.facing = quiere;
+                const v = this.$refs.video;
+                v.srcObject = nuevo;
+                await v.play().catch(() => {});
+                // Muchos Android abren con foco fijo: se pide el continuo (iOS lo hace solo).
+                const pista = nuevo.getVideoTracks()[0];
+                try {
+                    if (pista?.getCapabilities?.().focusMode?.includes('continuous')) {
+                        await pista.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+                    }
+                } catch { /* sin control de foco */ }
+                try {
+                    const disp = await navigator.mediaDevices.enumerateDevices();
+                    this.puedeVoltear = disp.filter((d) => d.kind === 'videoinput').length > 1;
+                } catch { this.puedeVoltear = false; }
+            } catch (e) {
+                const n = e?.name || '';
+                this.camaraError = n === 'NotAllowedError' || n === 'SecurityError'
+                    ? 'No diste permiso para la cámara. Puedes elegir una foto o tomarla con la cámara del celular.'
+                    : n === 'NotFoundError' || n === 'OverconstrainedError'
+                        ? 'No encontramos una cámara. Elige una foto.'
+                        : 'No se pudo abrir la cámara. Elige una foto o tómala con la cámara del celular.';
+            } finally {
+                this.iniciando = false;
+            }
+        },
+
+        voltear() { this.encender(this.facing === 'user' ? 'environment' : 'user'); },
+
+        apagarCamara() {
+            this.stream?.getTracks().forEach((p) => p.stop());
+            this.stream = null;
+        },
+
+        cerrarCamara() {
+            this.apagarCamara();
+            this.paso = 'tamano';
+        },
+
+        // La ventana (coordenadas de la pantalla) → píxeles del sensor. El video llena la pantalla
+        // recortado al centro (object-fit: cover): se compensa ese recorte.
+        disparar() {
+            const v = this.$refs.video;
+            const r = this.rect();
+            if (!v?.videoWidth || !r.w) return;
+            const { w: cw, h: ch } = this.cont;
+            const vw = v.videoWidth, vh = v.videoHeight;
+            const escala = Math.max(cw / vw, ch / vh);
+            const offX = (vw * escala - cw) / 2, offY = (vh * escala - ch) / 2;
+            const sx = Math.max(0, (offX + r.left) / escala);
+            const sy = Math.max(0, (offY + r.top) / escala);
+            const sw = Math.min(r.w / escala, vw - sx);
+            const sh = Math.min(r.h / escala, vh - sy);
+            const lienzo = document.createElement('canvas');
+            lienzo.width = Math.round(sw);
+            lienzo.height = Math.round(sh);
+            lienzo.getContext('2d').drawImage(v, sx, sy, sw, sh, 0, 0, lienzo.width, lienzo.height);
+            lienzo.toBlob((b) => b && this.usarFoto(b), 'image/jpeg', 0.95);
+        },
+
+        elegida(e) {
+            const archivo = e.target.files[0];
+            e.target.value = '';
+            if (!archivo) return;
+            if (!archivo.type.startsWith('image/')) { this.error = 'Elige una foto.'; return; }
+            this.usarFoto(archivo);
+        },
+
+        // ── Acomodar ───────────────────────────────────────────────────────
+        async usarFoto(blob) {
+            this.apagarCamara();
+            if (this.fuenteUrl) URL.revokeObjectURL(this.fuenteUrl);
+            this.fuenteUrl = URL.createObjectURL(blob);
+            const im = new Image();
+            try {
+                await new Promise((ok, mal) => { im.onload = ok; im.onerror = mal; im.src = this.fuenteUrl; });
+            } catch {
+                this.error = 'No pudimos abrir esa foto. Prueba con otra (JPG o PNG).';
+                this.paso = 'tamano';
+                return;
+            }
+            this.img = { w: im.naturalWidth, h: im.naturalHeight };
+            this.zoom = 1;
+            this.zoomPrevio = 1;
+            this.paso = 'ajuste';
+            // Se mide ya pintado: x-show lo muestra después del siguiente cuadro.
+            await new Promise((listo) => requestAnimationFrame(() => requestAnimationFrame(listo)));
+            this.medirMarco();
+        },
+
+        // Medidas del marco en pantalla y la foto centrada, cubriéndolo todo.
+        medirMarco() {
+            const m = this.$refs.marco;
+            this.marco = { w: m.clientWidth, h: m.clientHeight };
+            const e = this.escala();
+            this.pos = { x: (this.marco.w - this.img.w * e) / 2, y: (this.marco.h - this.img.h * e) / 2 };
+        },
+
+        // px de pantalla por px de la foto: lo justo para cubrir el marco, por el zoom.
+        escala() {
+            if (!this.img.w || !this.marco.w) return 0;
+            return Math.max(this.marco.w / this.img.w, this.marco.h / this.img.h) * this.zoom;
+        },
+
+        // Que la foto siempre cubra el marco (sin huecos en las orillas).
+        acotar(x, y) {
+            const e = this.escala();
+            return {
+                x: Math.min(0, Math.max(this.marco.w - this.img.w * e, x)),
+                y: Math.min(0, Math.max(this.marco.h - this.img.h * e, y)),
+            };
+        },
+
+        tomar(ev) {
+            ev.currentTarget.setPointerCapture(ev.pointerId);
+            this.arrastre = { x: ev.clientX, y: ev.clientY, pos: { ...this.pos } };
+        },
+        mover(ev) {
+            if (!this.arrastre) return;
+            const a = this.arrastre;
+            this.pos = this.acotar(a.pos.x + ev.clientX - a.x, a.pos.y + ev.clientY - a.y);
+        },
+        soltar() { this.arrastre = null; },
+
+        // Al acercar, el centro del marco se queda en el mismo punto de la foto.
+        acercar() {
+            const anterior = this.zoomPrevio || 1;
+            const cx = this.marco.w / 2, cy = this.marco.h / 2;
+            const f = this.zoom / anterior;
+            this.pos = this.acotar(cx - (cx - this.pos.x) * f, cy - (cy - this.pos.y) * f);
+            this.zoomPrevio = this.zoom;
+        },
+        zoomPrevio: 1,
+
+        // Lo que se ve en el marco → JPEG a los px de impresión exactos.
+        hornear() {
+            const e = this.escala();
+            const ancho = px(this.tam.w), alto = px(this.tam.h);
+            const lienzo = document.createElement('canvas');
+            lienzo.width = ancho;
+            lienzo.height = alto;
+            const c = lienzo.getContext('2d');
+            c.imageSmoothingQuality = 'high';
+            c.drawImage(this.$refs.fuente, -this.pos.x / e, -this.pos.y / e, this.marco.w / e, this.marco.h / e, 0, 0, ancho, alto);
+            lienzo.toBlob((b) => {
+                if (!b) return;
+                if (this.finalUrl) URL.revokeObjectURL(this.finalUrl);
+                this.finalBlob = b;
+                this.finalUrl = URL.createObjectURL(b);
+                this.error = '';
+                this.paso = 'revisar';
+            }, 'image/jpeg', 0.92);
+        },
+
+        // ── Mandar a imagina ───────────────────────────────────────────────
+        async permiso() {
+            const r = await fetch('/fotos/permiso', { cache: 'no-store' });
+            if (r.status === 401) throw new Error('Tu sesión se cerró. Vuelve a entrar a la app.');
+            if (!r.ok) throw new Error('No pudimos preparar el envío. Intenta de nuevo.');
+            return r.json();
+        },
+
+        async mandar() {
+            if (!this.finalBlob) return;
+            this.paso = 'enviando';
+            this.error = '';
+            try {
+                let intento = 0;
+                for (;;) {
+                    const { permiso, imagina } = await this.permiso();
+                    const datos = new FormData();
+                    datos.append('file', this.finalBlob, 'credencial.jpg');
+                    datos.append('widthMM', String(this.tam.w));
+                    datos.append('heightMM', String(this.tam.h));
+                    datos.append('dpi', String(DPI));
+                    const r = await fetch(`${imagina}/api/v1/kiosko/carnet`, {
+                        method: 'POST', headers: { 'X-Permiso': permiso }, body: datos,
+                    });
+                    const cuerpo = await r.json().catch(() => ({}));
+                    if (r.ok) {
+                        location.href = '/fotos?mandado=' + encodeURIComponent(cuerpo.orderCode || '');
+                        return;
+                    }
+                    // Permiso vencido (se tardó mucho): uno nuevo y otra vez, una sola vez.
+                    if (r.status === 400 && /permiso/i.test(cuerpo.error || '') && intento++ === 0) continue;
+                    throw new Error(cuerpo.error || 'No pudimos mandar tu foto. Intenta de nuevo.');
+                }
+            } catch (e) {
+                this.error = e instanceof TypeError ? 'Sin conexión. Revisa tu internet e intenta de nuevo.' : e.message;
+                this.paso = 'revisar';
+            }
+        },
+
+        init() {
+            window.addEventListener('resize', () => {
+                if (this.paso === 'camara') this.medirCamara();
+                if (this.paso === 'ajuste') this.medirMarco();
+            });
+        },
+    }));
+});

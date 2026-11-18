@@ -13,6 +13,7 @@ mod caja;
 mod config;
 mod db;
 mod estaticos;
+mod fotos;
 mod google;
 mod impresion;
 mod ipp;
@@ -48,6 +49,8 @@ pub struct AppState {
     pub avisos: avisos::Avisos,
     /// La cuenta de la caja en vivo para la app del cliente (`caja.rs`, `routes/cuenta.rs`).
     pub cajas: Arc<caja::Cajas>,
+    /// Fotos desde la app (`fotos.rs`): firma el permiso para imagina. `None`: sin fotos.
+    pub fotos: Option<Arc<fotos::Firmador>>,
     /// MinIO del autoservicio de impresión (`minio.rs`). `None`: "Imprime tú solito" apagado.
     pub minio: Option<minio::Minio>,
     /// "Entrar con Google" por Keycloak (`google.rs`). `None`: el botón no aparece.
@@ -103,6 +106,12 @@ async fn main() {
     }
     // La pestaña "Imprimir" de la app solo existe con MinIO.
     tmpl.add_global("imprimir_activo", minio.is_some());
+    let fotos = fotos::Firmador::desde_base64(&cfg.fotos_llave_privada).map(Arc::new);
+    match &fotos {
+        Some(f) => tracing::info!("fotos: llave pública para imagina (XPLAYA_LLAVE_PUBLICA) {}", f.publica),
+        None => tracing::info!("fotos apagadas (sin FOTOS_LLAVE_PRIVADA)"),
+    }
+    tmpl.add_global("fotos_activo", fotos.is_some());
     let google = google::Google::desde_config(&cfg);
     if google.is_none() {
         tracing::info!("google: sin KEYCLOAK_ISSUER o KEYCLOAK_CLIENT_SECRET, entrar con Google apagado");
@@ -122,12 +131,14 @@ async fn main() {
         vapid,
         avisos,
         cajas: Arc::new(caja::Cajas::new()),
+        fotos,
         minio,
         google,
         google_idas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(10 * 60))),
     };
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());
+    fotos::vigilar(state.clone());
     // La cuenta de la caja en vivo (NATS caja.cuenta).
     caja::vigilar(state.clone());
     // Borra los PDFs del autoservicio de impresión a los 7 días.
