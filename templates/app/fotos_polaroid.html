@@ -1,0 +1,193 @@
+{% extends "app/base.html" %}
+{#
+  Fotos polaroid (routes/fotos.rs; lógica en static/app/polaroid.js, `fotoPolaroid`). Es el kiosko
+  polaroid de imagina en la app: formato → tus fotos → editar cada una (texto, letra, color,
+  encuadre) → mandar. El pedido y su paquete van directo a imagina con el permiso de xplaya, así
+  la operadora lo abre y lo corrige en el panel de imagina como siempre.
+#}
+{% block title %}Fotos polaroid — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{# Dentro de <head>: las letras del texto y la lógica de esta pantalla (antes que Alpine). #}
+{% block meta_social %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Pacifico&family=Montserrat:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Indie+Flower&family=Shadows+Into+Light&family=Kalam&family=Permanent+Marker&family=Amatic+SC&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Lobster&display=swap">
+<script defer src="{{ estatico("app/polaroid.js") }}"></script>
+{% endblock %}
+{% block content %}
+<div class="pol" x-data="fotoPolaroid()" x-cloak>
+
+{# Elegir fotos: varias de la galería, la cámara, o cambiar una. #}
+<input type="file" accept="image/*" multiple class="oculto" x-ref="galeria" @change="elegidas($event, 'llenar')">
+<input type="file" accept="image/*" capture="environment" class="oculto" x-ref="camara" @change="elegidas($event, 'llenar')">
+<input type="file" accept="image/*" class="oculto" x-ref="cambio" @change="elegidas($event, 'cambiar')">
+
+{# ── 1. Formato ── #}
+<section x-show="listo && paso === 'formato'">
+    <header class="app-top">
+        <a href="/fotos" class="btn-link imp-volver">← Fotos</a>
+        <h1 class="app-title">Fotos polaroid</h1>
+    </header>
+    <p class="imp-intro">Elige el formato. En una hoja carta caben varias.</p>
+    <div class="pol-formatos" role="radiogroup" aria-label="Formato">
+        <template x-for="(f, clave) in FORMATOS" :key="clave">
+            <label class="pol-formato" :class="elegido === clave && 'activo'">
+                <input type="radio" name="formato" :value="clave" x-model="elegido">
+                <span class="pol-muestra" :style="muestra(clave)" aria-hidden="true">
+                    <span :class="clave === 'strip' && 'tira'"></span>
+                </span>
+                <strong x-text="f.nombre"></strong>
+                <small x-text="f.desc"></small>
+            </label>
+        </template>
+    </div>
+    <p class="inicio-nota pol-borra" x-show="borraAlCambiar" x-text="`Al cambiar de formato se borran tus ${llenas} fotos.`"></p>
+    <p class="inicio-nota" x-show="!borraAlCambiar" x-text="desc(elegido)"></p>
+    <button type="button" class="btn-qr" @click="continuar()">Continuar</button>
+</section>
+
+{# ── 2. Tus fotos ── #}
+<section x-show="listo && paso === 'fotos'">
+    <header class="app-top pol-top">
+        <button type="button" class="btn-link imp-volver" @click="atras()">← Cambiar formato</button>
+        <h1 class="app-title">Tus fotos</h1>
+        <p class="inicio-nota" x-text="`${FORMATOS[formato].nombre} ${FORMATOS[formato].desc} · ${llenas} de ${fotos.length}`"></p>
+    </header>
+    <p class="alerta" role="alert" x-show="error" x-text="error"></p>
+
+    <div class="pol-rejilla" :style="`grid-template-columns:repeat(${columnas}, 1fr)`">
+        <template x-for="(u, n) in unidades" :key="formato + n">
+            <div class="pol-celda">
+                <template x-if="primera(u)">
+                    <button type="button" class="pol-tarjeta" :style="tarjetaFotos().caja" @click="ir('editar', u.find((i) => fotos[i]))"
+                            :aria-label="`Editar ${esTira ? 'tira' : 'foto'} ${n + 1}`">
+                        <span class="pol-area" :style="tarjetaFotos().foto">
+                            <template x-for="i in u" :key="i">
+                                <span class="pol-hueco"><img x-show="fotos[i]" :src="fotos[i]?.url" alt=""></span>
+                            </template>
+                        </span>
+                        <canvas class="pol-texto" x-show="hayTexto" :style="tarjetaFotos().texto"
+                                x-effect="pintarTexto($el, primera(u), tarjetaFotos().e)"></canvas>
+                    </button>
+                </template>
+                <template x-if="!primera(u)">
+                    <button type="button" class="pol-vacia" :style="tarjetaFotos().caja" @click="abrirGaleria(u[0])"
+                            :aria-label="`Agregar ${esTira ? 'tira' : 'foto'} ${n + 1}`">+</button>
+                </template>
+                <small x-text="`${esTira ? 'Tira' : 'Foto'} ${n + 1}`"></small>
+            </div>
+        </template>
+    </div>
+
+    <div class="pol-abajo">
+        <div class="pol-agregar" x-show="hayHuecos">
+            <button type="button" class="btn-sec" @click="abrirGaleria()">🖼️ Galería</button>
+            <button type="button" class="btn-sec" @click="abrirCamara()">📷 Cámara</button>
+        </div>
+        <button type="button" class="btn-qr" @click="mandar()" :disabled="!llenas"
+                x-text="llenas ? `Mandar a la papelería · ${llenas} ${llenas === 1 ? 'foto' : 'fotos'}` : 'Agrega al menos una foto'"></button>
+        <p class="inicio-nota">La imprimimos y te escribimos por WhatsApp. Pagas al recogerla.</p>
+    </div>
+</section>
+
+{# ── 3. Editar una polaroid (en la tira, sus 3 fotos) ── #}
+<section x-show="listo && paso === 'editar'">
+    <header class="app-top pol-top">
+        <button type="button" class="btn-link imp-volver" @click="atras()" :disabled="!cabe">← Todas</button>
+        <h1 class="app-title" x-text="`${esTira ? 'Tira' : 'Foto'} ${posicion + 1} de ${conFotos.length}`"></h1>
+    </header>
+
+    <div class="pol-vista">
+        <button type="button" class="pol-flecha" @click="moverUnidad(-1)" :disabled="posicion <= 0 || !cabe" aria-label="Anterior">‹</button>
+        <div class="pol-tarjeta grande" :style="tarjetaEditor().caja">
+            <span class="pol-area" :style="tarjetaEditor().foto">
+                <template x-for="i in unidad(idx)" :key="i">
+                    <span class="pol-hueco" :class="esTira && i === idx && 'activo'"><img x-show="fotos[i]" :src="fotos[i]?.url" alt=""></span>
+                </template>
+            </span>
+            <canvas class="pol-texto" x-show="hayTexto" :style="tarjetaEditor().texto"
+                    x-effect="pintarTexto($el, fuente, tarjetaEditor().e)"></canvas>
+        </div>
+        <button type="button" class="pol-flecha" @click="moverUnidad(1)" :disabled="posicion >= conFotos.length - 1 || !cabe" aria-label="Siguiente">›</button>
+    </div>
+
+    <div class="pol-tira-fotos" x-show="esTira">
+        <template x-for="(i, n) in unidad(idx)" :key="i">
+            <button type="button" :class="i === idx && 'activo'" @click="fotos[i] ? cambiarA(i) : abrirCambio(i)">
+                <img x-show="fotos[i]" :src="fotos[i]?.url" alt="">
+                <span x-show="!fotos[i]">+</span>
+                <small x-text="`Foto ${n + 1}`"></small>
+            </button>
+        </template>
+    </div>
+
+    <div class="pol-acciones" x-show="activa">
+        <button type="button" class="btn-sec" @click="irAEncuadre()">✂️ Encuadre</button>
+        <button type="button" class="btn-sec" @click="abrirCambio(idx)">🔁 Cambiar</button>
+        <button type="button" class="btn-sec pol-quitar" @click="quitarFoto()">🗑️ Quitar</button>
+    </div>
+
+    <div class="pol-texto-campos" x-show="hayTexto">
+        <label class="pol-escribir">
+            <input type="text" class="campo" placeholder="Escribe algo… (opcional)" enterkeyhint="done"
+                   :maxlength="maxLetras" :value="fuente.texto" :style="`font-family:'${fuente.letra}', sans-serif`"
+                   @input="ponerTexto('texto', $event.target.value)" @keydown.enter="$event.target.blur()">
+            <small x-text="`${fuente.texto.length}/${maxLetras}`"></small>
+        </label>
+        <p class="alerta" x-show="!cabe">El texto ya no cabe en el espacio blanco. Acórtalo un poco.</p>
+        <p class="pol-etq">Letra</p>
+        <div class="pol-letras">
+            <template x-for="l in LETRAS" :key="l">
+                <button type="button" :class="fuente.letra === l && 'activo'" :style="`font-family:'${l}', sans-serif`"
+                        @click="ponerTexto('letra', l)" :aria-label="l">Aa</button>
+            </template>
+        </div>
+        <p class="pol-etq">Color</p>
+        <div class="pol-colores">
+            <template x-for="c in COLORES" :key="c">
+                <button type="button" :class="fuente.color === c && 'activo'" :style="`background:${c}`"
+                        @click="ponerTexto('color', c)" :aria-label="`Color ${c}`"></button>
+            </template>
+        </div>
+    </div>
+
+    <button type="button" class="btn-qr pol-listo" :disabled="!cabe"
+            @click="posicion < conFotos.length - 1 ? moverUnidad(1) : atras()"
+            x-text="posicion < conFotos.length - 1 ? (esTira ? 'Siguiente tira' : 'Siguiente foto') : 'Listo'"></button>
+</section>
+
+{# ── 4. Encuadre de una foto ── #}
+<section x-show="listo && paso === 'encuadre'">
+    <header class="app-top">
+        <button type="button" class="btn-link imp-volver" @click="atras()">← Cancelar</button>
+        <h1 class="app-title">Encuadre</h1>
+    </header>
+    <p class="imp-intro">Arrastra la foto y acércala si hace falta.</p>
+    <div class="fot-marco pol-marco" x-ref="marcoEnc" :style="`aspect-ratio:${aspectoArea}`"
+         @pointerdown="tomar($event)" @pointermove="mover($event)" @pointerup="soltar()" @pointercancel="soltar()">
+        <img :src="enc.url" alt="Tu foto" draggable="false" x-show="enc.url"
+             :style="`width:${enc.img.w * escalaEnc()}px;height:${enc.img.h * escalaEnc()}px;transform:translate(${enc.pos.x}px,${enc.pos.y}px)`">
+    </div>
+    <label class="fot-zoom">
+        <span aria-hidden="true">➖</span>
+        <input type="range" min="1" max="4" step="0.01" x-model.number="enc.zoom" @input="acercar()" aria-label="Acercar">
+        <span aria-hidden="true">➕</span>
+    </label>
+    <button type="button" class="btn-qr" @click="aplicarEncuadre()">Aplicar</button>
+</section>
+
+{# ── Enviando ── #}
+<section class="pol-enviando" x-show="paso === 'enviando'">
+    <p class="pol-pct" x-text="avance + ' %'"></p>
+    <div class="pol-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="avance">
+        <span :style="`width:${avance}%`"></span>
+    </div>
+    <p>Mandando tus fotos…</p>
+    <p class="inicio-nota">No cierres esta pantalla.</p>
+</section>
+
+<p class="pol-aviso" x-show="aviso" x-text="aviso" role="status"></p>
+<div class="pol-preparando" x-show="preparando">
+    <p x-text="preparando && (preparando.total === 1 ? 'Preparando tu foto…' : `Preparando fotos ${preparando.hechas} de ${preparando.total}…`)"></p>
+</div>
+
+</div>
+{% endblock %}

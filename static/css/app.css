@@ -1596,3 +1596,137 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 /* Revisar */
 .fot-revisar { display: grid; justify-items: center; margin-bottom: 8px; }
 .fot-revisar img { max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 6px 20px rgb(0 0 0 / .18); background: #fff; }
+
+/* Polaroid (fotos_polaroid.html, static/app/polaroid.js) */
+.oculto { display: none; }
+.pol-formatos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px; }
+.pol-formato {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: end;
+    gap: 4px;
+    min-height: 150px;
+    padding: 14px 8px 12px;
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    text-align: center;
+    cursor: pointer;
+}
+.pol-formato.activo { border-color: var(--accent); }
+.pol-formato input { position: absolute; opacity: 0; pointer-events: none; }
+.pol-formato small { color: var(--muted); }
+.pol-muestra { display: flex; margin-bottom: 6px; background: #fff; border-radius: 3px; box-shadow: 0 2px 8px rgb(0 0 0 / .18); }
+.pol-muestra span { flex: 1; background: var(--chip); border-radius: 1px; }
+.pol-muestra span.tira { background: repeating-linear-gradient(var(--chip) 0 30%, #fff 30% 35%); }
+.pol-formato.activo .pol-muestra span { background-color: var(--ok-bg); }
+.pol-formato.activo .pol-muestra span.tira { background: repeating-linear-gradient(var(--ok-bg) 0 30%, #fff 30% 35%); }
+.pol-borra { color: var(--warn); font-weight: 600; }
+.pol-top .inicio-nota { margin-top: 4px; }
+
+.pol-rejilla { display: grid; gap: 12px; margin-bottom: 18px; }
+.pol-celda { display: grid; justify-items: center; gap: 4px; }
+.pol-celda small { color: var(--muted); font-size: .78rem; }
+.pol-tarjeta {
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgb(0 0 0 / .22);
+    overflow: hidden;
+    cursor: pointer;
+}
+.pol-area { position: absolute; display: flex; flex-direction: column; background: #fff; }
+.pol-hueco { flex: 1; min-height: 0; background: #e2e8f0; overflow: hidden; }
+.pol-hueco img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pol-tarjeta.grande .pol-hueco.activo { outline: 3px solid var(--accent); outline-offset: -3px; }
+.pol-texto { position: absolute; }
+.pol-vacia {
+    display: grid;
+    place-items: center;
+    border: 2px dashed var(--line);
+    border-radius: 4px;
+    background: none;
+    color: var(--muted);
+    font-size: 1.8rem;
+    cursor: pointer;
+}
+.pol-abajo { display: grid; gap: 10px; }
+.pol-agregar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.pol-vista { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 12px; }
+.pol-tarjeta.grande { cursor: default; flex-shrink: 0; }
+.pol-flecha { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--chip); color: var(--ink); font-size: 1.8rem; line-height: 1; }
+.pol-flecha:disabled { opacity: .3; }
+.pol-tira-fotos { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.pol-tira-fotos button {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 6px 8px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+}
+.pol-tira-fotos button.activo { border-color: var(--accent); }
+.pol-tira-fotos img, .pol-tira-fotos span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 6px; object-fit: cover; font-size: 1.3rem; }
+.pol-tira-fotos small { font-size: .75rem; color: var(--muted); }
+.pol-acciones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.pol-acciones .btn-sec { padding: 10px 6px; font-size: .9rem; }
+.pol-quitar { color: var(--warn); }
+.pol-texto-campos { display: grid; gap: 8px; margin-bottom: 16px; }
+.pol-escribir { position: relative; display: block; }
+.pol-escribir input { width: 100%; padding-right: 64px; font-size: 1.1rem; }
+.pol-escribir small { position: absolute; right: 12px; top: 50%; translate: 0 -50%; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pol-etq { margin: 4px 0 0; font-size: .85rem; color: var(--muted); }
+.pol-letras, .pol-colores { display: flex; gap: 8px; overflow-x: auto; padding: 3px 2px 6px; scrollbar-width: none; }
+.pol-letras button {
+    flex-shrink: 0;
+    min-width: 52px;
+    padding: 8px 10px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 1.1rem;
+}
+.pol-letras button.activo { border-color: var(--accent); background: var(--ok-bg); }
+.pol-colores button { flex-shrink: 0; width: 34px; height: 34px; border: 0; border-radius: 50%; }
+.pol-colores button.activo { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pol-listo:disabled { opacity: .5; }
+.pol-marco { width: min(80vw, 340px); max-height: 60vh; }
+
+.pol-enviando { display: grid; justify-items: center; gap: 12px; padding-top: 18vh; text-align: center; }
+.pol-pct { margin: 0; font: 600 2.6rem var(--font-display); font-variant-numeric: tabular-nums; }
+.pol-barra { width: min(100%, 320px); height: 10px; border-radius: 999px; background: var(--chip); overflow: hidden; }
+.pol-barra span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.pol-aviso {
+    position: fixed;
+    inset: calc(14px + env(safe-area-inset-top)) 16px auto;
+    z-index: 60;
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--brand-yellow);
+    color: #1b1b1b;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 6px 18px rgb(0 0 0 / .2);
+}
+.pol-preparando {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgb(0 0 0 / .6);
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+}
