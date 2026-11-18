@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/imprimir/{id}/quitar", post(imprimir::quitar))
         .route("/fotos", get(fotos::pagina))
         .route("/fotos/credencial", get(fotos::credencial))
+        .route("/fotos/polaroid", get(fotos::polaroid))
         .route("/fotos/permiso", get(fotos::permiso))
         .route("/anuncio", get(anuncio::pagina))
         // Imagen de hasta 10 MB y los campos de texto.

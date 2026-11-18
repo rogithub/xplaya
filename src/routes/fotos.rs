@@ -97,6 +97,15 @@ pub async fn credencial(State(state): State<AppState>, headers: HeaderMap) -> Re
     render(&state, "app/fotos_credencial.html", context! { en_app => true })
 }
 
+/// GET /fotos/polaroid — formato, fotos, texto y encuadre, y mandar (`fotoPolaroid` en
+/// static/app/polaroid.js).
+pub async fn polaroid(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Err(r) = requisitos(&state, &headers).await {
+        return r;
+    }
+    render(&state, "app/fotos_polaroid.html", context! { en_app => true })
+}
+
 /// GET /fotos/permiso — `{ permiso, imagina }` para el cliente con sesión. La app lo pide antes
 /// de mandar sus fotos (y otra vez si imagina dice que venció).
 pub async fn permiso(State(state): State<AppState>, headers: HeaderMap) -> Response {

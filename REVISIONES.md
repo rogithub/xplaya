@@ -4,6 +4,34 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fotos en la app, etapa 3: fotos polaroid (2026-11-18)
+
+"Fotos polaroid" en la pestaña Fotos. Es el kiosko polaroid de imagina pasado a Alpine, con el mismo
+pedido para que la operadora lo abra y lo corrija en el panel de imagina como siempre.
+
+- `static/app/polaroid.js` — nuevo; solo lo carga esa pantalla. Formatos (Tira 5 × 15 con 3 fotos,
+  Grande 10 × 15, Clásica 10 × 9, Mini 5 × 7) con su marco; cuántas caben en carta; recorte
+  automático al elegir (varias a la vez según la memoria del celular); acomodo del texto (el mayor
+  tamaño que cabe, líneas parejas) dibujado igual en la vista y en el PNG que va al PDF; encuadre
+  arrastrando y acercando, guardado como `box` en fracciones; borrador en IndexedDB
+  (`xplaya-fotos`, 48 h) por si el navegador cierra la página. "Atrás" del celular regresa de
+  pantalla en pantalla.
+- Al mandar: sube a imagina los recortes (la tira, sus 3 fotos ya juntas) y los textos en PNG
+  (`/api/v1/images`), crea el pedido `polaroid-grid` (`/api/v1/orders/print`, con `X-Permiso`) y
+  sube el paquete para corregir en tienda (originales, recortes y `proyecto.json`, version 1,
+  `tool: kiosko-polaroid`) con su avance en %.
+- `templates/app/fotos_polaroid.html` — formato → tus fotos → editar (texto, 15 letras, 8 colores,
+  encuadre, cambiar, quitar; en la tira, sus 3 fotos) → mandar. Sin el selector de emojis del
+  kiosko: el teclado del celular ya los trae.
+- `src/routes/fotos.rs` — `GET /fotos/polaroid`; `templates/app/fotos.html` ya la enlaza.
+- `static/css/app.css` — `.pol-*`.
+
+Probado en local (imagina, MinIO y NATS de prueba): Mini con 3 fotos, texto, letra, color y un
+encuadre; Tira con 3 fotos y su texto; recargar a medio camino recupera todo. imagina guardó el
+PDF y el paquete completo (8 archivos) y el pedido salió en "Tus pedidos".
+
+---
+
 ## Fotos en la app, etapa 2: foto de credencial (2026-11-18)
 
 Pestaña nueva **📸 Fotos** abajo (solo con `FOTOS_LLAVE_PRIVADA`). Ahí: "Foto de credencial",
