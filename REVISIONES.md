@@ -4,6 +4,28 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Fotos en la app, etapa 1: permiso para imagina y estado de los pedidos (2026-11-18)
+
+Primer paso para hacer la foto de credencial y las polaroid desde la app (plan en el artifact
+"Fotos en la app"). El pedido sigue viviendo en **imagina** (la operadora lo corrige, imprime y
+marca); la app es la puerta del cliente. Todavía no hay pantallas: eso es la etapa 2.
+
+- `src/fotos.rs` — `Firmador`: firma con Ed25519 (`FOTOS_LLAVE_PRIVADA`) un permiso de 30 min con
+  el cliente, su nombre y teléfono. `vigilar`: lee `imagina.pedidos` (stream IMAGINA, consumer
+  `xplaya`), lo guarda en `PedidosFotos` y, al terminar (impreso, cancelado o borrado), le manda
+  un aviso al cliente una sola vez.
+- `src/routes/fotos.rs` — `GET /fotos/permiso`: `{permiso, imagina}` para el cliente con sesión.
+- `src/db/fotos.rs` — guardar el estado (devuelve el anterior) y nombre/teléfono del cliente.
+- `src/main.rs`, `src/config.rs` — `AppState.fotos`, global `fotos_activo`; la llave pública sale
+  en el log al arrancar.
+- Del lado de imagina (`imagina/src/permiso.rs`): revisa el permiso con la pública, guarda el
+  cliente en el pedido y publica cada cambio.
+
+Probado en local de punta a punta: permiso → imagina (con MinIO y NATS de prueba) → pedido con
+nombre y teléfono → NATS → `PedidosFotos` "recibido" → "impreso".
+
+---
+
 ## El kiosko se recarga solo después de un deploy (2026-11-18)
 
 Después de subir los anuncios, la pantalla del kiosko siguió con la página vieja hasta reiniciar la

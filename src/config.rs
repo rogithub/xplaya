@@ -22,6 +22,8 @@ pub struct Config {
     /// Llave privada VAPID de las notificaciones Web Push (`push.rs`), base64url de 32 bytes.
     /// Vacía: la app no ofrece notificaciones.
     pub vapid_private_key: String,
+    /// Llave Ed25519 (base64url, 32 bytes) que firma el permiso de fotos para imagina (`fotos.rs`).
+    pub fotos_llave_privada: String,
     /// NATS para enterarse al instante de notificaciones nuevas (`push.rs`). Usuario `xplaya`:
     /// solo puede leer su consumer del stream NOTIFICACIONES. Sin usuario, solo la revisión
     /// periódica de la tabla.
@@ -69,6 +71,7 @@ impl Config {
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty()),
             vapid_private_key: std::env::var("VAPID_PRIVATE_KEY").unwrap_or_default(),
+            fotos_llave_privada: std::env::var("FOTOS_LLAVE_PRIVADA").unwrap_or_default(),
             nats_url: std::env::var("NATS_URL")
                 .unwrap_or_else(|_| "nats://nats.nats.svc.cluster.local:4222".to_string()),
             nats_usuario: std::env::var("NATS_USUARIO").unwrap_or_default().trim().to_string(),

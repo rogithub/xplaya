@@ -27,7 +27,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 use crate::{
     db,
     impresion,
-    routes::{alta, alta::error_json, anuncio, cuenta, google, imprimir, kiosko, monedero, notificaciones, tienda},
+    routes::{alta, alta::error_json, anuncio, cuenta, fotos, google, imprimir, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/imprimir/{id}/cuenta", get(imprimir::cuenta))
         .route("/imprimir/{id}/pdf", get(imprimir::pdf))
         .route("/imprimir/{id}/quitar", post(imprimir::quitar))
+        .route("/fotos/permiso", get(fotos::permiso))
         .route("/anuncio", get(anuncio::pagina))
         // Imagen de hasta 10 MB y los campos de texto.
         .route("/anuncio", post(anuncio::guardar).layer(DefaultBodyLimit::max(crate::anuncio::MAX_BYTES + 512 * 1024)))
