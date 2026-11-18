@@ -358,6 +358,7 @@ document.addEventListener('alpine:init', () => {
         enviando: false,
         error: '',
         ultimoToque: 0,
+        nuevaVersion: false,    // el servidor ya tiene otra versión de la página (nuevoQr)
         // Vitrina: productos al azar (/kiosko/vitrina); las diapositivas son esos productos con la
         // de la app cada `CADA_APP`; `i` es la que se ve y `desde`, cuándo empezó a verse.
         productos: [],
@@ -393,6 +394,7 @@ document.addEventListener('alpine:init', () => {
             setInterval(() => {
                 const quieto = Date.now() - this.ultimoToque > 60000;
                 if (!quieto) return;
+                if (this.nuevaVersion) { location.reload(); return; }
                 if (this.vista !== 'inicio') this.ir('inicio', false);
                 // La vitrina pasa sola; la de la app se queda el doble, para dar tiempo de sacar el celular.
                 else if (!this.esApp() || Date.now() - this.desde >= 29000) this.mover(1, false);
@@ -512,7 +514,10 @@ document.addEventListener('alpine:init', () => {
             try {
                 const r = await fetch('/kiosko/qr', { cache: 'no-store' });
                 if (r.ok) {
-                    const { svg, ms } = await r.json();
+                    const { svg, ms, version } = await r.json();
+                    // Hubo deploy: la página es vieja. Se recarga sola en cuanto nadie la use
+                    // (el kiosko no tiene teclado para Ctrl+Shift+R).
+                    if (version && version !== document.querySelector(".kiosko")?.dataset.version) this.nuevaVersion = true;
                     // QR de la app: en su ficha y en la vitrina (siempre en la página, para que se
                     // renueve solo).
                     this.$refs.qrApp.innerHTML = svg;

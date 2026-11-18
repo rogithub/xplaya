@@ -12,7 +12,7 @@
 #}
 {% block title %}Kiosko — Papelería xplaya{% endblock %}
 {% block content %}
-<div class="kiosko" x-data="kioskoPantalla()" @pointerdown="actividad()">
+<div class="kiosko" x-data="kioskoPantalla()" @pointerdown="actividad()" data-version="{{ version_paginas }}">
 
     {# ── Inicio: vitrina + cuadros ── #}
     <div class="kiosko-inicio" x-show="vista === 'inicio'">

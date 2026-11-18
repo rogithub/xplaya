@@ -27,6 +27,8 @@ mod routes;
 #[derive(Clone)]
 pub struct AppState {
     pub tmpl: Environment<'static>,
+    /// Versión de CSS, JS y plantillas (`estaticos.rs`): el kiosko se recarga si cambia.
+    pub version_paginas: String,
     pub config: config::Config,
     pub pool: PgPool,
     pub http: reqwest::Client,
@@ -80,6 +82,11 @@ async fn main() {
         });
     }
 
+    // El kiosko se recarga solo cuando cambia (routes/kiosko.rs → /kiosko/qr).
+    let version = huellas.version("templates");
+    tracing::info!("versión de las páginas: {version}");
+    tmpl.add_global("version_paginas", version.clone());
+
     let http = reqwest::Client::new();
     let webauthn = Arc::new(passkeys::webauthn(&cfg));
     let vapid = push::Vapid::desde_base64(&cfg.vapid_private_key).map(Arc::new);
@@ -103,6 +110,7 @@ async fn main() {
     tmpl.add_global("google_activo", google.is_some());
     let state = AppState {
         tmpl,
+        version_paginas: version,
         config: cfg,
         pool,
         http,
