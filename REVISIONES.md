@@ -26,7 +26,9 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
   - mensaje con archivos de otro mensaje rechazado (400);
   - video de 80 MB: la memoria del proceso pasó de 35 a 36 MB;
   - sin temporales en `/tmp`.
-- Falta probar Word→PDF (Gotenberg no se alcanza desde aquí) y la publicación en NATS.
+- Word→PDF probado con el Gotenberg local nuevo (`~/services/gotenberg/gotenberg.sh`, 8.27.0 como el
+  cluster, puerto 3001; `GOTENBERG_URL` en `.env.example`): docx de 2 páginas en 1.5 s.
+- Falta probar la publicación en NATS (en producción).
 
 ## Chat de la app, etapa 3b, paso 2: qué es cada archivo (2026-11-19)
 
