@@ -4,6 +4,24 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 8c: la cotización del carrito en el chat (2026-11-19)
+
+- `src/chat/reglas.rs`: `cotizacion_del_carrito(cliente, pedido, ahora)` arma el mensaje
+  `tipo: cotizacion`, `ref: {uid}`, texto "Recibimos tu pedido.". El id es UUID v5 del pedido
+  (`ESPACIO_AVISOS`, `cotizacion/{uid}`): si se publica dos veces, se guarda una. Test
+  `una_cotizacion_por_pedido` (mismo id, otro pedido otro id, el consumer lo guarda del lado
+  automático).
+- `src/routes/chat.rs`: `cotizacion_del_carrito(state, cliente, pedido)` revisa que el cliente
+  vea el chat (`chat_visible`) y publica en `chat.{c}.automatico.mensaje` con `Nats-Msg-Id`.
+  Si falla, solo va al log: el pedido ya está hecho.
+- `src/routes/tienda.rs::crear_pedido`: después del aviso a la papelería, lo lanza con
+  `tokio::spawn`, así el celular no espera a NATS.
+- Probado en :3055 (sin NATS local): el pedido sale bien y el log dice
+  "no se pudo mandar la cotización {uid} a {cliente}: sin NATS". El globo con la tarjeta ya se
+  probó en el paso 8a; falta verlo de punta a punta con NATS al desplegar.
+
+---
+
 ## Chat de la app, etapa 3b, paso 8b: "Preguntar por el chat" (2026-11-19)
 
 - `templates/app/tienda/detalle.html`: botón "💬 Preguntar por el chat" (`.btn-sec`) debajo de

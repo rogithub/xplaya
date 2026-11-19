@@ -73,6 +73,24 @@ pub async fn visible(state: &AppState, headers: &HeaderMap) -> bool {
     del_chat(state, headers).await.is_ok()
 }
 
+/// Al mandar el carrito desde la app (`tienda::crear_pedido`), su cotización aparece en el chat
+/// como mensaje automático, si el cliente ve el chat. Si algo falla, solo va al log: el pedido ya
+/// se creó y la papelería ya tiene el aviso.
+pub async fn cotizacion_del_carrito(state: &AppState, cliente: Uuid, pedido: Uuid) {
+    let ajustes = match db::chat::ajustes(&state.pool).await {
+        Ok(a) => a,
+        Err(e) => return tracing::warn!("chat: cotización {pedido}: {e}"),
+    };
+    if !reglas::chat_visible(ajustes.clientes_prueba.as_deref(), cliente) {
+        return;
+    }
+    let m = reglas::cotizacion_del_carrito(cliente, pedido, ahora());
+    let tema = Tema { cliente, lado: Lado::Automatico, evento: Evento::Mensaje };
+    if let Err(e) = state.chat.publicar(&tema, &m, Some(m.id)).await {
+        tracing::warn!("chat: no se pudo mandar la cotización {pedido} a {cliente}: {e}");
+    }
+}
+
 fn error_bd(e: sqlx::Error) -> StatusCode {
     tracing::error!("chat: BD: {e}");
     StatusCode::INTERNAL_SERVER_ERROR

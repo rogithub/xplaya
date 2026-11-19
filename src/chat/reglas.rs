@@ -313,6 +313,24 @@ pub fn aviso_fuera_de_horario(cliente: Uuid, ahora: DateTime<FixedOffset>) -> Op
     })
 }
 
+/// La cotización del carrito en el chat (`routes::chat::cotizacion_del_carrito`): al mandar su
+/// pedido desde la app, el cliente lo ve como tarjeta. El id sale del pedido, así que si se
+/// publica dos veces se guarda una sola.
+pub fn cotizacion_del_carrito(cliente: Uuid, pedido: Uuid, ahora: DateTime<FixedOffset>) -> Mensaje {
+    Mensaje {
+        v: VERSION,
+        id: Uuid::new_v5(&ESPACIO_AVISOS, format!("cotizacion/{pedido}").as_bytes()),
+        cliente_id: cliente,
+        tipo: Tipo::Cotizacion,
+        texto: Some("Recibimos tu pedido.".to_string()),
+        adjuntos: vec![],
+        responde_a: None,
+        referencia: Some(pedido.to_string()),
+        encargo_id: None,
+        fecha: ahora,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -614,5 +632,16 @@ mod tests {
         let ajustes = Ajustes::default();
         assert!(matches!(aplicar(&t(Lado::Automatico), Entrante::Mensaje(noche.clone()), None, 1, &ajustes), Cambio::Guardar(_)));
         assert!(matches!(aplicar(&t(Lado::Cliente), Entrante::Mensaje(noche), None, 1, &ajustes), Cambio::Ignorar(_)));
+    }
+
+    #[test]
+    fn una_cotizacion_por_pedido() {
+        let ahora = a_las("2026-11-19T12:00");
+        let c = cotizacion_del_carrito(CLIENTE, ID, ahora);
+        assert_eq!(c.id, cotizacion_del_carrito(CLIENTE, ID, ahora + chrono::Duration::seconds(5)).id);
+        assert_ne!(c.id, cotizacion_del_carrito(CLIENTE, OTRO, ahora).id);
+        assert_eq!((c.tipo, c.referencia.as_deref()), (Tipo::Cotizacion, Some(ID.to_string().as_str())));
+        let t = Tema { cliente: CLIENTE, lado: Lado::Automatico, evento: Evento::Mensaje };
+        assert!(matches!(aplicar(&t, Entrante::Mensaje(c), None, 1, &Ajustes::default()), Cambio::Guardar(_)));
     }
 }

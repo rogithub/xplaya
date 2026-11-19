@@ -127,6 +127,9 @@ pub async fn crear_pedido(
     match db::pedidos::crear_para_cliente(&state.pool, cliente_id, &req.items).await {
         Ok(uid) => {
             state.avisos.pedido_nuevo(&state.pool, &state.config.site_url, uid, "la app");
+            // En segundo plano: el celular no espera a NATS para ver su cotización.
+            let st = state.clone();
+            tokio::spawn(async move { crate::routes::chat::cotizacion_del_carrito(&st, cliente_id, uid).await });
             Json(serde_json::json!({
                 "cotizacion": format!("{}/cotizacion/{uid}", state.config.site_url),
             }))
