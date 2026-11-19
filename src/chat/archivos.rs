@@ -189,6 +189,91 @@ pub fn miniatura(bytes: &[u8]) -> Option<Vec<u8>> {
     Some(jpeg)
 }
 
+// ── Servir y bajar ──────────────────────────────────────────────────────────
+
+/// Lo que el navegador puede mostrar sin riesgo: lo que reconoce `clasificar`. Todo lo demás (o
+/// un mime raro que publique otro programa en el stream) se baja como `application/octet-stream`.
+pub fn en_linea(mime: &str) -> bool {
+    matches!(
+        mime,
+        "image/jpeg" | "image/png" | "image/webp" | "image/gif"
+            | "video/mp4" | "video/webm" | "video/quicktime" | "video/x-matroska"
+            | "audio/webm" | "audio/mp4" | "audio/ogg" | "audio/mpeg" | "audio/wav"
+            | "application/pdf"
+    )
+}
+
+/// `Content-Disposition` con el nombre del cliente: `filename` en ASCII para navegadores viejos
+/// y `filename*` en UTF-8 (RFC 6266) con acentos y eñes.
+pub fn disposicion(en_linea: bool, nombre: &str) -> String {
+    let modo = if en_linea { "inline" } else { "attachment" };
+    let ascii: String = nombre.chars().map(|c| if c.is_ascii_graphic() && c != '"' && c != '\\' || c == ' ' { c } else { '_' }).collect();
+    let utf8: String = nombre
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'.' | b'-' | b'_' | b'~' => (b as char).to_string(),
+            _ => format!("%{b:02X}"),
+        })
+        .collect();
+    format!("{modo}; filename=\"{ascii}\"; filename*=UTF-8''{utf8}")
+}
+
+/// Carpeta del zip según el tipo.
+fn carpeta(mime: &str) -> &'static str {
+    match mime.split('/').next() {
+        Some("image") => "fotos",
+        Some("video") => "videos",
+        Some("audio") => "audios",
+        _ => "documentos",
+    }
+}
+
+/// Qué va en el zip de "Bajar todo": `(llave en MinIO, ruta en el zip)`.
+///
+/// - Carpetas por tipo (`fotos/`, `videos/`, `audios/`, `documentos/`); si todo es de un tipo,
+///   sin carpetas.
+/// - Un Word va con su original y el PDF convertido (`tesis.docx` y `tesis.pdf`).
+/// - Nombres repetidos llevan `(2)`, `(3)`…; los caracteres que Windows no acepta, `_`.
+pub fn rutas_zip(adjuntos: &[super::contrato::Adjunto]) -> Vec<(String, String)> {
+    let mut archivos: Vec<(&str, String, &'static str)> = Vec::new();
+    for a in adjuntos {
+        let ext = a.llave.rsplit_once('.').map_or("", |(_, e)| e);
+        let mut nombre = limpiar_para_zip(&a.nombre);
+        if !ext.is_empty() && !nombre.to_lowercase().ends_with(&format!(".{ext}")) {
+            nombre = format!("{nombre}.{ext}");
+        }
+        let que = carpeta(&a.mime);
+        let pdf = a.pdf.as_deref().map(|pdf| {
+            let base = nombre.rsplit_once('.').map_or(nombre.as_str(), |(b, _)| b);
+            (pdf, format!("{base}.pdf"), que)
+        });
+        archivos.push((&a.llave, nombre, que));
+        archivos.extend(pdf);
+    }
+    let una_carpeta = archivos.iter().all(|(_, _, c)| *c == archivos[0].2);
+    let mut usadas = std::collections::HashSet::new();
+    archivos
+        .into_iter()
+        .map(|(llave, nombre, que)| {
+            let ruta = |n: &str| if una_carpeta { n.to_string() } else { format!("{que}/{n}") };
+            let (base, ext) = nombre.rsplit_once('.').map_or((nombre.as_str(), String::new()), |(b, e)| (b, format!(".{e}")));
+            let mut final_ = ruta(&nombre);
+            let mut n = 2;
+            while !usadas.insert(final_.to_lowercase()) {
+                final_ = ruta(&format!("{base} ({n}){ext}"));
+                n += 1;
+            }
+            (llave.to_string(), final_)
+        })
+        .collect()
+}
+
+fn limpiar_para_zip(nombre: &str) -> String {
+    let limpio: String = nombre.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') { '_' } else { c }).collect();
+    let limpio = limpio.trim().trim_start_matches('.').to_string();
+    if limpio.is_empty() { "archivo".to_string() } else { limpio }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -284,6 +369,65 @@ mod tests {
         let leida = image::load_from_memory(&mini).unwrap();
         assert_eq!((leida.width(), leida.height()), (480, 360));
         assert_eq!(miniatura(b"no es imagen"), None);
+    }
+
+    #[test]
+    fn que_se_ve_en_el_navegador() {
+        assert!(en_linea("image/jpeg") && en_linea("video/mp4") && en_linea("application/pdf") && en_linea("audio/webm"));
+        assert!(!en_linea("text/html") && !en_linea("image/svg+xml") && !en_linea("application/octet-stream"));
+    }
+
+    #[test]
+    fn disposicion_con_acentos() {
+        assert_eq!(
+            disposicion(false, "Tésis \"final\".docx"),
+            "attachment; filename=\"T_sis _final_.docx\"; filename*=UTF-8''T%C3%A9sis%20%22final%22.docx"
+        );
+        assert!(disposicion(true, "a.pdf").starts_with("inline; "));
+    }
+
+    fn adj(nombre: &str, mime: &str, llave: &str, pdf: Option<&str>) -> super::super::contrato::Adjunto {
+        super::super::contrato::Adjunto {
+            nombre: nombre.into(),
+            mime: mime.into(),
+            bytes: 1,
+            llave: llave.into(),
+            paginas: None,
+            pdf: pdf.map(Into::into),
+            miniatura: None,
+        }
+    }
+
+    #[test]
+    fn zip_de_puras_fotos_sin_carpetas_y_sin_repetidos() {
+        let fotos = [
+            adj("IMG_1.jpg", "image/jpeg", "c/m/1.jpg", None),
+            adj("img_1.JPG", "image/jpeg", "c/m/2.jpg", None),
+            adj("IMG_1.jpg", "image/jpeg", "c/m/3.jpg", None),
+            adj("WhatsApp Image", "image/jpeg", "c/m/4.jpg", None),
+        ];
+        let rutas: Vec<String> = rutas_zip(&fotos).into_iter().map(|(_, r)| r).collect();
+        assert_eq!(rutas, ["IMG_1.jpg", "img_1 (2).JPG", "IMG_1 (3).jpg", "WhatsApp Image.jpg"]);
+    }
+
+    #[test]
+    fn zip_mezclado_por_carpetas_con_el_pdf_del_word() {
+        let todo = [
+            adj("portada.png", "image/png", "c/m/1.png", None),
+            adj("Tesis: final.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "c/m/2.docx", Some("c/m/2-pdf.pdf")),
+            adj("nota-de-voz.weba", "audio/webm", "c/m/3.weba", None),
+            adj("../../x.mp4", "video/mp4", "c/m/4.mp4", None),
+        ];
+        assert_eq!(
+            rutas_zip(&todo),
+            [
+                ("c/m/1.png".to_string(), "fotos/portada.png".to_string()),
+                ("c/m/2.docx".to_string(), "documentos/Tesis_ final.docx".to_string()),
+                ("c/m/2-pdf.pdf".to_string(), "documentos/Tesis_ final.pdf".to_string()),
+                ("c/m/3.weba".to_string(), "audios/nota-de-voz.weba".to_string()),
+                ("c/m/4.mp4".to_string(), "videos/_.._x.mp4".to_string()),
+            ]
+        );
     }
 
     #[test]

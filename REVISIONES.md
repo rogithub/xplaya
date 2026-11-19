@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 4: servir archivos y "Bajar todo" (2026-11-19)
+
+- `GET /chat/archivo/{mensaje}/{n}/{original|pdf|mini}` (`src/routes/chat.rs::archivo`):
+  - Solo el cliente dueño del mensaje, y si no está eliminado (`mensaje_con_archivos`); si no, 404.
+  - Pasa el `Range` a MinIO (206 con `Content-Range`): el video se puede adelantar sin bajarlo todo.
+    Nada pasa por memoria.
+  - Se abre en el navegador solo lo de la lista segura (`archivos::en_linea`: fotos, video, audio,
+    PDF); lo demás sale `application/octet-stream` y como descarga. `?bajar=1` fuerza la descarga.
+    Nombre con `archivos::disposicion` (ASCII + `filename*` UTF-8).
+  - Si MinIO ya no lo tiene (pasaron los 90 días): 410 "Archivo vencido".
+- `GET /chat/zip/{mensaje}` (`zip`): zip sin compresión armado mientras se baja (`async_zip` sobre
+  un `tokio::io::duplex`), un archivo a la vez desde MinIO. Zip64, así que no hay tope de tamaño.
+  Los vencidos se saltan; las entradas llevan la fecha del mensaje.
+- `archivos::rutas_zip`: carpetas `fotos/ videos/ audios/ documentos/` (sin carpetas si todo es de
+  un tipo), el Word junto a su PDF, `(2)` en repetidos y caracteres que Windows no acepta → `_`.
+- Probado local con un mensaje de 4 archivos: miniatura, PDF, Word→PDF, `Range` del video de 80 MB
+  (206), otro mensaje 404, sin sesión 401, y el zip pasa `unzip -t`.
+
+---
+
 ## Chat de la app, etapa 3b, paso 3: subir archivos (2026-11-19)
 
 - `POST /chat/archivo` (`src/routes/chat.rs::subir_archivo`), multipart con `mensaje` y `archivo`:

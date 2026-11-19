@@ -29,8 +29,10 @@ base64ct = { version = "1.8.3", features = ["alloc"] }
 # Permiso de fotos para imagina (fotos.rs): firma Ed25519.
 ed25519-dalek = "2"
 async-nats = { version = "0.52.0", default-features = false, features = ["jetstream", "ring", "server_2_10"] }
-futures-util = { version = "0.3.34", default-features = false }
+futures-util = { version = "0.3.34", default-features = false, features = ["io"] }
 # Archivos del chat (minio.rs): el cuerpo de un archivo en disco como stream para MinIO.
 tokio-util = { version = "0.7", features = ["io"] }
+# "Bajar todo" del chat: zip armado en stream desde MinIO (routes/chat.rs).
+async_zip = { version = "0.0.19", default-features = false, features = ["tokio"] }
 lopdf = { version = "0.47.0", default-features = false }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }

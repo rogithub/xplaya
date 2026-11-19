@@ -83,6 +83,8 @@ pub fn router() -> Router<AppState> {
             post(chat::subir_archivo)
                 .layer(DefaultBodyLimit::max((crate::chat::archivos::MB_VIDEO_TOPE * 1024 * 1024) as usize + 512 * 1024)),
         )
+        .route("/chat/archivo/{mensaje}/{n}/{cual}", get(chat::archivo))
+        .route("/chat/zip/{mensaje}", get(chat::zip))
         .route("/chat/mensaje", post(chat::mandar))
         .route("/chat/leido", post(chat::leido))
         .route("/chat/escribiendo", post(chat::escribiendo))

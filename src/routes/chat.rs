@@ -11,6 +11,9 @@
 //! - `GET /chat/eventos`: SSE (`vista::EnVivo`), como `routes/cuenta.rs`.
 //! - `POST /chat/archivo`: sube un archivo (multipart) y regresa su número; el mensaje que lo
 //!   lleva se manda después con `POST /chat/mensaje` (`chat/subidas.rs`).
+//! - `GET /chat/archivo/{mensaje}/{n}/{original|pdf|mini}`: un archivo, en stream y con `Range`
+//!   (los videos se adelantan). `?bajar=1` lo baja en vez de abrirlo.
+//! - `GET /chat/zip/{mensaje}`: "Bajar todo", con carpetas por tipo.
 //! - `POST /chat/mensaje`, `/chat/leido`, `/chat/{id}/editar`, `/chat/{id}/eliminar`,
 //!   `/chat/escribiendo`.
 //! - `GET /chat/sin-leer`: el número del globito del menú.
@@ -19,7 +22,8 @@ use std::convert::Infallible;
 
 use axum::{
     extract::{Multipart, Path, Query, State},
-    http::{HeaderMap, StatusCode},
+    body::Body,
+    http::{header, HeaderMap, HeaderValue, StatusCode},
     response::{
         sse::{Event, KeepAlive, Sse},
         Html, IntoResponse, Redirect, Response,
@@ -344,6 +348,143 @@ pub async fn subir_archivo(State(state): State<AppState>, headers: HeaderMap, mu
 fn error_disco(e: std::io::Error) -> StatusCode {
     tracing::error!("chat: disco: {e}");
     StatusCode::INTERNAL_SERVER_ERROR
+}
+
+/// El mensaje con sus archivos, si es de este cliente y no se eliminó (si no, 404: no se dice si
+/// existe).
+async fn mensaje_con_archivos(state: &AppState, headers: &HeaderMap, mensaje: Uuid) -> Result<reglas::Guardado, StatusCode> {
+    let (cliente, _) = del_chat(state, headers).await?;
+    let g = db::chat::guardado(&state.pool, mensaje).await.map_err(error_bd)?.ok_or(StatusCode::NOT_FOUND)?;
+    if g.cliente != cliente || g.eliminado {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    Ok(g)
+}
+
+#[derive(Deserialize)]
+pub struct ComoBajar {
+    bajar: Option<String>,
+}
+
+/// Un archivo de un mensaje: `original`, `pdf` (el Word convertido) o `mini` (miniatura).
+pub async fn archivo(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((mensaje, n, cual)): Path<(Uuid, usize, String)>,
+    Query(como): Query<ComoBajar>,
+) -> Result<Response, StatusCode> {
+    let g = mensaje_con_archivos(&state, &headers, mensaje).await?;
+    let minio = state.minio.as_ref().ok_or(StatusCode::NOT_FOUND)?.en(BUCKET_CHAT);
+    let a = g.adjuntos.get(n).ok_or(StatusCode::NOT_FOUND)?;
+    let (llave, mime, nombre) = match cual.as_str() {
+        "original" => (a.llave.clone(), a.mime.clone(), a.nombre.clone()),
+        "pdf" => {
+            let base = a.nombre.rsplit_once('.').map_or(a.nombre.as_str(), |(b, _)| b);
+            (a.pdf.clone().ok_or(StatusCode::NOT_FOUND)?, "application/pdf".to_string(), format!("{base}.pdf"))
+        }
+        "mini" => (a.miniatura.clone().ok_or(StatusCode::NOT_FOUND)?, "image/jpeg".to_string(), format!("mini-{}", a.nombre)),
+        _ => return Err(StatusCode::NOT_FOUND),
+    };
+    // Solo `bytes=…`: lo demás no se le pasa a MinIO.
+    let rango = headers
+        .get(header::RANGE)
+        .and_then(|v| v.to_str().ok())
+        .filter(|r| r.starts_with("bytes=") && r.len() < 100 && r[6..].bytes().all(|b| b.is_ascii_digit() || b == b'-' || b == b','));
+    let d = match minio.bajar_stream(&llave, rango).await {
+        Ok(d) => d,
+        Err(e) if e.contains("404") => return Ok((StatusCode::GONE, "Archivo vencido").into_response()),
+        Err(e) if e.contains("416") => return Ok(StatusCode::RANGE_NOT_SATISFIABLE.into_response()),
+        Err(e) => {
+            tracing::warn!("chat: bajar {llave}: {e}");
+            return Err(StatusCode::BAD_GATEWAY);
+        }
+    };
+    let en_linea = archivos::en_linea(&mime) && como.bajar.is_none();
+    let tipo = if archivos::en_linea(&mime) { mime.as_str() } else { "application/octet-stream" };
+    let mut r = Response::new(Body::from_stream(d.cuerpo.bytes_stream()));
+    *r.status_mut() = if d.status == 206 { StatusCode::PARTIAL_CONTENT } else { StatusCode::OK };
+    let h = r.headers_mut();
+    let mut poner = |nombre: header::HeaderName, valor: &str| {
+        if let Ok(v) = HeaderValue::from_str(valor) {
+            h.insert(nombre, v);
+        }
+    };
+    poner(header::CONTENT_TYPE, tipo);
+    poner(header::CONTENT_DISPOSITION, &archivos::disposicion(en_linea, &nombre));
+    poner(header::ACCEPT_RANGES, "bytes");
+    // Un archivo del chat no cambia nunca: el celular lo guarda un día.
+    poner(header::CACHE_CONTROL, "private, max-age=86400");
+    poner(header::X_CONTENT_TYPE_OPTIONS, "nosniff");
+    if let Some(l) = &d.largo {
+        poner(header::CONTENT_LENGTH, l);
+    }
+    if let Some(cr) = &d.rango {
+        poner(header::CONTENT_RANGE, cr);
+    }
+    Ok(r)
+}
+
+/// "Bajar todo": un zip sin compresión (fotos y videos ya vienen comprimidos) que se arma
+/// mientras se baja, archivo por archivo desde MinIO, sin juntarlo en memoria ni en disco.
+/// Lo vencido se salta.
+pub async fn zip(State(state): State<AppState>, headers: HeaderMap, Path(mensaje): Path<Uuid>) -> Result<Response, StatusCode> {
+    use async_zip::{base::write::ZipFileWriter, Compression, ZipDateTimeBuilder, ZipEntryBuilder};
+    use chrono::{Datelike, Timelike};
+    use futures_util::AsyncWriteExt as _;
+
+    let g = mensaje_con_archivos(&state, &headers, mensaje).await?;
+    let minio = state.minio.as_ref().ok_or(StatusCode::NOT_FOUND)?.en(BUCKET_CHAT);
+    let rutas = archivos::rutas_zip(&g.adjuntos);
+    if rutas.is_empty() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    // Los archivos salen con la fecha del mensaje (hora local, como la guarda el zip).
+    let f = g.fecha;
+    let fecha = ZipDateTimeBuilder::new()
+        .year(f.year())
+        .month(f.month())
+        .day(f.day())
+        .hour(f.hour())
+        .minute(f.minute())
+        .second(f.second())
+        .build();
+    let (escritor, lector) = tokio::io::duplex(256 * 1024);
+    tokio::spawn(async move {
+        let armar = async {
+            let mut zip = ZipFileWriter::with_tokio(escritor);
+            for (llave, ruta) in rutas {
+                let d = match minio.bajar_stream(&llave, None).await {
+                    Ok(d) => d,
+                    Err(e) if e.contains("404") => continue,
+                    Err(e) => return Err(e),
+                };
+                let mut entrada =
+                    zip.write_entry_stream(ZipEntryBuilder::new(ruta.into(), Compression::Stored).last_modification_date(fecha)).await.map_err(|e| e.to_string())?;
+                let mut cuerpo = d.cuerpo.bytes_stream();
+                while let Some(trozo) = cuerpo.next().await {
+                    entrada.write_all(&trozo.map_err(|e| e.to_string())?).await.map_err(|e| e.to_string())?;
+                }
+                entrada.close().await.map_err(|e| e.to_string())?;
+            }
+            zip.close().await.map_err(|e| e.to_string())?;
+            Ok::<_, String>(())
+        };
+        // Si se corta (o el celular deja de bajarlo), el zip queda incompleto y el navegador lo
+        // marca como fallido.
+        if let Err(e) = armar.await {
+            tracing::warn!("chat: zip de {mensaje}: {e}");
+        }
+    });
+    let nombre = format!("archivos-{}.zip", g.fecha.format("%Y-%m-%d"));
+    Ok((
+        [
+            (header::CONTENT_TYPE, "application/zip".to_string()),
+            (header::CONTENT_DISPOSITION, archivos::disposicion(false, &nombre)),
+            (header::CACHE_CONTROL, "private, no-store".to_string()),
+        ],
+        Body::from_stream(tokio_util::io::ReaderStream::new(lector)),
+    )
+        .into_response())
 }
 
 /// Abre la imagen en memoria: una a la vez (`subidas.pesado`).
