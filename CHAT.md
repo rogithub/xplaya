@@ -97,7 +97,7 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 
 ## Comportamiento acordado
 
-- **Fuera de horario** (L–V 6:30–18:00, S 9:00–14:00): respuesta automática con el horario, una vez por
+- **Fuera de horario** (L–V 6:30–18:00, S 8:00–14:00): respuesta automática con el horario, una vez por
   cada cierre.
 - **✓ enviado y ✓✓ leído** en los dos sentidos; **"escribiendo…"** en los dos sentidos.
 - **Editar**: solo texto, los primeros 15 min, con la marca "Editado"; no se guarda la versión anterior.

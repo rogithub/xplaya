@@ -243,7 +243,7 @@ fn horario(dia: Weekday) -> Option<(NaiveTime, NaiveTime)> {
     let h = |hora, minuto| NaiveTime::from_hms_opt(hora, minuto, 0).expect("hora válida");
     match dia {
         Weekday::Sun => None,
-        Weekday::Sat => Some((h(9, 0), h(14, 0))),
+        Weekday::Sat => Some((h(8, 0), h(14, 0))),
         _ => Some((h(6, 30), h(18, 0))),
     }
 }
@@ -265,7 +265,7 @@ pub fn inicio_del_cierre(ahora: NaiveDateTime) -> Option<NaiveDateTime> {
 }
 
 pub const TEXTO_FUERA_DE_HORARIO: &str = "¡Hola! Ahorita estamos cerrados. Nuestro horario es de lunes a viernes de 6:30 a 18:00 y \
-sábados de 9:00 a 14:00. Te contestamos en cuanto abramos.";
+sábados de 8:00 a 14:00. Te contestamos en cuanto abramos.";
 
 /// Para que el id del aviso salga igual cada vez (`aviso_fuera_de_horario`).
 const ESPACIO_AVISOS: Uuid = Uuid::from_u128(0x5c1d7e0a_2b3f_4a6c_9d8e_7f6a5b4c3d2e);
@@ -515,7 +515,8 @@ mod tests {
         assert!(abierto(el("2026-11-16 06:30")));
         assert!(abierto(el("2026-11-16 17:59")));
         assert!(!abierto(el("2026-11-16 18:00")));
-        assert!(!abierto(el("2026-11-21 08:59")));
+        assert!(!abierto(el("2026-11-21 07:59")));
+        assert!(abierto(el("2026-11-21 08:00")));
         assert!(abierto(el("2026-11-21 13:59")));
         assert!(!abierto(el("2026-11-21 14:00")));
         assert!(!abierto(el("2026-11-22 12:00")));
@@ -529,7 +530,7 @@ mod tests {
         assert_eq!(inicio_del_cierre(el("2026-11-21 15:00")), Some(el("2026-11-21 14:00")));
         assert_eq!(inicio_del_cierre(el("2026-11-22 12:00")), Some(el("2026-11-21 14:00")), "domingo: desde el sábado");
         assert_eq!(inicio_del_cierre(el("2026-11-23 06:00")), Some(el("2026-11-21 14:00")), "lunes temprano: también");
-        assert_eq!(inicio_del_cierre(el("2026-11-21 08:00")), Some(el("2026-11-20 18:00")), "sábado temprano: desde el viernes");
+        assert_eq!(inicio_del_cierre(el("2026-11-21 07:00")), Some(el("2026-11-20 18:00")), "sábado temprano: desde el viernes");
     }
 
     fn a_las(fecha: &str) -> DateTime<FixedOffset> {

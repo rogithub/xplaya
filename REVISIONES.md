@@ -13,7 +13,7 @@ que no se usan).
   caracteres o chat bloqueado. La fecha la pone xplaya y el id el celular.
 - `chat_visible()` — `CHAT_CLIENTES_PRUEBA`: sin la fila nadie ve el chat, vacía todos, o la lista
   de ids separados por coma.
-- `abierto()`, `inicio_del_cierre()` — L–V 6:30–18:00, S 9:00–14:00, domingo cerrado.
+- `abierto()`, `inicio_del_cierre()` — L–V 6:30–18:00, S 8:00–14:00, domingo cerrado.
 - `aviso_fuera_de_horario()` — la respuesta automática; su id (UUID v5) sale del cliente y de la
   hora del cierre, así que es el mismo en todo ese cierre: si ya está guardado, no se repite.
 - Editar y eliminar desde la app no tienen reglas nuevas: se reusa `aplicar()`.
