@@ -35,6 +35,9 @@ function chatPeso(bytes) {
 }
 
 function chatIcono(a) {
+    if (a.clase === 'imagen') return '🖼️';
+    if (a.clase === 'video') return '🎬';
+    if (a.clase === 'audio') return '🎵';
     if (a.clase === 'pdf') return '📄';
     if (a.clase === 'office') {
         if (/\.(xlsx?|ods|csv)$/i.test(a.nombre)) return '📊';
@@ -44,7 +47,54 @@ function chatIcono(a) {
     return '📎';
 }
 
-function chatEsMedio(a) { return a.clase === 'imagen' || a.clase === 'video'; }
+// Una foto o un video que se puede dibujar (los locales que regresan de localStorage no traen URL).
+function chatEsMedio(a) { return (a.clase === 'imagen' || a.clase === 'video') && !!(a.mini || a.original); }
+
+// ── Subir archivos ──
+// Los `File` que se están subiendo, por id de mensaje. No van a localStorage: si se cierra la app
+// a media subida, ese mensaje se pierde. Ya subidos, el mensaje sí se guarda como pendiente (con
+// los números que dio el servidor, que los guarda una hora).
+const chatSubidas = new Map();
+const CHAT_SUBIDAS_A_LA_VEZ = 3;
+const CHAT_INTENTOS = 3;
+
+// Qué es, solo para la vista previa y el límite; el servidor lo decide por los bytes.
+function chatClaseLocal(file) {
+    if (/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return 'imagen';
+    if (file.type.startsWith('video/')) return 'video';
+    if (file.type.startsWith('audio/')) return 'audio';
+    if (file.type === 'application/pdf') return 'pdf';
+    if (/\.(docx?|xlsx?|pptx?|odt|ods|odp|rtf)$/i.test(file.name)) return 'office';
+    return 'archivo';
+}
+
+function chatSoltarUrls(adjuntos) {
+    (adjuntos || []).forEach((a) => {
+        [a.original, a.mini, a.vista].forEach((u) => { if (u && u.startsWith('blob:')) URL.revokeObjectURL(u); });
+    });
+}
+
+// POST /chat/archivo con XMLHttpRequest para tener el avance de la subida.
+function chatSubir(file, mensaje, alAvanzar) {
+    return new Promise((ok, mal) => {
+        const x = new XMLHttpRequest();
+        x.open('POST', '/chat/archivo');
+        x.upload.onprogress = (e) => { if (e.lengthComputable) alAvanzar(e.loaded); };
+        x.onload = () => {
+            let j = {};
+            try { j = JSON.parse(x.responseText); } catch { /* no es JSON */ }
+            if (x.status === 200 && j.archivo) ok(j);
+            else mal({ status: x.status, error: j.error });
+        };
+        x.onerror = () => mal({ status: 0 });
+        const f = new FormData();
+        f.append('mensaje', mensaje);  // primero el mensaje: así lo pide el servidor
+        f.append('archivo', file, file.name);
+        x.send(f);
+    });
+}
+
+function chatEsperar(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 // Para 🔊 y para la cita cuando el mensaje no tiene texto.
 function chatQueEs(adjuntos) {
@@ -76,6 +126,11 @@ document.addEventListener('alpine:init', () => {
         escribe: false,       // la papelería escribe
         error: '',
         visor: null,          // foto abierta en grande
+        elegidos: [],         // archivos con 📎, antes de mandar: {id, nombre, clase, bytes, vista}
+        permiteArchivos: false,
+        bytesVideo: 0,
+        bytesDocumento: 0,
+        maxAdjuntos: 100,
         puedeLeer: 'speechSynthesis' in window,
         _ultimoEscribiendo: 0,
         _escribeHasta: null,
@@ -87,6 +142,10 @@ document.addEventListener('alpine:init', () => {
             this.bloqueado = datos.bloqueado;
             this.minutosEditar = datos.minutosEditar;
             this.hayMas = datos.hayMas;
+            this.permiteArchivos = !!datos.archivos;
+            this.bytesVideo = datos.bytesVideo;
+            this.bytesDocumento = datos.bytesDocumento;
+            this.maxAdjuntos = datos.maxAdjuntos;
             this.mensajes = datos.mensajes.map((m) => ({ ...m, estado: 'guardado' }));
 
             // Lo que quedó sin mandar (sin señal, app cerrada).
@@ -111,7 +170,7 @@ document.addEventListener('alpine:init', () => {
             return {
                 id: p.id, autor: 'cliente', tipo: 'texto', texto: p.texto, respondeA: p.respondeA || null,
                 cita: p.cita || null, fecha: p.fecha, leido: false, editado: false, eliminado: false, estado,
-                adjuntos: [], zip: null,
+                adjuntos: (p.adjuntos || []).map((a) => ({ ...a, local: true })), zip: null,
             };
         },
 
@@ -130,6 +189,7 @@ document.addEventListener('alpine:init', () => {
         medios(m) { return this.visibles(m).filter((v) => chatEsMedio(v.a)); },
         docs(m) { return this.visibles(m).filter((v) => !chatEsMedio(v.a)); },
         icono(a) { return chatIcono(a); },
+        puedeReintentar(m) { return chatSubidas.has(m.id); },
 
         detalle(a) {
             const paginas = a.paginas ? `${a.paginas} ${a.paginas === 1 ? 'página' : 'páginas'} · ` : '';
@@ -256,6 +316,9 @@ document.addEventListener('alpine:init', () => {
             const nuevo = { ...v, estado: 'guardado' };
             if (i >= 0) {
                 // Uno propio que estaba enviándose: ya está guardado.
+                if (this.visor && this.visor.local) this.visor = null;
+                chatSoltarUrls(this.mensajes[i].adjuntos);
+                chatSubidas.delete(v.id);
                 this.mensajes[i] = { ...nuevo, cita: this.mensajes[i].cita || v.cita };
                 this.quitarPendiente(v.id);
             } else {
@@ -346,9 +409,14 @@ document.addEventListener('alpine:init', () => {
 
         async enviar() {
             const texto = this.texto;
-            if (!texto.trim() || this.bloqueado) return;
+            if (this.editando) {
+                if (!texto.trim()) return;
+                this.error = '';
+                return this.guardarEdicion(texto);
+            }
+            if ((!texto.trim() && !this.elegidos.length) || this.bloqueado) return;
             this.error = '';
-            if (this.editando) return this.guardarEdicion(texto);
+            if (this.elegidos.length) return this.enviarConArchivos(texto);
 
             const p = {
                 id: chatId(),
@@ -376,7 +444,7 @@ document.addEventListener('alpine:init', () => {
                 const r = await fetch('/chat/mensaje', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: p.id, texto: p.texto, respondeA: p.respondeA }),
+                    body: JSON.stringify({ id: p.id, texto: p.texto, respondeA: p.respondeA, archivos: p.archivos || [] }),
                 });
                 if (r.ok) {
                     this.quitarPendiente(p.id);
@@ -405,9 +473,153 @@ document.addEventListener('alpine:init', () => {
         },
 
         descartar(m) {
+            chatSoltarUrls(m.adjuntos);
+            chatSubidas.delete(m.id);
             this.mensajes = this.mensajes.filter((x) => x.id !== m.id);
             this.quitarPendiente(m.id);
             this.error = '';
+        },
+
+        // ── Archivos: elegir y subir ──
+
+        elegir(e) {
+            const errores = [];
+            for (const file of e.target.files) {
+                if (this.elegidos.length >= this.maxAdjuntos) {
+                    errores.push(`Van ${this.maxAdjuntos} archivos como máximo por mensaje.`);
+                    break;
+                }
+                const clase = chatClaseLocal(file);
+                const tope = clase === 'video' ? this.bytesVideo : this.bytesDocumento;
+                if (file.size > tope) {
+                    errores.push(`"${file.name}" pasa de ${Math.round(tope / 1024 / 1024)} MB.`);
+                    continue;
+                }
+                if (!file.size) {
+                    errores.push(`"${file.name}" está vacío.`);
+                    continue;
+                }
+                const id = chatId();
+                chatSubidas.set('elegido:' + id, file);
+                this.elegidos.push({
+                    id, nombre: file.name, clase, bytes: file.size,
+                    vista: clase === 'imagen' ? URL.createObjectURL(file) : null,
+                });
+            }
+            this.error = errores.join(' ');
+            e.target.value = '';  // que se pueda volver a elegir el mismo
+        },
+
+        quitarElegido(e) {
+            chatSoltarUrls([e]);
+            chatSubidas.delete('elegido:' + e.id);
+            this.elegidos = this.elegidos.filter((x) => x.id !== e.id);
+        },
+
+        async enviarConArchivos(texto) {
+            const p = {
+                id: chatId(),
+                texto,
+                respondeA: this.respondiendo ? this.respondiendo.id : null,
+                cita: this.respondiendo ? (this.respondiendo.texto || chatQueEs(this.respondiendo.adjuntos)) : null,
+                fecha: new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 23),
+            };
+            const items = this.elegidos.map((e) => {
+                const file = chatSubidas.get('elegido:' + e.id);
+                chatSubidas.delete('elegido:' + e.id);
+                return { file, archivo: null, cargado: 0 };
+            });
+            // Lo que se ve mientras se sube: la vista previa del celular, sin links.
+            const adjuntos = this.elegidos.map((e, n) => {
+                const url = e.vista || (e.clase === 'video' || e.clase === 'audio' ? URL.createObjectURL(items[n].file) : null);
+                return { nombre: e.nombre, clase: e.clase, bytes: e.bytes, original: url, mini: null, local: true };
+            });
+            chatSubidas.set(p.id, { p, items });
+            const m = this.local(p, 'enviando');
+            m.adjuntos = adjuntos;
+            m.subiendo = { hechos: 0, total: items.length, pct: 0 };
+            this.mensajes.push(m);
+            this.elegidos = [];
+            this.texto = '';
+            this.respondiendo = null;
+            this.$nextTick(() => {
+                this.crecer(this.$refs.caja);
+                this.alFinal();
+            });
+            await this.subirTodo(p.id);
+        },
+
+        // Sube lo que falte, 3 a la vez; cada uno se reintenta solo. Con todos arriba, manda el mensaje.
+        async subirTodo(id) {
+            const s = chatSubidas.get(id);
+            if (!s || s.activo) return;
+            s.activo = true;
+            const m = () => this.mensajes.find((x) => x.id === id);
+            const total = s.items.reduce((t, it) => t + it.file.size, 0) || 1;
+            const avance = () => {
+                const msj = m();
+                if (!msj) return;
+                const subido = s.items.reduce((t, it) => t + (it.archivo ? it.file.size : it.cargado), 0);
+                msj.subiendo = {
+                    hechos: s.items.filter((it) => it.archivo).length,
+                    total: s.items.length,
+                    pct: Math.min(100, Math.round((subido * 100) / total)),
+                };
+            };
+            const faltan = s.items.filter((it) => !it.archivo);
+            let siguiente = 0;
+            let falla = null;
+            const trabajar = async () => {
+                while (siguiente < faltan.length && !falla && chatSubidas.has(id)) {
+                    const it = faltan[siguiente++];
+                    for (let intento = 1; ; intento++) {
+                        try {
+                            const r = await chatSubir(it.file, id, (n) => { it.cargado = n; avance(); });
+                            it.archivo = r.archivo;
+                            avance();
+                            break;
+                        } catch (e) {
+                            it.cargado = 0;
+                            avance();
+                            // 400 y 413: el archivo no se va a poder (vacío, muy grande, bloqueado).
+                            if (e.status === 400 || e.status === 413 || intento >= CHAT_INTENTOS) {
+                                falla = e;
+                                break;
+                            }
+                            await chatEsperar(1500 * intento);
+                        }
+                    }
+                }
+            };
+            avance();
+            await Promise.all(Array.from({ length: CHAT_SUBIDAS_A_LA_VEZ }, trabajar));
+            s.activo = false;
+            const msj = m();
+            if (!msj || !chatSubidas.has(id)) return;  // lo quitaron mientras subía
+            if (falla) {
+                msj.estado = 'error';
+                msj.subiendo = null;
+                this.$nextTick(() => this.alFinal());
+                this.error = falla.error || (navigator.onLine
+                    ? 'No se pudo subir un archivo.'
+                    : 'Sin conexión: no se subieron los archivos.');
+                return;
+            }
+            // Todos arriba: ya se puede guardar como pendiente (sin los File) y mandar.
+            const p = {
+                ...s.p,
+                archivos: s.items.map((it) => it.archivo),
+                adjuntos: msj.adjuntos.map((a) => ({ nombre: a.nombre, clase: a.clase, bytes: a.bytes })),
+            };
+            chatGuardarPendientes([...chatLeerPendientes().filter((x) => x.id !== id), p]);
+            msj.subiendo = null;
+            await this.mandarUno(p);
+        },
+
+        reintentarSubida(m) {
+            this.error = '';
+            m.estado = 'enviando';
+            this.subirTodo(m.id);
         },
 
         // ── Menú de un mensaje ──

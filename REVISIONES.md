@@ -4,6 +4,41 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 6b: botón 📎 y subida (2026-11-19)
+
+- `src/routes/chat.rs::pagina`: `chat-datos` lleva `archivos` (hay MinIO), `bytesVideo`,
+  `bytesDocumento` (de `archivos::limite`) y `maxAdjuntos`. Sin MinIO no sale el 📎.
+- `templates/app/chat.html`:
+  - 📎 a la izquierda del cuadro (no al editar) con un `<input type=file multiple>` oculto.
+  - Bandeja de elegidos (`.chat-bandeja`): miniatura o icono, nombre y ✕.
+  - ➤ se activa con texto **o** archivos.
+  - En el globo, barra de avance y "Subiendo 3/4 · 43%" en el pie; "No se mandó · Reintentar ·
+    Quitar".
+- `static/app/chat.js`:
+  - `elegir`: revisa en el celular el tamaño (video o lo demás), vacíos y el máximo de 100; lo que no
+    pasa se dice en `error` y no entra.
+  - `enviarConArchivos`: el mensaje sale al instante con la vista previa del celular (`blob:`), sin
+    links (`local: true`). Los `File` viven en `chatSubidas` (un `Map` fuera de Alpine), nunca en
+    localStorage.
+  - `subirTodo`: 3 a la vez con `XMLHttpRequest` (`upload.onprogress`), `mensaje` antes que
+    `archivo` en el form. Cada uno se reintenta solo hasta 3 veces; 400/413 no se reintentan. Si
+    falla, ⚠️ y "Reintentar" sube solo los que faltan.
+  - Ya todos arriba, el mensaje se guarda como pendiente con los números del servidor (los guarda
+    una hora) y una lista ligera de adjuntos, y se manda con `archivos: [...]`. Si no hay red o NATS,
+    lo reintenta el `reintentar` de siempre, aunque se cierre la app; al volver, los adjuntos se
+    ven como renglones sin vista previa.
+  - Al llegar por el SSE se cambia por la vista del servidor y se sueltan las URLs `blob:`.
+- `static/css/app.css`: `.chat-clip`, `.chat-bandeja`, `.chat-elegido`, `.chat-progreso`.
+- Probado en local con Playwright (sin NATS: el mensaje se queda en 🕓 como pendiente):
+  - foto, PDF, docx y video de 80 MB juntos, con la subida limitada a 16 MB/s para ver el avance;
+  - un PDF de 30 MB rechazado en el celular;
+  - 2 fallas de red que se recuperan solas;
+  - todas fallando: sale "Reintentar" y, con red, sube;
+  - al recargar, los pendientes siguen ahí.
+- Falta: el mensaje con archivos por NATS hasta el SSE (en producción).
+
+---
+
 ## Chat de la app, etapa 3b, paso 6a: archivos en el globo (2026-11-19)
 
 Solo mostrar; el botón 📎 y la subida son el 6b. Las tarjetas, el paso 8.

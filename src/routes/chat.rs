@@ -108,6 +108,11 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap) -> Respon
             minutosEditar => ajustes.minutos_editar,
             hayMas => mensajes.len() as i64 == PAGINA,
             pagina => PAGINA,
+            // Para revisar en el celular antes de subir; el servidor los vuelve a revisar.
+            archivos => state.minio.is_some(),
+            bytesVideo => archivos::limite(Clase::Video, &ajustes),
+            bytesDocumento => archivos::limite(Clase::Archivo, &ajustes),
+            maxAdjuntos => reglas::MAX_ADJUNTOS,
         },
     };
     match state.tmpl.get_template("app/chat.html").and_then(|t| t.render(ctx)) {
