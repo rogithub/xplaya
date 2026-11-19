@@ -145,8 +145,15 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 
 ## Etapa 2 en el cluster
 
+Scripts en el share (`/home/ro/srv/share/xplaya-chat/`), en curicaueri:
+
+- `crear-chat-nats.sh`: después de que ArgoCD sincronice los permisos, reinicia NATS y crea el
+  stream y el consumer.
+- `chat-minio.sh`: crea el bucket `papeleria-chat` con borrado a 90 días y amplía la política
+  `xplaya-impresiones`.
+
 ```
-# Stream y consumer (usuario ro, como los otros streams; k3s-manifests/CLAUDE.md)
+# Lo que crea crear-chat-nats.sh (usuario ro)
 nats stream add CHAT --defaults --subjects "chat.*.*.mensaje,chat.*.*.leido,chat.*.*.editado,chat.*.*.eliminado,chat.*.*.sugerencia" --storage file --retention limits --max-age 30d --max-bytes 512MB --replicas 1 --discard old --dupe-window 2m
 nats consumer add CHAT xplaya --defaults --pull --deliver all --ack explicit --wait 30s --max-deliver 10
 ```
@@ -156,5 +163,3 @@ Permisos (`workloads/nats/configmap.yaml`): **xplaya** publica `$JS.API.CONSUMER
 `$JS.API.STREAM.MSG.DELETE.CHAT`, `chat.*.cliente.>`, `chat.*.automatico.>` y escucha
 `chat.*.papeleria.escribiendo`. **pos** publica `chat.*.papeleria.>` y escucha `chat.>`.
 
-Bucket: `/home/ro/srv/share/xplaya-minio/chat-minio.sh` (crea `papeleria-chat`, borrado a 90 días y
-amplía la política `xplaya-impresiones`).
