@@ -20,6 +20,8 @@ Diseño completo en `CHAT.md` (nuevo). Todavía no hay pantallas: esto es la bas
   POS (`../inventario_papeleria/...` o `POS_SCHEMA`); sin él se saltan.
 - `src/main.rs` — arranca `chat::vigilar`. Sin variables nuevas (reusa `NATS_*` y `MINIO_*`).
 - La tabla `Mensajes` y `Clientes.ChatBloqueado` están en el repo del POS (`dbchanges/updates.sql`).
+- **Probado en producción el 19 nov 2026** con `/home/ro/srv/share/xplaya-chat/probar-chat.sh`: un
+  mensaje editado y leído, y otro que la caja no pudo borrar y el cliente sí.
 
 ---
 

@@ -133,8 +133,8 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 ## Etapas
 
 1. Diseño — hecho (19 nov 2026).
-2. **Base**: tabla (hecho, POS 19 nov), stream `CHAT`, permisos de NATS, bucket `papeleria-chat`,
-   xplaya guarda lo que llega al stream, temas anotados en k3s-manifests.
+2. Base — hecho y probado en producción (19 nov 2026): tabla, stream `CHAT`, permisos de NATS,
+   bucket `papeleria-chat`, xplaya guarda lo que llega al stream. Prueba: `xplaya-chat/probar-chat.sh`.
 3. a) Chat de texto en la app. b) Archivos, voz y tarjetas.
 4. (unida a 3b)
 5. Chat en la caja (POS).

@@ -126,7 +126,7 @@ WhatsApp. La competencia cercana imprime con chorro de tinta, más lento y cobra
   (propuesta: 7 tras "Listo"), tipos y tamaños (PDF, JPG, PNG, HEIC; 10 archivos de 25 MB) y si
   "Listo" se marca también desde el POS.
 - 🔄 **Chat de la app con la caja:** diseño cerrado el 19 nov 2026, en `CHAT.md` (avance por etapas en
-  https://claude.ai/artifact/UfNTCHwqPsWu19eS4gzqcn). Etapa 2 (base) en curso.
+  https://claude.ai/artifact/UfNTCHwqPsWu19eS4gzqcn). Etapa 2 (base) hecha y probada en producción el 19 nov; sigue la 3a (chat de texto en la app).
 - ⬜ **Después, con números:** cotización y pedido desde el POS, y fijar fecha
   para que los trabajos de impresión lleguen por la app.
 
