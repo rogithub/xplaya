@@ -47,6 +47,7 @@ use crate::{
         contrato::{Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Tema, VERSION},
         nats::Cambio as CambioEnVivo,
         reglas::{self, Ajustes, Cambio},
+        tarjetas,
     },
     db, impresion,
     minio::BUCKET_CHAT,
@@ -89,7 +90,8 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap) -> Respon
         return Redirect::to("/").into_response();
     };
     let datos = async {
-        let mensajes = db::chat::conversacion(&state.pool, cliente, None, PAGINA).await?;
+        let mut mensajes = db::chat::conversacion(&state.pool, cliente, None, PAGINA).await?;
+        tarjetas::poner(&state.pool, (&state.config).into(), &mut mensajes).await?;
         let bloqueado = db::chat::bloqueado(&state.pool, cliente).await?;
         Ok::<_, sqlx::Error>((mensajes, bloqueado))
     };
@@ -128,7 +130,8 @@ pub async fn anteriores(
     Query(p): Query<AnterioresParams>,
 ) -> Result<Response, StatusCode> {
     let (cliente, _) = del_chat(&state, &headers).await?;
-    let mensajes = db::chat::conversacion(&state.pool, cliente, p.antes, PAGINA).await.map_err(error_bd)?;
+    let mut mensajes = db::chat::conversacion(&state.pool, cliente, p.antes, PAGINA).await.map_err(error_bd)?;
+    tarjetas::poner(&state.pool, (&state.config).into(), &mut mensajes).await.map_err(error_bd)?;
     Ok(Json(mensajes).into_response())
 }
 

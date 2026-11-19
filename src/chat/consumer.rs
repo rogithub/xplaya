@@ -11,6 +11,7 @@ use futures_util::StreamExt;
 
 use super::contrato::{self, Entrante, Evento, Lado, Tema};
 use super::reglas::{self, Cambio};
+use super::tarjetas;
 use super::vista::{EnVivo, Vista};
 use crate::{db, AppState};
 
@@ -88,7 +89,15 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
     match reglas::aplicar(&t, entrante, guardado.as_ref(), secuencia, &ajustes) {
         Cambio::Guardar(n) => {
             if db::chat::guardar(&state.pool, &n).await? {
-                state.chat.avisar(n.cliente, EnVivo::Mensaje(Vista::from(&n)));
+                let mut vista = Vista::from(&n);
+                if let Some(referencia) = &n.referencia {
+                    // El mensaje ya está guardado: si la tarjeta falla, se avisa sin ella.
+                    match tarjetas::resolver(&state.pool, (&state.config).into(), &vista.tipo, referencia).await {
+                        Ok(t) => vista.tarjeta = t,
+                        Err(e) => tracing::warn!("chat: tarjeta de {}: {e}", n.id),
+                    }
+                }
+                state.chat.avisar(n.cliente, EnVivo::Mensaje(Box::new(vista)));
                 if n.autor == Lado::Cliente {
                     fuera_de_horario(state, n.cliente, n.fecha).await?;
                 }

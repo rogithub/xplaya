@@ -47,6 +47,8 @@ pub struct Cotizacion {
     pub fecha: String,
     pub hora: String,
     pub cliente_id: Option<Uuid>,
+    /// `Pedidos.Estatus`: 0 Nuevo, 1 Pagado, 2 Entregado.
+    pub estatus: i32,
     pub tiene_monedero: bool,
     pub productos: Vec<ProductoCotizacion>,
     pub total: String,

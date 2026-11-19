@@ -4,6 +4,35 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 5: vista con archivos y tarjetas (2026-11-19)
+
+Solo el JSON que recibe la app (`/chat`, `/chat/anteriores` y el SSE); la pantalla es el paso 6.
+
+- `src/chat/vista.rs`: `Vista` trae `adjuntos`, `zip`, `ref` y `tarjeta`.
+  - `adjuntos_vista` arma cada archivo con su `clase` (`imagen`, `video`, `audio`, `pdf`, `office`,
+    `archivo`) y sus URLs `/chat/archivo/{mensaje}/{n}/original|pdf|mini`; `zip` solo con más de
+    uno. Un Word cuya conversión falló queda como `archivo` (solo se baja).
+  - `EnVivo::Mensaje` lleva la `Vista` en `Box` (creció; lo pidió clippy).
+- `src/db/chat.rs::conversacion`: lee `adjuntos` y `ref`. La fila pasó de tupla a struct `FromRow`.
+  Sin tarjetas: esas las pone `chat::tarjetas::poner`.
+- Nuevo `src/chat/tarjetas.rs`: en `Mensajes` solo va el `ref`; los datos se buscan al dar la vista,
+  así el precio, la existencia o el estatus están al día.
+  - `Tarjeta` (enum con `tipo` en el JSON): producto (nombre, precio con `$`, primera foto,
+    existencia), recibo (fecha, hora, total) y cotización (número, estatus, total), cada una con su
+    `url` al sitio.
+  - `resolver`: `None` si el `ref` no se entiende o ya no existe (la pantalla dirá "ya no está").
+  - `poner`: a los no eliminados; si el mismo `ref` sale varias veces en la página, se busca una vez.
+  - Recibe `Urls` (`SITE_URL` y `CONTENT_BASE_URL`) en vez de todo el `Config`.
+- `db/monedero.rs::cotizacion` y `models::monedero::Cotizacion` traen `estatus`.
+- Llaman a `poner`: `routes/chat.rs` (`pagina`, `anteriores`). El consumer (`chat/consumer.rs`)
+  resuelve la tarjeta antes del aviso en vivo; si falla, avisa sin ella (el mensaje ya se guardó).
+- Pruebas: `vista` (URLs, clases, zip), `db::chat` (la conversación trae archivos y `ref`;
+  eliminado sin archivos) y `tarjetas` con el schema del POS más `reportes.sql` (de ahí salen
+  `v_inventario` y las vistas del monedero).
+- Probado local con el mensaje de 4 archivos: las 6 URLs y el zip responden (206 / 200).
+
+---
+
 ## Chat de la app, etapa 3b, paso 4: servir archivos y "Bajar todo" (2026-11-19)
 
 - `GET /chat/archivo/{mensaje}/{n}/{original|pdf|mini}` (`src/routes/chat.rs::archivo`):

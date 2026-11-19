@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::chat::contrato::{Adjunto, Lado};
 use crate::chat::reglas::{Ajustes, Guardado, Nuevo};
-use crate::chat::vista::Vista;
+use crate::chat::vista::{adjuntos_vista, Vista};
 
 /// Cliente, autor, fecha, si se eliminó, adjuntos y secuencia.
 type FilaGuardado = (Uuid, String, NaiveDateTime, bool, Option<serde_json::Value>, Option<i64>);
@@ -132,16 +132,31 @@ pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
 /// Cuánto de la cita se manda: es solo para recordar a qué se responde.
 const LARGO_CITA: i32 = 120;
 
-type FilaVista = (Uuid, String, String, Option<String>, Option<Uuid>, Option<String>, NaiveDateTime, bool, bool, bool);
+#[derive(sqlx::FromRow)]
+struct FilaVista {
+    id: Uuid,
+    autor: String,
+    tipo: String,
+    texto: Option<String>,
+    respondea: Option<Uuid>,
+    cita: Option<String>,
+    fecha: NaiveDateTime,
+    leido: bool,
+    editado: bool,
+    eliminado: bool,
+    adjuntos: Option<serde_json::Value>,
+    referencia: Option<String>,
+}
 
 /// Mensajes de la conversación, del más viejo al más nuevo: los últimos `limite`, o los
 /// anteriores al mensaje `antes` (al subir en el chat). Se pagina por (fecha, id) para no
-/// perder mensajes del mismo segundo.
+/// perder mensajes del mismo segundo. Sin tarjetas: esas las pone `chat::tarjetas::poner`.
 pub async fn conversacion(pool: &PgPool, cliente: Uuid, antes: Option<Uuid>, limite: i64) -> Result<Vec<Vista>, sqlx::Error> {
     let filas: Vec<FilaVista> = sqlx::query_as(
         "SELECT m.id, m.autor, m.tipo, m.texto, m.respondea,
-                CASE WHEN r.fechaeliminado IS NULL THEN LEFT(r.texto, $4) END,
-                m.fecha, m.fechaleido IS NOT NULL, m.fechaeditado IS NOT NULL, m.fechaeliminado IS NOT NULL
+                CASE WHEN r.fechaeliminado IS NULL THEN LEFT(r.texto, $4) END AS cita,
+                m.fecha, m.fechaleido IS NOT NULL AS leido, m.fechaeditado IS NOT NULL AS editado,
+                m.fechaeliminado IS NOT NULL AS eliminado, m.adjuntos, m.ref AS referencia
          FROM mensajes m
          LEFT JOIN mensajes r ON r.id = m.respondea
          WHERE m.clienteid = $1
@@ -158,17 +173,25 @@ pub async fn conversacion(pool: &PgPool, cliente: Uuid, antes: Option<Uuid>, lim
     Ok(filas
         .into_iter()
         .rev()
-        .map(|(id, autor, tipo, texto, responde_a, cita, fecha, leido, editado, eliminado)| Vista {
-            id,
-            autor,
-            tipo,
-            texto,
-            responde_a,
-            cita,
-            fecha,
-            leido,
-            editado,
-            eliminado,
+        .map(|f| {
+            let archivos: Vec<Adjunto> = f.adjuntos.and_then(|a| serde_json::from_value(a).ok()).unwrap_or_default();
+            let (adjuntos, zip) = adjuntos_vista(f.id, &archivos);
+            Vista {
+                id: f.id,
+                autor: f.autor,
+                tipo: f.tipo,
+                texto: f.texto,
+                responde_a: f.respondea,
+                cita: f.cita,
+                fecha: f.fecha,
+                leido: f.leido,
+                editado: f.editado,
+                eliminado: f.eliminado,
+                adjuntos,
+                zip,
+                referencia: f.referencia,
+                tarjeta: None,
+            }
         })
         .collect())
 }
@@ -194,13 +217,13 @@ pub async fn sin_leer(pool: &PgPool, cliente: Uuid) -> Result<i64, sqlx::Error> 
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::chat::contrato::Tipo;
 
     /// Carga el schema real del POS en la base temporal de la prueba, para no tener una copia que
     /// se desfase. `false` si no está el repo del POS (la prueba se salta).
-    async fn con_schema(pool: &PgPool) -> bool {
+    pub(crate) async fn con_schema(pool: &PgPool) -> bool {
         let ruta = std::env::var("POS_SCHEMA").unwrap_or_else(|_| {
             format!("{}/../inventario_papeleria/dbscripts/postgresql_inventario.sql", env!("CARGO_MANIFEST_DIR"))
         });
@@ -212,7 +235,7 @@ mod tests {
         true
     }
 
-    async fn cliente(pool: &PgPool, telefono: &str) -> Uuid {
+    pub(crate) async fn cliente(pool: &PgPool, telefono: &str) -> Uuid {
         sqlx::query_scalar("INSERT INTO clientes (telefono, nombre, fechacreado) VALUES ($1, 'Prueba', NOW()) RETURNING id")
             .bind(telefono)
             .fetch_one(pool)
@@ -418,5 +441,40 @@ mod tests {
         assert_eq!(sin_leer(&pool, c).await.unwrap(), 2, "los suyos y los eliminados no cuentan");
         marcar_leidos(&pool, c, false, hora("17:05:00")).await.unwrap();
         assert_eq!(sin_leer(&pool, c).await.unwrap(), 0);
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn la_conversacion_trae_archivos_y_ref(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        let c = cliente(&pool, "9840000001").await;
+        let mut dos = nuevo(c, Lado::Cliente, "17:00:00");
+        let mut foto = dos.adjuntos[0].clone();
+        foto.nombre = "foto.jpg".into();
+        foto.mime = "image/jpeg".into();
+        foto.miniatura = Some(format!("{c}/x/foto.mini.jpg"));
+        dos.adjuntos.push(foto);
+        let uno = nuevo(c, Lado::Cliente, "17:01:00");
+        let mut tarjeta = nuevo(c, Lado::Papeleria, "17:02:00");
+        (tarjeta.tipo, tarjeta.texto, tarjeta.adjuntos, tarjeta.referencia) = (Tipo::Producto, None, vec![], Some("1234".into()));
+        for n in [&dos, &uno, &tarjeta] {
+            guardar(&pool, n).await.unwrap();
+        }
+
+        let todo = conversacion(&pool, c, None, 50).await.unwrap();
+        let (a, b, t) = (&todo[0], &todo[1], &todo[2]);
+        assert_eq!(a.adjuntos.len(), 2);
+        assert_eq!(a.adjuntos[1].original, format!("/chat/archivo/{}/1/original", dos.id));
+        assert_eq!(a.adjuntos[1].mini, Some(format!("/chat/archivo/{}/1/mini", dos.id)));
+        assert_eq!((a.adjuntos[0].clase, a.adjuntos[1].clase), ("pdf", "imagen"));
+        assert_eq!(a.zip, Some(format!("/chat/zip/{}", dos.id)));
+        assert_eq!((b.adjuntos.len(), b.zip.as_deref()), (1, None), "con uno no hay \"Bajar todo\"");
+        assert_eq!((t.tipo.as_str(), t.referencia.as_deref(), t.adjuntos.len()), ("producto", Some("1234"), 0));
+        assert_eq!(t.tarjeta, None, "la pone chat::tarjetas");
+
+        eliminar(&pool, dos.id, hora("17:10:00")).await.unwrap();
+        let todo = conversacion(&pool, c, None, 50).await.unwrap();
+        assert_eq!((todo[0].adjuntos.len(), todo[0].zip.as_deref()), (0, None), "eliminado: sin archivos");
     }
 }

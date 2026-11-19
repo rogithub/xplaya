@@ -58,6 +58,7 @@ struct PedidoRow {
     uid: Uuid,
     fechacreado: chrono::NaiveDateTime,
     clienteid: Option<Uuid>,
+    estatus: i32,
 }
 
 #[derive(sqlx::FromRow)]
@@ -239,7 +240,7 @@ pub async fn recibo(pool: &PgPool, id: Uuid) -> Result<Option<VentaRecibo>, sqlx
 
 pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, sqlx::Error> {
     let Some(pedido) = sqlx::query_as::<_, PedidoRow>(
-        "SELECT id, uid, fechacreado, clienteid FROM pedidos WHERE uid = $1",
+        "SELECT id, uid, fechacreado, clienteid, estatus FROM pedidos WHERE uid = $1",
     )
     .bind(uid)
     .fetch_optional(pool)
@@ -315,6 +316,7 @@ pub async fn cotizacion(pool: &PgPool, uid: Uuid) -> Result<Option<Cotizacion>, 
         fecha: fecha_es(pedido.fechacreado),
         hora: hora(pedido.fechacreado),
         cliente_id: pedido.clienteid,
+        estatus: pedido.estatus,
         tiene_monedero,
         productos,
         total: mxn(total),

@@ -16,6 +16,7 @@ pub mod contrato;
 pub mod nats;
 pub mod reglas;
 pub mod subidas;
+pub mod tarjetas;
 pub mod vista;
 
 pub use consumer::vigilar;
