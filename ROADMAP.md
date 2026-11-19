@@ -125,7 +125,9 @@ WhatsApp. La competencia cercana imprime con chorro de tinta, más lento y cobra
   POS. Falta decidir: solo clientes con passkey (recomendado), días que se guardan los archivos
   (propuesta: 7 tras "Listo"), tipos y tamaños (PDF, JPG, PNG, HEIC; 10 archivos de 25 MB) y si
   "Listo" se marca también desde el POS.
-- ⬜ **Después, con números:** cotización y pedido desde el POS, chat por encargo, y fijar fecha
+- 🔄 **Chat de la app con la caja:** diseño cerrado el 19 nov 2026, en `CHAT.md` (avance por etapas en
+  https://claude.ai/artifact/UfNTCHwqPsWu19eS4gzqcn). Etapa 2 (base) en curso.
+- ⬜ **Después, con números:** cotización y pedido desde el POS, y fijar fecha
   para que los trabajos de impresión lleguen por la app.
 
 **Reglas que salieron de la plática:**
