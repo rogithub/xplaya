@@ -14,8 +14,8 @@ use super::reglas::Nuevo;
 pub struct Vista {
     pub id: Uuid,
     /// `cliente`, `papeleria`, `automatico` o `asistente`.
-    pub autor: &'static str,
-    pub tipo: &'static str,
+    pub autor: String,
+    pub tipo: String,
     pub texto: Option<String>,
     pub responde_a: Option<Uuid>,
     /// Inicio del texto citado. En vivo va vacío: la app lo busca en lo que ya tiene.
@@ -31,8 +31,8 @@ impl From<&Nuevo> for Vista {
     fn from(n: &Nuevo) -> Self {
         Vista {
             id: n.id,
-            autor: n.autor.texto(),
-            tipo: n.tipo.texto(),
+            autor: n.autor.texto().to_string(),
+            tipo: n.tipo.texto().to_string(),
             texto: n.texto.clone(),
             responde_a: n.responde_a,
             cita: None,

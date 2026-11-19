@@ -1,7 +1,8 @@
 //! Tabla `Mensajes` del chat (definida en el repo del POS; diseño en `CHAT.md`). Solo xplaya
 //! escribe aquí, desde el stream `CHAT` (`chat/consumer.rs`). Fechas en la hora de la tienda.
 //!
-//! Solo ejecuta: lo que se guarda y cuándo lo decide `chat::reglas`.
+//! Solo ejecuta: lo que se guarda y cuándo lo decide `chat::reglas`. La app lee de aquí el
+//! historial, el bloqueo y lo que no ha leído.
 
 use chrono::NaiveDateTime;
 use sqlx::PgPool;
@@ -9,6 +10,7 @@ use uuid::Uuid;
 
 use crate::chat::contrato::{Adjunto, Lado};
 use crate::chat::reglas::{Ajustes, Guardado, Nuevo};
+use crate::chat::vista::Vista;
 
 /// Cliente, autor, fecha, si se eliminó, adjuntos y secuencia.
 type FilaGuardado = (Uuid, String, NaiveDateTime, bool, Option<serde_json::Value>, Option<i64>);
@@ -101,15 +103,89 @@ pub async fn eliminar(pool: &PgPool, id: Uuid, fecha: NaiveDateTime) -> Result<(
 
 /// Los ajustes `CHAT_*` de `Settings`. Si falta uno o no es número, queda el de siempre.
 pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
-    let minutos: Option<String> = sqlx::query_scalar("SELECT value FROM settings WHERE key = 'CHAT_MINUTOS_EDITAR'")
-        .fetch_optional(pool)
-        .await?
-        .flatten();
+    let filas: Vec<(String, Option<String>)> =
+        sqlx::query_as("SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA')")
+            .fetch_all(pool)
+            .await?;
     let mut a = Ajustes::default();
-    if let Some(m) = minutos.and_then(|m| m.trim().parse().ok()) {
-        a.minutos_editar = m;
+    for (llave, valor) in filas {
+        match llave.as_str() {
+            "CHAT_MINUTOS_EDITAR" => {
+                if let Some(m) = valor.and_then(|m| m.trim().parse().ok()) {
+                    a.minutos_editar = m;
+                }
+            }
+            // Con la fila, aunque el valor sea NULL: vacía quiere decir todos (`chat_visible`).
+            _ => a.clientes_prueba = Some(valor.unwrap_or_default()),
+        }
     }
     Ok(a)
+}
+
+// ── Lo que lee la app ────────────────────────────────────────────────────────
+
+/// Cuánto de la cita se manda: es solo para recordar a qué se responde.
+const LARGO_CITA: i32 = 120;
+
+type FilaVista = (Uuid, String, String, Option<String>, Option<Uuid>, Option<String>, NaiveDateTime, bool, bool, bool);
+
+/// Mensajes de la conversación, del más viejo al más nuevo: los últimos `limite`, o los
+/// anteriores al mensaje `antes` (al subir en el chat). Se pagina por (fecha, id) para no
+/// perder mensajes del mismo segundo.
+pub async fn conversacion(pool: &PgPool, cliente: Uuid, antes: Option<Uuid>, limite: i64) -> Result<Vec<Vista>, sqlx::Error> {
+    let filas: Vec<FilaVista> = sqlx::query_as(
+        "SELECT m.id, m.autor, m.tipo, m.texto, m.respondea,
+                CASE WHEN r.fechaeliminado IS NULL THEN LEFT(r.texto, $4) END,
+                m.fecha, m.fechaleido IS NOT NULL, m.fechaeditado IS NOT NULL, m.fechaeliminado IS NOT NULL
+         FROM mensajes m
+         LEFT JOIN mensajes r ON r.id = m.respondea
+         WHERE m.clienteid = $1
+           AND ($2::uuid IS NULL OR (m.fecha, m.id) < (SELECT a.fecha, a.id FROM mensajes a WHERE a.id = $2 AND a.clienteid = $1))
+         ORDER BY m.fecha DESC, m.id DESC
+         LIMIT $3",
+    )
+    .bind(cliente)
+    .bind(antes)
+    .bind(limite)
+    .bind(LARGO_CITA)
+    .fetch_all(pool)
+    .await?;
+    Ok(filas
+        .into_iter()
+        .rev()
+        .map(|(id, autor, tipo, texto, responde_a, cita, fecha, leido, editado, eliminado)| Vista {
+            id,
+            autor,
+            tipo,
+            texto,
+            responde_a,
+            cita,
+            fecha,
+            leido,
+            editado,
+            eliminado,
+        })
+        .collect())
+}
+
+/// Si la caja bloqueó el chat de este cliente (`Clientes.ChatBloqueado`).
+pub async fn bloqueado(pool: &PgPool, cliente: Uuid) -> Result<bool, sqlx::Error> {
+    let bloqueado: Option<bool> = sqlx::query_scalar("SELECT chatbloqueado IS NOT NULL FROM clientes WHERE id = $1")
+        .bind(cliente)
+        .fetch_optional(pool)
+        .await?;
+    Ok(bloqueado.unwrap_or(false))
+}
+
+/// Mensajes que le escribieron al cliente (papelería, automáticos) y no ha leído: el globito del menú.
+pub async fn sin_leer(pool: &PgPool, cliente: Uuid) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT COUNT(*) FROM mensajes
+         WHERE clienteid = $1 AND autor <> 'cliente' AND fechaleido IS NULL AND fechaeliminado IS NULL",
+    )
+    .bind(cliente)
+    .fetch_one(pool)
+    .await
 }
 
 #[cfg(test)]
@@ -257,5 +333,79 @@ mod tests {
         assert_eq!(ajustes(&pool).await.unwrap().minutos_editar, 30);
         sqlx::query("UPDATE settings SET value = 'mucho' WHERE key = 'CHAT_MINUTOS_EDITAR'").execute(&pool).await.unwrap();
         assert_eq!(ajustes(&pool).await.unwrap(), Ajustes::default());
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn quien_ve_el_chat_sale_de_settings(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        assert_eq!(ajustes(&pool).await.unwrap().clientes_prueba, None, "sin la fila");
+        sqlx::query("INSERT INTO settings (key, value) VALUES ('CHAT_CLIENTES_PRUEBA', NULL)").execute(&pool).await.unwrap();
+        assert_eq!(ajustes(&pool).await.unwrap().clientes_prueba.as_deref(), Some(""), "NULL cuenta como vacía");
+        sqlx::query("UPDATE settings SET value = 'a,b' WHERE key = 'CHAT_CLIENTES_PRUEBA'").execute(&pool).await.unwrap();
+        assert_eq!(ajustes(&pool).await.unwrap().clientes_prueba.as_deref(), Some("a,b"));
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn la_conversacion_por_paginas_y_con_su_cita(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        let (c, otro) = (cliente(&pool, "9840000001").await, cliente(&pool, "9840000002").await);
+        guardar(&pool, &nuevo(otro, Lado::Cliente, "16:00:00")).await.unwrap();
+        // Tres del mismo segundo y uno después: la página no debe perder ninguno.
+        let mut ids = vec![];
+        for _ in 0..3 {
+            let n = nuevo(c, Lado::Cliente, "17:00:00");
+            guardar(&pool, &n).await.unwrap();
+            ids.push(n.id);
+        }
+        let mut respuesta = nuevo(c, Lado::Papeleria, "17:05:00");
+        respuesta.texto = Some("Sí".into());
+        respuesta.responde_a = Some(ids[0]);
+        guardar(&pool, &respuesta).await.unwrap();
+
+        let todo = conversacion(&pool, c, None, 50).await.unwrap();
+        assert_eq!(todo.len(), 4, "solo los de este cliente");
+        assert_eq!(todo.last().unwrap().id, respuesta.id, "del más viejo al más nuevo");
+        assert_eq!(todo.last().unwrap().cita.as_deref(), Some("Hola"));
+
+        let ultimos = conversacion(&pool, c, None, 2).await.unwrap();
+        let anteriores = conversacion(&pool, c, Some(ultimos[0].id), 2).await.unwrap();
+        let resto = conversacion(&pool, c, Some(anteriores[0].id), 2).await.unwrap();
+        let mut vistos: Vec<Uuid> = [resto, anteriores, ultimos].concat().iter().map(|v| v.id).collect();
+        assert_eq!(vistos.len(), 4);
+        vistos.sort();
+        vistos.dedup();
+        assert_eq!(vistos.len(), 4, "sin repetidos ni perdidos");
+
+        // Citado y eliminado: ya no se muestra su texto.
+        eliminar(&pool, ids[0], hora("17:10:00")).await.unwrap();
+        let todo = conversacion(&pool, c, None, 50).await.unwrap();
+        assert_eq!(todo.last().unwrap().cita, None);
+        assert!(todo.iter().any(|v| v.id == ids[0] && v.eliminado && v.texto.is_none()));
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn bloqueo_y_sin_leer(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        let c = cliente(&pool, "9840000001").await;
+        assert!(!bloqueado(&pool, c).await.unwrap());
+        assert!(!bloqueado(&pool, Uuid::new_v4()).await.unwrap());
+        sqlx::query("UPDATE clientes SET chatbloqueado = NOW() WHERE id = $1").bind(c).execute(&pool).await.unwrap();
+        assert!(bloqueado(&pool, c).await.unwrap());
+
+        guardar(&pool, &nuevo(c, Lado::Cliente, "17:00:00")).await.unwrap();
+        guardar(&pool, &nuevo(c, Lado::Papeleria, "17:01:00")).await.unwrap();
+        guardar(&pool, &nuevo(c, Lado::Automatico, "17:02:00")).await.unwrap();
+        let borrado = nuevo(c, Lado::Papeleria, "17:03:00");
+        guardar(&pool, &borrado).await.unwrap();
+        eliminar(&pool, borrado.id, hora("17:04:00")).await.unwrap();
+        assert_eq!(sin_leer(&pool, c).await.unwrap(), 2, "los suyos y los eliminados no cuentan");
+        marcar_leidos(&pool, c, false, hora("17:05:00")).await.unwrap();
+        assert_eq!(sin_leer(&pool, c).await.unwrap(), 0);
     }
 }

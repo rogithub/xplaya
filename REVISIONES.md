@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 3: lo que la app lee de la BD (2026-11-19)
+
+`src/db/chat.rs`, con pruebas `#[sqlx::test]` sobre el schema del POS.
+
+- `conversacion()` — los últimos N mensajes, o los anteriores a uno (al subir en el chat), del más
+  viejo al más nuevo. Pagina por (fecha, id): mensajes del mismo segundo no se pierden. Trae el
+  inicio del texto citado; si el citado se eliminó, sin texto.
+- `bloqueado()` — `Clientes.ChatBloqueado`.
+- `sin_leer()` — lo que le escribieron al cliente y no ha leído (el globito del menú).
+- `ajustes()` — una sola consulta; suma `CHAT_CLIENTES_PRUEBA` (con la fila, aunque sea NULL,
+  cuenta como vacía: todos).
+- `src/chat/vista.rs` — `autor` y `tipo` como `String` (vienen de la BD).
+
 ## Horario: los sábados se abre a las 8:00 (2026-11-19)
 
 - Pie de página y datos de Google (`OpeningHoursSpecification`) en `templates/base.html`,
