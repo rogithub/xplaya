@@ -17,3 +17,14 @@ pub async fn buscar(pool: &PgPool, code: &str) -> Result<Option<(String, Uuid)>,
 
     Ok(row.map(|r| (r.tipo, r.targetid)))
 }
+
+/// La ruta a la que lleva una URL corta (`/r/{code}`). La usan el redirect y el chat, que
+/// convierte un link corto en tarjeta.
+pub fn ruta(tipo: &str, id: Uuid) -> Option<String> {
+    match tipo {
+        "recibo" => Some(format!("/recibo/{id}")),
+        "cotizacion" => Some(format!("/cotizacion/{id}")),
+        "monedero" => Some(format!("/monedero/{id}")),
+        _ => None,
+    }
+}

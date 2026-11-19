@@ -92,7 +92,16 @@ impl Config {
     /// `Host` de `app_url` (sin esquema ni ruta), en minúsculas: "app.xplaya.com"
     /// en producción, "app.localhost:3000" en desarrollo.
     pub fn app_host(&self) -> String {
-        let sin_esquema = self.app_url.split("://").nth(1).unwrap_or(&self.app_url);
-        sin_esquema.split('/').next().unwrap_or("").to_lowercase()
+        host(&self.app_url)
     }
+
+    /// Lo mismo de `site_url`: "xplaya.com", o "localhost:3000" en desarrollo.
+    pub fn site_host(&self) -> String {
+        host(&self.site_url)
+    }
+}
+
+fn host(url: &str) -> String {
+    let sin_esquema = url.split("://").nth(1).unwrap_or(url);
+    sin_esquema.split('/').next().unwrap_or("").to_lowercase()
 }

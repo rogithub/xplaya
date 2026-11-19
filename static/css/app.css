@@ -1954,6 +1954,28 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .chat-fila:not(.mio) .chat-globo { padding-right: 40px; }
 
 .chat-texto { margin: 0; white-space: pre-wrap; }
+.chat-texto a { color: inherit; text-decoration: underline; }
+
+/* ── Tarjeta: producto, recibo o cotización ── */
+.chat-tarjeta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: min(260px, 64vw);
+    margin-bottom: 6px;
+    padding: 8px;
+    border-radius: 12px;
+    background: rgb(0 0 0 / .05);
+    color: inherit;
+    text-decoration: none;
+}
+.mio .chat-tarjeta { background: rgb(255 255 255 / .16); }
+.chat-tarjeta-foto { flex: none; width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--chip); }
+.chat-tarjeta-icono { display: grid; place-items: center; font-size: 1.8rem; }
+.chat-tarjeta-dato { min-width: 0; display: grid; gap: 1px; }
+.chat-tarjeta-dato small { opacity: .75; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+.chat-tarjeta-dato strong { font-weight: 600; font-size: .95rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.chat-tarjeta-dato span { font-size: .85rem; }
 
 /* ── Archivos en el globo ── */
 .chat-adjuntos { display: grid; gap: 6px; width: min(260px, 64vw); margin-bottom: 4px; cursor: default; }

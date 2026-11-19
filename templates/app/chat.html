@@ -95,7 +95,22 @@
                              :aria-valuenow="m.subiendo ? m.subiendo.pct : 0" aria-valuemin="0" aria-valuemax="100">
                             <span :style="'width: ' + (m.subiendo ? m.subiendo.pct : 0) + '%'"></span>
                         </div>
-                        <p class="chat-texto" x-show="!m.eliminado && m.texto" x-text="m.texto"></p>
+                        {# Producto, recibo o cotización, con datos al día. El producto abre en la tienda de la app. #}
+                        <template x-if="m.tarjeta && !m.eliminado">
+                            <a class="chat-tarjeta" :href="m.tarjeta.url" @click.stop
+                               :target="m.tarjeta.tipo === 'producto' ? null : '_blank'" rel="noopener">
+                                <img class="chat-tarjeta-foto" x-show="m.tarjeta.foto" :src="m.tarjeta.foto || ''" alt="" loading="lazy">
+                                <span class="chat-tarjeta-foto chat-tarjeta-icono" x-show="!m.tarjeta.foto"
+                                      x-text="tarjeta(m.tarjeta).icono" aria-hidden="true"></span>
+                                <span class="chat-tarjeta-dato">
+                                    <small x-text="tarjeta(m.tarjeta).que"></small>
+                                    <strong x-text="tarjeta(m.tarjeta).titulo"></strong>
+                                    <span x-text="tarjeta(m.tarjeta).dato"></span>
+                                </span>
+                            </a>
+                        </template>
+                        {# Los links se arman por pedazos (chatPartes), nunca con x-html. #}
+                        <p class="chat-texto" x-show="!m.eliminado && m.texto"><template x-for="(p, k) in partes(m.texto)" :key="k"><span><a x-show="p.url" :href="p.url || null" target="_blank" rel="noopener nofollow" @click.stop x-text="p.url ? p.t : ''"></a><span x-show="!p.url" x-text="p.url ? '' : p.t"></span></span></template></p>
                         <p class="chat-texto" x-show="m.eliminado"
                            x-text="mio(m) ? '🚫 Se borró de la app' : '🚫 Mensaje eliminado'"></p>
                         <span class="chat-pie">
@@ -114,7 +129,7 @@
                 {# Menú del mensaje: al tocarlo. #}
                 <div class="chat-menu" x-show="abierto === m.id" x-transition.opacity @click.outside="abierto = null">
                     <button type="button" @click="responder(m)">↩️ Responder</button>
-                    <button type="button" x-show="puedeLeer && (m.texto || (m.adjuntos && m.adjuntos.length))" @click="leer(m)">🔊 Leer en voz alta</button>
+                    <button type="button" x-show="puedeLeer && (m.texto || m.tarjeta || (m.adjuntos && m.adjuntos.length))" @click="leer(m)">🔊 Leer en voz alta</button>
                     <button type="button" x-show="puedeEditar(m)" @click="editar(m)">✏️ Editar</button>
                     <button type="button" class="peligro" x-show="mio(m)" @click="eliminar(m)">🗑️ Eliminar</button>
                 </div>

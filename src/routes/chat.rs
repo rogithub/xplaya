@@ -44,10 +44,10 @@ use crate::{
     caja::EnPantalla,
     chat::{
         archivos::{self, Clase},
-        contrato::{Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Tema, VERSION},
+        contrato::{Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Tema, Tipo, VERSION},
         nats::Cambio as CambioEnVivo,
         reglas::{self, Ajustes, Cambio},
-        tarjetas,
+        tarjetas::{self, Link},
     },
     db, impresion,
     minio::BUCKET_CHAT,
@@ -211,7 +211,8 @@ pub async fn mandar(State(state): State<AppState>, headers: HeaderMap, Json(m): 
             return Ok(error_json(StatusCode::BAD_REQUEST, "Algunos archivos ya no están. Vuelve a elegirlos."));
         }
     };
-    let borrador = reglas::Borrador { id: m.id, texto: m.texto, responde_a: m.responde_a, adjuntos, tarjeta: None };
+    let tarjeta = tarjeta_del_texto(&state, &m.texto).await;
+    let borrador = reglas::Borrador { id: m.id, texto: m.texto, responde_a: m.responde_a, adjuntos, tarjeta };
     let mensaje = match reglas::del_cliente(cliente, borrador, bloqueado, ahora()) {
         Ok(msg) => msg,
         Err(motivo) => return Ok(error_json(StatusCode::BAD_REQUEST, motivo)),
@@ -224,6 +225,30 @@ pub async fn mandar(State(state): State<AppState>, headers: HeaderMap, Json(m): 
         }
         Err(e) => sin_nats(e),
     })
+}
+
+/// Si el texto trae un link a un producto, recibo o cotización de xplaya (también `/r/…`), el
+/// mensaje va como esa tarjeta; el texto queda igual. Si la URL corta no se encuentra o falla la
+/// BD, se manda solo el texto.
+async fn tarjeta_del_texto(state: &AppState, texto: &str) -> Option<(Tipo, String)> {
+    let hosts = [state.config.site_host(), state.config.app_host()];
+    let hosts: Vec<&str> = hosts.iter().map(String::as_str).collect();
+    match tarjetas::de_link(texto, &hosts)? {
+        Link::Tarjeta(tipo, referencia) => Some((tipo, referencia)),
+        Link::Corto(code) => {
+            let (tipo, id) = match db::short_urls::buscar(&state.pool, &code).await {
+                Ok(destino) => destino?,
+                Err(e) => {
+                    tracing::warn!("chat: URL corta {code}: {e}");
+                    return None;
+                }
+            };
+            match tarjetas::de_ruta(&db::short_urls::ruta(&tipo, id)?)? {
+                Link::Tarjeta(tipo, referencia) => Some((tipo, referencia)),
+                Link::Corto(_) => None,
+            }
+        }
+    }
 }
 
 // ── Archivos ────────────────────────────────────────────────────────────────

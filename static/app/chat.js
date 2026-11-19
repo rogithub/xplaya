@@ -111,6 +111,33 @@ function chatQueEs(adjuntos) {
     return nombres[adjuntos[0].clase] || 'Archivo';
 }
 
+// ── Links y tarjetas ──
+// Los links del texto se vuelven <a> armando pedazos (sin x-html): solo http(s), así un
+// "javascript:" escrito en el chat nunca es un link.
+const CHAT_LINK = /(?:https?:\/\/|www\.)[^\s<>"]+|\b(?:app\.)?xplaya\.com\/[^\s<>"]*/gi;
+
+function chatPartes(texto) {
+    const partes = [];
+    let desde = 0;
+    for (const m of texto.matchAll(CHAT_LINK)) {
+        // La puntuación del final de la oración no es parte del link.
+        const link = m[0].replace(/[.,;:!?)\]'"]+$/, '');
+        if (m.index > desde) partes.push({ t: texto.slice(desde, m.index) });
+        partes.push({ t: link, url: /^https?:\/\//i.test(link) ? link : `https://${link}` });
+        desde = m.index + link.length;
+    }
+    if (desde < texto.length) partes.push({ t: texto.slice(desde) });
+    return partes;
+}
+
+// Lo que dice la tarjeta en la cita y en 🔊 cuando el mensaje no trae texto.
+function chatQueTarjeta(t) {
+    if (!t) return '';
+    if (t.tipo === 'producto') return t.nombre;
+    if (t.tipo === 'recibo') return `Recibo del ${t.fecha}`;
+    return `Cotización ${t.numero}`;
+}
+
 function chatLeerPendientes() {
     try { return JSON.parse(localStorage.getItem(CHAT_PENDIENTES) || '[]'); } catch { return []; }
 }
@@ -203,6 +230,17 @@ document.addEventListener('alpine:init', () => {
         medios(m) { return this.visibles(m).filter((v) => chatEsMedio(v.a)); },
         docs(m) { return this.visibles(m).filter((v) => !chatEsMedio(v.a)); },
         icono(a) { return chatIcono(a); },
+        partes(texto) { return chatPartes(texto || ''); },
+
+        // La tarjeta en tres renglones: qué es, el título y el dato principal.
+        tarjeta(t) {
+            if (t.tipo === 'producto') {
+                const hay = parseFloat(t.existencia) > 0 ? 'Hay en tienda' : 'Pregunta si hay';
+                return { que: 'Producto', titulo: t.nombre, dato: `${t.precio} · ${hay}`, icono: '🛍️' };
+            }
+            if (t.tipo === 'recibo') return { que: 'Recibo', titulo: `${t.fecha} · ${t.hora}`, dato: `Total ${t.total}`, icono: '🧾' };
+            return { que: 'Cotización', titulo: `Núm. ${t.numero}`, dato: `${t.estatus} · Total ${t.total}`, icono: '📋' };
+        },
         puedeReintentar(m) { return chatSubidas.has(m.id); },
 
         detalle(a) {
@@ -248,7 +286,7 @@ document.addEventListener('alpine:init', () => {
             const citado = this.mensajes.find((x) => x.id === m.respondeA);
             if (citado) {
                 if (citado.eliminado) return 'Mensaje eliminado';
-                return citado.texto || chatQueEs(citado.adjuntos);
+                return citado.texto || chatQueEs(citado.adjuntos) || chatQueTarjeta(citado.tarjeta);
             }
             return m.cita || 'Mensaje eliminado';
         },
@@ -312,7 +350,7 @@ document.addEventListener('alpine:init', () => {
             es.addEventListener('eliminado', (e) => {
                 const d = datos(e);
                 const m = this.mensajes.find((x) => x.id === d.id);
-                if (m) { m.texto = null; m.eliminado = true; m.adjuntos = []; m.zip = null; }
+                if (m) { m.texto = null; m.eliminado = true; m.adjuntos = []; m.zip = null; m.tarjeta = null; }
                 if (this.visor && this.visor.original.includes(d.id)) this.visor = null;
             });
             es.addEventListener('escribiendo', () => {
@@ -764,7 +802,7 @@ document.addEventListener('alpine:init', () => {
         // 🔊 con la voz en español del propio celular.
         leer(m) {
             this.abierto = null;
-            const texto = m.texto || chatQueEs(m.adjuntos);
+            const texto = m.texto || chatQueEs(m.adjuntos) || chatQueTarjeta(m.tarjeta);
             if (!this.puedeLeer || !texto) return;
             speechSynthesis.cancel();
             const dicho = new SpeechSynthesisUtterance(texto);

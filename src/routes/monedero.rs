@@ -429,13 +429,7 @@ pub async fn redirigir(
         .ok_or(StatusCode::NOT_FOUND)?;
 
     let (tipo, id) = entry;
-    let url = match tipo.as_str() {
-        "recibo" => format!("/recibo/{}", id),
-        "cotizacion" => format!("/cotizacion/{}", id),
-        "monedero" => format!("/monedero/{}", id),
-        _ => return Err(StatusCode::NOT_FOUND),
-    };
-
+    let url = db::short_urls::ruta(&tipo, id).ok_or(StatusCode::NOT_FOUND)?;
     Ok(Redirect::permanent(&url))
 }
 

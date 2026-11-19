@@ -4,6 +4,34 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 8a: links → tarjeta y tarjeta en el globo (2026-11-19)
+
+El paso 8 va en tres partes: 8a (esta), 8b "Preguntar por el chat" y 8c cotización del carrito.
+
+- `src/chat/tarjetas.rs`:
+  - `de_link(texto, hosts)` busca el primer link a xplaya (con o sin `https://`, con o sin
+    `www.`) a `/productos/{nid}`, `/tienda/{nid}`, `/recibo/{guid}`, `/cotizacion/{guid}` o
+    `/r/{code}`. Quita la puntuación pegada a la oración.
+  - `de_ruta` hace lo mismo desde la ruta; la usa también el destino de una URL corta.
+  - La tarjeta de producto ahora lleva a `/tienda/{nid}` (dentro de la app), no al sitio.
+  - Pruebas: `links_de_xplaya_a_tarjeta` y `lo_demas_no_es_tarjeta` (otro dominio,
+    `xplaya.com.mx`, ids malos, `/monedero/…`).
+- `src/routes/chat.rs`: `mandar` llama a `tarjeta_del_texto`. Si hay link, el mensaje va con
+  `tipo` y `ref` y el texto queda igual. `/r/…` se busca en `ShortUrls`; si no está o falla la
+  BD, se manda solo el texto.
+- `src/db/short_urls.rs`: `ruta(tipo, id)` es el destino de una URL corta. Lo comparten
+  `routes::monedero::redirigir` y el chat.
+- `src/config.rs`: `site_host()`, junto a `app_host()`.
+- `templates/app/chat.html`, `static/app/chat.js` y `static/css/app.css`:
+  - `.chat-tarjeta` va arriba del texto: foto o icono, qué es, título y dato principal (precio y
+    si hay; total; estatus y total). Se abre la página (el recibo y la cotización, en otra
+    pestaña).
+  - Los links del texto se vuelven `<a>` armando pedazos (`chatPartes`), sin `x-html`. Solo
+    `http(s)`, así que `javascript:` nunca es link.
+  - La cita y 🔊 usan la tarjeta si el mensaje no trae texto. `eliminado` la quita.
+- Probado: `cargo test tarjetas`. La captura (claro y oscuro) se hizo con mensajes inyectados en
+  la página, porque sin NATS local no se puede mandar.
+
 ## Chat de la app, etapa 3b, paso 7: notas de voz (2026-11-19)
 
 - `templates/app/chat.html`:

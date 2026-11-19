@@ -8,7 +8,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use super::vista::Vista;
+use super::{contrato::Tipo, vista::Vista};
 use crate::db;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -46,7 +46,7 @@ fn estatus(n: i32) -> &'static str {
     }
 }
 
-/// Dónde están el sitio (`SITE_URL`, los links de la tarjeta) y las fotos de los productos
+/// Dónde están el sitio (`SITE_URL`, los links del recibo y la cotización) y las fotos de los productos
 /// (`CONTENT_BASE_URL`).
 #[derive(Clone, Copy)]
 pub struct Urls<'a> {
@@ -73,7 +73,8 @@ pub async fn resolver(pool: &PgPool, urls: Urls<'_>, tipo: &str, referencia: &st
                 precio: format!("${}", p.precio_venta),
                 foto: p.fotos.into_iter().next(),
                 existencia: p.stock,
-                url: format!("{sitio}/productos/{nid}"),
+                // En la app misma: el cliente no sale de la PWA y puede agregarlo al carrito.
+                url: format!("/tienda/{nid}"),
             })
         }
         "recibo" => {
@@ -96,6 +97,50 @@ pub async fn resolver(pool: &PgPool, urls: Urls<'_>, tipo: &str, referencia: &st
         }
         _ => None,
     })
+}
+
+/// Lo que dice un link a xplaya pegado en un mensaje.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Link {
+    /// Ya se sabe qué tarjeta es: `producto` + nid, `recibo` o `cotizacion` + guid.
+    Tarjeta(Tipo, String),
+    /// `/r/{code}`: hay que buscarlo en `ShortUrls` y pasar el destino por `de_ruta`.
+    Corto(String),
+}
+
+/// El primer link del texto que va a un producto, recibo, cotización o URL corta de xplaya.
+/// `hosts` son los dominios propios ("xplaya.com", "app.xplaya.com"); el `www.` se ignora y el
+/// esquema es opcional, porque en WhatsApp se pegan de las dos formas.
+pub fn de_link(texto: &str, hosts: &[&str]) -> Option<Link> {
+    texto.split_whitespace().find_map(|palabra| {
+        // La puntuación que queda pegada a una oración no es parte del link.
+        let palabra = palabra.trim_start_matches(['(', '[', '"', '¿', '¡']);
+        let palabra = palabra.trim_end_matches(['.', ',', ';', ':', '!', '?', ')', ']', '"', '\'']);
+        let sin_esquema = palabra.strip_prefix("https://").or_else(|| palabra.strip_prefix("http://")).unwrap_or(palabra);
+        let (host, ruta) = sin_esquema.split_at(sin_esquema.find('/')?);
+        let host = host.to_lowercase();
+        let host = host.strip_prefix("www.").unwrap_or(&host);
+        if !hosts.iter().any(|h| h.eq_ignore_ascii_case(host)) {
+            return None;
+        }
+        de_ruta(ruta)
+    })
+}
+
+/// Lo mismo, desde la ruta (`/productos/12?x=1`). La usa también el destino de una URL corta.
+pub fn de_ruta(ruta: &str) -> Option<Link> {
+    let ruta = ruta.split(['?', '#']).next().unwrap_or("");
+    let mut partes = ruta.trim_start_matches('/').split('/');
+    let (Some(que), Some(id)) = (partes.next(), partes.next()) else { return None };
+    // `/productos/12/` sí; `/recibo/{guid}/pdf` también: sigue siendo ese recibo.
+    let id = id.trim();
+    match que {
+        "productos" | "tienda" => id.parse::<i32>().ok().filter(|n| *n > 0).map(|n| Link::Tarjeta(Tipo::Producto, n.to_string())),
+        "recibo" => id.parse::<Uuid>().ok().map(|g| Link::Tarjeta(Tipo::Recibo, g.to_string())),
+        "cotizacion" => id.parse::<Uuid>().ok().map(|g| Link::Tarjeta(Tipo::Cotizacion, g.to_string())),
+        "r" if !id.is_empty() && id.len() <= 10 && id.chars().all(|c| c.is_ascii_alphanumeric()) => Some(Link::Corto(id.to_string())),
+        _ => None,
+    }
 }
 
 /// Pone la tarjeta a los mensajes que la llevan (no a los eliminados). Si la misma sale varias
@@ -153,6 +198,46 @@ mod tests {
         sqlx::query_scalar("SELECT nid FROM productos WHERE id = $1").bind(p).fetch_one(pool).await.unwrap()
     }
 
+    const HOSTS: [&str; 2] = ["xplaya.com", "app.xplaya.com"];
+    const GUID: &str = "0f8fad5b-d9cb-469f-a165-70867728950e";
+
+    fn tarjeta(tipo: Tipo, r: &str) -> Option<Link> {
+        Some(Link::Tarjeta(tipo, r.into()))
+    }
+
+    #[test]
+    fn links_de_xplaya_a_tarjeta() {
+        let de = |t: &str| de_link(t, &HOSTS);
+        assert_eq!(de("¿Tienen esta? https://xplaya.com/productos/1234"), tarjeta(Tipo::Producto, "1234"));
+        assert_eq!(de("www.xplaya.com/productos/1234?utm=wa."), tarjeta(Tipo::Producto, "1234"));
+        assert_eq!(de("(app.xplaya.com/tienda/77)"), tarjeta(Tipo::Producto, "77"));
+        assert_eq!(de(&format!("http://XPLAYA.com/recibo/{GUID}/pdf")), tarjeta(Tipo::Recibo, GUID));
+        assert_eq!(de(&format!("xplaya.com/cotizacion/{}", GUID.to_uppercase())), tarjeta(Tipo::Cotizacion, GUID));
+        assert_eq!(de("https://xplaya.com/r/xK9mPq, gracias"), Some(Link::Corto("xK9mPq".into())));
+        // El primero que sirve.
+        assert_eq!(de("xplaya.com/terminos y xplaya.com/productos/5"), tarjeta(Tipo::Producto, "5"));
+    }
+
+    #[test]
+    fn lo_demas_no_es_tarjeta() {
+        let de = |t: &str| de_link(t, &HOSTS);
+        for t in [
+            "Hola, ¿abren mañana?",
+            "https://otro.com/productos/12",
+            "https://xplaya.com.mx/productos/12",
+            "https://malo-xplaya.com/productos/12",
+            "xplaya.com/productos/abc",
+            "xplaya.com/productos/0",
+            "xplaya.com/productos/",
+            "xplaya.com/recibo/no-es-guid",
+            "xplaya.com/monedero/0f8fad5b-d9cb-469f-a165-70867728950e",
+            "xplaya.com/r/demasiado-largo-para-ser-code",
+            "xplaya.com",
+        ] {
+            assert_eq!(de(t), None, "{t}");
+        }
+    }
+
     #[test]
     fn el_estatus_como_lo_lee_el_cliente() {
         assert_eq!([estatus(0), estatus(1), estatus(2)], ["Nueva", "Pagada", "Entregada"]);
@@ -185,7 +270,7 @@ mod tests {
         match resolver(&pool, URLS, "producto", &nid.to_string()).await.unwrap() {
             Some(Tarjeta::Producto { nombre, precio, url, foto, .. }) => {
                 assert_eq!((nombre.as_str(), precio.as_str(), foto), ("Cartulina", "$12.50", None));
-                assert_eq!(url, format!("https://xplaya.com/productos/{nid}"));
+                assert_eq!(url, format!("/tienda/{nid}"));
             }
             otra => panic!("producto: {otra:?}"),
         }
