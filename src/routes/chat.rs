@@ -176,11 +176,17 @@ pub struct NuevoMensaje {
     responde_a: Option<Uuid>,
 }
 
+impl NuevoMensaje {
+    fn borrador(self) -> reglas::Borrador {
+        reglas::Borrador { id: self.id, texto: self.texto, responde_a: self.responde_a, ..Default::default() }
+    }
+}
+
 /// Responde cuando NATS ya lo tiene (el ✓). Se guarda y llega por el SSE un instante después.
 pub async fn mandar(State(state): State<AppState>, headers: HeaderMap, Json(m): Json<NuevoMensaje>) -> Result<Response, StatusCode> {
     let (cliente, _) = del_chat(&state, &headers).await?;
     let bloqueado = db::chat::bloqueado(&state.pool, cliente).await.map_err(error_bd)?;
-    let mensaje = match reglas::del_cliente(cliente, m.id, &m.texto, m.responde_a, bloqueado, ahora()) {
+    let mensaje = match reglas::del_cliente(cliente, m.borrador(), bloqueado, ahora()) {
         Ok(msg) => msg,
         Err(motivo) => return Ok(error_json(StatusCode::BAD_REQUEST, motivo)),
     };

@@ -63,9 +63,9 @@ la ignora.
   "texto": "¿Así está bien para engargolar?",
   "adjuntos": [                  // opcional; el archivo vive en MinIO (bucket papeleria-chat)
     { "nombre": "tesis.docx", "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "bytes": 4194304, "llave": "8a1e…/0193f2c4-…/tesis.docx",
+      "bytes": 4194304, "llave": "8a1e…/0193f2c4-…/{archivo}.docx",  // el nombre del cliente no va en la llave
       "paginas": 48,             // PDF, o Word/Excel/PowerPoint ya convertido
-      "pdf": "8a1e…/0193f2c4-…/tesis.pdf",   // el convertido; el original sigue en "llave"
+      "pdf": "8a1e…/0193f2c4-…/{archivo}-pdf.pdf",   // el convertido; el original sigue en "llave"
       "miniatura": null }        // solo imágenes
   ],
   "respondeA": null,             // id del mensaje que cita

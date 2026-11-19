@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 2: qué es cada archivo (2026-11-19)
+
+Decisión nueva: **grupos de archivos** ("ahí van 60 fotos, imprímelas de 5×5"). Van en un solo
+mensaje con hasta 100 adjuntos y se bajan juntos en un zip con carpetas por tipo (pasos 3, 4b y 6).
+
+- `src/chat/archivos.rs` (puro, con pruebas):
+  - `clasificar(nombre, primeros_bytes)` da la clase (imagen, video, audio, PDF, Office o archivo),
+    la extensión y el mime.
+  - El tipo sale de los bytes. El nombre solo desempata: un webm puede ser video o nota de voz
+    (`.weba`), y un ZIP puede ser un docx.
+  - Lo que no se reconoce (un `.cdr`, un `.zip`, un HEIC) se manda como archivo que solo se baja.
+  - `limite`: `CHAT_MB_DOCUMENTO` o `CHAT_MB_VIDEO`, con tope de 95 MB por Cloudflare.
+  - `llaves`: `{cliente}/{mensaje}/{archivo}.{ext}`, `-pdf.pdf` y `-mini.jpg`. El nombre del cliente no
+    va en la llave.
+- `src/chat/reglas.rs`:
+  - `del_cliente` recibe un `Borrador` con adjuntos y tarjeta. Un mensaje puede ser solo fotos o solo
+    una tarjeta.
+  - El cliente no puede mandar avisos.
+  - `MAX_ADJUNTOS` (100) también lo revisa el consumer.
+  - `Ajustes` tiene `mb_documento` y `mb_video`, que se leen de `Settings` (`db/chat.rs::ajustes`).
+- `contratos/chat-v1/`: `mensaje-voz.json` y `mensaje-tarjeta.json` nuevos, y llaves con el formato
+  nuevo (también en `CHAT.md`).
+- Clippy avisa código sin usar en `archivos.rs` hasta el paso 3.
+
 ## Chat de la app, etapa 3b, paso 1: MinIO en stream (2026-11-19)
 
 Plan de la 3b (archivos, voz, Office→PDF, tarjetas) en `CHAT.md` al cerrar la etapa.

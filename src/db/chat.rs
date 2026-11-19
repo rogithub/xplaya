@@ -104,10 +104,13 @@ pub async fn eliminar(pool: &PgPool, id: Uuid, fecha: NaiveDateTime) -> Result<(
 /// Los ajustes `CHAT_*` de `Settings`. Si falta uno o no es número, queda el de siempre.
 pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
     let filas: Vec<(String, Option<String>)> =
-        sqlx::query_as("SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA')")
+        sqlx::query_as(
+            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO')",
+        )
             .fetch_all(pool)
             .await?;
     let mut a = Ajustes::default();
+    let numero = |valor: Option<String>| valor.and_then(|v| v.trim().parse::<u64>().ok()).filter(|n| *n > 0);
     for (llave, valor) in filas {
         match llave.as_str() {
             "CHAT_MINUTOS_EDITAR" => {
@@ -115,6 +118,8 @@ pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
                     a.minutos_editar = m;
                 }
             }
+            "CHAT_MB_DOCUMENTO" => a.mb_documento = numero(valor).unwrap_or(a.mb_documento),
+            "CHAT_MB_VIDEO" => a.mb_video = numero(valor).unwrap_or(a.mb_video),
             // Con la fila, aunque el valor sea NULL: vacía quiere decir todos (`chat_visible`).
             _ => a.clientes_prueba = Some(valor.unwrap_or_default()),
         }
@@ -333,6 +338,12 @@ mod tests {
         assert_eq!(ajustes(&pool).await.unwrap().minutos_editar, 30);
         sqlx::query("UPDATE settings SET value = 'mucho' WHERE key = 'CHAT_MINUTOS_EDITAR'").execute(&pool).await.unwrap();
         assert_eq!(ajustes(&pool).await.unwrap(), Ajustes::default());
+        sqlx::query("INSERT INTO settings (key, value) VALUES ('CHAT_MB_DOCUMENTO', '40'), ('CHAT_MB_VIDEO', '0')")
+            .execute(&pool)
+            .await
+            .unwrap();
+        let a = ajustes(&pool).await.unwrap();
+        assert_eq!((a.mb_documento, a.mb_video), (40, 100), "0 no es un límite: queda el de siempre");
     }
 
     #[sqlx::test(migrations = false)]

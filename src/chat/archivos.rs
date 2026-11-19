@@ -1,0 +1,258 @@
+//! Qué es cada archivo que manda el cliente por el chat, cuánto puede pesar y dónde va en MinIO.
+//! Puro, con pruebas: la ruta (`routes/chat.rs`) lee los primeros bytes, pregunta aquí y ejecuta.
+//!
+//! El tipo sale de los **primeros bytes** del archivo, no del mime que manda el celular. La
+//! extensión del nombre solo desempata lo que los bytes no dicen: un `.webm` puede ser video o una
+//! nota de voz, y un ZIP puede ser un Word.
+//!
+//! Lo que no se reconoce también se manda (un `.cdr`, un `.zip` con fotos): queda como
+//! [`Clase::Archivo`], que solo se puede bajar. Por eso se sirven siempre con
+//! `Content-Disposition` y `nosniff`.
+
+use uuid::Uuid;
+
+use super::reglas::Ajustes;
+
+/// Cuántos bytes del inicio hacen falta para `clasificar`.
+pub const BYTES_FIRMA: usize = 16;
+/// Cloudflare corta peticiones de más de 100 MB: el video no pasa de esto aunque el ajuste diga más.
+pub const MB_VIDEO_TOPE: u64 = 95;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Clase {
+    /// Con miniatura (JPEG, PNG, WebP). Un GIF va aquí pero sin miniatura.
+    Imagen,
+    Video,
+    /// Notas de voz y audios.
+    Audio,
+    /// Se cuentan sus páginas.
+    Pdf,
+    /// Word, Excel, PowerPoint (y los de LibreOffice): se convierten a PDF con Gotenberg.
+    Office,
+    /// Cualquier otra cosa: solo se baja.
+    Archivo,
+}
+
+/// El resultado de `clasificar`: la extensión (segura para la llave de MinIO) y el mime con que se
+/// guarda y se sirve.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Tipo {
+    pub clase: Clase,
+    pub ext: String,
+    pub mime: &'static str,
+}
+
+fn tipo(clase: Clase, ext: &str, mime: &'static str) -> Tipo {
+    Tipo { clase, ext: ext.to_string(), mime }
+}
+
+/// La extensión del nombre, en minúsculas; vacía si no hay o si no es una extensión razonable
+/// (solo letras y números, hasta 8). Así se puede poner en la llave sin codificar nada.
+fn extension(nombre: &str) -> String {
+    let Some((_, ext)) = nombre.rsplit_once('.') else {
+        return String::new();
+    };
+    let ext = ext.to_ascii_lowercase();
+    if !ext.is_empty() && ext.len() <= 8 && ext.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        ext
+    } else {
+        String::new()
+    }
+}
+
+/// Qué es el archivo, por sus primeros bytes (`BYTES_FIRMA`) y, si hace falta, su nombre.
+pub fn clasificar(nombre: &str, inicio: &[u8]) -> Tipo {
+    let ext = extension(nombre);
+    let en = |de: usize, firma: &[u8]| inicio.get(de..de + firma.len()) == Some(firma);
+
+    if en(0, b"%PDF") {
+        return tipo(Clase::Pdf, "pdf", "application/pdf");
+    }
+    if en(0, &[0xFF, 0xD8, 0xFF]) {
+        return tipo(Clase::Imagen, "jpg", "image/jpeg");
+    }
+    if en(0, &[0x89, b'P', b'N', b'G']) {
+        return tipo(Clase::Imagen, "png", "image/png");
+    }
+    if en(0, b"RIFF") && en(8, b"WEBP") {
+        return tipo(Clase::Imagen, "webp", "image/webp");
+    }
+    if en(0, b"GIF8") {
+        return tipo(Clase::Imagen, "gif", "image/gif");
+    }
+    if en(0, b"RIFF") && en(8, b"WAVE") {
+        return tipo(Clase::Audio, "wav", "audio/wav");
+    }
+    if en(0, b"OggS") {
+        return tipo(Clase::Audio, if ext == "opus" { "opus" } else { "ogg" }, "audio/ogg");
+    }
+    if en(0, b"ID3") || en(0, &[0xFF, 0xFB]) || en(0, &[0xFF, 0xF3]) || en(0, &[0xFF, 0xF2]) {
+        return tipo(Clase::Audio, "mp3", "audio/mpeg");
+    }
+    // WebM / Matroska: la nota de voz de Chrome y los videos de Android.
+    if en(0, &[0x1A, 0x45, 0xDF, 0xA3]) {
+        return match ext.as_str() {
+            "weba" | "opus" => tipo(Clase::Audio, "weba", "audio/webm"),
+            "mkv" => tipo(Clase::Video, "mkv", "video/x-matroska"),
+            _ => tipo(Clase::Video, "webm", "video/webm"),
+        };
+    }
+    // ISO (MP4, MOV, M4A, HEIC): la marca va después de "ftyp".
+    if en(4, b"ftyp") {
+        let marca = inicio.get(8..12).unwrap_or_default();
+        return match marca {
+            b"heic" | b"heix" | b"mif1" | b"msf1" | b"hevc" => tipo(Clase::Archivo, "heic", "image/heic"),
+            b"qt  " => tipo(Clase::Video, "mov", "video/quicktime"),
+            b"M4A " => tipo(Clase::Audio, "m4a", "audio/mp4"),
+            _ if matches!(ext.as_str(), "m4a" | "aac") => tipo(Clase::Audio, "m4a", "audio/mp4"),
+            _ => tipo(Clase::Video, "mp4", "video/mp4"),
+        };
+    }
+    // Word, Excel y PowerPoint nuevos (y los de LibreOffice) son un ZIP: decide la extensión.
+    if en(0, b"PK\x03\x04") {
+        return match ext.as_str() {
+            "docx" => tipo(Clase::Office, "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            "xlsx" => tipo(Clase::Office, "xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            "pptx" => tipo(Clase::Office, "pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+            "odt" => tipo(Clase::Office, "odt", "application/vnd.oasis.opendocument.text"),
+            "ods" => tipo(Clase::Office, "ods", "application/vnd.oasis.opendocument.spreadsheet"),
+            "odp" => tipo(Clase::Office, "odp", "application/vnd.oasis.opendocument.presentation"),
+            _ => tipo(Clase::Archivo, "zip", "application/zip"),
+        };
+    }
+    // Word, Excel y PowerPoint viejos (OLE).
+    if en(0, &[0xD0, 0xCF, 0x11, 0xE0]) {
+        return match ext.as_str() {
+            "doc" => tipo(Clase::Office, "doc", "application/msword"),
+            "xls" => tipo(Clase::Office, "xls", "application/vnd.ms-excel"),
+            "ppt" => tipo(Clase::Office, "ppt", "application/vnd.ms-powerpoint"),
+            _ => tipo(Clase::Archivo, if ext.is_empty() { "bin" } else { &ext }, "application/octet-stream"),
+        };
+    }
+    if en(0, b"{\\rtf") {
+        return tipo(Clase::Office, "rtf", "application/rtf");
+    }
+    tipo(Clase::Archivo, if ext.is_empty() { "bin" } else { &ext }, "application/octet-stream")
+}
+
+/// Cuántos bytes puede pesar un archivo de esa clase: `CHAT_MB_VIDEO` (con tope de
+/// `MB_VIDEO_TOPE`) los videos y `CHAT_MB_DOCUMENTO` todo lo demás.
+pub fn limite(clase: Clase, ajustes: &Ajustes) -> u64 {
+    let mb = match clase {
+        Clase::Video => ajustes.mb_video.min(MB_VIDEO_TOPE),
+        _ => ajustes.mb_documento,
+    };
+    mb * 1024 * 1024
+}
+
+/// El límite más grande, para cortar la subida antes de saber qué es.
+pub fn limite_mayor(ajustes: &Ajustes) -> u64 {
+    limite(Clase::Video, ajustes).max(limite(Clase::Archivo, ajustes))
+}
+
+/// Dónde va cada archivo en MinIO. Todo en la carpeta del cliente (así lo pide
+/// `reglas::mensaje`) y del mensaje. El nombre que puso el cliente no va en la llave: la firma de
+/// MinIO no codifica caracteres; ese nombre va en `Adjunto.nombre`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Llaves {
+    pub original: String,
+    /// El PDF convertido (Office).
+    pub pdf: String,
+    /// La miniatura (imágenes).
+    pub miniatura: String,
+}
+
+pub fn llaves(cliente: Uuid, mensaje: Uuid, archivo: Uuid, ext: &str) -> Llaves {
+    let base = format!("{cliente}/{mensaje}/{archivo}");
+    Llaves { original: format!("{base}.{ext}"), pdf: format!("{base}-pdf.pdf"), miniatura: format!("{base}-mini.jpg") }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn clase(nombre: &str, inicio: &[u8]) -> (Clase, String, &'static str) {
+        let t = clasificar(nombre, inicio);
+        (t.clase, t.ext, t.mime)
+    }
+
+    fn ftyp(marca: &[u8; 4]) -> Vec<u8> {
+        [&[0, 0, 0, 0x20][..], b"ftyp", marca, &[0, 0, 0, 0]].concat()
+    }
+
+    #[test]
+    fn por_los_bytes_no_por_el_nombre() {
+        assert_eq!(clase("foto.pdf", &[0xFF, 0xD8, 0xFF, 0xE0]).0, Clase::Imagen);
+        assert_eq!(clase("tesis.jpg", b"%PDF-1.7"), (Clase::Pdf, "pdf".into(), "application/pdf"));
+        assert_eq!(clase("x", &[0x89, b'P', b'N', b'G', 0x0D]).1, "png");
+        assert_eq!(clase("x", b"RIFF\0\0\0\0WEBPVP8 ").1, "webp");
+        assert_eq!(clase("x", b"GIF89a").0, Clase::Imagen);
+    }
+
+    #[test]
+    fn audios() {
+        assert_eq!(clase("x", b"OggS\0").1, "ogg");
+        assert_eq!(clase("PTT-2026.opus", b"OggS\0").1, "opus");
+        assert_eq!(clase("x", b"ID3\x04").1, "mp3");
+        assert_eq!(clase("x", b"RIFF\0\0\0\0WAVEfmt ").1, "wav");
+        assert_eq!(clase("x", &ftyp(b"M4A ")).0, Clase::Audio);
+    }
+
+    #[test]
+    fn webm_y_mp4_se_desempatan_por_el_nombre() {
+        let webm = [0x1A, 0x45, 0xDF, 0xA3, 0x9F];
+        assert_eq!(clase("nota-de-voz.weba", &webm), (Clase::Audio, "weba".into(), "audio/webm"));
+        assert_eq!(clase("video.webm", &webm).0, Clase::Video);
+        assert_eq!(clase("sin-nombre", &webm).0, Clase::Video);
+        assert_eq!(clase("nota-de-voz.m4a", &ftyp(b"iso5")), (Clase::Audio, "m4a".into(), "audio/mp4"));
+        assert_eq!(clase("VID_2026.mp4", &ftyp(b"isom")), (Clase::Video, "mp4".into(), "video/mp4"));
+        assert_eq!(clase("IMG_0001.MOV", &ftyp(b"qt  ")).1, "mov");
+    }
+
+    #[test]
+    fn heic_se_baja_pero_no_se_ve() {
+        assert_eq!(clase("IMG_0001.HEIC", &ftyp(b"heic")), (Clase::Archivo, "heic".into(), "image/heic"));
+    }
+
+    #[test]
+    fn office_por_la_extension_dentro_del_zip_o_ole() {
+        assert_eq!(clase("Tesis Final.DOCX", b"PK\x03\x04\x14\0").1, "docx");
+        assert_eq!(clase("ventas.xlsx", b"PK\x03\x04").0, Clase::Office);
+        assert_eq!(clase("expo.pptx", b"PK\x03\x04").0, Clase::Office);
+        assert_eq!(clase("fotos.zip", b"PK\x03\x04"), (Clase::Archivo, "zip".into(), "application/zip"));
+        assert_eq!(clase("viejo.doc", &[0xD0, 0xCF, 0x11, 0xE0, 0xA1]).1, "doc");
+        assert_eq!(clase("raro.msg", &[0xD0, 0xCF, 0x11, 0xE0]), (Clase::Archivo, "msg".into(), "application/octet-stream"));
+        assert_eq!(clase("carta.rtf", b"{\\rtf1\\ansi").0, Clase::Office);
+    }
+
+    #[test]
+    fn lo_demas_se_baja_con_una_extension_segura() {
+        assert_eq!(clase("logo.CDR", b"RIFF\0\0\0\0CDR"), (Clase::Archivo, "cdr".into(), "application/octet-stream"));
+        assert_eq!(clase("sin extension", b"hola").1, "bin");
+        assert_eq!(clase("../../etc/pa ss.w%d", b"hola").1, "bin");
+        assert_eq!(clase("muy.largaextension", b"hola").1, "bin");
+        assert_eq!(clase("", b"").1, "bin");
+    }
+
+    #[test]
+    fn limites() {
+        let a = Ajustes::default();
+        assert_eq!(limite(Clase::Pdf, &a), 25 * 1024 * 1024);
+        assert_eq!(limite(Clase::Video, &a), 95 * 1024 * 1024, "100 en el ajuste, pero Cloudflare corta en 100");
+        let chico = Ajustes { mb_video: 50, mb_documento: 10, ..Ajustes::default() };
+        assert_eq!(limite(Clase::Video, &chico), 50 * 1024 * 1024);
+        assert_eq!(limite(Clase::Imagen, &chico), 10 * 1024 * 1024);
+        assert_eq!(limite_mayor(&chico), 50 * 1024 * 1024);
+    }
+
+    #[test]
+    fn llaves_en_la_carpeta_del_cliente_y_del_mensaje() {
+        let (c, m, a) = (Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3));
+        let l = llaves(c, m, a, "docx");
+        assert_eq!(l.original, format!("{c}/{m}/{a}.docx"));
+        assert_eq!(l.pdf, format!("{c}/{m}/{a}-pdf.pdf"));
+        assert_eq!(l.miniatura, format!("{c}/{m}/{a}-mini.jpg"));
+        // Un PDF original no choca con el convertido.
+        assert_ne!(llaves(c, m, a, "pdf").original, l.pdf);
+    }
+}

@@ -283,6 +283,8 @@ mod tests {
     fn los_ejemplos_del_contrato_van_y_vuelven_iguales() {
         ida_y_vuelta::<Mensaje>("mensaje.json");
         ida_y_vuelta::<Mensaje>("mensaje-con-adjuntos.json");
+        ida_y_vuelta::<Mensaje>("mensaje-voz.json");
+        ida_y_vuelta::<Mensaje>("mensaje-tarjeta.json");
         ida_y_vuelta::<Leido>("leido.json");
         ida_y_vuelta::<Editado>("editado.json");
         ida_y_vuelta::<Eliminado>("eliminado.json");

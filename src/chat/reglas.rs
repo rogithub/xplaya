@@ -17,11 +17,15 @@ pub struct Ajustes {
     /// `CHAT_CLIENTES_PRUEBA`: quién ve el chat en la app mientras la caja no puede contestar
     /// (`chat_visible`). `None`: no está la fila.
     pub clientes_prueba: Option<String>,
+    /// `CHAT_MB_DOCUMENTO`: todo lo que no es video (`archivos::limite`).
+    pub mb_documento: u64,
+    /// `CHAT_MB_VIDEO`, con tope de `archivos::MB_VIDEO_TOPE`.
+    pub mb_video: u64,
 }
 
 impl Default for Ajustes {
     fn default() -> Self {
-        Self { minutos_editar: 15, clientes_prueba: None }
+        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100 }
     }
 }
 
@@ -96,6 +100,9 @@ fn mensaje(tema: &Tema, m: Mensaje, guardado: Option<&Guardado>, secuencia: u64)
     let carpeta = format!("{}/", m.cliente_id);
     if m.adjuntos.iter().flat_map(Adjunto::llaves).any(|llave| !llave.starts_with(&carpeta)) {
         return Cambio::Ignorar("un archivo no está en la carpeta del cliente");
+    }
+    if m.adjuntos.len() > MAX_ADJUNTOS {
+        return Cambio::Ignorar("demasiados archivos en un mensaje");
     }
     let texto = m.texto.filter(|t| !t.trim().is_empty());
     let referencia = m.referencia.filter(|r| !r.trim().is_empty());
@@ -191,36 +198,52 @@ fn ajeno(tema: &Tema, cliente_del_evento: Uuid, g: &Guardado) -> Option<&'static
 
 /// Más que esto no es una plática: se rechaza en lugar de cortarlo.
 pub const MAX_CARACTERES: usize = 4000;
+/// Archivos en un solo mensaje ("ahí te van estas 60 fotos"). Lo revisan la app y el consumer.
+pub const MAX_ADJUNTOS: usize = 100;
+
+/// Lo que el cliente quiere mandar desde la app.
+#[derive(Debug, Clone, Default)]
+pub struct Borrador {
+    /// Lo genera el celular: así un reintento sin señal no se guarda dos veces.
+    pub id: Uuid,
+    pub texto: String,
+    pub responde_a: Option<Uuid>,
+    /// Los arma xplaya al subir cada archivo (`POST /chat/archivo`), nunca el celular.
+    pub adjuntos: Vec<Adjunto>,
+    /// Tarjeta de producto, recibo o cotización, con su `ref`.
+    pub tarjeta: Option<(Tipo, String)>,
+}
 
 /// El mensaje que el cliente escribió en la app, listo para publicar en
-/// `chat.{cliente}.cliente.mensaje`. `id` lo genera el celular (así un reintento sin señal no se
-/// guarda dos veces) y la fecha la pone xplaya.
-pub fn del_cliente(
-    cliente: Uuid,
-    id: Uuid,
-    texto: &str,
-    responde_a: Option<Uuid>,
-    bloqueado: bool,
-    ahora: DateTime<FixedOffset>,
-) -> Result<Mensaje, &'static str> {
+/// `chat.{cliente}.cliente.mensaje`. La fecha la pone xplaya.
+pub fn del_cliente(cliente: Uuid, b: Borrador, bloqueado: bool, ahora: DateTime<FixedOffset>) -> Result<Mensaje, &'static str> {
     if bloqueado {
         return Err("La papelería bloqueó tu chat.");
     }
-    if texto.trim().is_empty() {
-        return Err("Escribe un mensaje.");
-    }
-    if texto.chars().count() > MAX_CARACTERES {
+    if b.texto.chars().count() > MAX_CARACTERES {
         return Err("El mensaje es muy largo.");
+    }
+    if b.adjuntos.len() > MAX_ADJUNTOS {
+        return Err("Son demasiados archivos para un mensaje (máximo 100).");
+    }
+    let (tipo, referencia) = match b.tarjeta {
+        None => (Tipo::Texto, None),
+        Some((tipo @ (Tipo::Producto | Tipo::Recibo | Tipo::Cotizacion), r)) if !r.trim().is_empty() => (tipo, Some(r)),
+        Some(_) => return Err("Esa tarjeta no se puede mandar."),
+    };
+    let texto = Some(b.texto).filter(|t| !t.trim().is_empty());
+    if texto.is_none() && b.adjuntos.is_empty() && referencia.is_none() {
+        return Err("Escribe un mensaje.");
     }
     Ok(Mensaje {
         v: VERSION,
-        id,
+        id: b.id,
         cliente_id: cliente,
-        tipo: Tipo::Texto,
-        texto: Some(texto.to_string()),
-        adjuntos: vec![],
-        responde_a,
-        referencia: None,
+        tipo,
+        texto,
+        adjuntos: b.adjuntos,
+        responde_a: b.responde_a,
+        referencia,
         encargo_id: None,
         fecha: ahora,
     })
@@ -481,18 +504,57 @@ mod tests {
 
     // ── App ──
 
+    fn texto(t: &str) -> Borrador {
+        Borrador { id: ID, texto: t.to_string(), ..Borrador::default() }
+    }
+
+    fn foto(n: u128) -> Adjunto {
+        let llave = format!("{CLIENTE}/{ID}/{}.jpg", Uuid::from_u128(n));
+        Adjunto { nombre: "foto.jpg".into(), mime: "image/jpeg".into(), bytes: 1, llave, paginas: None, pdf: None, miniatura: None }
+    }
+
     #[test]
     fn el_cliente_no_manda_vacio_largo_ni_bloqueado() {
         let ahora = hora("17:42:00");
-        let m = del_cliente(CLIENTE, ID, " Hola ", Some(OTRO), false, ahora).unwrap();
+        let m = del_cliente(CLIENTE, Borrador { responde_a: Some(OTRO), ..texto(" Hola ") }, false, ahora).unwrap();
         assert_eq!((m.v, m.tipo, m.texto.as_deref(), m.responde_a, m.fecha), (1, Tipo::Texto, Some(" Hola "), Some(OTRO), ahora));
-        assert!(del_cliente(CLIENTE, ID, "  \n ", None, false, ahora).is_err());
-        assert!(del_cliente(CLIENTE, ID, &"a".repeat(MAX_CARACTERES), None, false, ahora).is_ok());
-        assert!(del_cliente(CLIENTE, ID, &"ñ".repeat(MAX_CARACTERES + 1), None, false, ahora).is_err());
-        assert_eq!(del_cliente(CLIENTE, ID, "Hola", None, true, ahora), Err("La papelería bloqueó tu chat."));
+        assert!(del_cliente(CLIENTE, texto("  \n "), false, ahora).is_err());
+        assert!(del_cliente(CLIENTE, texto(&"a".repeat(MAX_CARACTERES)), false, ahora).is_ok());
+        assert!(del_cliente(CLIENTE, texto(&"ñ".repeat(MAX_CARACTERES + 1)), false, ahora).is_err());
+        assert_eq!(del_cliente(CLIENTE, texto("Hola"), true, ahora), Err("La papelería bloqueó tu chat."));
         // Lo que sale de aquí lo acepta el consumer al volver del stream.
-        let m = del_cliente(CLIENTE, ID, "Hola", None, false, ahora).unwrap();
+        let m = del_cliente(CLIENTE, texto("Hola"), false, ahora).unwrap();
         assert!(matches!(aplicar_sin_guardado(Lado::Cliente, m), Cambio::Guardar(_)));
+    }
+
+    #[test]
+    fn el_cliente_manda_fotos_sin_texto_hasta_cien() {
+        let ahora = hora("17:42:00");
+        let fotos = Borrador { adjuntos: (0..60).map(foto).collect(), ..texto("") };
+        let m = del_cliente(CLIENTE, fotos, false, ahora).unwrap();
+        assert_eq!((m.tipo, m.texto.as_deref(), m.adjuntos.len()), (Tipo::Texto, None, 60));
+        assert!(matches!(aplicar_sin_guardado(Lado::Cliente, m.clone()), Cambio::Guardar(_)));
+
+        let muchas = Borrador { adjuntos: (0..=MAX_ADJUNTOS as u128).map(foto).collect(), ..texto("") };
+        assert!(del_cliente(CLIENTE, muchas, false, ahora).is_err());
+        // Y si alguien las publica directo en NATS, el consumer tampoco las guarda.
+        let mut m = m;
+        m.adjuntos = (0..=MAX_ADJUNTOS as u128).map(foto).collect();
+        assert_eq!(aplicar_sin_guardado(Lado::Cliente, m), Cambio::Ignorar("demasiados archivos en un mensaje"));
+    }
+
+    #[test]
+    fn el_cliente_manda_tarjetas_pero_no_avisos() {
+        let ahora = hora("17:42:00");
+        let producto = Borrador { tarjeta: Some((Tipo::Producto, "1234".into())), ..texto("") };
+        let m = del_cliente(CLIENTE, producto, false, ahora).unwrap();
+        assert_eq!((m.tipo, m.referencia.as_deref(), m.texto.as_deref()), (Tipo::Producto, Some("1234"), None));
+        assert!(matches!(aplicar_sin_guardado(Lado::Cliente, m), Cambio::Guardar(_)));
+
+        let aviso = Borrador { tarjeta: Some((Tipo::Aviso, "x".into())), ..texto("Hola") };
+        assert!(del_cliente(CLIENTE, aviso, false, ahora).is_err());
+        let sin_ref = Borrador { tarjeta: Some((Tipo::Recibo, " ".into())), ..texto("Hola") };
+        assert!(del_cliente(CLIENTE, sin_ref, false, ahora).is_err());
     }
 
     #[test]
