@@ -159,8 +159,9 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
 1. Diseño — hecho (19 nov 2026).
 2. Base — hecho y probado en producción (19 nov 2026): tabla, stream `CHAT`, permisos de NATS,
    bucket `papeleria-chat`, xplaya guarda lo que llega al stream. Prueba: `xplaya-chat/probar-chat.sh`.
-3. a) Chat de texto en la app — código hecho (19 nov 2026); falta probarlo en producción con
-   los clientes de `CHAT_CLIENTES_PRUEBA`. b) Archivos, voz y tarjetas.
+3. a) Chat de texto en la app — hecho y probado en producción (19 nov 2026) con los clientes
+   de `CHAT_CLIENTES_PRUEBA`. Prueba: `xplaya-chat/contestar-como-caja.sh` (contesta como la
+   caja) y `clientes-prueba.sql`. b) Archivos, voz y tarjetas.
 4. (unida a 3b)
 5. Chat en la caja (POS).
 6. Avisos con la app cerrada.

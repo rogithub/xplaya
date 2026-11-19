@@ -4,6 +4,15 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a: probada en producción (2026-11-19)
+
+- `CHAT_CLIENTES_PRUEBA` con Rodrigo y Dayana (`/home/ro/srv/share/xplaya-chat/clientes-prueba.sql`).
+- Mensajes desde la app y respuestas de la caja con
+  `/home/ro/srv/share/xplaya-chat/contestar-como-caja.sh`: escribiendo, ✓✓, editar y eliminar.
+- Pendiente: ver la respuesta fuera de horario después de las 18:00.
+- Para que producción tome una imagen nueva hay que reiniciar el pod en curicaueri:
+  `sudo k3s kubectl rollout restart deployment xplaya -n papeleria`.
+
 ## Chat de la app, etapa 3a, paso 8: privacidad y documentos (2026-11-19)
 
 - `templates/pages/terminos.html#privacidad` — qué se guarda del chat (mensajes, archivos y notas
