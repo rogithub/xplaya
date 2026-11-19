@@ -18,7 +18,7 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres",
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "v5", "serde"] }
 rust_decimal = { version = "1", features = ["serde"] }
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "multipart", "json"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "multipart", "json", "stream"] }
 qrcode = { version = "0.14.1", default-features = false, features = ["svg"] }
 webauthn-rs = { version = "0.6.2", features = ["conditional-ui"] }
 sha2 = "0.11.1"
@@ -30,5 +30,7 @@ base64ct = { version = "1.8.3", features = ["alloc"] }
 ed25519-dalek = "2"
 async-nats = { version = "0.52.0", default-features = false, features = ["jetstream", "ring", "server_2_10"] }
 futures-util = { version = "0.3.34", default-features = false }
+# Archivos del chat (minio.rs): el cuerpo de un archivo en disco como stream para MinIO.
+tokio-util = { version = "0.7", features = ["io"] }
 lopdf = { version = "0.47.0", default-features = false }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }

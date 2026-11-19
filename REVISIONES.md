@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 1: MinIO en stream (2026-11-19)
+
+Plan de la 3b (archivos, voz, Office→PDF, tarjetas) en `CHAT.md` al cerrar la etapa.
+
+- `src/minio.rs`:
+  - `subir_archivo` manda un archivo del disco como stream (`UNSIGNED-PAYLOAD` en la firma) y no lo
+    carga en memoria. Así los videos de hasta 95 MB caben en el pod.
+  - `bajar_stream` pasa el `Range` del celular a MinIO y regresa el status 200/206 y el cuerpo en
+    stream, para que un video se pueda adelantar.
+  - Las dos usan un timeout de 30 min, porque el de 60 s no alcanza con poca señal.
+  - `BUCKET_CHAT` se movió aquí desde `chat/consumer.rs`.
+- `Cargo.toml`: `reqwest` con `stream` y `tokio-util` (`ReaderStream`).
+- Prueba contra MinIO local: `cargo test minio -- --ignored`. El MinIO local (`imagina-minio`) ya
+  tiene `papeleria-chat` y `papeleria-anuncios` en la política `xplaya-impresiones`.
+
 ## Chat de la app, etapa 3a: probada en producción (2026-11-19)
 
 - `CHAT_CLIENTES_PRUEBA` con Rodrigo y Dayana (`/home/ro/srv/share/xplaya-chat/clientes-prueba.sql`).

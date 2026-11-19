@@ -16,8 +16,6 @@ use crate::{db, AppState};
 
 const STREAM: &str = "CHAT";
 const CONSUMER: &str = "xplaya";
-/// Bucket de los archivos del chat (90 días, sin copia a R2).
-pub const BUCKET: &str = "papeleria-chat";
 
 /// Sin usuario de NATS no hace nada: el chat no funciona sin el stream.
 pub fn vigilar(state: AppState) {
@@ -147,7 +145,7 @@ async fn borrar_archivos(state: &AppState, llaves: &[String]) {
         tracing::warn!("chat: sin MinIO, quedan {} archivos hasta que venzan", llaves.len());
         return;
     };
-    let minio = minio.en(BUCKET);
+    let minio = minio.en(crate::minio::BUCKET_CHAT);
     for llave in llaves {
         if let Err(e) = minio.borrar(llave).await {
             tracing::warn!("chat: {e}");
