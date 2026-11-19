@@ -6,7 +6,8 @@
 //! `/chat/eventos`, que solo trae lo que ya está en `Mensajes`.
 //!
 //! - `GET /chat`: la pantalla, con los últimos mensajes.
-//! - `GET /chat/anteriores?antes={id}`: más historial al subir.
+//! - `GET /chat/anteriores?antes={id}`: más historial al subir; sin `antes`, los últimos (la app
+//!   se pone al día así al reconectar).
 //! - `GET /chat/eventos`: SSE (`vista::EnVivo`), como `routes/cuenta.rs`.
 //! - `POST /chat/mensaje`, `/chat/leido`, `/chat/{id}/editar`, `/chat/{id}/eliminar`,
 //!   `/chat/escribiendo`.
@@ -106,7 +107,7 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap) -> Respon
 
 #[derive(Deserialize)]
 pub struct AnterioresParams {
-    antes: Uuid,
+    antes: Option<Uuid>,
 }
 
 pub async fn anteriores(
@@ -115,7 +116,7 @@ pub async fn anteriores(
     Query(p): Query<AnterioresParams>,
 ) -> Result<Response, StatusCode> {
     let (cliente, _) = del_chat(&state, &headers).await?;
-    let mensajes = db::chat::conversacion(&state.pool, cliente, Some(p.antes), PAGINA).await.map_err(error_bd)?;
+    let mensajes = db::chat::conversacion(&state.pool, cliente, p.antes, PAGINA).await.map_err(error_bd)?;
     Ok(Json(mensajes).into_response())
 }
 

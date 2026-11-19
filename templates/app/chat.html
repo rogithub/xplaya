@@ -1,13 +1,95 @@
 {% extends "app/base.html" %}
 {#
-  Chat con la papelería (routes/chat.rs, CHAT.md). Por ahora solo el esqueleto: la pantalla
-  completa llega en el paso 6 de la etapa 3a (static/app/chat.js).
+  Chat con la papelería (routes/chat.rs, CHAT.md). Todo lo dibuja `chatApp` (static/app/chat.js)
+  con los datos de #chat-datos; los mensajes nuevos llegan por SSE. Los textos van con x-text:
+  nunca se inserta HTML de un mensaje.
 #}
 {% block title %}Chat — Papelería xplaya{% endblock %}
 {% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block scripts %}<script defer src="{{ estatico("app/chat.js") }}"></script>{% endblock %}
 {% block content %}
-<header class="app-top">
-    <h1 class="app-title">Chat</h1>
-</header>
 <script id="chat-datos" type="application/json">{{ chat | tojson }}</script>
+
+<section class="chat" x-data="chatApp" x-cloak>
+    <header class="app-top chat-top">
+        <h1 class="app-title">Chat</h1>
+        <p class="chat-sub">Escríbele a la papelería. Te contestamos en horario de la tienda.</p>
+    </header>
+
+    <p class="chat-bloqueado" x-show="bloqueado" role="status">
+        La papelería bloqueó tu chat. Si crees que es un error, pregúntanos en la tienda.
+    </p>
+
+    <button type="button" class="chat-mas" x-show="hayMas" @click="masAntiguos()" :disabled="cargandoMas"
+            x-text="cargandoMas ? 'Cargando…' : 'Ver mensajes anteriores'"></button>
+
+    <p class="chat-vacio" x-show="!mensajes.length">
+        Aún no hay mensajes. Pregúntanos lo que necesites: precios, si tenemos algo, o cómo mandar a imprimir.
+    </p>
+
+    <ol class="chat-lista" role="log" aria-live="polite" aria-label="Mensajes">
+        <template x-for="(m, i) in mensajes" :key="m.id">
+            <li class="chat-fila" :class="{ 'mio': mio(m), 'aviso': aviso(m) }">
+                <span class="chat-dia" x-show="nuevoDia(i)" x-text="dia(m)"></span>
+
+                {# Avisos automáticos (fuera de horario): al centro, sin menú. #}
+                <template x-if="aviso(m)">
+                    <p class="chat-aviso"><span x-text="m.texto"></span> <small x-text="hora(m)"></small></p>
+                </template>
+
+                <template x-if="!aviso(m)">
+                    <div class="chat-globo" :class="{ 'eliminado': m.eliminado, 'abierto': abierto === m.id }"
+                         @click="tocar(m)">
+                        <div class="chat-cita" x-show="m.respondeA && !m.eliminado">
+                            <strong x-text="autorCita(m)"></strong>
+                            <span x-text="textoCita(m)"></span>
+                        </div>
+                        <p class="chat-texto" x-show="!m.eliminado" x-text="m.texto"></p>
+                        <p class="chat-texto" x-show="m.eliminado"
+                           x-text="mio(m) ? '🚫 Se borró de la app' : '🚫 Mensaje eliminado'"></p>
+                        <span class="chat-pie">
+                            <span x-show="m.editado && !m.eliminado">Editado ·</span>
+                            <span x-text="hora(m)"></span>
+                            <span class="chat-marca" x-show="mio(m) && !m.eliminado" :class="{ 'leido': m.leido }"
+                                  x-text="marca(m)" :title="etiquetaMarca(m)" :aria-label="etiquetaMarca(m)"></span>
+                        </span>
+                        <button type="button" class="chat-oir" x-show="puedeLeer && !mio(m) && !m.eliminado"
+                                @click.stop="leer(m)" aria-label="Leer en voz alta">🔊</button>
+                    </div>
+                </template>
+
+                {# Menú del mensaje: al tocarlo. #}
+                <div class="chat-menu" x-show="abierto === m.id" x-transition.opacity @click.outside="abierto = null">
+                    <button type="button" @click="responder(m)">↩️ Responder</button>
+                    <button type="button" x-show="puedeLeer && m.texto" @click="leer(m)">🔊 Leer en voz alta</button>
+                    <button type="button" x-show="puedeEditar(m)" @click="editar(m)">✏️ Editar</button>
+                    <button type="button" class="peligro" x-show="mio(m)" @click="eliminar(m)">🗑️ Eliminar</button>
+                </div>
+
+                <p class="chat-fallo" x-show="m.estado === 'error'">
+                    No se mandó. <button type="button" @click="descartar(m)">Quitar</button>
+                </p>
+            </li>
+        </template>
+    </ol>
+
+    <p class="chat-escribe" x-show="escribe" role="status">La papelería está escribiendo…</p>
+
+    <form class="chat-redactor" x-ref="redactor" @submit.prevent="enviar()" x-show="!bloqueado">
+        <p class="chat-error" x-show="error" x-text="error" role="alert"></p>
+        <div class="chat-respondiendo" x-show="respondiendo || editando">
+            <span>
+                <strong x-text="editando ? 'Editando' : ('Respondiendo a ' + (respondiendo && mio(respondiendo) ? 'ti' : 'la papelería'))"></strong>
+                <span x-text="editando ? '' : (respondiendo ? respondiendo.texto : '')"></span>
+            </span>
+            <button type="button" @click="cancelar()" aria-label="Cancelar">✕</button>
+        </div>
+        <div class="chat-escribir">
+            <textarea x-ref="caja" x-model="texto" rows="1" maxlength="4000" placeholder="Escribe un mensaje"
+                      aria-label="Mensaje" enterkeyhint="send"
+                      @input="crecer($el); escribiendo()" @keydown="teclear($event)"></textarea>
+            <button type="submit" class="chat-enviar" :disabled="!texto.trim()" aria-label="Enviar">➤</button>
+        </div>
+    </form>
+</section>
 {% endblock %}

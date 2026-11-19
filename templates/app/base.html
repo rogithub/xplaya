@@ -35,6 +35,8 @@
     <script defer src="{{ estatico("app/app.js") }}"></script>
     {# Carrito de la tienda (el mismo store del sitio). Antes de Alpine: registra alpine:init. #}
     <script defer src="{{ estatico("js/cart.js") }}"></script>
+    {# JS de una sola página (registra sus componentes en alpine:init, antes de Alpine). #}
+    {% block scripts %}{% endblock %}
     {% endif %}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <script defer src="https://analytics.xplaya.com/script.js"

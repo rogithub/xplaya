@@ -4,6 +4,23 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 6: la pantalla del chat (2026-11-19)
+
+- `templates/app/chat.html` — globos (los del cliente a la derecha, los avisos automáticos al
+  centro), separadores por día, cita al responder, "Editado", "Mensaje eliminado" / "Se borró de
+  la app", ✓ / ✓✓ / 🕓, "La papelería está escribiendo…", aviso de bloqueo y el cuadro para
+  escribir fijo sobre la barra de abajo. Todo el texto con `x-text`: nunca HTML de un mensaje.
+- `static/app/chat.js` (nuevo) — componente `chatApp`: SSE (`mensaje`, `leido`, `editado`,
+  `eliminado`, `escribiendo`, `recargar`); al reconectar se pone al día con
+  `/chat/anteriores` sin `antes`. Mandar sin señal: cola en `localStorage`, se reintenta al volver
+  la red, cada 15 s y al abrir; el id lo pone el celular. Menú al tocar un mensaje: responder,
+  🔊 leer en voz alta (voz del celular), editar (los primeros minutos) y eliminar. Marca leído al
+  ver la pantalla.
+- `static/css/app.css` — sección "Chat".
+- `templates/app/base.html` — bloque `scripts` para el JS de una sola página (antes de Alpine).
+- `src/routes/chat.rs` — `/chat/anteriores` sin `antes` trae los últimos.
+- Visto con capturas (claro, oscuro, menú y "enviando…" sin NATS) con la BD de desarrollo.
+
 ## Chat de la app, etapa 3a, paso 5: rutas del chat (2026-11-19)
 
 - `src/routes/chat.rs` (nuevo) — todas piden sesión de passkey y `chat_visible`
