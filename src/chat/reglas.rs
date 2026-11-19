@@ -5,20 +5,23 @@
 //! publica, xplaya o el POS), no la de cuando se procesa: si xplaya estuvo apagado un rato, una
 //! edición hecha a tiempo sigue valiendo.
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
 use uuid::Uuid;
 
-use super::contrato::{hora_tienda, Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Mensaje, Tema, Tipo};
+use super::contrato::{hora_tienda, Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Mensaje, Tema, Tipo, VERSION};
 
 /// Los ajustes del chat que usan las reglas (tabla `Settings`, claves `CHAT_*`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ajustes {
     pub minutos_editar: i64,
+    /// `CHAT_CLIENTES_PRUEBA`: quién ve el chat en la app mientras la caja no puede contestar
+    /// (`chat_visible`). `None`: no está la fila.
+    pub clientes_prueba: Option<String>,
 }
 
 impl Default for Ajustes {
     fn default() -> Self {
-        Self { minutos_editar: 15 }
+        Self { minutos_editar: 15, clientes_prueba: None }
     }
 }
 
@@ -181,6 +184,112 @@ fn ajeno(tema: &Tema, cliente_del_evento: Uuid, g: &Guardado) -> Option<&'static
     }
 }
 
+// ── Lo que hace el cliente desde la app ──────────────────────────────────────
+//
+// Editar y eliminar desde la app no tienen reglas aparte: la ruta arma el evento y le pregunta a
+// `aplicar` con lo guardado, igual que hará el consumer cuando llegue del stream.
+
+/// Más que esto no es una plática: se rechaza en lugar de cortarlo.
+pub const MAX_CARACTERES: usize = 4000;
+
+/// El mensaje que el cliente escribió en la app, listo para publicar en
+/// `chat.{cliente}.cliente.mensaje`. `id` lo genera el celular (así un reintento sin señal no se
+/// guarda dos veces) y la fecha la pone xplaya.
+pub fn del_cliente(
+    cliente: Uuid,
+    id: Uuid,
+    texto: &str,
+    responde_a: Option<Uuid>,
+    bloqueado: bool,
+    ahora: DateTime<FixedOffset>,
+) -> Result<Mensaje, &'static str> {
+    if bloqueado {
+        return Err("La papelería bloqueó tu chat.");
+    }
+    if texto.trim().is_empty() {
+        return Err("Escribe un mensaje.");
+    }
+    if texto.chars().count() > MAX_CARACTERES {
+        return Err("El mensaje es muy largo.");
+    }
+    Ok(Mensaje {
+        v: VERSION,
+        id,
+        cliente_id: cliente,
+        tipo: Tipo::Texto,
+        texto: Some(texto.to_string()),
+        adjuntos: vec![],
+        responde_a,
+        referencia: None,
+        encargo_id: None,
+        fecha: ahora,
+    })
+}
+
+/// Quién ve el chat en la app (`CHAT_CLIENTES_PRUEBA`): sin la fila, nadie; vacía, todos; si no,
+/// los ids separados por coma.
+pub fn chat_visible(clientes_prueba: Option<&str>, cliente: Uuid) -> bool {
+    match clientes_prueba.map(str::trim) {
+        None => false,
+        Some("") => true,
+        Some(lista) => lista.split(',').any(|id| id.trim().parse::<Uuid>().ok() == Some(cliente)),
+    }
+}
+
+// ── Horario de la tienda ─────────────────────────────────────────────────────
+
+/// Apertura y cierre de un día (hora de la tienda). Domingo, cerrado.
+fn horario(dia: Weekday) -> Option<(NaiveTime, NaiveTime)> {
+    let h = |hora, minuto| NaiveTime::from_hms_opt(hora, minuto, 0).expect("hora válida");
+    match dia {
+        Weekday::Sun => None,
+        Weekday::Sat => Some((h(9, 0), h(14, 0))),
+        _ => Some((h(6, 30), h(18, 0))),
+    }
+}
+
+pub fn abierto(ahora: NaiveDateTime) -> bool {
+    horario(ahora.weekday()).is_some_and(|(abre, cierra)| (abre..cierra).contains(&ahora.time()))
+}
+
+/// Cuándo cerró la tienda por última vez, si ahora está cerrada.
+pub fn inicio_del_cierre(ahora: NaiveDateTime) -> Option<NaiveDateTime> {
+    if abierto(ahora) {
+        return None;
+    }
+    let hoy: NaiveDate = ahora.date();
+    (0..8)
+        .filter_map(|atras| hoy.checked_sub_days(chrono::Days::new(atras)))
+        .filter_map(|dia| horario(dia.weekday()).map(|(_, cierra)| dia.and_time(cierra)))
+        .find(|cierre| *cierre <= ahora)
+}
+
+pub const TEXTO_FUERA_DE_HORARIO: &str = "¡Hola! Ahorita estamos cerrados. Nuestro horario es de lunes a viernes de 6:30 a 18:00 y \
+sábados de 9:00 a 14:00. Te contestamos en cuanto abramos.";
+
+/// Para que el id del aviso salga igual cada vez (`aviso_fuera_de_horario`).
+const ESPACIO_AVISOS: Uuid = Uuid::from_u128(0x5c1d7e0a_2b3f_4a6c_9d8e_7f6a5b4c3d2e);
+
+/// La respuesta automática a un mensaje del cliente cuando la tienda está cerrada, o `None` si
+/// está abierta. El id sale del cliente y de la hora del cierre: es el mismo para todos los
+/// mensajes de ese cierre, así que basta ver si ya está guardado para contestar una sola vez.
+pub fn aviso_fuera_de_horario(cliente: Uuid, ahora: DateTime<FixedOffset>) -> Option<Mensaje> {
+    let cierre = inicio_del_cierre(hora_tienda(ahora))?;
+    let id = Uuid::new_v5(&ESPACIO_AVISOS, format!("fuera-de-horario/{cliente}/{cierre}").as_bytes());
+    Some(Mensaje {
+        v: VERSION,
+        id,
+        cliente_id: cliente,
+        tipo: Tipo::Aviso,
+        texto: Some(TEXTO_FUERA_DE_HORARIO.to_string()),
+        adjuntos: vec![],
+        responde_a: None,
+        referencia: None,
+        encargo_id: None,
+        fecha: ahora,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -328,7 +437,7 @@ mod tests {
     fn el_tiempo_para_editar_sale_de_los_ajustes() {
         let g = guardado(Lado::Cliente);
         let e = Editado { v: 1, cliente_id: CLIENTE, id: ID, texto: "x".into(), fecha: hora("18:10:00") };
-        let cambio = aplicar(&tema(Lado::Cliente, Evento::Editado), Entrante::Editado(e), Some(&g), 1, &Ajustes { minutos_editar: 30 });
+        let cambio = aplicar(&tema(Lado::Cliente, Evento::Editado), Entrante::Editado(e), Some(&g), 1, &Ajustes { minutos_editar: 30, ..Ajustes::default() });
         assert!(matches!(cambio, Cambio::Editar { .. }));
     }
 
@@ -368,5 +477,79 @@ mod tests {
         let mut ya = g.clone();
         ya.eliminado = true;
         assert_eq!(eliminar(Lado::Papeleria, Some(&ya)), Cambio::Ignorar("eliminar: ya estaba eliminado"));
+    }
+
+    // ── App ──
+
+    #[test]
+    fn el_cliente_no_manda_vacio_largo_ni_bloqueado() {
+        let ahora = hora("17:42:00");
+        let m = del_cliente(CLIENTE, ID, " Hola ", Some(OTRO), false, ahora).unwrap();
+        assert_eq!((m.v, m.tipo, m.texto.as_deref(), m.responde_a, m.fecha), (1, Tipo::Texto, Some(" Hola "), Some(OTRO), ahora));
+        assert!(del_cliente(CLIENTE, ID, "  \n ", None, false, ahora).is_err());
+        assert!(del_cliente(CLIENTE, ID, &"a".repeat(MAX_CARACTERES), None, false, ahora).is_ok());
+        assert!(del_cliente(CLIENTE, ID, &"ñ".repeat(MAX_CARACTERES + 1), None, false, ahora).is_err());
+        assert_eq!(del_cliente(CLIENTE, ID, "Hola", None, true, ahora), Err("La papelería bloqueó tu chat."));
+        // Lo que sale de aquí lo acepta el consumer al volver del stream.
+        let m = del_cliente(CLIENTE, ID, "Hola", None, false, ahora).unwrap();
+        assert!(matches!(aplicar_sin_guardado(Lado::Cliente, m), Cambio::Guardar(_)));
+    }
+
+    #[test]
+    fn quien_ve_el_chat() {
+        assert!(!chat_visible(None, CLIENTE), "sin la fila, nadie");
+        assert!(chat_visible(Some(" "), CLIENTE), "vacía, todos");
+        assert!(chat_visible(Some(&format!("{OTRO}, {CLIENTE}")), CLIENTE));
+        assert!(!chat_visible(Some(&OTRO.to_string()), CLIENTE));
+        assert!(!chat_visible(Some("basura"), CLIENTE));
+    }
+
+    fn el(fecha: &str) -> NaiveDateTime {
+        NaiveDateTime::parse_from_str(fecha, "%Y-%m-%d %H:%M").unwrap()
+    }
+
+    #[test]
+    fn horario_de_la_tienda() {
+        // 2026-11-16 es lunes; 21 sábado; 22 domingo.
+        assert!(!abierto(el("2026-11-16 06:29")));
+        assert!(abierto(el("2026-11-16 06:30")));
+        assert!(abierto(el("2026-11-16 17:59")));
+        assert!(!abierto(el("2026-11-16 18:00")));
+        assert!(!abierto(el("2026-11-21 08:59")));
+        assert!(abierto(el("2026-11-21 13:59")));
+        assert!(!abierto(el("2026-11-21 14:00")));
+        assert!(!abierto(el("2026-11-22 12:00")));
+    }
+
+    #[test]
+    fn cuando_cerro() {
+        assert_eq!(inicio_del_cierre(el("2026-11-16 12:00")), None);
+        assert_eq!(inicio_del_cierre(el("2026-11-16 20:00")), Some(el("2026-11-16 18:00")));
+        assert_eq!(inicio_del_cierre(el("2026-11-17 05:00")), Some(el("2026-11-16 18:00")), "de madrugada cuenta el de ayer");
+        assert_eq!(inicio_del_cierre(el("2026-11-21 15:00")), Some(el("2026-11-21 14:00")));
+        assert_eq!(inicio_del_cierre(el("2026-11-22 12:00")), Some(el("2026-11-21 14:00")), "domingo: desde el sábado");
+        assert_eq!(inicio_del_cierre(el("2026-11-23 06:00")), Some(el("2026-11-21 14:00")), "lunes temprano: también");
+        assert_eq!(inicio_del_cierre(el("2026-11-21 08:00")), Some(el("2026-11-20 18:00")), "sábado temprano: desde el viernes");
+    }
+
+    fn a_las(fecha: &str) -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339(&format!("{fecha}:00-05:00")).unwrap()
+    }
+
+    #[test]
+    fn un_aviso_por_cierre() {
+        assert_eq!(aviso_fuera_de_horario(CLIENTE, a_las("2026-11-16T12:00")), None);
+        let noche = aviso_fuera_de_horario(CLIENTE, a_las("2026-11-16T20:00")).unwrap();
+        let madrugada = aviso_fuera_de_horario(CLIENTE, a_las("2026-11-17T05:00")).unwrap();
+        let siguiente = aviso_fuera_de_horario(CLIENTE, a_las("2026-11-17T19:00")).unwrap();
+        assert_eq!(noche.id, madrugada.id, "mismo cierre, mismo aviso");
+        assert_ne!(noche.id, siguiente.id);
+        assert_ne!(noche.id, aviso_fuera_de_horario(OTRO, a_las("2026-11-16T20:00")).unwrap().id);
+        assert_eq!((noche.tipo, noche.fecha), (Tipo::Aviso, a_las("2026-11-16T20:00")));
+        // El consumer lo acepta del lado automático (y de ningún otro).
+        let t = |lado| Tema { cliente: CLIENTE, lado, evento: Evento::Mensaje };
+        let ajustes = Ajustes::default();
+        assert!(matches!(aplicar(&t(Lado::Automatico), Entrante::Mensaje(noche.clone()), None, 1, &ajustes), Cambio::Guardar(_)));
+        assert!(matches!(aplicar(&t(Lado::Cliente), Entrante::Mensaje(noche), None, 1, &ajustes), Cambio::Ignorar(_)));
     }
 }
