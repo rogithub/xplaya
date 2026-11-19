@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 4: respuesta automática fuera de horario (2026-11-19)
+
+- `src/chat/consumer.rs` — `fuera_de_horario()`: al guardar un mensaje del cliente con la tienda
+  cerrada, publica en `chat.{cliente}.automatico.mensaje` el aviso con el horario. Antes revisa
+  si ese aviso (mismo id en todo el cierre) ya está guardado: uno por cierre. Si NATS falla, solo
+  log. La hora que cuenta es la del mensaje, no la de cuando se procesa.
+- `src/chat/reglas.rs` — el aviso sale un segundo después del mensaje, para quedar debajo.
+- `src/chat/contrato.rs` — `con_zona()`, lo contrario de `hora_tienda()`.
+- Sin NATS en desarrollo: se prueba en producción con `probar-chat.sh` fuera de horario.
+
 ## Chat de la app, etapa 3a, paso 3: lo que la app lee de la BD (2026-11-19)
 
 `src/db/chat.rs`, con pruebas `#[sqlx::test]` sobre el schema del POS.

@@ -249,8 +249,16 @@ pub fn leer(evento: Evento, cuerpo: &[u8]) -> Result<Entrante, NoSeLee> {
 
 /// La hora de la tienda (Cancún, UTC−5 todo el año), como se guardan las fechas en la BD.
 pub fn hora_tienda(fecha: DateTime<FixedOffset>) -> NaiveDateTime {
-    let cancun = FixedOffset::west_opt(5 * 3600).expect("UTC−5 es válido");
-    fecha.with_timezone(&cancun).naive_local()
+    fecha.with_timezone(&cancun()).naive_local()
+}
+
+/// Lo contrario de `hora_tienda`: una fecha de la BD, con su zona, para el contrato.
+pub fn con_zona(fecha: NaiveDateTime) -> DateTime<FixedOffset> {
+    fecha.and_local_timezone(cancun()).single().expect("UTC−5 fijo: cada hora existe una vez")
+}
+
+fn cancun() -> FixedOffset {
+    FixedOffset::west_opt(5 * 3600).expect("UTC−5 es válido")
 }
 
 #[cfg(test)]
@@ -327,6 +335,7 @@ mod tests {
         let utc = DateTime::parse_from_rfc3339("2026-11-19T22:42:00Z").unwrap();
         assert_eq!(hora_tienda(utc).to_string(), "2026-11-19 17:42:00");
         let tienda = DateTime::parse_from_rfc3339("2026-11-19T17:42:00-05:00").unwrap();
+        assert_eq!(con_zona(hora_tienda(utc)), tienda);
         assert_eq!(hora_tienda(tienda).to_string(), "2026-11-19 17:42:00");
     }
 

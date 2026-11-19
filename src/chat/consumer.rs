@@ -9,7 +9,7 @@ use std::time::Duration;
 use async_nats::jetstream::{self, consumer::PullConsumer, AckKind};
 use futures_util::StreamExt;
 
-use super::contrato::{self, Entrante, Tema};
+use super::contrato::{self, Entrante, Evento, Lado, Tema};
 use super::reglas::{self, Cambio};
 use super::vista::{EnVivo, Vista};
 use crate::{db, AppState};
@@ -91,6 +91,9 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
         Cambio::Guardar(n) => {
             if db::chat::guardar(&state.pool, &n).await? {
                 state.chat.avisar(n.cliente, EnVivo::Mensaje(Vista::from(&n)));
+                if n.autor == Lado::Cliente {
+                    fuera_de_horario(state, n.cliente, n.fecha).await?;
+                }
             } else {
                 tracing::warn!("chat: {} no se guardó (repetido o el cliente no existe)", n.id);
             }
@@ -114,6 +117,24 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
             }
         }
         Cambio::Ignorar(motivo) => tracing::info!("chat: {tema} #{secuencia} ignorado: {motivo}"),
+    }
+    Ok(())
+}
+
+/// Si el cliente escribió con la tienda cerrada, la respuesta automática con el horario, una vez
+/// por cierre (`reglas::aviso_fuera_de_horario`). Se publica en el stream como cualquier mensaje y
+/// vuelve por aquí para guardarse. Si NATS falla, solo va al log: el mensaje del cliente ya se
+/// guardó, y reintentarlo no traería el aviso (el repetido se ignora).
+async fn fuera_de_horario(state: &AppState, cliente: uuid::Uuid, fecha: chrono::NaiveDateTime) -> Result<(), sqlx::Error> {
+    let Some(aviso) = reglas::aviso_fuera_de_horario(cliente, contrato::con_zona(fecha)) else {
+        return Ok(());
+    };
+    if db::chat::guardado(&state.pool, aviso.id).await?.is_some() {
+        return Ok(());
+    }
+    let tema = Tema { cliente, lado: Lado::Automatico, evento: Evento::Mensaje };
+    if let Err(e) = state.chat.publicar(&tema, &aviso, Some(aviso.id)).await {
+        tracing::warn!("chat: no se pudo mandar el aviso de fuera de horario a {cliente}: {e}");
     }
     Ok(())
 }

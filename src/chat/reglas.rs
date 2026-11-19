@@ -270,8 +270,8 @@ sábados de 8:00 a 14:00. Te contestamos en cuanto abramos.";
 /// Para que el id del aviso salga igual cada vez (`aviso_fuera_de_horario`).
 const ESPACIO_AVISOS: Uuid = Uuid::from_u128(0x5c1d7e0a_2b3f_4a6c_9d8e_7f6a5b4c3d2e);
 
-/// La respuesta automática a un mensaje del cliente cuando la tienda está cerrada, o `None` si
-/// está abierta. El id sale del cliente y de la hora del cierre: es el mismo para todos los
+/// La respuesta automática a un mensaje del cliente escrito a la hora `ahora` cuando la tienda
+/// está cerrada, o `None` si está abierta. Sale un segundo después, para quedar debajo. El id sale del cliente y de la hora del cierre: es el mismo para todos los
 /// mensajes de ese cierre, así que basta ver si ya está guardado para contestar una sola vez.
 pub fn aviso_fuera_de_horario(cliente: Uuid, ahora: DateTime<FixedOffset>) -> Option<Mensaje> {
     let cierre = inicio_del_cierre(hora_tienda(ahora))?;
@@ -286,7 +286,7 @@ pub fn aviso_fuera_de_horario(cliente: Uuid, ahora: DateTime<FixedOffset>) -> Op
         responde_a: None,
         referencia: None,
         encargo_id: None,
-        fecha: ahora,
+        fecha: ahora + chrono::Duration::seconds(1),
     })
 }
 
@@ -546,7 +546,7 @@ mod tests {
         assert_eq!(noche.id, madrugada.id, "mismo cierre, mismo aviso");
         assert_ne!(noche.id, siguiente.id);
         assert_ne!(noche.id, aviso_fuera_de_horario(OTRO, a_las("2026-11-16T20:00")).unwrap().id);
-        assert_eq!((noche.tipo, noche.fecha), (Tipo::Aviso, a_las("2026-11-16T20:00")));
+        assert_eq!((noche.tipo, noche.fecha), (Tipo::Aviso, a_las("2026-11-16T20:00") + chrono::Duration::seconds(1)));
         // El consumer lo acepta del lado automático (y de ningún otro).
         let t = |lado| Tema { cliente: CLIENTE, lado, evento: Evento::Mensaje };
         let ajustes = Ajustes::default();
