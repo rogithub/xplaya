@@ -4,6 +4,25 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 2: xplaya guarda lo que pasa por el stream CHAT (2026-11-19)
+
+Diseño completo en `CHAT.md` (nuevo). Todavía no hay pantallas: esto es la base.
+
+- `src/chat/contrato.rs` — el formato v1 (mensaje, leído, editado, eliminado) y el tema
+  `chat.{cliente}.{lado}.{evento}`. Puro. Sus pruebas leen los ejemplos de `contratos/chat-v1/`,
+  que también sirven al POS y al asistente.
+- `src/chat/reglas.rs` — `aplicar()` decide qué hacer con cada evento y devuelve un `Cambio` sin
+  ejecutarlo: el autor sale del tema, repetidos fuera, editar solo lo propio en 15 min, eliminar
+  solo lo propio, archivos solo en la carpeta del cliente. Puro, con pruebas.
+- `src/chat/consumer.rs` — lee el consumer `xplaya` del stream `CHAT` (como `fotos.rs`), pregunta a
+  las reglas y ejecuta: BD, MinIO (`papeleria-chat`) y quitar del stream lo eliminado.
+- `src/db/chat.rs` — consultas de `Mensajes`. Pruebas con `#[sqlx::test]` sobre el schema real del
+  POS (`../inventario_papeleria/...` o `POS_SCHEMA`); sin él se saltan.
+- `src/main.rs` — arranca `chat::vigilar`. Sin variables nuevas (reusa `NATS_*` y `MINIO_*`).
+- La tabla `Mensajes` y `Clientes.ChatBloqueado` están en el repo del POS (`dbchanges/updates.sql`).
+
+---
+
 ## Kiosko: el ícono de la app sí se achica (2026-11-18)
 
 - `static/css/app.css` — `.cuadro-app .app-icono` tenía un `height: auto` viejo después del

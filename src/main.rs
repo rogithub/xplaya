@@ -10,6 +10,7 @@ mod anuncio;
 mod autoservicio;
 mod avisos;
 mod caja;
+mod chat;
 mod config;
 mod db;
 mod estaticos;
@@ -139,6 +140,7 @@ async fn main() {
     // Tareas que entregan los avisos de la app (NATS + revisión periódica).
     push::vigilar(state.clone());
     fotos::vigilar(state.clone());
+    chat::vigilar(state.clone());
     // La cuenta de la caja en vivo (NATS caja.cuenta).
     caja::vigilar(state.clone());
     // Borra los PDFs del autoservicio de impresión a los 7 días.
