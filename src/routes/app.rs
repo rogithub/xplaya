@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/chat/archivo/{mensaje}/{n}/{cual}", get(chat::archivo))
         .route("/chat/zip/{mensaje}", get(chat::zip))
+        .route("/chat/compartir", post(chat::compartir_sin_sw))
         .route("/chat/mensaje", post(chat::mandar))
         .route("/chat/leido", post(chat::leido))
         .route("/chat/escribiendo", post(chat::escribiendo))
@@ -344,6 +345,20 @@ fn manifest_json(state: &AppState, start_url: &str) -> Response {
         "scope": "/",
         "display": "standalone",
         "orientation": "portrait",
+        // Compartir a la app (Android): fotos, documentos, textos o links desde otra app abren
+        // el chat con eso listo para mandar. El POST lo atiende el service worker
+        // (`static/app/sw.js`); los archivos nunca pasan por la memoria del servidor.
+        "share_target": {
+            "action": "/chat/compartir",
+            "method": "POST",
+            "enctype": "multipart/form-data",
+            "params": {
+                "title": "title",
+                "text": "text",
+                "url": "url",
+                "files": [{ "name": "files", "accept": ["*/*"] }]
+            }
+        },
         "background_color": "#231916",
         "theme_color": "#231916",
         "icons": [

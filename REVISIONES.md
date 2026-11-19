@@ -4,6 +4,32 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 9: compartir a la app (Android) (2026-11-19)
+
+Cambio al plan: lo compartido lo recibe el **service worker**, no el servidor. Así un video de
+95 MB no pasa por la memoria del pod, y se sube con el mismo flujo del 📎 (3 a la vez, con
+avance y reintento).
+
+- `src/routes/app.rs` (`manifest_json`): `share_target` → `POST /chat/compartir`, multipart con
+  `title`, `text`, `url` y `files` (`*/*`).
+- `static/app/sw.js`: `compartir(req)` atiende ese POST. Guarda los archivos en la caché
+  `compartido` (nombre en `X-Nombre`) y el texto (`text` y `url` sin repetir), y redirige 303 a
+  `/chat?compartido=1`. Al cambiar `VERSION` no se borra esa caché.
+- `static/app/chat.js`:
+  - `chatTomarCompartido()` lee la caché, arma los `File` y la borra (si recargas, ya no sale).
+  - `elegir` ahora llama a `agregar(files)`, que también usa lo compartido (mismos topes y
+    errores). Sin MinIO avisa que no se pueden mandar archivos.
+  - El texto compartido llena el cuadro; si es un link de xplaya, al mandarlo sale la tarjeta
+    (paso 8a).
+- `src/routes/chat.rs`: `compartir_sin_sw` → si llega el POST sin service worker, abre `/chat`.
+- El manifest es igual para todos: mientras el chat esté solo para los clientes de prueba, a los
+  demás compartir los lleva al monedero (`/chat` los redirige a `/`).
+- Probado con Playwright en :3055: un POST multipart (foto, PDF, texto y url) con el SW activo
+  deja los dos archivos y el texto listos en el chat. El POST sin SW da 303 a `/chat`. Falta
+  probarlo desde el menú de compartir de un Android con la app instalada.
+
+---
+
 ## Chat de la app, etapa 3b, paso 8c: la cotización del carrito en el chat (2026-11-19)
 
 - `src/chat/reglas.rs`: `cotizacion_del_carrito(cliente, pedido, ahora)` arma el mensaje

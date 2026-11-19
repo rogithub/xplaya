@@ -91,6 +91,12 @@ pub async fn cotizacion_del_carrito(state: &AppState, cliente: Uuid, pedido: Uui
     }
 }
 
+/// `POST /chat/compartir` sin service worker (recién instalada, o lo borró el navegador): lo
+/// compartido se pierde, pero el chat abre en vez de un error. Normalmente lo atiende `sw.js`.
+pub async fn compartir_sin_sw() -> Redirect {
+    Redirect::to("/chat")
+}
+
 fn error_bd(e: sqlx::Error) -> StatusCode {
     tracing::error!("chat: BD: {e}");
     StatusCode::INTERNAL_SERVER_ERROR

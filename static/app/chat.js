@@ -138,6 +138,31 @@ function chatQueTarjeta(t) {
     return `Cotización ${t.numero}`;
 }
 
+// Lo que se compartió desde otra app (lo guarda `compartir` en sw.js). Se saca de la caché al
+// tomarlo: si el cliente recarga, ya no vuelve a salir.
+async function chatTomarCompartido() {
+    const vacio = { texto: '', files: [] };
+    if (!('caches' in window)) return vacio;
+    try {
+        const cache = await caches.open('compartido');
+        const resp = await cache.match('/compartido/texto');
+        if (!resp) return vacio;
+        const { texto, archivos } = await resp.json();
+        const files = [];
+        for (let n = 0; n < archivos; n++) {
+            const r = await cache.match(`/compartido/${n}`);
+            if (!r) continue;
+            const nombre = decodeURIComponent(r.headers.get('X-Nombre') || `archivo-${n + 1}`);
+            files.push(new File([await r.blob()], nombre, { type: r.headers.get('Content-Type') || '' }));
+        }
+        await caches.delete('compartido');
+        return { texto: texto || '', files };
+    } catch (e) {
+        console.warn('Compartido:', e);
+        return vacio;
+    }
+}
+
 function chatLeerPendientes() {
     try { return JSON.parse(localStorage.getItem(CHAT_PENDIENTES) || '[]'); } catch { return []; }
 }
@@ -190,8 +215,16 @@ document.addEventListener('alpine:init', () => {
                 && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
             this.mensajes = datos.mensajes.map((m) => ({ ...m, estado: 'guardado' }));
             this.lista = datos.lista || null;
-            // Sin el ?producto=: al recargar o volver no se vuelve a poner la tarjeta.
+            const compartido = new URLSearchParams(location.search).has('compartido');
+            // Sin el ?producto= ni el ?compartido=: al recargar o volver no se vuelven a poner.
             if (location.search) history.replaceState(history.state, '', location.pathname);
+            if (compartido) {
+                chatTomarCompartido().then(({ texto, files }) => {
+                    if (texto) this.texto = this.texto ? `${this.texto}\n${texto}` : texto;
+                    this.agregar(files);
+                    this.$nextTick(() => this.crecer(this.$refs.caja));
+                });
+            }
 
             // Lo que quedó sin mandar (sin señal, app cerrada).
             const guardados = new Set(this.mensajes.map((m) => m.id));
@@ -553,8 +586,18 @@ document.addEventListener('alpine:init', () => {
         // ── Archivos: elegir y subir ──
 
         elegir(e) {
+            this.agregar(e.target.files);
+            e.target.value = '';  // que se pueda volver a elegir el mismo
+        },
+
+        // Archivos del 📎 o compartidos desde otra app: quedan arriba del cuadro hasta mandar.
+        agregar(files) {
+            if (files.length && !this.permiteArchivos) {
+                this.error = 'Por ahora no se pueden mandar archivos por el chat.';
+                return;
+            }
             const errores = [];
-            for (const file of e.target.files) {
+            for (const file of files) {
                 if (this.elegidos.length >= this.maxAdjuntos) {
                     errores.push(`Van ${this.maxAdjuntos} archivos como máximo por mensaje.`);
                     break;
@@ -577,7 +620,6 @@ document.addEventListener('alpine:init', () => {
                 });
             }
             this.error = errores.join(' ');
-            e.target.value = '';  // que se pueda volver a elegir el mismo
         },
 
         quitarElegido(e) {

@@ -14,6 +14,9 @@
 // app-v2: borra lo guardado antes de las huellas (archivos viejos bajo nombres nuevos).
 const VERSION = 'app-v2';
 
+// Lo compartido desde otra app espera aquí a que el chat lo tome (no se borra al cambiar VERSION).
+const COMPARTIDO = 'compartido';
+
 const CACHE_PRIMERO = [
     'https://cdn.jsdelivr.net',
     'https://fonts.googleapis.com',
@@ -26,15 +29,19 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys()
             .then((claves) => Promise.all(
-                claves.filter((c) => c !== VERSION).map((c) => caches.delete(c))))
+                claves.filter((c) => c !== VERSION && c !== COMPARTIDO).map((c) => caches.delete(c))))
             .then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', (event) => {
     const req = event.request;
-    if (req.method !== 'GET') return;
     const url = new URL(req.url);
+    if (req.method === 'POST' && url.origin === location.origin && url.pathname === '/chat/compartir') {
+        event.respondWith(compartir(req));
+        return;
+    }
+    if (req.method !== 'GET') return;
 
     if (req.mode === 'navigate') {
         event.respondWith(redPrimero(req));
@@ -75,6 +82,35 @@ async function cachePrimero(req) {
                         || (resp.headers.get('Cache-Control') || '').includes('immutable')));
     if (guardable) cache.put(req, resp.clone());
     return resp;
+}
+
+// ── Compartir a la app (Android) ────────────────────────────────────────────
+// El manifest (share_target) manda aquí lo que el cliente comparte desde otra app. Se guarda
+// en la caché del celular y se abre el chat, que lo toma (`chatTomarCompartido` en chat.js) y
+// lo sube como si lo hubiera elegido con 📎: 3 a la vez, con avance y reintento.
+async function compartir(req) {
+    try {
+        const datos = await req.formData();
+        const cache = await caches.open(COMPARTIDO);
+        // Lo de un compartido anterior que nunca se abrió ya no sirve.
+        await Promise.all((await cache.keys()).map((k) => cache.delete(k)));
+        const archivos = datos.getAll('files').filter((f) => f instanceof File && f.size);
+        await Promise.all(archivos.map((f, n) => cache.put(`/compartido/${n}`, new Response(f, {
+            headers: {
+                'Content-Type': f.type || 'application/octet-stream',
+                'X-Nombre': encodeURIComponent(f.name || `archivo-${n + 1}`),
+            },
+        }))));
+        // Android pone el link en `text` o en `url` según la app; el título casi nunca sirve.
+        const texto = [datos.get('text'), datos.get('url')]
+            .filter((t) => typeof t === 'string' && t.trim())
+            .filter((t, n, todos) => !todos.slice(0, n).some((otro) => otro.includes(t)))
+            .join('\n');
+        await cache.put('/compartido/texto', new Response(JSON.stringify({ texto, archivos: archivos.length })));
+    } catch (e) {
+        console.warn('Compartir:', e);
+    }
+    return Response.redirect('/chat?compartido=1', 303);
 }
 
 // ── Avisos (Web Push) ───────────────────────────────────────────────────────
