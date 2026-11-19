@@ -51,7 +51,7 @@
                                 <template x-for="(v, j) in medios(m)" :key="j + v.a.original">
                                     <div class="chat-medio">
                                         <template x-if="v.a.clase === 'imagen'">
-                                            <button type="button" class="chat-foto" @click="visor = v.a" :aria-label="'Ver ' + v.a.nombre">
+                                            <button type="button" class="chat-foto" @click="abrirVisor(v.a)" :aria-label="'Ver ' + v.a.nombre">
                                                 <img :src="v.a.mini || v.a.original" :alt="v.a.nombre" loading="lazy">
                                             </button>
                                         </template>
@@ -75,8 +75,8 @@
                                                 <strong x-text="v.a.nombre"></strong>
                                                 <small x-text="detalle(v.a)"></small>
                                                 <span class="chat-doc-links" x-show="!v.a.local">
-                                                    <a x-show="v.a.clase === 'pdf'" :href="v.a.original" target="_blank" rel="noopener">Ver</a>
-                                                    <a x-show="v.a.pdf" :href="v.a.pdf" target="_blank" rel="noopener">Ver PDF</a>
+                                                    <a x-show="v.a.clase === 'pdf'" :href="v.a.original" @click.prevent="verPdf(v.a, v.a.original)">Ver</a>
+                                                    <a x-show="v.a.pdf" :href="v.a.pdf" @click.prevent="verPdf(v.a, v.a.pdf)">Ver PDF</a>
                                                     <a :href="v.a.original + '?bajar=1'" download
                                                        x-text="v.a.clase === 'office' ? 'Bajar original' : 'Bajar'"></a>
                                                 </span>
@@ -205,16 +205,22 @@
         </div>
     </form>
 
-    {# Visor de fotos: dentro de la app (en la PWA del iPhone no hay "atrás"). #}
-    <div class="chat-visor" x-show="visor" x-transition.opacity @click.self="visor = null"
-         @keydown.escape.window="visor = null" role="dialog" aria-modal="true" aria-label="Foto">
-        <template x-if="visor">
-            <img :src="visor.original" :alt="visor.nombre" @click="visor = null">
+    {# Visor de fotos y PDF: dentro de la app. Fuera de ella, Android abre su propio visor y al
+       cerrarlo no vuelve al chat; en la PWA del iPhone no hay "atrás". El "atrás" de Android lo
+       cierra (abrirVisor pone una entrada en el historial). #}
+    <div class="chat-visor" :class="visor && visor.pdf && 'pdf'" x-show="visor" x-transition.opacity
+         @click.self="cerrarVisor()" @keydown.escape.window="cerrarVisor()" role="dialog" aria-modal="true"
+         :aria-label="visor ? visor.nombre : 'Visor'">
+        <template x-if="visor && !visor.pdf">
+            <img :src="visor.original" :alt="visor.nombre" @click="cerrarVisor()">
         </template>
+        <div class="chat-pdf" x-ref="pdf" x-show="visor && visor.pdf">
+            <p class="chat-pdf-aviso" x-show="pdfError" x-text="pdfError"></p>
+        </div>
         <div class="chat-visor-barra">
-            <a x-show="visor && !visor.local" :href="visor ? visor.original + '?bajar=1' : '#'" download>⬇ Bajar</a>
+            <a x-show="visor && !visor.local" :href="visor ? visor.bajar || visor.original + '?bajar=1' : '#'" download>⬇ Bajar</a>
             <span x-show="visor && visor.local"></span>
-            <button type="button" @click="visor = null" aria-label="Cerrar">✕</button>
+            <button type="button" @click="cerrarVisor()" aria-label="Cerrar">✕</button>
         </div>
     </div>
 </section>

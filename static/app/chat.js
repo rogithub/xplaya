@@ -138,6 +138,70 @@ function chatQueTarjeta(t) {
     return `Cotización ${t.numero}`;
 }
 
+// ── Visor de PDF ──
+// El documento de pdf.js va fuera de Alpine: su proxy reactivo rompe los campos privados de
+// pdf.js (igual que en Imprimir, app.js). Cada página se dibuja al acercarse a la pantalla, una
+// a la vez, para no trabar el celular con un PDF de 100 páginas.
+const CHAT_PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
+let chatPdf = null;          // { doc, obs, abierto }
+
+async function chatPdfAbrir(url, caja, paginas) {
+    chatPdfCerrar(caja);
+    const yo = { doc: null, obs: null, abierto: true };
+    chatPdf = yo;
+    const pdfjs = await import(`${CHAT_PDFJS}/pdf.min.mjs`);
+    pdfjs.GlobalWorkerOptions.workerSrc = `${CHAT_PDFJS}/pdf.worker.min.mjs`;
+    const doc = await pdfjs.getDocument(url).promise;
+    if (!yo.abierto) { doc.destroy(); return; }
+    yo.doc = doc;
+    let cola = Promise.resolve();
+    yo.obs = new IntersectionObserver((entradas) => {
+        for (const e of entradas) {
+            if (!e.isIntersecting) continue;
+            yo.obs.unobserve(e.target);
+            cola = cola.then(() => chatPdfDibujar(yo, Number(e.target.dataset.pagina), e.target));
+        }
+    }, { root: caja, rootMargin: '600px' });
+    // Antes de dibujarse, cada hoja toma la forma de la primera para que no brinque al bajar.
+    const primera = (await doc.getPage(1)).getViewport({ scale: 1 });
+    if (!yo.abierto) return;
+    for (let i = 1; i <= (doc.numPages || paginas || 1); i++) {
+        const hoja = document.createElement('canvas');
+        hoja.className = 'chat-pdf-hoja';
+        hoja.dataset.pagina = i;
+        hoja.style.aspectRatio = `${primera.width} / ${primera.height}`;
+        caja.append(hoja);
+        yo.obs.observe(hoja);
+    }
+}
+
+async function chatPdfDibujar(yo, num, canvas) {
+    if (!yo.abierto) return;
+    try {
+        const pagina = await yo.doc.getPage(num);
+        const base = pagina.getViewport({ scale: 1 });
+        const ancho = canvas.clientWidth * (window.devicePixelRatio || 1);
+        const vista = pagina.getViewport({ scale: ancho / base.width });
+        canvas.width = Math.floor(vista.width);
+        canvas.height = Math.floor(vista.height);
+        canvas.style.aspectRatio = `${base.width} / ${base.height}`;
+        await pagina.render({ canvasContext: canvas.getContext('2d'), viewport: vista }).promise;
+        pagina.cleanup();
+    } catch (e) {
+        console.warn(`chat: PDF página ${num}`, e);
+    }
+}
+
+function chatPdfCerrar(caja) {
+    if (chatPdf) {
+        chatPdf.abierto = false;
+        if (chatPdf.obs) chatPdf.obs.disconnect();
+        if (chatPdf.doc) chatPdf.doc.destroy();
+        chatPdf = null;
+    }
+    if (caja) caja.querySelectorAll('.chat-pdf-hoja').forEach((h) => h.remove());
+}
+
 // Lo que se compartió desde otra app (lo guarda `compartir` en sw.js). Se saca de la caché al
 // tomarlo: si el cliente recarga, ya no vuelve a salir.
 async function chatTomarCompartido() {
@@ -184,7 +248,8 @@ document.addEventListener('alpine:init', () => {
         abierto: null,        // id del mensaje con su menú abierto
         escribe: false,       // la papelería escribe
         error: '',
-        visor: null,          // foto abierta en grande
+        visor: null,          // foto (el adjunto) o PDF ({pdf, nombre, bajar}) abierto en grande
+        pdfError: '',
         elegidos: [],         // archivos con 📎, antes de mandar: {id, nombre, clase, bytes, vista}
         lista: null,          // "Preguntar por el chat": {tipo, ref, tarjeta}, se manda con el primer mensaje
         permiteArchivos: false,
@@ -233,6 +298,8 @@ document.addEventListener('alpine:init', () => {
             pendientes.forEach((p) => this.mensajes.push(this.local(p, 'enviando')));
 
             this.conectar();
+            // "Atrás" con el visor abierto lo cierra (abrirVisor puso la entrada).
+            window.addEventListener('popstate', () => { if (this.visor) this.soltarVisor(); });
             window.addEventListener('online', () => this.reintentar());
             setInterval(() => this.reintentar(), CHAT_REINTENTO_MS);
             document.addEventListener('visibilitychange', () => this.marcarLeido());
@@ -389,7 +456,7 @@ document.addEventListener('alpine:init', () => {
                 const d = datos(e);
                 const m = this.mensajes.find((x) => x.id === d.id);
                 if (m) { m.texto = null; m.eliminado = true; m.adjuntos = []; m.zip = null; m.tarjeta = null; }
-                if (this.visor && this.visor.original.includes(d.id)) this.visor = null;
+                if (this.visor && (this.visor.pdf || this.visor.original).includes(d.id)) this.cerrarVisor();
             });
             es.addEventListener('escribiendo', () => {
                 this.escribe = true;
@@ -406,7 +473,7 @@ document.addEventListener('alpine:init', () => {
             const nuevo = { ...v, estado: 'guardado' };
             if (i >= 0) {
                 // Uno propio que estaba enviándose: ya está guardado.
-                if (this.visor && this.visor.local) this.visor = null;
+                if (this.visor && this.visor.local) this.cerrarVisor();
                 chatSoltarUrls(this.mensajes[i].adjuntos);
                 chatSubidas.delete(v.id);
                 this.mensajes[i] = { ...nuevo, cita: this.mensajes[i].cita || v.cita };
@@ -581,6 +648,36 @@ document.addEventListener('alpine:init', () => {
             this.mensajes = this.mensajes.filter((x) => x.id !== m.id);
             this.quitarPendiente(m.id);
             this.error = '';
+        },
+
+        // ── Visor de fotos y PDF ──
+
+        abrirVisor(v) {
+            if (!this.visor) history.pushState({ chatVisor: true }, '');
+            this.visor = v;
+        },
+
+        // La ✕, tocar fuera o Escape: regresa en el historial y `popstate` lo suelta.
+        cerrarVisor() {
+            if (!this.visor) return;
+            if (history.state && history.state.chatVisor) history.back();
+            else this.soltarVisor();
+        },
+
+        soltarVisor() {
+            this.visor = null;
+            this.pdfError = '';
+            chatPdfCerrar(this.$refs.pdf);
+        },
+
+        // Las páginas, una debajo de otra, con pdf.js (el mismo de Imprimir).
+        verPdf(a, url) {
+            this.pdfError = '';
+            this.abrirVisor({ pdf: url, nombre: a.nombre, bajar: url + '?bajar=1' });
+            chatPdfAbrir(url, this.$refs.pdf, a.paginas).catch((e) => {
+                console.warn('chat: PDF', e);
+                this.pdfError = 'No se pudo mostrar el PDF. Usa ⬇ Bajar para verlo.';
+            });
         },
 
         // ── Archivos: elegir y subir ──

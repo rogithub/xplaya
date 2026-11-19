@@ -4,6 +4,24 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b: visor de PDF dentro del chat (2026-11-19)
+
+Probando en producción: "Ver PDF" abría el visor de Android y, al cerrarlo, se cerraba la app.
+
+- `static/app/chat.js`:
+  - `verPdf(a, url)` abre el visor con las páginas una debajo de otra, con pdf.js (la misma
+    versión de Imprimir). Cada página se dibuja al acercarse, una a la vez
+    (`chatPdfAbrir`, `chatPdfDibujar`, `chatPdfCerrar`; el documento va fuera de Alpine).
+  - `abrirVisor` / `cerrarVisor` / `soltarVisor`, para fotos y PDF: abrir pone una entrada en el
+    historial, así el "atrás" de Android cierra el visor y te deja en el chat.
+- `templates/app/chat.html`: "Ver" y "Ver PDF" ya no abren otra pestaña. El visor tiene
+  `.chat-pdf` y "⬇ Bajar" baja el PDF que se está viendo.
+- `static/css/app.css`: `.chat-visor.pdf` (fondo sólido, scroll propio) y `.chat-pdf-hoja`.
+- Probado con Playwright en :3055: PDF de 19 páginas y Word convertido. La ✕, el "atrás" y
+  tocar fuera regresan al chat (también con la foto).
+
+---
+
 ## Chat de la app, etapa 3b, paso 10: infra y cierre (2026-11-19)
 
 - `k3s-manifests` (`a0d79ec`, ya aplicado): `xplaya-deployment.yaml` sube el límite de memoria
