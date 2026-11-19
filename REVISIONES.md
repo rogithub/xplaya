@@ -4,6 +4,12 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Horario: los sábados se abre a las 8:00 (2026-11-19)
+
+- Pie de página y datos de Google (`OpeningHoursSpecification`) en `templates/base.html`,
+  `templates/pages/faq.html`, `templates/pages/impresiones.html` y `/llms.txt`
+  (`src/routes/pages.rs`). El chat ya lo tenía (`src/chat/reglas.rs`).
+
 ## Chat de la app, etapa 3a, paso 2: reglas de la app y horario (2026-11-19)
 
 Todo en `src/chat/reglas.rs`, puro y con pruebas. Lo usan los pasos 4 y 5 (mientras, Clippy avisa

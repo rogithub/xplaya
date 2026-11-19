@@ -65,7 +65,7 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 
 - Ubicación: Villas del Sol, a un costado de Palmas Turquesa, Playa del Carmen, Quintana Roo,
   C.P. 77726, México.
-- Horario: lunes a viernes 6:30–18:00, sábados 9:00–14:00.
+- Horario: lunes a viernes 6:30–18:00, sábados 8:00–14:00.
 - Contacto: WhatsApp +52 452 201 8336 · papeleria@xplaya.com
 - Google Maps: https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x
 "#,
