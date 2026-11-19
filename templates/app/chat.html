@@ -154,14 +154,23 @@
         </div>
         <div class="chat-escribir">
             <template x-if="permiteArchivos">
-                <button type="button" class="chat-clip" x-show="!editando" @click="$refs.archivos.click()"
+                <button type="button" class="chat-clip" x-show="!editando && !grabando" @click="$refs.archivos.click()"
                         aria-label="Adjuntar archivos">📎</button>
             </template>
             <input type="file" multiple hidden x-ref="archivos" @change="elegir($event)">
-            <textarea x-ref="caja" x-model="texto" rows="1" maxlength="4000" placeholder="Escribe un mensaje"
+            {# Nota de voz: 🎤 empieza, ➤ la manda, ✕ la tira. #}
+            <div class="chat-grabando" x-show="grabando" role="status">
+                <button type="button" @click="terminarNota(true)" aria-label="Cancelar nota de voz">✕</button>
+                <span class="chat-grabando-punto" aria-hidden="true"></span>
+                <span x-text="tiempoNota()"></span>
+                <small>Grabando… toca ➤ para mandar</small>
+            </div>
+            <textarea x-show="!grabando" x-ref="caja" x-model="texto" rows="1" maxlength="4000" placeholder="Escribe un mensaje"
                       aria-label="Mensaje" enterkeyhint="send"
                       @input="crecer($el); escribiendo()" @keydown="teclear($event)"></textarea>
-            <button type="submit" class="chat-enviar" :disabled="!texto.trim() && !elegidos.length" aria-label="Enviar">➤</button>
+            <button type="button" class="chat-enviar" x-show="microfono" @click="grabar()" aria-label="Grabar nota de voz">🎤</button>
+            <button type="submit" class="chat-enviar" x-show="!microfono"
+                    :disabled="!texto.trim() && !elegidos.length && !grabando" aria-label="Enviar">➤</button>
         </div>
     </form>
 

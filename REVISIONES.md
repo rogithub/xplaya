@@ -4,6 +4,35 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 7: notas de voz (2026-11-19)
+
+- `templates/app/chat.html`:
+  - 🎤 ocupa el lugar de ➤ cuando no hay texto ni archivos (y no se está editando).
+  - Al grabar, el cuadro de texto se cambia por la barra `.chat-grabando`: ✕ (tirar), punto rojo,
+    tiempo y "toca ➤ para mandar".
+- `static/app/chat.js`:
+  - `grabar` usa `MediaRecorder` con `audio/webm;codecs=opus`, o `audio/mp4` en iPhone.
+    `terminarNota` detiene (o tira) la grabación y suelta el micrófono. A los 5 min se manda sola.
+  - `mandarNota` arma el `File` y lo manda por el mismo camino del 📎 (`enviarConArchivos`), así
+    que la nota también tiene avance, reintento y pendiente.
+  - El nombre es `nota-de-voz.weba` o `.m4a`: así `archivos::clasificar` la toma por audio (un
+    `.webm` lo tomaría por video; el plan decía `.webm`).
+  - Menos de 1 s no se manda (un toque sin querer). Sin permiso del micrófono, se avisa en `error`.
+  - `MediaRecorder` y los pedazos viven fuera de Alpine.
+- `static/css/app.css`: `.chat-grabando` y el punto que late (quieto con `prefers-reduced-motion`).
+- Probado con el micrófono falso de Chromium:
+  - el 🎤 sale solo sin texto;
+  - ✕ no manda nada;
+  - 3 s → el servidor guardó `nota-de-voz.weba`, `audio/webm`, 46 KB;
+  - sin permiso sale el aviso.
+- Pendiente:
+  - el webm de `MediaRecorder` en Chrome no trae la duración: el reproductor dice 0:00 hasta
+    tocarlo y no deja adelantar;
+  - probar en un iPhone real (m4a) y que un iPhone viejo reproduzca el webm/opus (etapa 5, como
+    dice el plan).
+
+---
+
 ## Chat de la app, etapa 3b, paso 6b: botón 📎 y subida (2026-11-19)
 
 - `src/routes/chat.rs::pagina`: `chat-datos` lleva `archivos` (hay MinIO), `bytesVideo`,

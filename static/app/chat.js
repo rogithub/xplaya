@@ -94,6 +94,13 @@ function chatSubir(file, mensaje, alAvanzar) {
     });
 }
 
+// ── Notas de voz ──
+// Opus en webm donde se puede (Android, computadora); el iPhone graba mp4/AAC. El servidor
+// reconoce la nota por el nombre: `.weba` o `.m4a` (un `.webm` lo tomaría por video).
+const CHAT_NOTA_MAX_S = 5 * 60;
+let chatGrabadora = null;   // MediaRecorder: fuera de Alpine
+let chatPedazos = [];
+
 function chatEsperar(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 // Para 🔊 y para la cita cuando el mensaje no tiene texto.
@@ -131,6 +138,11 @@ document.addEventListener('alpine:init', () => {
         bytesVideo: 0,
         bytesDocumento: 0,
         maxAdjuntos: 100,
+        puedeGrabar: false,
+        grabando: false,
+        segundos: 0,
+        _reloj: null,
+        _cancelada: false,
         puedeLeer: 'speechSynthesis' in window,
         _ultimoEscribiendo: 0,
         _escribeHasta: null,
@@ -146,6 +158,8 @@ document.addEventListener('alpine:init', () => {
             this.bytesVideo = datos.bytesVideo;
             this.bytesDocumento = datos.bytesDocumento;
             this.maxAdjuntos = datos.maxAdjuntos;
+            this.puedeGrabar = this.permiteArchivos && 'MediaRecorder' in window
+                && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
             this.mensajes = datos.mensajes.map((m) => ({ ...m, estado: 'guardado' }));
 
             // Lo que quedó sin mandar (sin señal, app cerrada).
@@ -408,6 +422,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async enviar() {
+            if (this.grabando) return this.terminarNota();
             const texto = this.texto;
             if (this.editando) {
                 if (!texto.trim()) return;
@@ -620,6 +635,69 @@ document.addEventListener('alpine:init', () => {
             this.error = '';
             m.estado = 'enviando';
             this.subirTodo(m.id);
+        },
+
+        // ── Notas de voz ──
+
+        // 🎤 en lugar de ➤ cuando no hay nada que mandar.
+        get microfono() {
+            return this.puedeGrabar && !this.grabando && !this.editando && !this.texto.trim() && !this.elegidos.length;
+        },
+
+        tiempoNota() {
+            const s = this.segundos;
+            return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+        },
+
+        async grabar() {
+            this.error = '';
+            let flujo;
+            try {
+                flujo = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (e) {
+                this.error = e.name === 'NotAllowedError'
+                    ? 'Para grabar, permite el micrófono en tu celular.'
+                    : 'No se pudo usar el micrófono.';
+                return;
+            }
+            const tipo = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported(t));
+            const g = new MediaRecorder(flujo, tipo ? { mimeType: tipo } : undefined);
+            chatPedazos = [];
+            g.ondataavailable = (e) => { if (e.data.size) chatPedazos.push(e.data); };
+            g.onstop = () => {
+                flujo.getTracks().forEach((t) => t.stop());
+                clearInterval(this._reloj);
+                this.grabando = false;
+                if (!this._cancelada) this.mandarNota(g.mimeType || tipo || '');
+                chatPedazos = [];
+            };
+            this._cancelada = false;
+            this.segundos = 0;
+            this.grabando = true;
+            g.start(1000);
+            chatGrabadora = g;
+            const inicio = Date.now();
+            this._reloj = setInterval(() => {
+                this.segundos = Math.floor((Date.now() - inicio) / 1000);
+                if (this.segundos >= CHAT_NOTA_MAX_S) this.terminarNota();  // a los 5 min se manda sola
+            }, 250);
+        },
+
+        terminarNota(cancelar = false) {
+            this._cancelada = cancelar;
+            if (chatGrabadora && chatGrabadora.state !== 'inactive') chatGrabadora.stop();
+            chatGrabadora = null;
+        },
+
+        mandarNota(mime) {
+            const m4a = mime.includes('mp4');
+            const blob = new Blob(chatPedazos, { type: m4a ? 'audio/mp4' : 'audio/webm' });
+            if (this.segundos < 1 || !blob.size) return;  // un toque sin querer
+            const file = new File([blob], m4a ? 'nota-de-voz.m4a' : 'nota-de-voz.weba', { type: blob.type });
+            const id = chatId();
+            chatSubidas.set('elegido:' + id, file);
+            this.elegidos.push({ id, nombre: 'Nota de voz', clase: 'audio', bytes: file.size, vista: null });
+            this.enviarConArchivos('');
         },
 
         // ── Menú de un mensaje ──
