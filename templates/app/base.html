@@ -24,6 +24,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Instrument+Sans:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="{{ estatico("css/app.css") }}">
     {% if en_app %}
+    {# Tamaño de letra elegido en "Más" (menuApp en app.js): antes de pintar, para que no brinque. #}
+    <script>try { var l = localStorage.getItem('xp_letra'); if (l && l !== '100') document.documentElement.style.fontSize = l + '%'; } catch (e) {}</script>
     {# Solo en app.xplaya.com: PWA instalable. El manifest lo pone cada página
        (el del monedero lleva al cliente directo a su tarjeta al abrir la app). #}
     {% block manifest %}{% endblock %}

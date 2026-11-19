@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 7: menú nuevo y tamaño de letra (2026-11-19)
+
+- `templates/app/nav.html` — barra Chat · Monedero · Tienda · Carrito · Más, con íconos SVG de
+  línea (iguales en todos los celulares) y cápsula detrás del ícono activo. "Más" abre una hoja
+  desde abajo con Imprimir y Fotos (si están prendidos), el tamaño de letra y el enlace a
+  privacidad; queda marcada cuando se está en Imprimir o Fotos.
+- `static/app/app.js` — componente `menuApp`: la pestaña Chat sale solo si `/chat/sin-leer`
+  contesta (se recuerda en el celular para que la barra no brinque), con su globito; se va al
+  marcar leído (`chat-leido` de chat.js). Tamaño de letra en 5 pasos (87.5 % a 140 %) guardado
+  en `xp_letra`.
+- `templates/app/base.html` — script en el `<head>` que aplica el tamaño de letra antes de pintar.
+- `static/css/app.css` — barra y hoja nuevas (la barra en px: no crece con la letra); `body` en
+  `rem` para que crezca todo lo demás.
+- Visto con capturas: claro, oscuro, hoja abierta y letra "Enorme" en el chat.
+
 ## Chat de la app, etapa 3a, paso 6: la pantalla del chat (2026-11-19)
 
 - `templates/app/chat.html` — globos (los del cliente a la derecha, los avisos automáticos al

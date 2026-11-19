@@ -1205,3 +1205,72 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 });
+
+// Barra de abajo y hoja de "Más" (templates/app/nav.html).
+// - La pestaña Chat solo sale a quien lo puede ver: lo dice /chat/sin-leer (404 si no). La
+//   respuesta se recuerda en el celular para que la barra no brinque al cargar cada página.
+// - Tamaño de letra: % del <html> (todo lo de app.css va en rem). Se aplica antes de pintar con
+//   el script del <head> de app/base.html, que lee la misma llave.
+const LETRA_LLAVE = 'xp_letra';
+const LETRA_PASOS = [87.5, 100, 112.5, 125, 140];
+const LETRA_NOMBRES = ['Chica', 'Normal', 'Grande', 'Más grande', 'Enorme'];
+const CHAT_VISIBLE_LLAVE = 'xp_chat_visible';
+
+function leerLocal(llave) {
+    try { return localStorage.getItem(llave); } catch { return null; }
+}
+
+function guardarLocal(llave, valor) {
+    try { localStorage.setItem(llave, valor); } catch { /* sin almacenamiento */ }
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('menuApp', () => ({
+        mas: false,
+        chat: location.pathname === '/chat' || leerLocal(CHAT_VISIBLE_LLAVE) === '1',
+        sinLeer: 0,
+        pasos: LETRA_PASOS,
+        paso: Math.max(0, LETRA_PASOS.indexOf(Number(leerLocal(LETRA_LLAVE) || 100))),
+
+        get nombreLetra() { return LETRA_NOMBRES[this.paso]; },
+
+        init() {
+            this.revisarChat();
+            // El chat marcó leído (chat.js): el globito se va.
+            window.addEventListener('chat-leido', () => { this.sinLeer = 0; });
+        },
+
+        async revisarChat() {
+            try {
+                const r = await fetch('/chat/sin-leer');
+                if (r.ok) {
+                    this.chat = true;
+                    this.sinLeer = location.pathname === '/chat' ? 0 : (await r.json()).sinLeer;
+                } else if (r.status === 404 || r.status === 401) {
+                    this.chat = false;
+                }
+                guardarLocal(CHAT_VISIBLE_LLAVE, this.chat ? '1' : '0');
+            } catch { /* sin red: se queda lo recordado */ }
+        },
+
+        abrir() {
+            this.mas = true;
+            document.documentElement.classList.add('sin-scroll');
+        },
+
+        cerrar() {
+            this.mas = false;
+            document.documentElement.classList.remove('sin-scroll');
+        },
+
+        letraMenos() { this.ponerLetra(this.paso - 1); },
+        letraMas() { this.ponerLetra(this.paso + 1); },
+
+        ponerLetra(k) {
+            this.paso = Math.min(Math.max(k, 0), LETRA_PASOS.length - 1);
+            const pct = LETRA_PASOS[this.paso];
+            document.documentElement.style.fontSize = pct === 100 ? '' : pct + '%';
+            guardarLocal(LETRA_LLAVE, String(pct));
+        },
+    }));
+});
