@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 8: privacidad y documentos (2026-11-19)
+
+- `templates/pages/terminos.html#privacidad` — qué se guarda del chat (mensajes, archivos y notas
+  de voz), quién lo ve, cuánto se guarda (mensajes mientras uses la app, archivos 90 días), que
+  eliminar borra para los dos, y que al cancelar se borran también.
+- `CHAT.md` — sección "La app (etapa 3a)" (flujo, id del celular, fecha de xplaya, ✓/✓✓, una
+  réplica, fuera de horario) y `CHAT_CLIENTES_PRUEBA`.
+- Avance en el artifact del plan: etapa 3a, 8 de 9 pasos; falta probarla en producción.
+- Para probar en producción: agregar la fila `CHAT_CLIENTES_PRUEBA` con los `Clientes.Id` de
+  prueba (sin la fila nadie ve el chat).
+
 ## Chat de la app, etapa 3a, paso 7: menú nuevo y tamaño de letra (2026-11-19)
 
 - `templates/app/nav.html` — barra Chat · Monedero · Tienda · Carrito · Más, con íconos SVG de

@@ -92,12 +92,16 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
   mandar. No hay límite de mensajes.
 - **Ajustes en `Settings`**: `CHAT_DIAS_TABLA` (vacío: para siempre), `CHAT_MINUTOS_AVISO` (5),
   `CHAT_MINUTOS_EDITAR` (15), `CHAT_MB_DOCUMENTO` (25), `CHAT_MB_VIDEO` (100).
+- **`CHAT_CLIENTES_PRUEBA`** (`Settings`): quién ve el chat en la app. **Sin la fila, nadie**; con
+  la fila vacía (o NULL), todos; si no, los `Clientes.Id` separados por coma. No está en los
+  scripts del POS a propósito: se agrega a mano con los clientes de prueba y se vacía cuando la
+  caja pueda contestar (etapa 5).
 - **Archivos**: MinIO, bucket `papeleria-chat`, **90 días** y sin copia a R2. Después, en el chat sale
   "Archivo vencido" con su nombre.
 
 ## Comportamiento acordado
 
-- **Fuera de horario** (L–V 6:30–18:00, S 8:00–14:00): respuesta automática con el horario, una vez por
+- **Fuera de horario** (L–V 6:30–18:00, S 8:00–14:00; `reglas::abierto`): respuesta automática con el horario, una vez por
   cada cierre.
 - **✓ enviado y ✓✓ leído** en los dos sentidos; **"escribiendo…"** en los dos sentidos.
 - **Editar**: solo texto, los primeros 15 min, con la marca "Editado"; no se guarda la versión anterior.
@@ -119,6 +123,26 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
   mensajes y archivos.
 - **Para después**: reacciones, buscar, imprimir desde el chat (hoy solo hay blanco y negro).
 
+## La app (etapa 3a)
+
+```
+celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ CHAT
+   ▲                                                                 │
+   └──SSE /chat/eventos◀── broadcast ◀── consumer (después de guardar)┘
+```
+
+- Rutas en `src/routes/chat.rs`; pantalla en `templates/app/chat.html` y `static/app/chat.js`.
+- El **id** lo genera el celular (un reintento sin señal no se guarda dos veces: `Nats-Msg-Id` en
+  el stream y `ON CONFLICT` en la tabla). La **fecha** la pone xplaya al publicar.
+- **✓** cuando NATS confirma la publicación; **✓✓** cuando llega el `leido` de la papelería.
+- Los cambios en vivo los reparte el consumer después de guardar (`chat/nats.rs`), en memoria:
+  sirve porque xplaya corre con **una réplica**. Con dos, habría que repartir por NATS.
+- **Fuera de horario**: el consumer, al guardar un mensaje del cliente con la tienda cerrada,
+  publica el aviso en `chat.{cliente}.automatico.mensaje`. Su id (UUID v5 del cliente y la hora
+  del cierre) es el mismo en todo el cierre: si ya está guardado, no se repite.
+- Editar y eliminar desde la app se revisan con `reglas::aplicar` antes de publicar, para
+  contestar el error al momento; el consumer los vuelve a revisar al llegar.
+
 ## Reglas del código
 
 1. **Decisiones en funciones puras** (`src/chat/reglas.rs`): reciben el evento, lo guardado, la hora y
@@ -135,7 +159,8 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 1. Diseño — hecho (19 nov 2026).
 2. Base — hecho y probado en producción (19 nov 2026): tabla, stream `CHAT`, permisos de NATS,
    bucket `papeleria-chat`, xplaya guarda lo que llega al stream. Prueba: `xplaya-chat/probar-chat.sh`.
-3. a) Chat de texto en la app. b) Archivos, voz y tarjetas.
+3. a) Chat de texto en la app — código hecho (19 nov 2026); falta probarlo en producción con
+   los clientes de `CHAT_CLIENTES_PRUEBA`. b) Archivos, voz y tarjetas.
 4. (unida a 3b)
 5. Chat en la caja (POS).
 6. Avisos con la app cerrada.
