@@ -44,7 +44,53 @@
                             <strong x-text="autorCita(m)"></strong>
                             <span x-text="textoCita(m)"></span>
                         </div>
-                        <p class="chat-texto" x-show="!m.eliminado" x-text="m.texto"></p>
+                        {# Archivos: fotos y videos en cuadrícula, audio y documentos en renglones.
+                           Con más de 4 se ven 4 y el último dice "+N". #}
+                        <div class="chat-adjuntos" x-show="m.adjuntos && m.adjuntos.length && !m.eliminado" @click.stop>
+                            <div class="chat-medios" x-show="medios(m).length" :class="{ 'uno': medios(m).length === 1 }">
+                                <template x-for="(v, j) in medios(m)" :key="j + v.a.original">
+                                    <div class="chat-medio">
+                                        <template x-if="v.a.clase === 'imagen'">
+                                            <button type="button" class="chat-foto" @click="visor = v.a" :aria-label="'Ver ' + v.a.nombre">
+                                                <img :src="v.a.mini || v.a.original" :alt="v.a.nombre" loading="lazy">
+                                            </button>
+                                        </template>
+                                        <template x-if="v.a.clase === 'video'">
+                                            <video controls preload="metadata" playsinline :src="v.a.original + '#t=0.1'"></video>
+                                        </template>
+                                        <button type="button" class="chat-mas-n" x-show="v.mas" @click="m._todos = true"
+                                                x-text="'+' + v.mas" :aria-label="'Ver ' + v.mas + ' archivos más'"></button>
+                                    </div>
+                                </template>
+                            </div>
+                            <template x-for="(v, j) in docs(m)" :key="j + v.a.original">
+                                <div class="chat-doc">
+                                    <template x-if="v.a.clase === 'audio'">
+                                        <audio controls preload="none" :src="v.a.original"></audio>
+                                    </template>
+                                    <template x-if="v.a.clase !== 'audio'">
+                                        <div class="chat-doc-fila">
+                                            <span class="chat-doc-icono" x-text="icono(v.a)" aria-hidden="true"></span>
+                                            <span class="chat-doc-dato">
+                                                <strong x-text="v.a.nombre"></strong>
+                                                <small x-text="detalle(v.a)"></small>
+                                                <span class="chat-doc-links">
+                                                    <a x-show="v.a.clase === 'pdf'" :href="v.a.original" target="_blank" rel="noopener">Ver</a>
+                                                    <a x-show="v.a.pdf" :href="v.a.pdf" target="_blank" rel="noopener">Ver PDF</a>
+                                                    <a :href="v.a.original + '?bajar=1'" download
+                                                       x-text="v.a.clase === 'office' ? 'Bajar original' : 'Bajar'"></a>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </template>
+                                    <button type="button" class="chat-mas-n chat-mas-doc" x-show="v.mas" @click="m._todos = true"
+                                            x-text="'+' + v.mas + ' más'"></button>
+                                </div>
+                            </template>
+                            <a class="chat-zip" x-show="m.zip && m.adjuntos.length > 4" :href="m.zip" download
+                               x-text="'⬇ Bajar todo (' + m.adjuntos.length + ' archivos, zip)'"></a>
+                        </div>
+                        <p class="chat-texto" x-show="!m.eliminado && m.texto" x-text="m.texto"></p>
                         <p class="chat-texto" x-show="m.eliminado"
                            x-text="mio(m) ? '🚫 Se borró de la app' : '🚫 Mensaje eliminado'"></p>
                         <span class="chat-pie">
@@ -61,7 +107,7 @@
                 {# Menú del mensaje: al tocarlo. #}
                 <div class="chat-menu" x-show="abierto === m.id" x-transition.opacity @click.outside="abierto = null">
                     <button type="button" @click="responder(m)">↩️ Responder</button>
-                    <button type="button" x-show="puedeLeer && m.texto" @click="leer(m)">🔊 Leer en voz alta</button>
+                    <button type="button" x-show="puedeLeer && (m.texto || (m.adjuntos && m.adjuntos.length))" @click="leer(m)">🔊 Leer en voz alta</button>
                     <button type="button" x-show="puedeEditar(m)" @click="editar(m)">✏️ Editar</button>
                     <button type="button" class="peligro" x-show="mio(m)" @click="eliminar(m)">🗑️ Eliminar</button>
                 </div>
@@ -80,7 +126,7 @@
         <div class="chat-respondiendo" x-show="respondiendo || editando">
             <span>
                 <strong x-text="editando ? 'Editando' : ('Respondiendo a ' + (respondiendo && mio(respondiendo) ? 'ti' : 'la papelería'))"></strong>
-                <span x-text="editando ? '' : (respondiendo ? respondiendo.texto : '')"></span>
+                <span x-text="editando ? '' : (respondiendo ? (respondiendo.texto || chatQueEs(respondiendo.adjuntos)) : '')"></span>
             </span>
             <button type="button" @click="cancelar()" aria-label="Cancelar">✕</button>
         </div>
@@ -91,5 +137,17 @@
             <button type="submit" class="chat-enviar" :disabled="!texto.trim()" aria-label="Enviar">➤</button>
         </div>
     </form>
+
+    {# Visor de fotos: dentro de la app (en la PWA del iPhone no hay "atrás"). #}
+    <div class="chat-visor" x-show="visor" x-transition.opacity @click.self="visor = null"
+         @keydown.escape.window="visor = null" role="dialog" aria-modal="true" aria-label="Foto">
+        <template x-if="visor">
+            <img :src="visor.original" :alt="visor.nombre" @click="visor = null">
+        </template>
+        <div class="chat-visor-barra">
+            <a :href="visor ? visor.original + '?bajar=1' : '#'" download>⬇ Bajar</a>
+            <button type="button" @click="visor = null" aria-label="Cerrar">✕</button>
+        </div>
+    </div>
 </section>
 {% endblock %}

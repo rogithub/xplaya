@@ -26,6 +26,34 @@ function chatId() {
     return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
+const CHAT_VISIBLES = 4; // con más archivos se ven 4 y el último dice "+N"
+
+function chatPeso(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function chatIcono(a) {
+    if (a.clase === 'pdf') return '📄';
+    if (a.clase === 'office') {
+        if (/\.(xlsx?|ods|csv)$/i.test(a.nombre)) return '📊';
+        if (/\.(pptx?|odp)$/i.test(a.nombre)) return '📽️';
+        return '📝';
+    }
+    return '📎';
+}
+
+function chatEsMedio(a) { return a.clase === 'imagen' || a.clase === 'video'; }
+
+// Para 🔊 y para la cita cuando el mensaje no tiene texto.
+function chatQueEs(adjuntos) {
+    if (!adjuntos || !adjuntos.length) return '';
+    if (adjuntos.length > 1) return `${adjuntos.length} archivos`;
+    const nombres = { imagen: 'Foto', video: 'Video', audio: 'Nota de voz', pdf: 'Documento', office: 'Documento' };
+    return nombres[adjuntos[0].clase] || 'Archivo';
+}
+
 function chatLeerPendientes() {
     try { return JSON.parse(localStorage.getItem(CHAT_PENDIENTES) || '[]'); } catch { return []; }
 }
@@ -47,6 +75,7 @@ document.addEventListener('alpine:init', () => {
         abierto: null,        // id del mensaje con su menú abierto
         escribe: false,       // la papelería escribe
         error: '',
+        visor: null,          // foto abierta en grande
         puedeLeer: 'speechSynthesis' in window,
         _ultimoEscribiendo: 0,
         _escribeHasta: null,
@@ -82,7 +111,29 @@ document.addEventListener('alpine:init', () => {
             return {
                 id: p.id, autor: 'cliente', tipo: 'texto', texto: p.texto, respondeA: p.respondeA || null,
                 cita: p.cita || null, fecha: p.fecha, leido: false, editado: false, eliminado: false, estado,
+                adjuntos: [], zip: null,
             };
+        },
+
+        // ── Archivos ──
+        // Fotos y videos primero (cuadrícula), luego audio y documentos. Con más de 4 se ven los
+        // primeros 4 de ese orden y el último lleva `mas` (cuántos faltan) hasta que se toca.
+
+        visibles(m) {
+            const todos = [...(m.adjuntos || [])].sort((a, b) => chatEsMedio(b) - chatEsMedio(a));
+            if (m._todos || todos.length <= CHAT_VISIBLES) return todos.map((a) => ({ a, mas: 0 }));
+            return todos.slice(0, CHAT_VISIBLES).map((a, i) => ({
+                a, mas: i === CHAT_VISIBLES - 1 ? todos.length - CHAT_VISIBLES : 0,
+            }));
+        },
+
+        medios(m) { return this.visibles(m).filter((v) => chatEsMedio(v.a)); },
+        docs(m) { return this.visibles(m).filter((v) => !chatEsMedio(v.a)); },
+        icono(a) { return chatIcono(a); },
+
+        detalle(a) {
+            const paginas = a.paginas ? `${a.paginas} ${a.paginas === 1 ? 'página' : 'páginas'} · ` : '';
+            return paginas + chatPeso(a.bytes);
         },
 
         mio(m) { return m.autor === 'cliente'; },
@@ -121,7 +172,10 @@ document.addEventListener('alpine:init', () => {
 
         textoCita(m) {
             const citado = this.mensajes.find((x) => x.id === m.respondeA);
-            if (citado) return citado.eliminado ? 'Mensaje eliminado' : citado.texto;
+            if (citado) {
+                if (citado.eliminado) return 'Mensaje eliminado';
+                return citado.texto || chatQueEs(citado.adjuntos);
+            }
             return m.cita || 'Mensaje eliminado';
         },
 
@@ -184,7 +238,8 @@ document.addEventListener('alpine:init', () => {
             es.addEventListener('eliminado', (e) => {
                 const d = datos(e);
                 const m = this.mensajes.find((x) => x.id === d.id);
-                if (m) { m.texto = null; m.eliminado = true; }
+                if (m) { m.texto = null; m.eliminado = true; m.adjuntos = []; m.zip = null; }
+                if (this.visor && this.visor.original.includes(d.id)) this.visor = null;
             });
             es.addEventListener('escribiendo', () => {
                 this.escribe = true;
@@ -299,7 +354,7 @@ document.addEventListener('alpine:init', () => {
                 id: chatId(),
                 texto,
                 respondeA: this.respondiendo ? this.respondiendo.id : null,
-                cita: this.respondiendo ? this.respondiendo.texto : null,
+                cita: this.respondiendo ? (this.respondiendo.texto || chatQueEs(this.respondiendo.adjuntos)) : null,
                 // Hora de la tienda, como las del servidor. Solo sirve para ordenar mientras se
                 // manda; la de verdad la pone el servidor.
                 fecha: new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 23),
@@ -419,9 +474,10 @@ document.addEventListener('alpine:init', () => {
         // 🔊 con la voz en español del propio celular.
         leer(m) {
             this.abierto = null;
-            if (!this.puedeLeer || !m.texto) return;
+            const texto = m.texto || chatQueEs(m.adjuntos);
+            if (!this.puedeLeer || !texto) return;
             speechSynthesis.cancel();
-            const dicho = new SpeechSynthesisUtterance(m.texto);
+            const dicho = new SpeechSynthesisUtterance(texto);
             dicho.lang = 'es-MX';
             const voz = speechSynthesis.getVoices().find((v) => v.lang && v.lang.startsWith('es'));
             if (voz) dicho.voice = voz;

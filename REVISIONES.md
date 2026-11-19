@@ -4,6 +4,33 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 6a: archivos en el globo (2026-11-19)
+
+Solo mostrar; el botón 📎 y la subida son el 6b. Las tarjetas, el paso 8.
+
+- `templates/app/chat.html`: en `.chat-globo`, entre la cita y el texto, `.chat-adjuntos`:
+  - fotos y videos en cuadrícula de 2 (`.chat-medios`; uno solo va a lo ancho). La foto usa la
+    miniatura y al tocarla abre el **visor**; el video, `preload="metadata"` y `#t=0.1` para que el
+    iPhone muestre el primer cuadro;
+  - audio con `<audio controls>`;
+  - PDF / Office / otro en renglón (`.chat-doc`): icono, nombre, "19 páginas · 144 KB" y links
+    "Ver" · "Bajar", "Ver PDF" · "Bajar original" o solo "Bajar" (`?bajar=1`).
+  - Con más de 4 se ven los primeros 4 (fotos y videos primero) y el último dice "+N"; al tocarlo
+    salen todos. Abajo, "⬇ Bajar todo (N archivos, zip)".
+  - `@click.stop`: tocar un archivo no abre el menú del mensaje.
+- Visor (`.chat-visor`): la foto original en grande dentro de la app (en la PWA del iPhone no hay
+  "atrás"), con "⬇ Bajar" y ✕; cierra con ✕, Escape o tocando fuera.
+- `static/app/chat.js`: `chatPeso`, `chatIcono`, `chatQueEs` y, en el componente, `visibles`,
+  `medios`, `docs`, `detalle`.
+  - `eliminado` vacía `adjuntos` y `zip` (y cierra el visor si era de ese mensaje).
+  - Sin texto, 🔊 y la cita dicen "Foto", "Video", "Nota de voz", "Documento" o "N archivos".
+  - Las `:key` de los `x-for` llevan la posición: dos archivos iguales no rompen la lista.
+- `static/css/app.css`: sección "Archivos en el globo" y "Foto en grande".
+- Probado en local con el mensaje de 4 archivos y uno de 8 armado en la prueba (Playwright reescribe
+  el JSON de `/chat`), en claro y oscuro: cuadrícula, "+4", desplegar, zip y visor.
+
+---
+
 ## Chat de la app, etapa 3b, paso 5: vista con archivos y tarjetas (2026-11-19)
 
 Solo el JSON que recibe la app (`/chat`, `/chat/anteriores` y el SSE); la pantalla es el paso 6.
