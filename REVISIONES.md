@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 1: publicar y avisar en vivo (2026-11-19)
+
+Plan de la 3a: 8 pasos (publicar, reglas, BD, fuera de horario, rutas, pantalla, menú, privacidad).
+Todavía sin pantallas.
+
+- `src/chat/nats.rs` (nuevo) — `Chat` en `AppState`: publica en el stream `CHAT` esperando el ack
+  (el ✓ de la app) con `Nats-Msg-Id` para no guardar dos veces lo que el celular reintente; manda
+  el "escribiendo…" del cliente por NATS núcleo y escucha el de la papelería
+  (`chat.*.papeleria.escribiendo`). Reparte los cambios con un `broadcast` en memoria: vale porque
+  xplaya corre con una réplica.
+- `src/chat/vista.rs` (nuevo) — `Vista` (un mensaje como lo dibuja la app) y `EnVivo` (los eventos
+  del SSE). No es contrato de NATS: puede cambiar sin subir `v`.
+- `src/chat/consumer.rs` — después de guardar, editar, marcar leído o eliminar, avisa en vivo. Así
+  la app solo ve lo que ya está en `Mensajes`.
+- `src/chat/contrato.rs` — fuera los `allow(dead_code)` de `Tema::armar`.
+
 ## Chat de la app, etapa 2: xplaya guarda lo que pasa por el stream CHAT (2026-11-19)
 
 Diseño completo en `CHAT.md` (nuevo). Todavía no hay pantallas: esto es la base.

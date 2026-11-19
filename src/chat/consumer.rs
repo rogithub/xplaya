@@ -2,7 +2,7 @@
 //! quien venga (`CHAT.md`). Misma forma que `fotos.rs`.
 //!
 //! Es un adaptador: lee el tema y el cuerpo, le pregunta a `reglas::aplicar` qué hacer y lo
-//! ejecuta. No decide nada.
+//! ejecuta. No decide nada. Después de guardar, avisa a la app en vivo (`nats.rs`).
 
 use std::time::Duration;
 
@@ -11,6 +11,7 @@ use futures_util::StreamExt;
 
 use super::contrato::{self, Entrante, Tema};
 use super::reglas::{self, Cambio};
+use super::vista::{EnVivo, Vista};
 use crate::{db, AppState};
 
 const STREAM: &str = "CHAT";
@@ -88,16 +89,23 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
 
     match reglas::aplicar(&t, entrante, guardado.as_ref(), secuencia, &ajustes) {
         Cambio::Guardar(n) => {
-            if !db::chat::guardar(&state.pool, &n).await? {
+            if db::chat::guardar(&state.pool, &n).await? {
+                state.chat.avisar(n.cliente, EnVivo::Mensaje(Vista::from(&n)));
+            } else {
                 tracing::warn!("chat: {} no se guardó (repetido o el cliente no existe)", n.id);
             }
         }
         Cambio::MarcarLeidos { cliente, del_cliente, hasta } => {
             db::chat::marcar_leidos(&state.pool, cliente, del_cliente, hasta).await?;
+            state.chat.avisar(cliente, EnVivo::Leido { del_cliente, hasta });
         }
-        Cambio::Editar { id, texto, fecha } => db::chat::editar(&state.pool, id, &texto, fecha).await?,
+        Cambio::Editar { id, texto, fecha } => {
+            db::chat::editar(&state.pool, id, &texto, fecha).await?;
+            state.chat.avisar(t.cliente, EnVivo::Editado { id, texto, fecha });
+        }
         Cambio::Eliminar { id, fecha, llaves, secuencia: del_mensaje } => {
             db::chat::eliminar(&state.pool, id, fecha).await?;
+            state.chat.avisar(t.cliente, EnVivo::Eliminado { id, fecha });
             // Lo que sigue es limpieza: si falla, el archivo se borra solo a los 90 días y el
             // mensaje sale del stream a los 30. No se reintenta el evento por eso.
             borrar_archivos(state, &llaves).await;

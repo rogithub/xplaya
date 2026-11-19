@@ -65,7 +65,6 @@ impl Evento {
         }
     }
 
-    #[allow(dead_code)] // con `Tema::armar`
     fn texto(self) -> &'static str {
         match self {
             Self::Mensaje => "mensaje",
@@ -97,8 +96,7 @@ impl Tema {
         Some(Self { cliente: cliente.parse().ok()?, lado: Lado::leer(lado)?, evento: Evento::leer(evento)? })
     }
 
-    /// Lo usa xplaya al publicar, desde la etapa 3a.
-    #[allow(dead_code)]
+    /// Lo usa xplaya al publicar.
     pub fn armar(&self) -> String {
         format!("chat.{}.{}.{}", self.cliente, self.lado.texto(), self.evento.texto())
     }

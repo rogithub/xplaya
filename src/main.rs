@@ -46,6 +46,8 @@ pub struct AppState {
     pub kiosko_visitas: Arc<passkeys::Pendientes<()>>,
     /// Llaves VAPID de las notificaciones (`push.rs`). `None`: notificaciones apagadas.
     pub vapid: Option<Arc<push::Vapid>>,
+    /// Chat de la app: publicar en NATS y cambios en vivo (`chat/nats.rs`).
+    pub chat: chat::Chat,
     /// Avisos a la papelería por NATS → nats-ntfy → ntfy (`avisos.rs`).
     pub avisos: avisos::Avisos,
     /// La cuenta de la caja en vivo para la app del cliente (`caja.rs`, `routes/cuenta.rs`).
@@ -101,6 +103,8 @@ async fn main() {
     // La app la usa para suscribirse; sin llave (vacía) no ofrece notificaciones.
     tmpl.add_global("vapid_publica", vapid.as_ref().map(|v| v.publica.clone()).unwrap_or_default());
     let avisos = avisos::Avisos::conectar(&cfg).await;
+    let chat = chat::Chat::conectar(&cfg).await;
+    chat.vigilar_escribiendo();
     let minio = minio::Minio::desde_config(&cfg);
     if minio.is_none() {
         tracing::info!("imprimir: sin MINIO_USUARIO, autoservicio de impresión apagado");
@@ -130,6 +134,7 @@ async fn main() {
         entradas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(5 * 60))),
         kiosko_visitas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(15 * 60))),
         vapid,
+        chat,
         avisos,
         cajas: Arc::new(caja::Cajas::new()),
         fotos,
