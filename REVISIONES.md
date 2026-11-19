@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 10: infra y cierre (2026-11-19)
+
+- `k3s-manifests` (`a0d79ec`, ya aplicado): `xplaya-deployment.yaml` sube el límite de memoria
+  a 256Mi (la miniatura abre la foto en memoria; en reposo usa ~4Mi) y monta `/tmp` como
+  `emptyDir` de 1Gi para las subidas. Sin cambios en los PVC: MinIO usa 1.8 de 20 GB.
+- La política de `xplaya-impresiones` ya incluye `papeleria-chat` (`xplaya-chat/chat-minio.sh`).
+  `xplaya-minio/anuncios-minio.sh` la arma sin el chat: no volver a correrlo así.
+- `CHAT.md`: sección "Archivos y tarjetas (etapa 3b)", 95 MB de video y la etapa 3b hecha,
+  pendiente de probar en producción. Artifact de etapas al día.
+
+---
+
 ## Chat de la app, etapa 3b, paso 9: compartir a la app (Android) (2026-11-19)
 
 Cambio al plan: lo compartido lo recibe el **service worker**, no el servidor. Así un video de

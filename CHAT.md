@@ -110,7 +110,8 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 - **Responder a un mensaje** (`respondeA`), **mandar sin señal** (queda "enviando…"), **compartir a la
   app** desde otras apps en Android, **respuestas rápidas** en la caja.
 - **Archivos**: imágenes (miniatura), videos (se reproducen ahí), PDF (páginas), Word/Excel/PowerPoint
-  convertidos a PDF con Gotenberg; el original se puede bajar. 25 MB documentos, 100 MB videos.
+  convertidos a PDF con Gotenberg; el original se puede bajar. 25 MB documentos, 95 MB videos
+  (el tope de 100 MB de Cloudflare).
   Notas de voz. Para después: miniatura de PDF y HEIC.
 - **Tarjetas propias** (no Open Graph) para productos, recibos y cotizaciones, con datos al día de la
   BD. Un link de xplaya.com (o `/r/…`) se vuelve tarjeta solo; los de otros sitios quedan como link.
@@ -143,6 +144,34 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
 - Editar y eliminar desde la app se revisan con `reglas::aplicar` antes de publicar, para
   contestar el error al momento; el consumer los vuelve a revisar al llegar.
 
+## Archivos y tarjetas (etapa 3b)
+
+```
+celular ─POST /chat/archivo (1 por petición, 3 a la vez)─▶ xplaya ─/tmp─▶ MinIO papeleria-chat
+   │                          ◀── número del archivo ──┘   (Adjunto en memoria, chat/subidas.rs)
+   └─POST /chat/mensaje {archivos: [números], texto}─▶ publica UN mensaje con todos
+```
+
+- **Subida en dos tiempos**: cada archivo se escribe a `/tmp` (emptyDir de 1Gi en el pod) y va a
+  MinIO sin pasar por memoria. El `Adjunto` lo arma el servidor: tipo por los primeros bytes, no
+  por el mime del celular (`chat/archivos.rs`). Espera su mensaje 1 h; si nunca se manda, se borra.
+- **Según el tipo**: imagen con miniatura, PDF con páginas, Word/Excel/PowerPoint convertidos con
+  Gotenberg (uno a la vez; si falla, solo se baja el original), video y audio tal cual. La
+  miniatura abre la foto en memoria, una a la vez: por eso el pod tiene 256Mi.
+- **Servir**: `GET /chat/archivo/{mensaje}/{n}/{original|pdf|mini}` con `Range` (los videos se
+  adelantan) y `GET /chat/zip/{mensaje}` (todo, en stream, con carpetas por tipo). Pasados los
+  90 días: "Archivo vencido".
+- **Notas de voz**: 🎤 con `MediaRecorder` (`.weba`, o `.m4a` en iPhone), por la misma subida.
+  En el contrato son `tipo: texto` con un adjunto `audio/*`.
+- **Tarjetas** (`chat/tarjetas.rs`): se resuelven al dar la vista, con datos al día. Salen de:
+  - un link de xplaya.com o `/r/…` en el texto;
+  - "Preguntar por el chat" en `/tienda/{nid}` (la tarjeta queda lista arriba del cuadro);
+  - el carrito: al mandarlo desde la app, xplaya publica en `chat.{c}.automatico.mensaje` la
+    cotización (id UUID v5 del pedido, no se repite).
+- **Compartir a la app** (Android): `share_target` del manifest → `POST /chat/compartir`. Lo
+  recibe el service worker (`static/app/sw.js`), no el servidor: guarda los archivos en la caché
+  del celular y abre el chat, que los sube como si vinieran del 📎.
+
 ## Reglas del código
 
 1. **Decisiones en funciones puras** (`src/chat/reglas.rs`): reciben el evento, lo guardado, la hora y
@@ -161,7 +190,8 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
    bucket `papeleria-chat`, xplaya guarda lo que llega al stream. Prueba: `xplaya-chat/probar-chat.sh`.
 3. a) Chat de texto en la app — hecho y probado en producción (19 nov 2026) con los clientes
    de `CHAT_CLIENTES_PRUEBA`. Prueba: `xplaya-chat/contestar-como-caja.sh` (contesta como la
-   caja) y `clientes-prueba.sql`. b) Archivos, voz y tarjetas.
+   caja) y `clientes-prueba.sql`. b) Archivos, voz y tarjetas — hecho (19 nov 2026); falta
+   probarla en producción (con NATS, y compartir desde un Android con la app instalada).
 4. (unida a 3b)
 5. Chat en la caja (POS).
 6. Avisos con la app cerrada.
