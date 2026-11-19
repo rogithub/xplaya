@@ -76,6 +76,13 @@ pub fn router() -> Router<AppState> {
         .route("/chat/anteriores", get(chat::anteriores))
         .route("/chat/eventos", get(chat::eventos))
         .route("/chat/sin-leer", get(chat::sin_leer))
+        // Un archivo por petición: hasta el tope del video (95 MB, por Cloudflare) más el formulario.
+        // El límite de cada clase (`CHAT_MB_*`) lo revisa la ruta mientras lo escribe a disco.
+        .route(
+            "/chat/archivo",
+            post(chat::subir_archivo)
+                .layer(DefaultBodyLimit::max((crate::chat::archivos::MB_VIDEO_TOPE * 1024 * 1024) as usize + 512 * 1024)),
+        )
         .route("/chat/mensaje", post(chat::mandar))
         .route("/chat/leido", post(chat::leido))
         .route("/chat/escribiendo", post(chat::escribiendo))

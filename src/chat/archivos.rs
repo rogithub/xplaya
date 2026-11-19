@@ -167,6 +167,28 @@ pub fn llaves(cliente: Uuid, mensaje: Uuid, archivo: Uuid, ext: &str) -> Llaves 
     Llaves { original: format!("{base}.{ext}"), pdf: format!("{base}-pdf.pdf"), miniatura: format!("{base}-mini.jpg") }
 }
 
+/// El nombre que se muestra en el chat y con el que se baja: sin rutas ni caracteres de
+/// control, hasta 120. Sin nombre, `archivo.{ext}`.
+pub fn nombre_visible(original: &str, ext: &str) -> String {
+    let base = original.rsplit(['/', '\\']).next().unwrap_or("");
+    let limpio: String = base.chars().filter(|c| !c.is_control()).take(120).collect();
+    let limpio = limpio.trim();
+    if limpio.is_empty() { format!("archivo.{ext}") } else { limpio.to_string() }
+}
+
+/// Lado mayor de la miniatura: se ve bien en la cuadrícula y en un globo, y pesa ~30 KB.
+pub const LADO_MINIATURA: u32 = 480;
+
+/// La miniatura en JPEG, derecha según el EXIF. `None` si la imagen no se puede abrir (el
+/// mensaje se manda igual, sin miniatura).
+pub fn miniatura(bytes: &[u8]) -> Option<Vec<u8>> {
+    let img = crate::anuncio::abrir_imagen(bytes)?;
+    let chica = img.thumbnail(LADO_MINIATURA, LADO_MINIATURA).to_rgb8();
+    let mut jpeg = Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 75).encode_image(&chica).ok()?;
+    Some(jpeg)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -243,6 +265,25 @@ mod tests {
         assert_eq!(limite(Clase::Video, &chico), 50 * 1024 * 1024);
         assert_eq!(limite(Clase::Imagen, &chico), 10 * 1024 * 1024);
         assert_eq!(limite_mayor(&chico), 50 * 1024 * 1024);
+    }
+
+    #[test]
+    fn nombres_que_se_muestran() {
+        assert_eq!(nombre_visible("C:\\Users\\ana\\Tesis final.docx", "docx"), "Tesis final.docx");
+        assert_eq!(nombre_visible("../../etc/passwd", "bin"), "passwd");
+        assert_eq!(nombre_visible("  \n ", "jpg"), "archivo.jpg");
+        assert_eq!(nombre_visible(&"a".repeat(300), "pdf").chars().count(), 120);
+    }
+
+    #[test]
+    fn miniatura_de_una_foto_grande() {
+        let foto = image::RgbImage::from_pixel(1600, 1200, image::Rgb([200, 30, 30]));
+        let mut png = Vec::new();
+        image::DynamicImage::ImageRgb8(foto).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        let mini = miniatura(&png).unwrap();
+        let leida = image::load_from_memory(&mini).unwrap();
+        assert_eq!((leida.width(), leida.height()), (480, 360));
+        assert_eq!(miniatura(b"no es imagen"), None);
     }
 
     #[test]

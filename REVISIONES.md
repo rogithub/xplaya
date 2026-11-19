@@ -4,6 +4,30 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 3: subir archivos (2026-11-19)
+
+- `POST /chat/archivo` (`src/routes/chat.rs::subir_archivo`), multipart con `mensaje` y `archivo`:
+  - Escribe a `/tmp` por pedazos y corta al pasar el límite (`Temporal` se borra solo).
+    Reconoce el tipo (`archivos::clasificar`) y lo manda a MinIO en stream.
+  - Imagen: miniatura de 480 px. PDF: páginas. Word/Excel/PowerPoint: Gotenberg
+    `/forms/libreoffice/convert`, de disco a disco, y se sube `-pdf.pdf`.
+  - Si lo extra falla, se manda igual.
+  - Regresa `{archivo, adjunto}`.
+- `src/chat/subidas.rs`: los adjuntos esperan su mensaje en memoria (una réplica).
+  - `ver` exige el mismo cliente y mensaje.
+  - Al publicar se marcan, no se quitan: un reintento los sigue encontrando.
+  - A la hora salen; los que nunca se mandaron se borran de MinIO (`limpiar_subidas`, cada 10 min).
+  - Semáforos: `pesado` (miniatura y páginas, 1 a la vez) y `gotenberg` (1 a la vez).
+- `POST /chat/mensaje` acepta `archivos: [...]` y publica un mensaje con todos sus adjuntos.
+- `anuncio::abrir_imagen` (EXIF y tope de 12 000 px) se separó de `preparar_imagen` para usarla en
+  `archivos::miniatura`. `archivos::nombre_visible`.
+- Probado en local con el MinIO de `imagina-minio` y una sesión de prueba en la BD dev:
+  - foto con miniatura, PDF de 19 páginas y 30 MB rechazado (413);
+  - mensaje con archivos de otro mensaje rechazado (400);
+  - video de 80 MB: la memoria del proceso pasó de 35 a 36 MB;
+  - sin temporales en `/tmp`.
+- Falta probar Word→PDF (Gotenberg no se alcanza desde aquí) y la publicación en NATS.
+
 ## Chat de la app, etapa 3b, paso 2: qué es cada archivo (2026-11-19)
 
 Decisión nueva: **grupos de archivos** ("ahí van 60 fotos, imprímelas de 5×5"). Van en un solo

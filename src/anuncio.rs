@@ -27,24 +27,29 @@ pub fn color_valido(color: &str) -> bool {
 /// centrada sobre la misma foto agrandada y borrosa (como hace WhatsApp). Respeta la rotación
 /// que guarda la cámara del celular (EXIF).
 pub fn preparar_imagen(bytes: &[u8]) -> Result<Vec<u8>, String> {
-    const NO_SE_LEE: &str = "No pudimos leer tu imagen. Usa una foto JPG o PNG.";
-    let mut lector = ImageReader::new(Cursor::new(bytes)).with_guessed_format().map_err(|_| NO_SE_LEE)?;
-    // Una imagen chiquita en bytes puede pedir gigas al abrirse: tope de 12 000 px por lado.
-    let mut limites = Limits::default();
-    limites.max_image_width = Some(12_000);
-    limites.max_image_height = Some(12_000);
-    lector.limits(limites);
-    let mut decodificador = lector.into_decoder().map_err(|_| NO_SE_LEE)?;
-    let orientacion = decodificador.orientation().map_err(|_| NO_SE_LEE)?;
-    let mut img = DynamicImage::from_decoder(decodificador).map_err(|_| NO_SE_LEE)?;
-    img.apply_orientation(orientacion);
-
+    let img = abrir_imagen(bytes).ok_or("No pudimos leer tu imagen. Usa una foto JPG o PNG.")?;
     let lienzo = acomodar(&img.to_rgb8());
     let mut jpeg = Vec::new();
     image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 85)
         .encode_image(&lienzo)
         .map_err(|e| format!("JPEG: {e}"))?;
     Ok(jpeg)
+}
+
+/// Abre una foto del celular (JPEG, PNG o WebP) ya derecha según su EXIF, con tope de tamaño.
+/// También la usan las miniaturas del chat (`chat/archivos.rs`).
+pub fn abrir_imagen(bytes: &[u8]) -> Option<DynamicImage> {
+    let mut lector = ImageReader::new(Cursor::new(bytes)).with_guessed_format().ok()?;
+    // Una imagen chiquita en bytes puede pedir gigas al abrirse: tope de 12 000 px por lado.
+    let mut limites = Limits::default();
+    limites.max_image_width = Some(12_000);
+    limites.max_image_height = Some(12_000);
+    lector.limits(limites);
+    let mut decodificador = lector.into_decoder().ok()?;
+    let orientacion = decodificador.orientation().ok()?;
+    let mut img = DynamicImage::from_decoder(decodificador).ok()?;
+    img.apply_orientation(orientacion);
+    Some(img)
 }
 
 fn acomodar(img: &RgbImage) -> RgbImage {

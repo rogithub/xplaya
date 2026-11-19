@@ -9,6 +9,8 @@
 //! - `GET /chat/anteriores?antes={id}`: más historial al subir; sin `antes`, los últimos (la app
 //!   se pone al día así al reconectar).
 //! - `GET /chat/eventos`: SSE (`vista::EnVivo`), como `routes/cuenta.rs`.
+//! - `POST /chat/archivo`: sube un archivo (multipart) y regresa su número; el mensaje que lo
+//!   lleva se manda después con `POST /chat/mensaje` (`chat/subidas.rs`).
 //! - `POST /chat/mensaje`, `/chat/leido`, `/chat/{id}/editar`, `/chat/{id}/eliminar`,
 //!   `/chat/escribiendo`.
 //! - `GET /chat/sin-leer`: el número del globito del menú.
@@ -16,7 +18,7 @@
 use std::convert::Infallible;
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Multipart, Path, Query, State},
     http::{HeaderMap, StatusCode},
     response::{
         sse::{Event, KeepAlive, Sse},
@@ -26,18 +28,24 @@ use axum::{
 };
 use chrono::{DateTime, FixedOffset, Utc};
 use minijinja::context;
+use futures_util::StreamExt;
 use serde::Deserialize;
-use tokio::sync::broadcast::{error::RecvError, Receiver};
+use tokio::{
+    io::AsyncWriteExt,
+    sync::broadcast::{error::RecvError, Receiver},
+};
 use uuid::Uuid;
 
 use crate::{
     caja::EnPantalla,
     chat::{
-        contrato::{Editado, Eliminado, Entrante, Evento, Lado, Leido, Tema, VERSION},
+        archivos::{self, Clase},
+        contrato::{Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Tema, VERSION},
         nats::Cambio as CambioEnVivo,
         reglas::{self, Ajustes, Cambio},
     },
-    db,
+    db, impresion,
+    minio::BUCKET_CHAT,
     routes::{alta::error_json, app::cliente_sesion},
     AppState,
 };
@@ -172,29 +180,229 @@ async fn siguiente(mut c: Conexion) -> Option<(Result<Event, Infallible>, Conexi
 pub struct NuevoMensaje {
     /// Lo genera el celular: un reintento sin señal no se guarda dos veces.
     id: Uuid,
+    #[serde(default)]
     texto: String,
     responde_a: Option<Uuid>,
-}
-
-impl NuevoMensaje {
-    fn borrador(self) -> reglas::Borrador {
-        reglas::Borrador { id: self.id, texto: self.texto, responde_a: self.responde_a, ..Default::default() }
-    }
+    /// Los números que dio `POST /chat/archivo`, en el orden en que se muestran.
+    #[serde(default)]
+    archivos: Vec<Uuid>,
 }
 
 /// Responde cuando NATS ya lo tiene (el ✓). Se guarda y llega por el SSE un instante después.
 pub async fn mandar(State(state): State<AppState>, headers: HeaderMap, Json(m): Json<NuevoMensaje>) -> Result<Response, StatusCode> {
     let (cliente, _) = del_chat(&state, &headers).await?;
     let bloqueado = db::chat::bloqueado(&state.pool, cliente).await.map_err(error_bd)?;
-    let mensaje = match reglas::del_cliente(cliente, m.borrador(), bloqueado, ahora()) {
+    let adjuntos = match state.subidas.ver(cliente, m.id, &m.archivos) {
+        Some(a) => a,
+        None => {
+            tracing::info!("chat: {cliente} mandó {} con archivos que no están", m.id);
+            return Ok(error_json(StatusCode::BAD_REQUEST, "Algunos archivos ya no están. Vuelve a elegirlos."));
+        }
+    };
+    let borrador = reglas::Borrador { id: m.id, texto: m.texto, responde_a: m.responde_a, adjuntos, tarjeta: None };
+    let mensaje = match reglas::del_cliente(cliente, borrador, bloqueado, ahora()) {
         Ok(msg) => msg,
         Err(motivo) => return Ok(error_json(StatusCode::BAD_REQUEST, motivo)),
     };
     let tema = Tema { cliente, lado: Lado::Cliente, evento: Evento::Mensaje };
     Ok(match state.chat.publicar(&tema, &mensaje, Some(mensaje.id)).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Ok(()) => {
+            state.subidas.publicadas(&m.archivos);
+            StatusCode::NO_CONTENT.into_response()
+        }
         Err(e) => sin_nats(e),
     })
+}
+
+// ── Archivos ────────────────────────────────────────────────────────────────
+
+/// Archivo en `/tmp` que se borra solo al terminar la petición, salga bien o mal.
+struct Temporal(std::path::PathBuf);
+
+impl Temporal {
+    fn nuevo() -> Self {
+        Self(std::env::temp_dir().join(format!("xplaya-chat-{}", Uuid::new_v4())))
+    }
+}
+
+impl Drop for Temporal {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
+const MB: u64 = 1024 * 1024;
+
+/// Sube un archivo del chat. Campos en este orden: `mensaje` (el id que generó el celular para
+/// el mensaje que lo va a llevar) y `archivo`. El archivo va a disco por pedazos, sin pasar
+/// entero por la memoria, y de ahí a MinIO; las miniaturas, las páginas y la conversión de
+/// Word a PDF se hacen aquí. Regresa `{archivo, adjunto}`; el adjunto espera en
+/// `state.subidas` a su mensaje.
+pub async fn subir_archivo(State(state): State<AppState>, headers: HeaderMap, mut multipart: Multipart) -> Result<Response, StatusCode> {
+    let (cliente, ajustes) = del_chat(&state, &headers).await?;
+    let minio = state.minio.as_ref().ok_or(StatusCode::NOT_FOUND)?.en(BUCKET_CHAT);
+    if db::chat::bloqueado(&state.pool, cliente).await.map_err(error_bd)? {
+        return Ok(error_json(StatusCode::BAD_REQUEST, "La papelería bloqueó tu chat."));
+    }
+    const INCOMPLETO: &str = "El archivo no llegó completo. Inténtalo de nuevo.";
+    let temporal = Temporal::nuevo();
+    let tope = archivos::limite_mayor(&ajustes);
+    let mut mensaje: Option<Uuid> = None;
+    // Nombre que puso el cliente, bytes y los primeros bytes (para saber qué es).
+    let mut recibido: Option<(String, u64, Vec<u8>)> = None;
+    loop {
+        let mut campo = match multipart.next_field().await {
+            Ok(Some(c)) => c,
+            Ok(None) => break,
+            Err(_) => return Ok(error_json(StatusCode::BAD_REQUEST, INCOMPLETO)),
+        };
+        match campo.name() {
+            Some("mensaje") => mensaje = campo.text().await.ok().and_then(|t| t.trim().parse().ok()),
+            Some("archivo") if mensaje.is_some() => {
+                let original = campo.file_name().unwrap_or("").to_string();
+                let mut disco = tokio::fs::File::create(&temporal.0).await.map_err(error_disco)?;
+                let (mut bytes, mut inicio) = (0u64, Vec::with_capacity(archivos::BYTES_FIRMA));
+                loop {
+                    let trozo = match campo.chunk().await {
+                        Ok(Some(t)) => t,
+                        Ok(None) => break,
+                        Err(_) => return Ok(error_json(StatusCode::BAD_REQUEST, INCOMPLETO)),
+                    };
+                    bytes += trozo.len() as u64;
+                    if bytes > tope {
+                        return Ok(error_json(StatusCode::PAYLOAD_TOO_LARGE, &format!("El archivo pasa de {} MB.", tope / MB)));
+                    }
+                    let falta = archivos::BYTES_FIRMA.saturating_sub(inicio.len()).min(trozo.len());
+                    inicio.extend_from_slice(&trozo[..falta]);
+                    disco.write_all(&trozo).await.map_err(error_disco)?;
+                }
+                disco.flush().await.map_err(error_disco)?;
+                recibido = Some((original, bytes, inicio));
+            }
+            _ => {}
+        }
+    }
+    let (Some(mensaje), Some((original, bytes, inicio))) = (mensaje, recibido) else {
+        return Ok(error_json(StatusCode::BAD_REQUEST, "Elige un archivo."));
+    };
+    if bytes == 0 {
+        return Ok(error_json(StatusCode::BAD_REQUEST, "El archivo está vacío."));
+    }
+    let tipo = archivos::clasificar(&original, &inicio);
+    let limite = archivos::limite(tipo.clase, &ajustes);
+    if bytes > limite {
+        let que = if tipo.clase == Clase::Video { "El video" } else { "El archivo" };
+        return Ok(error_json(StatusCode::PAYLOAD_TOO_LARGE, &format!("{que} pasa de {} MB.", limite / MB)));
+    }
+
+    let archivo = Uuid::new_v4();
+    let llaves = archivos::llaves(cliente, mensaje, archivo, &tipo.ext);
+    if let Err(e) = minio.subir_archivo(&llaves.original, &temporal.0, tipo.mime).await {
+        tracing::warn!("chat: subir {}: {e}", llaves.original);
+        return Ok(error_json(StatusCode::SERVICE_UNAVAILABLE, "No se pudo subir. Inténtalo de nuevo."));
+    }
+    let mut adjunto = Adjunto {
+        nombre: archivos::nombre_visible(&original, &tipo.ext),
+        mime: tipo.mime.to_string(),
+        bytes,
+        llave: llaves.original.clone(),
+        paginas: None,
+        pdf: None,
+        miniatura: None,
+    };
+    // Lo de abajo es extra: si falla, el archivo se manda igual (sin miniatura, sin páginas o
+    // solo para bajar).
+    match tipo.clase {
+        Clase::Imagen if tipo.ext != "gif" => {
+            if let Some(mini) = miniatura(&state, &temporal).await {
+                match minio.subir(&llaves.miniatura, mini, "image/jpeg").await {
+                    Ok(()) => adjunto.miniatura = Some(llaves.miniatura),
+                    Err(e) => tracing::warn!("chat: miniatura {}: {e}", llaves.miniatura),
+                }
+            }
+        }
+        Clase::Pdf => adjunto.paginas = paginas(&state, &temporal).await,
+        Clase::Office => {
+            let pdf = Temporal::nuevo();
+            match a_pdf(&state, &temporal, &tipo.ext, &pdf).await {
+                Ok(()) => {
+                    adjunto.paginas = paginas(&state, &pdf).await;
+                    match minio.subir_archivo(&llaves.pdf, &pdf.0, "application/pdf").await {
+                        Ok(()) => adjunto.pdf = Some(llaves.pdf),
+                        Err(e) => tracing::warn!("chat: subir {}: {e}", llaves.pdf),
+                    }
+                }
+                Err(e) => tracing::warn!("chat: Gotenberg no convirtió {} ({}): {e}", llaves.original, adjunto.nombre),
+            }
+        }
+        _ => {}
+    }
+    state.subidas.guardar(archivo, cliente, mensaje, adjunto.clone());
+    Ok(Json(serde_json::json!({ "archivo": archivo, "adjunto": adjunto })).into_response())
+}
+
+fn error_disco(e: std::io::Error) -> StatusCode {
+    tracing::error!("chat: disco: {e}");
+    StatusCode::INTERNAL_SERVER_ERROR
+}
+
+/// Abre la imagen en memoria: una a la vez (`subidas.pesado`).
+async fn miniatura(state: &AppState, temporal: &Temporal) -> Option<Vec<u8>> {
+    let _turno = state.subidas.pesado.acquire().await.ok()?;
+    let ruta = temporal.0.clone();
+    tokio::task::spawn_blocking(move || std::fs::read(ruta).ok().and_then(|b| archivos::miniatura(&b))).await.ok().flatten()
+}
+
+/// Páginas de un PDF; `None` si tiene contraseña o no se puede abrir (se manda igual).
+async fn paginas(state: &AppState, temporal: &Temporal) -> Option<u32> {
+    let _turno = state.subidas.pesado.acquire().await.ok()?;
+    let ruta = temporal.0.clone();
+    tokio::task::spawn_blocking(move || std::fs::read(ruta).ok().and_then(|b| impresion::contar_paginas(&b).ok())).await.ok().flatten()
+}
+
+/// Word, Excel o PowerPoint a PDF con Gotenberg (LibreOffice), de disco a disco.
+async fn a_pdf(state: &AppState, origen: &Temporal, ext: &str, destino: &Temporal) -> Result<(), String> {
+    let _turno = state.subidas.gotenberg.acquire().await.map_err(|e| e.to_string())?;
+    let archivo = tokio::fs::File::open(&origen.0).await.map_err(|e| e.to_string())?;
+    let largo = archivo.metadata().await.map_err(|e| e.to_string())?.len();
+    let cuerpo = reqwest::Body::wrap_stream(tokio_util::io::ReaderStream::new(archivo));
+    // Gotenberg decide cómo convertir por la extensión del nombre.
+    let parte = reqwest::multipart::Part::stream_with_length(cuerpo, largo).file_name(format!("documento.{ext}"));
+    let resp = state
+        .http
+        .post(format!("{}/forms/libreoffice/convert", state.config.gotenberg_url))
+        .multipart(reqwest::multipart::Form::new().part("files", parte))
+        .timeout(std::time::Duration::from_secs(180))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("{}", resp.status()));
+    }
+    let mut disco = tokio::fs::File::create(&destino.0).await.map_err(|e| e.to_string())?;
+    let mut cuerpo = resp.bytes_stream();
+    while let Some(trozo) = cuerpo.next().await {
+        disco.write_all(&trozo.map_err(|e| e.to_string())?).await.map_err(|e| e.to_string())?;
+    }
+    disco.flush().await.map_err(|e| e.to_string())
+}
+
+/// Cada 10 minutos borra de MinIO los archivos que subieron y nunca se mandaron.
+pub fn limpiar_subidas(state: AppState) {
+    let Some(minio) = state.minio.as_ref().map(|m| m.en(BUCKET_CHAT)) else { return };
+    tokio::spawn(async move {
+        let mut cada = tokio::time::interval(std::time::Duration::from_secs(10 * 60));
+        loop {
+            cada.tick().await;
+            for adjunto in state.subidas.vencidas() {
+                for llave in adjunto.llaves() {
+                    if let Err(e) = minio.borrar(llave).await {
+                        tracing::warn!("chat, limpieza de subidas: {e}");
+                    }
+                }
+            }
+        }
+    });
 }
 
 /// El cliente vio la conversación: todo lo que le escribieron hasta ahora queda leído.

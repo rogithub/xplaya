@@ -56,6 +56,8 @@ pub struct AppState {
     pub fotos: Option<Arc<fotos::Firmador>>,
     /// MinIO del autoservicio de impresión (`minio.rs`). `None`: "Imprime tú solito" apagado.
     pub minio: Option<minio::Minio>,
+    /// Archivos del chat ya subidos que esperan su mensaje (`chat/subidas.rs`).
+    pub subidas: Arc<chat::Subidas>,
     /// "Entrar con Google" por Keycloak (`google.rs`). `None`: el botón no aparece.
     pub google: Option<google::Google>,
     /// Idas a Google que esperan el regreso, con el `state` como id.
@@ -139,6 +141,7 @@ async fn main() {
         cajas: Arc::new(caja::Cajas::new()),
         fotos,
         minio,
+        subidas: Arc::new(chat::Subidas::default()),
         google,
         google_idas: Arc::new(passkeys::Pendientes::new(Duration::from_secs(10 * 60))),
     };
@@ -152,6 +155,8 @@ async fn main() {
     routes::imprimir::limpiar(state.clone());
     // Borra los anuncios del kiosko rechazados o vencidos de hace más de 30 días.
     routes::anuncio::limpiar(state.clone());
+    // Borra los archivos del chat que se subieron y nunca se mandaron.
+    routes::chat::limpiar_subidas(state.clone());
     // Imprime los trabajos que la caja autorizó (autoservicio.rs).
     autoservicio::vigilar(state.clone());
 
