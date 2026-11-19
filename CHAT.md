@@ -190,8 +190,9 @@ celular ─POST /chat/archivo (1 por petición, 3 a la vez)─▶ xplaya ─/tmp
    bucket `papeleria-chat`, xplaya guarda lo que llega al stream. Prueba: `xplaya-chat/probar-chat.sh`.
 3. a) Chat de texto en la app — hecho y probado en producción (19 nov 2026) con los clientes
    de `CHAT_CLIENTES_PRUEBA`. Prueba: `xplaya-chat/contestar-como-caja.sh` (contesta como la
-   caja) y `clientes-prueba.sql`. b) Archivos, voz y tarjetas — hecho (19 nov 2026); falta
-   probarla en producción (con NATS, y compartir desde un Android con la app instalada).
+   caja) y `clientes-prueba.sql`. b) Archivos, voz y tarjetas — hecho y probado en producción (19 nov 2026):
+   foto, video, PDF, Word, nota de voz, tarjetas, carrito y compartir desde Android. Para que
+   salga en el menú de compartir hubo que reinstalar la app (Android guardaba el manifest viejo).
 4. (unida a 3b)
 5. Chat en la caja (POS).
 6. Avisos con la app cerrada.

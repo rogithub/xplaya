@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b probada en producción (2026-11-19)
+
+- Probado desde el celular: foto, videos (con y sin audio, se adelantan), PDF y Word con el
+  visor dentro del chat, nota de voz, "Preguntar por el chat", la cotización del carrito y
+  compartir una foto y un link desde Android.
+- Compartir: Android no tomó el `share_target` hasta reinstalar la app.
+- Pendiente aparte (no del chat): en la página de la cotización las fotos de los productos
+  salen mal.
+- `CHAT.md` y el artifact de etapas: 3b hecha y probada.
+
+---
+
 ## Chat de la app, etapa 3b: visor de PDF dentro del chat (2026-11-19)
 
 Probando en producción: "Ver PDF" abría el visor de Android y, al cerrarlo, se cerraba la app.
