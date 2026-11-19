@@ -64,7 +64,7 @@ pub async fn lista(
 
 // ── GET /tienda/{nid} ───────────────────────────────────────────────────────
 
-pub async fn detalle(State(state): State<AppState>, Path(nid): Path<i32>) -> Result<Html<String>, StatusCode> {
+pub async fn detalle(State(state): State<AppState>, headers: HeaderMap, Path(nid): Path<i32>) -> Result<Html<String>, StatusCode> {
     let producto = db::productos::detalle(&state.pool, nid, &state.config.content_base_url)
         .await
         .map_err(|e| {
@@ -76,6 +76,8 @@ pub async fn detalle(State(state): State<AppState>, Path(nid): Path<i32>) -> Res
         en_app => true,
         nav => "tienda",
         producto,
+        // "Preguntar por el chat": solo a quien ve el chat.
+        con_chat => super::chat::visible(&state, &headers).await,
     })
 }
 

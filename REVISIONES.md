@@ -4,6 +4,29 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3b, paso 8b: "Preguntar por el chat" (2026-11-19)
+
+- `templates/app/tienda/detalle.html`: botón "💬 Preguntar por el chat" (`.btn-sec`) debajo de
+  "Agregar al carrito". Lleva a `/chat?producto={nid}`. Solo sale a quien ve el chat
+  (`routes::chat::visible`, que usa `del_chat`; `tienda::detalle` ahora recibe los headers).
+- `src/routes/chat.rs`:
+  - `pagina` lee `?producto=` y manda en `chat.lista` la tarjeta resuelta (`tipo`, `ref`,
+    `tarjeta`). Si el producto no existe, `lista` va `null`.
+  - `NuevoMensaje` acepta `tipo` y `ref`. Si vienen, ganan sobre el link del texto;
+    `reglas::del_cliente` sigue revisando que sea producto, recibo o cotización con ref.
+- `static/app/chat.js` y `templates/app/chat.html`:
+  - `lista` se ve arriba del cuadro de texto (`.chat-por-mandar`, con ✕ para quitarla).
+  - El primer mensaje se la lleva (`tomarLista`, con texto o sin él). El globo local ya trae la
+    tarjeta, así que se ve completo antes de que conteste el servidor. También va al pendiente
+    de localStorage, para el reintento.
+  - Con la tarjeta lista sale ➤ en vez de 🎤, y el cuadro dice "Escribe tu pregunta".
+  - `init` quita el `?producto=` de la URL: al recargar no vuelve a salir.
+- Probado con Playwright (contestando `/chat/mensaje` en el script, porque no hay NATS local):
+  - con sesión, el botón sale; sin sesión, no;
+  - la tarjeta queda lista;
+  - al mandar "¿Lo tienen en rojo?" el cuerpo lleva `"tipo":"producto","ref":"1967"`;
+  - el globo sale con la tarjeta y la tarjeta lista desaparece.
+
 ## Chat de la app, etapa 3b, paso 8a: links → tarjeta y tarjeta en el globo (2026-11-19)
 
 El paso 8 va en tres partes: 8a (esta), 8b "Preguntar por el chat" y 8c cotización del carrito.

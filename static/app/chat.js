@@ -161,6 +161,7 @@ document.addEventListener('alpine:init', () => {
         error: '',
         visor: null,          // foto abierta en grande
         elegidos: [],         // archivos con 📎, antes de mandar: {id, nombre, clase, bytes, vista}
+        lista: null,          // "Preguntar por el chat": {tipo, ref, tarjeta}, se manda con el primer mensaje
         permiteArchivos: false,
         bytesVideo: 0,
         bytesDocumento: 0,
@@ -188,6 +189,9 @@ document.addEventListener('alpine:init', () => {
             this.puedeGrabar = this.permiteArchivos && 'MediaRecorder' in window
                 && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
             this.mensajes = datos.mensajes.map((m) => ({ ...m, estado: 'guardado' }));
+            this.lista = datos.lista || null;
+            // Sin el ?producto=: al recargar o volver no se vuelve a poner la tarjeta.
+            if (location.search) history.replaceState(history.state, '', location.pathname);
 
             // Lo que quedó sin mandar (sin señal, app cerrada).
             const guardados = new Set(this.mensajes.map((m) => m.id));
@@ -209,7 +213,8 @@ document.addEventListener('alpine:init', () => {
 
         local(p, estado) {
             return {
-                id: p.id, autor: 'cliente', tipo: 'texto', texto: p.texto, respondeA: p.respondeA || null,
+                id: p.id, autor: 'cliente', tipo: p.tipo || 'texto', ref: p.ref || null, tarjeta: p.tarjeta || null,
+                texto: p.texto, respondeA: p.respondeA || null,
                 cita: p.cita || null, fecha: p.fecha, leido: false, editado: false, eliminado: false, estado,
                 adjuntos: (p.adjuntos || []).map((a) => ({ ...a, local: true })), zip: null,
             };
@@ -467,7 +472,7 @@ document.addEventListener('alpine:init', () => {
                 this.error = '';
                 return this.guardarEdicion(texto);
             }
-            if ((!texto.trim() && !this.elegidos.length) || this.bloqueado) return;
+            if ((!texto.trim() && !this.elegidos.length && !this.lista) || this.bloqueado) return;
             this.error = '';
             if (this.elegidos.length) return this.enviarConArchivos(texto);
 
@@ -476,6 +481,7 @@ document.addEventListener('alpine:init', () => {
                 texto,
                 respondeA: this.respondiendo ? this.respondiendo.id : null,
                 cita: this.respondiendo ? (this.respondiendo.texto || chatQueEs(this.respondiendo.adjuntos)) : null,
+                ...this.tomarLista(),
                 // Hora de la tienda, como las del servidor. Solo sirve para ordenar mientras se
                 // manda; la de verdad la pone el servidor.
                 fecha: new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 23),
@@ -491,13 +497,24 @@ document.addEventListener('alpine:init', () => {
             await this.mandarUno(p);
         },
 
+        // La tarjeta lista va en el mensaje que se manda y deja de estar arriba del cuadro.
+        // Con `tarjeta` el globo se ve completo desde antes de que conteste el servidor.
+        tomarLista() {
+            const l = this.lista;
+            this.lista = null;
+            return l ? { tipo: l.tipo, ref: l.ref, tarjeta: l.tarjeta } : {};
+        },
+
         async mandarUno(p) {
             const m = this.mensajes.find((x) => x.id === p.id);
             try {
                 const r = await fetch('/chat/mensaje', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: p.id, texto: p.texto, respondeA: p.respondeA, archivos: p.archivos || [] }),
+                    body: JSON.stringify({
+                        id: p.id, texto: p.texto, respondeA: p.respondeA, archivos: p.archivos || [],
+                        tipo: p.tipo || null, ref: p.ref || null,
+                    }),
                 });
                 if (r.ok) {
                     this.quitarPendiente(p.id);
@@ -575,6 +592,7 @@ document.addEventListener('alpine:init', () => {
                 texto,
                 respondeA: this.respondiendo ? this.respondiendo.id : null,
                 cita: this.respondiendo ? (this.respondiendo.texto || chatQueEs(this.respondiendo.adjuntos)) : null,
+                ...this.tomarLista(),
                 fecha: new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 23),
             };
             const items = this.elegidos.map((e) => {
@@ -679,7 +697,7 @@ document.addEventListener('alpine:init', () => {
 
         // 🎤 en lugar de ➤ cuando no hay nada que mandar.
         get microfono() {
-            return this.puedeGrabar && !this.grabando && !this.editando && !this.texto.trim() && !this.elegidos.length;
+            return this.puedeGrabar && !this.grabando && !this.editando && !this.texto.trim() && !this.elegidos.length && !this.lista;
         },
 
         tiempoNota() {

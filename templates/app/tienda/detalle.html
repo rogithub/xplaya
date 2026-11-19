@@ -73,6 +73,9 @@
         Agregar al carrito
     </button>
     <a href="/carrito" class="btn-link producto-ir" x-show="agregado" x-cloak>Ver mi carrito →</a>
+    {% if con_chat %}
+    <a href="/chat?producto={{ producto.nid }}" class="btn-sec producto-preguntar">💬 Preguntar por el chat</a>
+    {% endif %}
 
     {% if producto.descripcion %}
     <p class="producto-desc">{{ producto.descripcion }}</p>

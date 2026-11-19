@@ -68,6 +68,11 @@ async fn del_chat(state: &AppState, headers: &HeaderMap) -> Result<(Uuid, Ajuste
     Ok((cliente, ajustes))
 }
 
+/// Para mostrar "Preguntar por el chat" fuera del chat (`/tienda/{nid}`).
+pub async fn visible(state: &AppState, headers: &HeaderMap) -> bool {
+    del_chat(state, headers).await.is_ok()
+}
+
 fn error_bd(e: sqlx::Error) -> StatusCode {
     tracing::error!("chat: BD: {e}");
     StatusCode::INTERNAL_SERVER_ERROR
@@ -85,7 +90,14 @@ fn sin_nats(e: String) -> Response {
 
 // ── Pantalla e historial ────────────────────────────────────────────────────
 
-pub async fn pagina(State(state): State<AppState>, headers: HeaderMap) -> Response {
+#[derive(Deserialize)]
+pub struct PaginaParams {
+    /// "Preguntar por el chat" en `/tienda/{nid}`: la tarjeta queda lista arriba del cuadro de
+    /// texto y se manda con el primer mensaje.
+    producto: Option<i32>,
+}
+
+pub async fn pagina(State(state): State<AppState>, headers: HeaderMap, Query(p): Query<PaginaParams>) -> Response {
     let Ok((cliente, ajustes)) = del_chat(&state, &headers).await else {
         return Redirect::to("/").into_response();
     };
@@ -93,9 +105,15 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap) -> Respon
         let mut mensajes = db::chat::conversacion(&state.pool, cliente, None, PAGINA).await?;
         tarjetas::poner(&state.pool, (&state.config).into(), &mut mensajes).await?;
         let bloqueado = db::chat::bloqueado(&state.pool, cliente).await?;
-        Ok::<_, sqlx::Error>((mensajes, bloqueado))
+        let lista = match p.producto {
+            Some(nid) => tarjetas::resolver(&state.pool, (&state.config).into(), "producto", &nid.to_string())
+                .await?
+                .map(|tarjeta| context! { tipo => "producto", ref => nid.to_string(), tarjeta }),
+            None => None,
+        };
+        Ok::<_, sqlx::Error>((mensajes, bloqueado, lista))
     };
-    let (mensajes, bloqueado) = match datos.await {
+    let (mensajes, bloqueado, lista) = match datos.await {
         Ok(d) => d,
         Err(e) => return error_bd(e).into_response(),
     };
@@ -113,6 +131,7 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap) -> Respon
             bytesVideo => archivos::limite(Clase::Video, &ajustes),
             bytesDocumento => archivos::limite(Clase::Archivo, &ajustes),
             maxAdjuntos => reglas::MAX_ADJUNTOS,
+            lista,
         },
     };
     match state.tmpl.get_template("app/chat.html").and_then(|t| t.render(ctx)) {
@@ -198,6 +217,10 @@ pub struct NuevoMensaje {
     /// Los números que dio `POST /chat/archivo`, en el orden en que se muestran.
     #[serde(default)]
     archivos: Vec<Uuid>,
+    /// La tarjeta de "Preguntar por el chat". Sin ella, se busca un link en el texto.
+    tipo: Option<Tipo>,
+    #[serde(rename = "ref")]
+    referencia: Option<String>,
 }
 
 /// Responde cuando NATS ya lo tiene (el ✓). Se guarda y llega por el SSE un instante después.
@@ -211,7 +234,12 @@ pub async fn mandar(State(state): State<AppState>, headers: HeaderMap, Json(m): 
             return Ok(error_json(StatusCode::BAD_REQUEST, "Algunos archivos ya no están. Vuelve a elegirlos."));
         }
     };
-    let tarjeta = tarjeta_del_texto(&state, &m.texto).await;
+    let tarjeta = match (m.tipo, m.referencia) {
+        // `del_cliente` revisa que sea producto, recibo o cotización y que el ref no venga vacío.
+        (Some(tipo), Some(referencia)) => Some((tipo, referencia)),
+        (Some(tipo), None) => Some((tipo, String::new())),
+        _ => tarjeta_del_texto(&state, &m.texto).await,
+    };
     let borrador = reglas::Borrador { id: m.id, texto: m.texto, responde_a: m.responde_a, adjuntos, tarjeta };
     let mensaje = match reglas::del_cliente(cliente, borrador, bloqueado, ahora()) {
         Ok(msg) => msg,

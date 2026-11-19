@@ -1271,6 +1271,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .producto-precio { margin: 10px 2px 0; font-family: var(--font-display); font-weight: 600; font-size: 2rem; color: var(--accent); }
 .producto-unidad { margin: 0 2px; color: var(--muted); }
 .producto-ir { display: block; margin-top: 12px; text-align: center; }
+.producto-preguntar { margin-top: 12px; }
 .producto-desc { margin: 20px 2px 0; white-space: pre-line; color: var(--muted); }
 
 /* ── Tienda: carrito ────────────────────────────────────────────────────── */
@@ -2144,6 +2145,18 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .chat-respondiendo > span { flex: 1; min-width: 0; display: grid; }
 .chat-respondiendo > span > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
 .chat-respondiendo button { border: 0; background: none; color: var(--muted); font-size: 1.1rem; padding: 6px; }
+.chat-por-mandar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 6px;
+    border-left: 3px solid var(--brand-yellow);
+    border-radius: 12px;
+    background: var(--surface);
+}
+.chat-por-mandar .chat-tarjeta { flex: 1; width: auto; margin: 0; padding: 0; background: none; }
+.chat-por-mandar button { border: 0; background: none; color: var(--muted); font-size: 1.1rem; padding: 6px; }
 .chat-escribir { display: flex; align-items: flex-end; gap: 8px; }
 .chat-escribir textarea {
     flex: 1;

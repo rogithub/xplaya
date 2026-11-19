@@ -154,6 +154,22 @@
             </span>
             <button type="button" @click="cancelar()" aria-label="Cancelar">✕</button>
         </div>
+        {# "Preguntar por el chat" (/tienda/{nid}): la tarjeta va con el siguiente mensaje. #}
+        <template x-if="lista && !editando">
+            <div class="chat-por-mandar">
+                <div class="chat-tarjeta">
+                    <img class="chat-tarjeta-foto" x-show="lista.tarjeta.foto" :src="lista.tarjeta.foto || ''" alt="">
+                    <span class="chat-tarjeta-foto chat-tarjeta-icono" x-show="!lista.tarjeta.foto"
+                          x-text="tarjeta(lista.tarjeta).icono" aria-hidden="true"></span>
+                    <span class="chat-tarjeta-dato">
+                        <small x-text="tarjeta(lista.tarjeta).que"></small>
+                        <strong x-text="tarjeta(lista.tarjeta).titulo"></strong>
+                        <span x-text="tarjeta(lista.tarjeta).dato"></span>
+                    </span>
+                </div>
+                <button type="button" @click="lista = null" aria-label="Quitar el producto">✕</button>
+            </div>
+        </template>
         {# Archivos elegidos con 📎, antes de mandar. #}
         <div class="chat-bandeja" x-show="elegidos.length">
             <template x-for="e in elegidos" :key="e.id">
@@ -180,12 +196,12 @@
                 <span x-text="tiempoNota()"></span>
                 <small>Grabando… toca ➤ para mandar</small>
             </div>
-            <textarea x-show="!grabando" x-ref="caja" x-model="texto" rows="1" maxlength="4000" placeholder="Escribe un mensaje"
+            <textarea x-show="!grabando" x-ref="caja" x-model="texto" rows="1" maxlength="4000" :placeholder="lista ? 'Escribe tu pregunta' : 'Escribe un mensaje'"
                       aria-label="Mensaje" enterkeyhint="send"
                       @input="crecer($el); escribiendo()" @keydown="teclear($event)"></textarea>
             <button type="button" class="chat-enviar" x-show="microfono" @click="grabar()" aria-label="Grabar nota de voz">🎤</button>
             <button type="submit" class="chat-enviar" x-show="!microfono"
-                    :disabled="!texto.trim() && !elegidos.length && !grabando" aria-label="Enviar">➤</button>
+                    :disabled="!texto.trim() && !elegidos.length && !grabando && !lista" aria-label="Enviar">➤</button>
         </div>
     </form>
 
