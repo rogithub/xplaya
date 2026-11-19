@@ -4,6 +4,23 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat de la app, etapa 3a, paso 5: rutas del chat (2026-11-19)
+
+- `src/routes/chat.rs` (nuevo) — todas piden sesión de passkey y `chat_visible`
+  (`CHAT_CLIENTES_PRUEBA`); si no, `/chat` lleva a `/` y lo demás da 401/404.
+  - `GET /chat` (pantalla con los últimos 50, bloqueo y minutos para editar),
+    `GET /chat/anteriores?antes={id}`, `GET /chat/sin-leer`.
+  - `GET /chat/eventos` — SSE como `routes/cuenta.rs`; si se atrasa manda `recargar`. Cuenta como
+    app en pantalla (para la etapa 6).
+  - `POST /chat/mensaje` — `reglas::del_cliente` y publica; responde cuando NATS lo tiene (el ✓).
+    Sin NATS, 503: la app lo deja en "enviando…".
+  - `POST /chat/leido`, `/chat/{id}/editar`, `/chat/{id}/eliminar` — editar y eliminar se revisan
+    con `reglas::aplicar` antes de publicar, para contestar el error al momento.
+  - `POST /chat/escribiendo` — NATS núcleo.
+- `src/routes/app.rs` — registra las rutas.
+- `templates/app/chat.html` — solo el esqueleto con los datos; la pantalla es el paso 6.
+- Probado en local con curl (sesión de prueba en la BD de desarrollo).
+
 ## Chat de la app, etapa 3a, paso 4: respuesta automática fuera de horario (2026-11-19)
 
 - `src/chat/consumer.rs` — `fuera_de_horario()`: al guardar un mensaje del cliente con la tienda

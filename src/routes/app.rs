@@ -27,7 +27,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 use crate::{
     db,
     impresion,
-    routes::{alta, alta::error_json, anuncio, cuenta, fotos, google, imprimir, kiosko, monedero, notificaciones, tienda},
+    routes::{alta, alta::error_json, anuncio, chat, cuenta, fotos, google, imprimir, kiosko, monedero, notificaciones, tienda},
     AppState,
 };
 
@@ -72,6 +72,15 @@ pub fn router() -> Router<AppState> {
         .route("/anuncio/imagen", get(anuncio::imagen))
         .route("/anuncio/quitar", post(anuncio::quitar))
         .route("/anuncio/volver-a-mandar", post(anuncio::volver_a_mandar))
+        .route("/chat", get(chat::pagina))
+        .route("/chat/anteriores", get(chat::anteriores))
+        .route("/chat/eventos", get(chat::eventos))
+        .route("/chat/sin-leer", get(chat::sin_leer))
+        .route("/chat/mensaje", post(chat::mandar))
+        .route("/chat/leido", post(chat::leido))
+        .route("/chat/escribiendo", post(chat::escribiendo))
+        .route("/chat/{id}/editar", post(chat::editar))
+        .route("/chat/{id}/eliminar", post(chat::eliminar))
         .route("/cuenta/eventos", get(cuenta::eventos))
         .route("/cuenta/venta/{venta_id}", get(cuenta::venta))
         .route("/kiosko", get(kiosko::pantalla))

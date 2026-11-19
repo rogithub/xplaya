@@ -2,6 +2,7 @@ pub mod anuncio;
 pub mod fotos;
 pub mod productos;
 pub mod carrito;
+pub mod chat;
 pub mod pages;
 pub mod monedero;
 pub mod feeds;

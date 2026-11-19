@@ -1,0 +1,13 @@
+{% extends "app/base.html" %}
+{#
+  Chat con la papelería (routes/chat.rs, CHAT.md). Por ahora solo el esqueleto: la pantalla
+  completa llega en el paso 6 de la etapa 3a (static/app/chat.js).
+#}
+{% block title %}Chat — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+<header class="app-top">
+    <h1 class="app-title">Chat</h1>
+</header>
+<script id="chat-datos" type="application/json">{{ chat | tojson }}</script>
+{% endblock %}
