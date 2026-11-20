@@ -4,6 +4,13 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## CHAT.md: etapa 5 en main y probada (2026-11-20)
+
+- `CHAT.md`, "Etapas": el chat en la caja ya está en `main` del POS y probado en producción; falta
+  vaciar `CHAT_CLIENTES_PRUEBA`.
+
+---
+
 ## Aviso de privacidad: Mi perfil (2026-11-20)
 
 Para abrir el chat a todos (vaciar `CHAT_CLIENTES_PRUEBA`).

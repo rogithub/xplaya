@@ -244,8 +244,8 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
    foto, video, PDF, Word, nota de voz, tarjetas, carrito y compartir desde Android. Para que
    salga en el menú de compartir hubo que reinstalar la app (Android guardaba el manifest viejo).
 4. (unida a 3b)
-5. Chat en la caja (POS) — hecho (20 nov 2026), en la rama `feature/chat-caja` del POS; falta
-   probarlo en producción con `CHAT_CLIENTES_PRUEBA` y abrirlo a todos (vaciar esa lista).
+5. Chat en la caja (POS) — hecho y probado en producción (20 nov 2026), en `main` del POS. Falta
+   abrirlo a todos (vaciar `CHAT_CLIENTES_PRUEBA`).
 6. Avisos con la app cerrada.
 7. Marcar encargos.
 8. Asistente de IA: propone respuestas (`sugerencia`) que la caja aprueba; sus herramientas para
