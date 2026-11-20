@@ -4,6 +4,31 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: lista de chats como en WhatsApp, sin un toque más lento (2026-11-20)
+
+`/chat` ahora abre en una lista con la papelería como contacto; al tocarla entra la
+conversación. Las dos vistas están en la misma página, así que pasar de una a otra es al
+instante.
+
+- `templates/app/chat.html`: `.chats` (título "Chats", la invitación a Mi perfil y la fila con
+  logo, último mensaje, hora y globito de no leídos) y `.chat-conv` (lo de antes, con ← en el
+  encabezado). El cuadro de texto queda fuera de `.chat-conv`: la animación de entrada usa
+  `transform`, que rompería su `position: fixed`.
+- `static/app/chat.js`: `vista` ('lista' | 'conversacion'), `abrirConversacion` (pone
+  `{chatConv: true}` en el historial), `volver`, y para la fila `ultimoTexto`, `horaLista`,
+  `sinLeer`. `popstate`: cierra el visor si está abierto; si no, regresa a la lista.
+  `marcarLeido` no hace nada en la lista. Con `?producto=`, `?compartido=1` o `?abrir=1` entra
+  directo a la conversación, sin animación, y el "atrás" regresa a la lista.
+- `static/css/app.css`: `.chats-*`, `.chat-volver`, `.chat-entra` (se desliza desde la derecha;
+  sin animación con `prefers-reduced-motion`).
+- Probado en local con Playwright: lista → conversación → atrás → lista → atrás sale del chat;
+  ← igual; `?abrir=1` directo y su atrás a la lista; texto largo con "…" y globito; sin errores
+  en consola.
+- Falta "Vaciar chat": espera la columna `Clientes.ChatVaciado` (la pone el POS).
+- `CHAT.md` al día.
+
+---
+
 ## App: Mi perfil, nombre y foto para el chat (2026-11-20)
 
 Para que la papelería sepa con quién habla, como en WhatsApp. El POS los enseña en su chat (lo

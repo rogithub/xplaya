@@ -1901,6 +1901,19 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     padding-bottom: 12px;
     border-bottom: 1px solid var(--line);
 }
+.chat-volver {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 44px;
+    margin: 0 -6px 0 -8px;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+}
+.chat-volver svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .chat-contacto-foto {
     flex: none;
     width: 48px;
@@ -2375,3 +2388,49 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .perfil-elegir.ocupado { opacity: .6; }
 .perfil-nombre { margin-bottom: 24px; }
 .perfil-nombre .inicio-nota { margin-top: 8px; }
+
+/* ── Lista de chats (templates/app/chat.html) ─────────────────────────────── */
+.chats-lista { list-style: none; margin: 0; padding: 0; }
+.chats-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 4px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.chats-fila:active { background: var(--chip); }
+.chats-foto { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
+.chats-centro { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; }
+.chats-arriba, .chats-abajo { display: flex; align-items: center; gap: 8px; }
+.chats-arriba strong { flex: 1; font-size: 1.05rem; }
+.chats-hora { flex: none; color: var(--muted); font-size: .8rem; }
+.chats-hora.nuevo { color: var(--ok); font-weight: 600; }
+.chats-ultimo { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); font-size: .92rem; }
+.chats-badge {
+    flex: none;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background: var(--ok);
+    color: var(--accent-ink);
+    font-size: .78rem;
+    font-weight: 700;
+    line-height: 22px;
+    text-align: center;
+}
+
+/* La conversación entra desde la derecha. Al abrir directo (aviso, compartido) no se anima. */
+.chat-entra { transition: transform .22s ease-out, opacity .22s ease-out; }
+.chat-derecha { transform: translateX(40%); opacity: 0; }
+.chat-centro { transform: none; opacity: 1; }
+.chat-sin-animar .chat-entra { transition: none; }
+@media (prefers-reduced-motion: reduce) { .chat-entra { transition: none; } }

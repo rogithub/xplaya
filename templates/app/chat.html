@@ -1,6 +1,8 @@
 {% extends "app/base.html" %}
 {#
-  Chat con la papelería (routes/chat.rs, CHAT.md). Todo lo dibuja `chatApp` (static/app/chat.js)
+  Chat con la papelería (routes/chat.rs, CHAT.md). Dos vistas en la misma página: la lista de
+  chats y la conversación; pasar de una a otra no va al servidor y el "atrás" regresa a la lista.
+  Todo lo dibuja `chatApp` (static/app/chat.js)
   con los datos de #chat-datos; los mensajes nuevos llegan por SSE. Los textos van con x-text:
   nunca se inserta HTML de un mensaje.
 #}
@@ -11,12 +13,54 @@
 <script id="chat-datos" type="application/json">{{ chat | tojson }}</script>
 
 <section class="chat" x-data="chatApp" x-cloak>
+    {# ── Lista de chats, como en WhatsApp. Por ahora una fila: la papelería. Tocarla abre la
+       conversación sin ir al servidor (ya está cargada abajo). ── #}
+    <div class="chats" x-show="vista === 'lista'">
+        <header class="app-top">
+            <h1 class="app-title">Chats</h1>
+        </header>
+
+        {# Invitación a Mi perfil: sale mientras no tenga foto, hasta que la cierre (en este celular). #}
+        {% if invitar_foto %}
+        <a class="chat-invita" href="/perfil" x-data="{ ver: !localStorage.getItem('invitaFoto') }" x-show="ver">
+            <span class="chat-invita-ico" aria-hidden="true">📷</span>
+            <span><strong>Pon tu foto y tu nombre</strong> para que sepamos con quién hablamos.</span>
+            <button type="button" class="chat-invita-cerrar" aria-label="No mostrar otra vez"
+                    @click.prevent="localStorage.setItem('invitaFoto', '1'); ver = false">✕</button>
+        </a>
+        {% endif %}
+
+        <ul class="chats-lista">
+            <li>
+                <button type="button" class="chats-fila" @click="abrirConversacion()">
+                    <img class="chats-foto" src="/static/img/logo/v3/papeleria-insignia.svg" alt="" width="52" height="52">
+                    <span class="chats-centro">
+                        <span class="chats-arriba">
+                            <strong>Papelería xplaya</strong>
+                            <small class="chats-hora" :class="sinLeer() && 'nuevo'" x-text="horaLista()"></small>
+                        </span>
+                        <span class="chats-abajo">
+                            <span class="chats-ultimo" x-text="ultimoTexto()"></span>
+                            <span class="chats-badge" x-show="sinLeer()" x-text="sinLeer() > 99 ? '99+' : sinLeer()"></span>
+                        </span>
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    {# ── Conversación ── #}
+    <div class="chat-conv" x-show="vista === 'conversacion'"
+         x-transition:enter="chat-entra" x-transition:enter-start="chat-derecha" x-transition:enter-end="chat-centro">
     {# Con quién habla el cliente. Abierta/cerrada es el switch de la caja (`PAPELERIA_ABIERTA`),
        leído al abrir el chat. #}
     <header class="chat-contacto">
+        <button type="button" class="chat-volver" @click="volver()" aria-label="Volver a los chats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
         <img class="chat-contacto-foto" src="/static/img/logo/v3/papeleria-insignia.svg" alt="" width="48" height="48">
         <div>
-            <h1 class="chat-contacto-nombre">Papelería xplaya</h1>
+            <h2 class="chat-contacto-nombre">Papelería xplaya</h2>
             {% if abierta %}
             <p class="chat-contacto-estado abierta"><span class="chat-punto"></span>Abierta · Te contestamos en un rato</p>
             {% else %}
@@ -24,16 +68,6 @@
             {% endif %}
         </div>
     </header>
-
-    {# Invitación a Mi perfil: sale mientras no tenga foto, hasta que la cierre (en este celular). #}
-    {% if invitar_foto %}
-    <a class="chat-invita" href="/perfil" x-data="{ ver: !localStorage.getItem('invitaFoto') }" x-show="ver">
-        <span class="chat-invita-ico" aria-hidden="true">📷</span>
-        <span><strong>Pon tu foto y tu nombre</strong> para que sepamos con quién hablamos.</span>
-        <button type="button" class="chat-invita-cerrar" aria-label="No mostrar otra vez"
-                @click.prevent="localStorage.setItem('invitaFoto', '1'); ver = false">✕</button>
-    </a>
-    {% endif %}
 
     <p class="chat-bloqueado" x-show="bloqueado" role="status">
         La papelería bloqueó tu chat. Si crees que es un error, pregúntanos en la tienda.
@@ -163,8 +197,11 @@
     </ol>
 
     <p class="chat-escribe" x-show="escribe" role="status">La papelería está escribiendo…</p>
+    </div>
 
-    <form class="chat-redactor" x-ref="redactor" @submit.prevent="enviar()" x-show="!bloqueado">
+    {# Fuera de .chat-conv: su animación usa transform, y con eso `position: fixed` dejaría de
+       pegarse a la pantalla mientras entra. #}
+    <form class="chat-redactor" x-ref="redactor" @submit.prevent="enviar()" x-show="vista === 'conversacion' && !bloqueado">
         <p class="chat-error" x-show="error" x-text="error" role="alert"></p>
         <div class="chat-respondiendo" x-show="respondiendo || editando">
             <span>

@@ -237,6 +237,7 @@ function chatGuardarPendientes(lista) {
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('chatApp', () => ({
+        vista: 'lista',       // 'lista' de chats o 'conversacion' (misma página, sin ir al servidor)
         mensajes: [],
         bloqueado: false,
         minutosEditar: 15,
@@ -280,9 +281,13 @@ document.addEventListener('alpine:init', () => {
                 && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
             this.mensajes = datos.mensajes.map((m) => ({ ...m, estado: 'guardado' }));
             this.lista = datos.lista || null;
-            const compartido = new URLSearchParams(location.search).has('compartido');
+            const params = new URLSearchParams(location.search);
+            const compartido = params.has('compartido');
             // Sin el ?producto= ni el ?compartido=: al recargar o volver no se vuelven a poner.
             if (location.search) history.replaceState(history.state, '', location.pathname);
+            // Con algo que mandar (producto, compartido) o un aviso (?abrir), directo a la
+            // conversación; el "atrás" regresa a la lista, como en WhatsApp.
+            if (this.lista || compartido || params.has('abrir')) this.abrirConversacion(false);
             if (compartido) {
                 chatTomarCompartido().then(({ texto, files }) => {
                     if (texto) this.texto = this.texto ? `${this.texto}\n${texto}` : texto;
@@ -298,15 +303,66 @@ document.addEventListener('alpine:init', () => {
             pendientes.forEach((p) => this.mensajes.push(this.local(p, 'enviando')));
 
             this.conectar();
-            // "Atrás" con el visor abierto lo cierra (abrirVisor puso la entrada).
-            window.addEventListener('popstate', () => { if (this.visor) this.soltarVisor(); });
+            // "Atrás" con el visor abierto lo cierra (abrirVisor puso la entrada); en la
+            // conversación, regresa a la lista (abrirConversacion puso la suya).
+            window.addEventListener('popstate', () => {
+                if (this.visor) this.soltarVisor();
+                else if (this.vista === 'conversacion' && !(history.state && history.state.chatConv)) this.vista = 'lista';
+            });
             window.addEventListener('online', () => this.reintentar());
             setInterval(() => this.reintentar(), CHAT_REINTENTO_MS);
             document.addEventListener('visibilitychange', () => this.marcarLeido());
             this.reintentar();
             this.marcarLeido();
             this.colocarRedactor();
-            this.$nextTick(() => this.alFinal(false));
+        },
+
+        // ── Lista y conversación ──
+
+        abrirConversacion(animar = true) {
+            if (this.vista === 'conversacion') return;
+            history.pushState({ chatConv: true }, '');
+            this.vista = 'conversacion';
+            if (!animar) document.documentElement.classList.add('chat-sin-animar');
+            this.$nextTick(() => {
+                this.colocarRedactor();
+                this.alFinal(false);
+                this.marcarLeido();
+                document.documentElement.classList.remove('chat-sin-animar');
+            });
+        },
+
+        // La ← de la conversación: como el "atrás" del celular (popstate la regresa a la lista).
+        volver() {
+            if (history.state && history.state.chatConv) history.back();
+            else this.vista = 'lista';
+            window.scrollTo(0, 0);
+        },
+
+        // Para la fila de la lista: el último mensaje, sus no leídos y cuándo fue.
+        ultimo() {
+            return this.mensajes.length ? this.mensajes[this.mensajes.length - 1] : null;
+        },
+
+        ultimoTexto() {
+            const m = this.ultimo();
+            if (!m) return 'Escríbenos lo que necesites';
+            if (m.eliminado) return 'Mensaje eliminado';
+            const texto = (m.texto || '').trim() || chatQueEs(m.adjuntos) || 'Mensaje';
+            return this.mio(m) ? `Tú: ${texto}` : texto;
+        },
+
+        horaLista() {
+            const m = this.ultimo();
+            if (!m) return '';
+            const d = this.dia(m);
+            if (d === 'Hoy') return this.hora(m);
+            if (d === 'Ayer') return 'Ayer';
+            return chatFecha(m.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'numeric', year: '2-digit', timeZone: 'America/Cancun' });
+        },
+
+        sinLeer() {
+            return this.mensajes.filter((m) => !this.mio(m) && !m.leido && !m.eliminado).length;
         },
 
         // ── Mostrar ──
@@ -534,7 +590,8 @@ document.addEventListener('alpine:init', () => {
         // ── Leído ──
 
         marcarLeido() {
-            if (document.visibilityState !== 'visible') return;
+            // En la lista no se ha leído nada: el globito se queda hasta abrir la conversación.
+            if (document.visibilityState !== 'visible' || this.vista !== 'conversacion') return;
             const sinLeer = this.mensajes.filter((m) => !this.mio(m) && !m.leido && !m.eliminado);
             if (!sinLeer.length) return;
             sinLeer.forEach((m) => { m.leido = true; });

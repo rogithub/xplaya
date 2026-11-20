@@ -145,6 +145,11 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
   está guardado, no se repite.
 - Editar y eliminar desde la app se revisan con `reglas::aplicar` antes de publicar, para
   contestar el error al momento; el consumer los vuelve a revisar al llegar.
+- **Lista de chats y conversación** en la misma página (`vista` en `chatApp`): `/chat` abre en la
+  lista (una fila, la papelería: último mensaje, hora y no leídos) y tocarla muestra la
+  conversación sin ir al servidor. Abrirla pone una entrada en el historial, así el "atrás" de
+  Android regresa a la lista. Con `?producto=`, `?compartido=1` o `?abrir=1` (para avisos) se
+  abre directo en la conversación. En la lista no se marca nada como leído.
 
 ## Archivos y tarjetas (etapa 3b)
 
