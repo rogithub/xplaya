@@ -17,6 +17,10 @@
     --ok-bg: #DDEFEE;
     --warn: #A8431A;
     --warn-bg: #FBE6DA;
+    /* Burbujas del chat: la del cliente clarita con el verde de la marca, como en las apps de mensajes. */
+    --globo-mio: #D2EFEC;
+    --globo-mio-ink: #18211F;
+    --globo-sombra: 0 1px .5px rgb(11 20 26 / .13);
 
     /* Marca: fijos en ambos modos */
     --brand-dark: #231916;
@@ -43,6 +47,9 @@
         --ok-bg: #16302F;
         --warn: #F08A5A;
         --warn-bg: #3A2117;
+        --globo-mio: #1B4D4A;
+        --globo-mio-ink: #F2ECE7;
+        --globo-sombra: 0 1px .5px rgb(0 0 0 / .35);
     }
 }
 
@@ -2012,25 +2019,39 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     text-transform: capitalize;
 }
 
+/* Como en las apps de mensajes: esquinas chicas, sin borde, una sombra leve, y una colita arriba
+   en el primer mensaje de cada grupo (los que siguen del mismo lado llevan `.sigue`). */
+.chat-fila:not(.sigue) { margin-top: 6px; }
 .chat-globo {
     position: relative;
     max-width: 82%;
-    padding: 8px 12px 6px;
-    border-radius: 18px 18px 18px 6px;
+    padding: 6px 9px 5px;
+    border-radius: 8px;
     background: var(--surface);
-    border: 1px solid var(--line);
+    box-shadow: var(--globo-sombra);
     cursor: pointer;
     overflow-wrap: anywhere;
     -webkit-tap-highlight-color: transparent;
 }
 .mio .chat-globo {
-    border-radius: 18px 18px 6px 18px;
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-ink);
+    background: var(--globo-mio);
+    color: var(--globo-mio-ink);
 }
+.chat-globo::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 13px;
+    background: inherit;
+}
+.chat-fila:not(.mio):not(.sigue) .chat-globo { border-top-left-radius: 0; }
+.chat-fila:not(.mio):not(.sigue) .chat-globo::before { left: -8px; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.chat-fila.mio:not(.sigue) .chat-globo { border-top-right-radius: 0; }
+.chat-fila.mio:not(.sigue) .chat-globo::before { right: -8px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+.chat-fila.sigue .chat-globo::before, .chat-globo.eliminado::before { display: none; }
 .chat-globo.abierto { outline: 2px solid var(--brand-yellow); outline-offset: 2px; }
-.chat-globo.eliminado { background: transparent; color: var(--muted); border-style: dashed; border-color: var(--line); font-style: italic; }
+.chat-globo.eliminado { background: transparent; color: var(--muted); box-shadow: none; outline: 1px dashed var(--line); font-style: italic; }
 /* Lugar para el 🔊 abajo a la derecha. */
 .chat-fila:not(.mio) .chat-globo { padding-right: 40px; }
 
@@ -2050,7 +2071,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     color: inherit;
     text-decoration: none;
 }
-.mio .chat-tarjeta { background: rgb(255 255 255 / .16); }
+.mio .chat-tarjeta { background: rgb(0 0 0 / .05); }
 .chat-tarjeta-foto { flex: none; width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--chip); }
 .chat-tarjeta-icono { display: grid; place-items: center; font-size: 1.8rem; }
 .chat-tarjeta-dato { min-width: 0; display: grid; gap: 1px; }
@@ -2086,14 +2107,14 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     border-radius: 12px;
     background: rgb(0 0 0 / .05);
 }
-.mio .chat-doc-fila { background: rgb(255 255 255 / .16); }
+.mio .chat-doc-fila { background: rgb(0 0 0 / .05); }
 .chat-doc-icono { font-size: 1.6rem; line-height: 1; }
 .chat-doc-dato { min-width: 0; display: grid; gap: 1px; }
 .chat-doc-dato strong { font-weight: 600; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-doc-dato small { opacity: .75; font-size: .78rem; }
 .chat-doc-links { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; }
 .chat-doc-links a, .chat-zip { color: var(--accent); font-weight: 600; font-size: .88rem; text-decoration: underline; }
-.mio .chat-doc-links a, .mio .chat-zip { color: var(--accent-ink); }
+.mio .chat-doc-links a, .mio .chat-zip { color: var(--accent); }
 .chat-mas-doc { border-radius: 12px; font-size: 1.1rem; }
 .chat-zip { justify-self: start; padding: 2px 0; }
 
@@ -2152,11 +2173,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     opacity: .75;
 }
 .chat-marca { letter-spacing: -.15em; }
-.chat-marca.leido { color: var(--brand-yellow); opacity: 1; font-weight: 700; }
-/* En oscuro el globo propio es claro: el amarillo no se ve. */
-@media (prefers-color-scheme: dark) {
-    .chat-marca.leido { color: var(--accent-ink); }
-}
+.chat-marca.leido { color: var(--accent); opacity: 1; font-weight: 700; }
 .chat-cita {
     display: grid;
     margin: 0 -4px 6px;
@@ -2346,7 +2363,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     background: rgb(0 0 0 / .12);
     overflow: hidden;
 }
-.mio .chat-progreso { background: rgb(255 255 255 / .25); }
+.mio .chat-progreso { background: rgb(0 0 0 / .1); }
 .chat-progreso span { display: block; height: 100%; background: currentColor; transition: width .2s; }
 
 /* ── Nota de voz grabándose ── */

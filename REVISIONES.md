@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: burbujas como en las apps de mensajes (2026-11-20)
+
+Paso 2. La burbuja del cliente era verde oscuro con letra blanca y muy redonda; ahora es clarita
+con letra oscura (`--globo-mio`, verde de la marca; en oscuro, verde oscuro), la de la papelería
+blanca, esquinas de 8 px, sin borde, sombra leve y colita arriba en el primer mensaje de cada grupo.
+
+- `static/app/chat.js`: `sigue(i)`, mismo lado que el anterior y el mismo día.
+- `templates/app/chat.html`: clase `sigue` en la fila.
+- `static/css/app.css`: tokens `--globo-*`, `::before` de la colita, y lo de dentro de la burbuja
+  propia (tarjeta, documentos, enlaces, ✓✓ leído) ajustado al fondo claro.
+
+---
+
 ## Chat: íconos de línea en lugar de emoji (2026-11-20)
 
 Paso 1 de acercar el chat al look de las apps de mensajes. Los emoji (📎 🎤 🧹 👤 ↩️ 🗑️ 📄…)

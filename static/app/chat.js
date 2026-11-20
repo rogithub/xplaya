@@ -466,6 +466,13 @@ document.addEventListener('alpine:init', () => {
             return f.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Cancun' });
         },
 
+        // Del mismo lado que el anterior, el mismo día: sin colita y más pegado (como en WhatsApp).
+        sigue(i) {
+            if (this.nuevoDia(i)) return false;
+            const antes = this.mensajes[i - 1], m = this.mensajes[i];
+            return !this.aviso(antes) && !this.aviso(m) && this.mio(antes) === this.mio(m);
+        },
+
         nuevoDia(i) {
             return i === 0 || this.dia(this.mensajes[i]) !== this.dia(this.mensajes[i - 1]);
         },
