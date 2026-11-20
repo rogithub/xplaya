@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: el encabezado de la conversación siempre visible (2026-11-20)
+
+Como en WhatsApp: al recorrer los mensajes, el encabezado (← · Papelería xplaya · ⋮) se queda
+arriba, así la salida y el menú están siempre a la mano.
+
+- `static/css/app.css`: `.chat-contacto` con `position: sticky; top: 0`, fondo y de orilla a
+  orilla (margen negativo) para que los mensajes no se asomen por los lados.
+
+---
+
 ## Chat: sin barra de abajo dentro de la conversación (2026-11-20)
 
 Como en WhatsApp: en la lista de chats está la barra normal; al abrir la conversación se esconde

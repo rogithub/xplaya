@@ -183,6 +183,39 @@ celular ─POST /chat/archivo (1 por petición, 3 a la vez)─▶ xplaya ─/tmp
   recibe el service worker (`static/app/sw.js`), no el servidor: guarda los archivos en la caché
   del celular y abre el chat, que los sube como si vinieran del 📎.
 
+## La caja (etapa 5)
+
+```
+caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─▶ xplaya guarda en Mensajes
+  ▲                                                          │
+  └──SSE /Chat/Eventos◀── ChatEnVivo (escucha chat.>) ◀──────┘
+```
+
+- Vive en el POS (`inventario_papeleria`): `ChatController`, lógica en `Ro.Inventario.Core`
+  (`ReglasChat`, `ArchivosChat`, `TemaChat`, `ChatService`) y pantalla en `scripts/pages/chat/`.
+  Por qué así y qué se descartó: `docs/decisiones/2026-11-19-chat-en-la-caja.md` del POS.
+- **El POS solo lee `Mensajes`.** Lo que hace la caja (`mensaje`, `leido`, `editado`,
+  `eliminado`) lo publica en `chat.{cliente}.papeleria.*` por JetStream, con el id como
+  `Nats-Msg-Id`, y xplaya lo guarda igual que lo de la app. "Escribiendo" va por NATS núcleo.
+  En la BD escribe solo lo suyo: `Clientes.ChatBloqueado`, `PAPELERIA_ABIERTA` y
+  `CHAT_RESPUESTAS_RAPIDAS`.
+- **En vivo**: `ChatEnVivo` (una suscripción a `chat.>`, NATS núcleo) reparte a las
+  conversaciones abiertas por SSE. Como xplaya, funciona con una réplica.
+- **Bandeja** (`/Chat`): nombre (o `NombreChat` y foto de perfil), último mensaje, hora, sin leer,
+  🚫 si está bloqueado, y el switch de abierta/cerrada.
+- **Conversación** (`/Chat/Conversacion/{cliente}`): texto, archivos, responder, editar (15 min),
+  eliminar, ✓/✓✓, escribiendo, respuestas rápidas (⚡, editables ahí) y bloquear. Marca leído
+  cuando está a la vista, hasta el último mensaje del cliente. Si el cliente vació su chat, lo
+  dice arriba; la caja sigue viendo todo.
+- **Archivos desde la caja**: el POS sube directo a MinIO (`papeleria-chat`,
+  `{cliente}/{mensaje}/{archivo}`) y arma el adjunto (tipo por los primeros bytes, sin miniatura
+  ni conversión de Word). La app muestra el original.
+- **Aviso flotante** en todas las pantallas del POS: consulta `/Chat/SinLeer` cada 5 s; al
+  tocarlo abre la conversación en la pestaña `chat-xplaya`. Contador junto a "Chat" en el menú.
+- **No hace (por ahora)**: notas de voz desde la caja (el POS va por http y el micrófono pide
+  https) ni mandar tarjetas.
+- **Sin NATS** (local y E2E): `NullChatPublisher`; la caja lee, pero mandar dice "No se mandó".
+
 ## Reglas del código
 
 1. **Decisiones en funciones puras** (`src/chat/reglas.rs`): reciben el evento, lo guardado, la hora y
@@ -205,7 +238,8 @@ celular ─POST /chat/archivo (1 por petición, 3 a la vez)─▶ xplaya ─/tmp
    foto, video, PDF, Word, nota de voz, tarjetas, carrito y compartir desde Android. Para que
    salga en el menú de compartir hubo que reinstalar la app (Android guardaba el manifest viejo).
 4. (unida a 3b)
-5. Chat en la caja (POS).
+5. Chat en la caja (POS) — hecho (20 nov 2026), en la rama `feature/chat-caja` del POS; falta
+   probarlo en producción con `CHAT_CLIENTES_PRUEBA` y abrirlo a todos (vaciar esa lista).
 6. Avisos con la app cerrada.
 7. Marcar encargos.
 8. Asistente de IA: propone respuestas (`sugerencia`) que la caja aprueba; sus herramientas para

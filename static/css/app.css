@@ -1893,13 +1893,18 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 
 /* ── Chat (templates/app/chat.html, static/app/chat.js) ─────────────────── */
 
+/* Siempre visible arriba al recorrer la conversación, como en WhatsApp (la ← y el ⋮ a la mano). */
 .chat-contacto {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 8px 2px 12px;
-    padding-bottom: 12px;
+    margin: 0 -16px 12px;
+    padding: 8px 18px 12px;
     border-bottom: 1px solid var(--line);
+    background: var(--bg);
 }
 .chat-volver {
     flex: none;
