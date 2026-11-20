@@ -2474,3 +2474,44 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     cursor: pointer;
 }
 .chat-opciones-menu button:active { background: var(--chip); }
+
+/* Acomodar la foto de perfil (static/app/perfil.js) */
+.recorte {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    background: #111;
+    color: #fff;
+}
+.recorte-titulo { margin: 0; font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; }
+.recorte-cuadro {
+    position: relative;
+    width: min(100%, 380px, 60vh);
+    aspect-ratio: 1;
+    overflow: hidden;
+    touch-action: none;
+    cursor: grab;
+}
+.recorte-cuadro canvas { display: block; width: 100%; height: 100%; }
+/* Lo de fuera del círculo, oscurecido: así se ve qué queda. */
+.recorte-circulo {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, .6);
+    outline: 2px solid rgba(255, 255, 255, .85);
+    outline-offset: -2px;
+    pointer-events: none;
+}
+.recorte-ayuda { margin: 0; max-width: 380px; color: #ccc; font-size: .9rem; text-align: center; }
+.recorte-zoom { display: flex; align-items: center; gap: 12px; width: min(100%, 380px); font-size: 1.4rem; }
+.recorte-zoom input { flex: 1; accent-color: var(--brand-teal); }
+.recorte-error { margin: 0; color: #ffb4a0; }
+.recorte-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); }
+.recorte-botones .btn-sec, .recorte-botones .btn-qr { margin: 0; }

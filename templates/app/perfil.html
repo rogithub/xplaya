@@ -2,10 +2,12 @@
 {#
   "Mi perfil" (routes/perfil.rs): el nombre y la foto con los que la papelería ve al cliente en el
   chat. El nombre va en Clientes.NombreChat; la de la caja (Clientes.Nombre) solo se sugiere.
-  La foto se manda en cuanto se elige; el servidor la recorta cuadrada.
+  Al elegir la foto se acomoda en el círculo (`recorteFoto`, static/app/perfil.js) y se manda
+  ya recortada; el servidor la revisa y la deja en 256 px.
 #}
 {% block title %}Mi perfil — Papelería xplaya{% endblock %}
 {% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block scripts %}<script defer src="{{ estatico("app/perfil.js") }}"></script>{% endblock %}
 {% block content %}
 {% set nombre = perfil.nombrechat or perfil.nombre %}
 
@@ -19,7 +21,7 @@
 {% if ok == "quitada" %}<p class="imp-aviso ok" role="status">Quitamos tu foto.</p>{% endif %}
 {% if ok == "nombre" %}<p class="imp-aviso ok" role="status">✅ Guardamos tu nombre.</p>{% endif %}
 
-<section class="perfil-foto" x-data="{ subiendo: false }">
+<section class="perfil-foto" x-data="recorteFoto">
     {% if perfil.fotoperfil %}
     <img class="perfil-avatar" src="/perfil/foto?v={{ perfil.fotoperfil | urlencode }}" alt="Tu foto" width="128" height="128">
     {% else %}
@@ -30,10 +32,34 @@
     <form method="post" action="/perfil/foto" enctype="multipart/form-data" x-ref="form">
         <label class="btn-qr perfil-elegir" :class="subiendo && 'ocupado'">
             <span x-text="subiendo ? 'Subiendo…' : '{{ "📷 Cambiar foto" if perfil.fotoperfil else "📷 Poner foto" }}'"></span>
-            <input type="file" name="foto" accept="image/*" class="imp-archivo"
-                   @change="if ($event.target.files.length) { subiendo = true; $refs.form.submit() }" :disabled="subiendo">
+            <input type="file" name="foto" accept="image/*" class="imp-archivo" x-ref="archivo"
+                   @change="elegir($event)" :disabled="subiendo">
         </label>
     </form>
+
+    {# Acomodar la foto: un dedo la mueve, dos (o la barrita) la acercan. #}
+    <div class="recorte" x-show="abierto" x-cloak role="dialog" aria-modal="true" aria-labelledby="recorte-titulo">
+        <p class="recorte-titulo" id="recorte-titulo">Acomoda tu foto</p>
+        <div class="recorte-cuadro" x-ref="cuadro"
+             @pointerdown.prevent="bajar($event)" @pointermove.prevent="mover($event)"
+             @pointerup="soltarDedo($event)" @pointercancel="soltarDedo($event)"
+             @wheel.prevent="rueda($event)">
+            <canvas x-ref="vista"></canvas>
+            <span class="recorte-circulo" aria-hidden="true"></span>
+        </div>
+        <p class="recorte-ayuda">Arrástrala con el dedo. Para acercarla, usa dos dedos o la barra.</p>
+        <label class="recorte-zoom">
+            <span aria-hidden="true">−</span>
+            <input type="range" min="0" max="100" :value="zoom" @input="conBarrita($event.target.value)" aria-label="Acercar">
+            <span aria-hidden="true">+</span>
+        </label>
+        <p class="recorte-error" x-show="error" x-text="error" role="alert"></p>
+        <div class="recorte-botones">
+            <button type="button" class="btn-sec" @click="cancelar()" :disabled="subiendo">Cancelar</button>
+            <button type="button" class="btn-qr" @click="listo()" :disabled="subiendo"
+                    x-text="subiendo ? 'Subiendo…' : 'Listo'"></button>
+        </div>
+    </div>
     {% if perfil.fotoperfil %}
     <form method="post" action="/perfil/foto/quitar"
           @submit="if (!confirm('¿Quitar tu foto?')) $event.preventDefault()">

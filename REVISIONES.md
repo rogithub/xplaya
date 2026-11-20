@@ -4,6 +4,27 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Mi perfil: acomodar la foto en el círculo antes de mandarla (2026-11-20)
+
+Antes el servidor la recortaba al centro a ciegas (en una foto de cuerpo entero la cara se
+salía). Ahora, como en WhatsApp, el cliente la acomoda.
+
+- `static/app/perfil.js` (nuevo), componente `recorteFoto`: abre la foto ya derecha
+  (`createImageBitmap` con `imageOrientation: 'from-image'`), la dibuja en un `<canvas>` bajo un
+  círculo; un dedo la mueve, dos la acercan alrededor del punto medio, también la barrita y la
+  rueda del mouse. Siempre cubre el círculo (`limitar`), zoom hasta 4×. "Listo" recorta en el
+  celular a 512×512 JPEG y lo manda por `fetch` a `POST /perfil/foto` (~60 KB en vez de la foto
+  completa). Si el navegador no puede abrir la foto (HEIC en Android), se manda completa como
+  antes y el servidor recorta al centro. El "atrás" de Android cierra el recorte.
+- `templates/app/perfil.html`: la pantalla negra "Acomoda tu foto" con Cancelar / Listo.
+  Estilos `.recorte*` en `static/css/app.css`.
+- Servidor sin cambios: `perfil::preparar_foto` revisa la imagen y la deja en 256.
+- Probado en local con Playwright: foto vertical con la "cara" arriba, arrastrar + barrita →
+  la guardada tiene la cara al centro; pellizco simulado con dos pointers acerca y no aleja de
+  más; "atrás" cierra sin salir de la página.
+
+---
+
 ## Chat: vaciar chat, solo del lado del cliente (2026-11-20)
 
 Como en WhatsApp: el cliente deja de ver la conversación vieja y la papelería la conserva.
