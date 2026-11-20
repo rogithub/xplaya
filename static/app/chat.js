@@ -34,17 +34,33 @@ function chatPeso(bytes) {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+// Íconos de los archivos (Material Symbols, los mismos de templates/app/iconos.html).
+const CHAT_ICONOS = {
+    imagen: 'M180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm56-97h489L578-473 446-302l-93-127-117 152Zm-56 97v-600 600Z',
+    video: 'm140-800 74 152h130l-74-152h89l74 152h130l-74-152h89l74 152h130l-74-152h112q24 0 42 18t18 42v520q0 24-18 42t-42 18H140q-24 0-42-18t-18-42v-520q0-24 18-42t42-18Zm0 212v368h680v-368H140Zm0 0v368-368Z',
+    audio: 'M393-120q-63 0-106.5-43.5T243-270q0-63 43.5-106.5T393-420q28 0 50.5 8t39.5 22v-450h234v135H543v435q0 63-43.5 106.5T393-120Z',
+    pdf: 'M331-431h37v-83h48q15.73 0 26.36-10.64Q453-535.28 453-551v-48q0-15.72-10.64-26.36Q431.73-636 416-636h-85v205Zm37-120v-48h48v48h-48Zm129 120h84q15 0 26-10.64 11-10.63 11-26.36v-131q0-15.72-11-26.36Q596-636 581-636h-84v205Zm37-37v-131h47v131h-47Zm133 37h37v-83h50v-37h-50v-48h50v-37h-87v205ZM260-200q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h560q24 0 42 18t18 42v560q0 24-18 42t-42 18H260Zm0-60h560v-560H260v560ZM140-80q-24 0-42-18t-18-42v-620h60v620h620v60H140Zm120-740v560-560Z',
+    hoja: 'M780-121H180q-24 0-42-18t-18-42v-599q0-24 18-42t42-18h600q24 0 42 18t18 42v599q0 24-18 42t-42 18ZM180-639h600v-141H180v141Zm130 60H180v398h130v-398Zm340 0v398h130v-398H650Zm-60 0H370v398h220v-398Z',
+    presentacion: 'm387-311 261-169-261-169v338ZM180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z',
+    documento: 'M277-279h275v-60H277v60Zm0-171h406v-60H277v60Zm0-171h406v-60H277v60Zm-97 501q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z',
+    archivo: 'M220-80q-24 0-42-18t-18-42v-680q0-24 18-42t42-18h361l219 219v521q0 24-18 42t-42 18H220Zm331-554v-186H220v680h520v-494H551ZM220-820v186-186 680-680Z',
+};
+
+function chatIconoSvg(nombre) {
+    return `<svg class="sim" viewBox="0 -960 960 960" aria-hidden="true"><path d="${CHAT_ICONOS[nombre]}"/></svg>`;
+}
+
 function chatIcono(a) {
-    if (a.clase === 'imagen') return '🖼️';
-    if (a.clase === 'video') return '🎬';
-    if (a.clase === 'audio') return '🎵';
-    if (a.clase === 'pdf') return '📄';
+    if (a.clase === 'imagen') return chatIconoSvg('imagen');
+    if (a.clase === 'video') return chatIconoSvg('video');
+    if (a.clase === 'audio') return chatIconoSvg('audio');
+    if (a.clase === 'pdf') return chatIconoSvg('pdf');
     if (a.clase === 'office') {
-        if (/\.(xlsx?|ods|csv)$/i.test(a.nombre)) return '📊';
-        if (/\.(pptx?|odp)$/i.test(a.nombre)) return '📽️';
-        return '📝';
+        if (/\.(xlsx?|ods|csv)$/i.test(a.nombre)) return chatIconoSvg('hoja');
+        if (/\.(pptx?|odp)$/i.test(a.nombre)) return chatIconoSvg('presentacion');
+        return chatIconoSvg('documento');
     }
-    return '📎';
+    return chatIconoSvg('archivo');
 }
 
 // Una foto o un video que se puede dibujar (los locales que regresan de localStorage no traen URL).

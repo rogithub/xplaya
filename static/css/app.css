@@ -985,6 +985,9 @@ a.btn-qr { text-decoration: none; }
     box-shadow: 0 4px 14px rgb(0 0 0 / .12);
 }
 
+/* ── Íconos de línea (templates/app/iconos.html, Material Symbols): toman el color del texto ── */
+.sim { width: 1.25em; height: 1.25em; flex: none; fill: currentColor; vertical-align: -.3em; }
+
 /* ── Barra de abajo: Chat · Monedero · Tienda · Carrito · Más (app/nav.html) ── */
 /* En px y no en rem: la barra no crece con el tamaño de letra, para que siempre quepan las 5. */
 
@@ -1918,7 +1921,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     color: var(--ink);
     cursor: pointer;
 }
-.chat-volver svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.chat-volver .sim { width: 26px; height: 26px; }
 .chat-contacto-foto {
     flex: none;
     width: 48px;
@@ -2454,7 +2457,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     color: var(--ink);
     cursor: pointer;
 }
-.chat-opciones-btn svg { width: 22px; height: 22px; fill: currentColor; }
+.chat-opciones-btn .sim { width: 24px; height: 24px; }
 .chat-opciones-menu {
     position: absolute;
     right: 0;
@@ -2532,3 +2535,25 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .recorte-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); }
 .recorte-botones .btn-sec, .recorte-botones .btn-qr { margin: 0; }
 .chats-ultimo.escribiendo { color: var(--ok); font-style: italic; }
+
+/* Íconos del chat: tamaños y grises como en las apps de mensajes (el ícono no compite con el texto). */
+.chat-enviar, .chat-clip { display: grid; place-items: center; padding: 0; }
+.chat-enviar .sim, .chat-clip .sim { width: 24px; height: 24px; }
+.chat-clip { color: var(--muted); }
+.chat-invita-ico { display: grid; color: var(--accent); }
+.chat-invita-ico .sim { width: 26px; height: 26px; }
+.chat-invita-cerrar .sim, .chat-respondiendo .sim, .chat-por-mandar .sim, .chat-grabando button .sim { width: 20px; height: 20px; }
+.chat-elegido button { display: grid; place-items: center; }
+.chat-elegido button .sim { width: 16px; height: 16px; }
+.chat-elegido-icono .sim { width: 34px; height: 34px; color: var(--muted); }
+.chat-doc-icono .sim { width: 30px; height: 30px; }
+.chat-oir .sim { width: 18px; height: 18px; opacity: .7; }
+.chat-oir { color: inherit; }
+.chat-menu button { display: inline-flex; align-items: center; gap: 6px; }
+.chat-menu button .sim { width: 18px; height: 18px; color: var(--muted); }
+.chat-menu button.peligro .sim { color: inherit; }
+.chat-opciones-menu button, .chat-opciones-menu a { display: flex; align-items: center; gap: 14px; }
+.chat-opciones-menu .sim { width: 22px; height: 22px; color: var(--muted); }
+.chat-visor-barra a, .chat-visor-barra button { display: inline-flex; align-items: center; gap: 6px; }
+.chat-visor-barra .sim { width: 24px; height: 24px; }
+.chat-grabando small .sim { width: 1.1em; height: 1.1em; }

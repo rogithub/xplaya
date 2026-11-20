@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: íconos de línea en lugar de emoji (2026-11-20)
+
+Paso 1 de acercar el chat al look de las apps de mensajes. Los emoji (📎 🎤 🧹 👤 ↩️ 🗑️ 📄…)
+cambian de dibujo en cada celular y se ven gruesos; ahora son íconos de línea de un color.
+
+- `templates/app/iconos.html` (nuevo): macro `icono("clip")` → SVG en línea de Material Symbols
+  Outlined 400 (Apache 2.0), con `currentColor`. Clase `.sim` (ya había una `.ico` en otras páginas).
+- `templates/app/chat.html`: flecha, ⋮, menús, clip, micrófono, enviar, cerrar, bajar, leer en voz alta.
+- `static/app/chat.js`: `CHAT_ICONOS` y `chatIcono` devuelven SVG (los archivos se pintan con `x-html`).
+- `static/css/app.css`: `.sim` y tamaños por lugar.
+
+---
+
 ## Chat: "escribiendo…" en el encabezado y estado con texto de la caja (2026-11-20)
 
 Como en WhatsApp: la línea bajo "Papelería xplaya" es el estado y, mientras la papelería

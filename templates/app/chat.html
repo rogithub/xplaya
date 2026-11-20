@@ -10,6 +10,7 @@
 {% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
 {% block scripts %}<script defer src="{{ estatico("app/chat.js") }}"></script>{% endblock %}
 {% block content %}
+{% from "app/iconos.html" import icono %}
 <script id="chat-datos" type="application/json">{{ chat | tojson }}</script>
 
 <section class="chat" x-data="chatApp" x-cloak>
@@ -23,10 +24,10 @@
         {# Invitación a Mi perfil: sale mientras no tenga foto, hasta que la cierre (en este celular). #}
         {% if invitar_foto %}
         <a class="chat-invita" href="/perfil" x-data="{ ver: !localStorage.getItem('invitaFoto') }" x-show="ver">
-            <span class="chat-invita-ico" aria-hidden="true">📷</span>
+            <span class="chat-invita-ico">{{ icono("camara") }}</span>
             <span><strong>Pon tu foto y tu nombre</strong> para que sepamos con quién hablamos.</span>
             <button type="button" class="chat-invita-cerrar" aria-label="No mostrar otra vez"
-                    @click.prevent="localStorage.setItem('invitaFoto', '1'); ver = false">✕</button>
+                    @click.prevent="localStorage.setItem('invitaFoto', '1'); ver = false">{{ icono("cerrar") }}</button>
         </a>
         {% endif %}
 
@@ -57,7 +58,7 @@
        leído al abrir el chat. #}
     <header class="chat-contacto">
         <button type="button" class="chat-volver" @click="volver()" aria-label="Volver a los chats">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            {{ icono("atras") }}
         </button>
         <img class="chat-contacto-foto" src="/static/img/logo/v3/papeleria-insignia.svg" alt="" width="48" height="48">
         <div>
@@ -71,11 +72,11 @@
         </div>
         <div class="chat-opciones" x-data="{ menu: false }" @click.outside="menu = false">
             <button type="button" class="chat-opciones-btn" @click="menu = !menu" :aria-expanded="menu" aria-label="Opciones del chat">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+                {{ icono("menu") }}
             </button>
             <div class="chat-opciones-menu" x-show="menu" x-transition.opacity>
-                <a href="/perfil">👤 Mi perfil</a>
-                <button type="button" @click="menu = false; vaciar()">🧹 Vaciar chat</button>
+                <a href="/perfil">{{ icono("perfil") }} Mi perfil</a>
+                <button type="button" @click="menu = false; vaciar()">{{ icono("vaciar") }} Vaciar chat</button>
             </div>
         </div>
     </header>
@@ -134,7 +135,7 @@
                                     </template>
                                     <template x-if="v.a.clase !== 'audio' || !v.a.original">
                                         <div class="chat-doc-fila">
-                                            <span class="chat-doc-icono" x-text="icono(v.a)" aria-hidden="true"></span>
+                                            <span class="chat-doc-icono" x-html="icono(v.a)" aria-hidden="true"></span>
                                             <span class="chat-doc-dato">
                                                 <strong x-text="v.a.nombre"></strong>
                                                 <small x-text="detalle(v.a)"></small>
@@ -186,16 +187,16 @@
                                   x-text="marca(m)" :title="etiquetaMarca(m)" :aria-label="etiquetaMarca(m)"></span>
                         </span>
                         <button type="button" class="chat-oir" x-show="puedeLeer && !mio(m) && !m.eliminado"
-                                @click.stop="leer(m)" aria-label="Leer en voz alta">🔊</button>
+                                @click.stop="leer(m)" aria-label="Leer en voz alta">{{ icono("oir") }}</button>
                     </div>
                 </template>
 
                 {# Menú del mensaje: al tocarlo. #}
                 <div class="chat-menu" x-show="abierto === m.id" x-transition.opacity @click.outside="abierto = null">
-                    <button type="button" @click="responder(m)">↩️ Responder</button>
-                    <button type="button" x-show="puedeLeer && (m.texto || m.tarjeta || (m.adjuntos && m.adjuntos.length))" @click="leer(m)">🔊 Leer en voz alta</button>
-                    <button type="button" x-show="puedeEditar(m)" @click="editar(m)">✏️ Editar</button>
-                    <button type="button" class="peligro" x-show="mio(m)" @click="eliminar(m)">🗑️ Eliminar</button>
+                    <button type="button" @click="responder(m)">{{ icono("responder") }} Responder</button>
+                    <button type="button" x-show="puedeLeer && (m.texto || m.tarjeta || (m.adjuntos && m.adjuntos.length))" @click="leer(m)">{{ icono("oir") }} Leer en voz alta</button>
+                    <button type="button" x-show="puedeEditar(m)" @click="editar(m)">{{ icono("editar") }} Editar</button>
+                    <button type="button" class="peligro" x-show="mio(m)" @click="eliminar(m)">{{ icono("eliminar") }} Eliminar</button>
                 </div>
 
                 <p class="chat-fallo" x-show="m.estado === 'error'">
@@ -218,7 +219,7 @@
                 <strong x-text="editando ? 'Editando' : ('Respondiendo a ' + (respondiendo && mio(respondiendo) ? 'ti' : 'la papelería'))"></strong>
                 <span x-text="editando ? '' : (respondiendo ? (respondiendo.texto || chatQueEs(respondiendo.adjuntos)) : '')"></span>
             </span>
-            <button type="button" @click="cancelar()" aria-label="Cancelar">✕</button>
+            <button type="button" @click="cancelar()" aria-label="Cancelar">{{ icono("cerrar") }}</button>
         </div>
         {# "Preguntar por el chat" (/tienda/{nid}): la tarjeta va con el siguiente mensaje. #}
         <template x-if="lista && !editando">
@@ -233,41 +234,41 @@
                         <span x-text="tarjeta(lista.tarjeta).dato"></span>
                     </span>
                 </div>
-                <button type="button" @click="lista = null" aria-label="Quitar el producto">✕</button>
+                <button type="button" @click="lista = null" aria-label="Quitar el producto">{{ icono("cerrar") }}</button>
             </div>
         </template>
-        {# Archivos elegidos con 📎, antes de mandar. #}
+        {# Archivos elegidos con el clip, antes de mandar. #}
         <div class="chat-bandeja" x-show="elegidos.length">
             <template x-for="e in elegidos" :key="e.id">
                 <div class="chat-elegido">
                     <template x-if="e.vista">
                         <img :src="e.vista" :alt="e.nombre">
                     </template>
-                    <span x-show="!e.vista" class="chat-elegido-icono" x-text="icono(e)" aria-hidden="true"></span>
+                    <span x-show="!e.vista" class="chat-elegido-icono" x-html="icono(e)" aria-hidden="true"></span>
                     <small x-text="e.nombre"></small>
-                    <button type="button" @click="quitarElegido(e)" :aria-label="'Quitar ' + e.nombre">✕</button>
+                    <button type="button" @click="quitarElegido(e)" :aria-label="'Quitar ' + e.nombre">{{ icono("cerrar") }}</button>
                 </div>
             </template>
         </div>
         <div class="chat-escribir">
             <template x-if="permiteArchivos">
                 <button type="button" class="chat-clip" x-show="!editando && !grabando" @click="$refs.archivos.click()"
-                        aria-label="Adjuntar archivos">📎</button>
+                        aria-label="Adjuntar archivos">{{ icono("clip") }}</button>
             </template>
             <input type="file" multiple hidden x-ref="archivos" @change="elegir($event)">
-            {# Nota de voz: 🎤 empieza, ➤ la manda, ✕ la tira. #}
+            {# Nota de voz: micrófono empieza, enviar la manda, el bote la tira. #}
             <div class="chat-grabando" x-show="grabando" role="status">
-                <button type="button" @click="terminarNota(true)" aria-label="Cancelar nota de voz">✕</button>
+                <button type="button" @click="terminarNota(true)" aria-label="Cancelar nota de voz">{{ icono("eliminar") }}</button>
                 <span class="chat-grabando-punto" aria-hidden="true"></span>
                 <span x-text="tiempoNota()"></span>
-                <small>Grabando… toca ➤ para mandar</small>
+                <small>Grabando… toca {{ icono("enviar") }} para mandar</small>
             </div>
             <textarea x-show="!grabando" x-ref="caja" x-model="texto" rows="1" maxlength="4000" :placeholder="lista ? 'Escribe tu pregunta' : 'Escribe un mensaje'"
                       aria-label="Mensaje" enterkeyhint="send"
                       @input="crecer($el); escribiendo()" @keydown="teclear($event)"></textarea>
-            <button type="button" class="chat-enviar" x-show="microfono" @click="grabar()" aria-label="Grabar nota de voz">🎤</button>
+            <button type="button" class="chat-enviar" x-show="microfono" @click="grabar()" aria-label="Grabar nota de voz">{{ icono("mic") }}</button>
             <button type="submit" class="chat-enviar" x-show="!microfono"
-                    :disabled="!texto.trim() && !elegidos.length && !grabando && !lista" aria-label="Enviar">➤</button>
+                    :disabled="!texto.trim() && !elegidos.length && !grabando && !lista" aria-label="Enviar">{{ icono("enviar") }}</button>
         </div>
     </form>
 
@@ -284,9 +285,9 @@
             <p class="chat-pdf-aviso" x-show="pdfError" x-text="pdfError"></p>
         </div>
         <div class="chat-visor-barra">
-            <a x-show="visor && !visor.local" :href="visor ? visor.bajar || visor.original + '?bajar=1' : '#'" download>⬇ Bajar</a>
+            <a x-show="visor && !visor.local" :href="visor ? visor.bajar || visor.original + '?bajar=1' : '#'" download>{{ icono("bajar") }} Bajar</a>
             <span x-show="visor && visor.local"></span>
-            <button type="button" @click="cerrarVisor()" aria-label="Cerrar">✕</button>
+            <button type="button" @click="cerrarVisor()" aria-label="Cerrar">{{ icono("cerrar") }}</button>
         </div>
     </div>
 </section>
