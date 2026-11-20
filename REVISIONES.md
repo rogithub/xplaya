@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Aviso de privacidad: Mi perfil (2026-11-20)
+
+Para abrir el chat a todos (vaciar `CHAT_CLIENTES_PRUEBA`).
+
+- `templates/pages/terminos.html`, "Datos recabados": la foto y el nombre de Mi perfil los ve la
+  Tienda en el chat, y se cambian o quitan ahí mismo.
+- `CHAT.md`, "Privacidad": ya cubierto en `terminos.html#privacidad` (chat, archivos 90 días, Mi perfil).
+
+---
+
 ## Chat: caja de escribir en una pastilla, con clip y cámara adentro (2026-11-20)
 
 Paso 5. Como en las apps de mensajes: una pastilla con el texto y, adentro a la derecha, el clip y

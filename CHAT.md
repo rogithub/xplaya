@@ -126,8 +126,9 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 - **Avisos**: aviso flotante en el POS; si nadie lee en 5 min, ntfy al celular de la papelería
   (`avisos.chat`). Web Push al cliente con la app cerrada. Los avisos de "Avisar por la app" aparecen
   también en el chat.
-- **Privacidad**: actualizar el aviso (LFPDPPP). Si un cliente pide borrar sus datos, se borran sus
-  mensajes y archivos.
+- **Privacidad**: el aviso (LFPDPPP) ya lo cubre en `templates/pages/terminos.html#privacidad`:
+  el chat, los archivos y notas de voz por 90 días, y la foto y el nombre de Mi perfil. Si un
+  cliente pide borrar sus datos, se borran sus mensajes y archivos.
 - **Para después**: reacciones, buscar, imprimir desde el chat (hoy solo hay blanco y negro).
 
 ## La app (etapa 3a)
