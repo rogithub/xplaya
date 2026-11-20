@@ -93,7 +93,21 @@ pub async fn cotizacion_del_carrito(state: &AppState, cliente: Uuid, pedido: Uui
 
 /// `POST /chat/compartir` sin service worker (recién instalada, o lo borró el navegador): lo
 /// compartido se pierde, pero el chat abre en vez de un error. Normalmente lo atiende `sw.js`.
-pub async fn compartir_sin_sw() -> Redirect {
+///
+/// Hay que leer el cuerpo completo aunque se tire: si se contesta mientras la foto sigue
+/// subiendo, el servidor corta la conexión y Cloudflare enseña su página de "sitio caído".
+pub async fn compartir_sin_sw(body: Body) -> Redirect {
+    // Tope por si acaso: lo mismo que acepta /chat/archivo (Cloudflare no deja pasar más).
+    const TOPE: usize = (crate::chat::archivos::MB_VIDEO_TOPE as usize + 1) * 1024 * 1024;
+    let mut leidos = 0;
+    let mut stream = body.into_data_stream();
+    while let Some(Ok(trozo)) = stream.next().await {
+        leidos += trozo.len();
+        if leidos > TOPE {
+            break;
+        }
+    }
+    tracing::info!("chat: compartir sin service worker ({leidos} bytes, se pierde)");
     Redirect::to("/chat")
 }
 

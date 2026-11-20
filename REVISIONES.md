@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: compartir sin service worker ya no da la página de error de Cloudflare (2026-11-20)
+
+Compartiendo una foto desde la galería salió la página de Cloudflare de "sitio caído"; al
+reintentar sí sirvió.
+
+- `src/routes/chat.rs`, `compartir_sin_sw`: cuando el service worker no atrapa el
+  `POST /chat/compartir` (dormido o actualizándose), la foto llega al servidor. Antes se
+  contestaba el redirect sin leer el cuerpo: el servidor cortaba la conexión con la foto a
+  medio subir y Cloudflare lo tomaba como origen caído. Ahora lee el cuerpo completo (tope de
+  `MB_VIDEO_TOPE` + 1 MB), lo tira y abre `/chat`.
+- Probado en local con 8 MB sin `Expect: 100-continue` (como el navegador): antes el servidor
+  leía 65 KB y cortaba; ahora recibe los 8 MB y contesta 303.
+- Lo compartido en ese caso todavía se pierde: hay que volver a compartirlo.
+
+---
+
 ## Chat de la app, etapa 3b probada en producción (2026-11-19)
 
 - Probado desde el celular: foto, videos (con y sin audio, se adelantan), PDF y Word con el
