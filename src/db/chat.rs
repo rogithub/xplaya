@@ -128,6 +128,21 @@ pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
     Ok(a)
 }
 
+/// Cuándo se cerró la papelería, si el switch de la caja (`Settings.PAPELERIA_ABIERTA`) está en
+/// `'0'`; `None` si está abierta o no hay fila. La hora es `LastUpdated`, que la caja pone al
+/// mover el switch: separa un cierre del siguiente para el aviso automático
+/// (`reglas::aviso_fuera_de_horario`). Sin `LastUpdated`, todos los cierres cuentan como uno.
+pub async fn cierre_de_la_papeleria(pool: &PgPool) -> Result<Option<NaiveDateTime>, sqlx::Error> {
+    let fila: Option<(Option<String>, Option<NaiveDateTime>)> =
+        sqlx::query_as("SELECT value, lastupdated FROM settings WHERE key = 'PAPELERIA_ABIERTA'")
+            .fetch_optional(pool)
+            .await?;
+    Ok(match fila {
+        Some((Some(valor), cuando)) if valor.trim() == "0" => Some(cuando.unwrap_or_default()),
+        _ => None,
+    })
+}
+
 // ── Lo que lee la app ────────────────────────────────────────────────────────
 
 /// Cuánto de la cita se manda: es solo para recordar a qué se responde.

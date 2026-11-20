@@ -101,8 +101,9 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 
 ## Comportamiento acordado
 
-- **Fuera de horario** (L–V 6:30–18:00, S 8:00–14:00; `reglas::abierto`): respuesta automática con el horario, una vez por
-  cada cierre.
+- **Abierta / cerrada**: el switch de la caja guarda `Settings.PAPELERIA_ABIERTA` (`'1'`/`'0'`) y su
+  `LastUpdated`. El encabezado del chat lo enseña (se lee al abrir el chat) y, cerrada, la respuesta
+  automática con el horario sale una vez por cada cierre. Sin la fila: abierta.
 - **✓ enviado y ✓✓ leído** en los dos sentidos; **"escribiendo…"** en los dos sentidos.
 - **Editar**: solo texto, los primeros 15 min, con la marca "Editado"; no se guarda la versión anterior.
 - **Eliminar para todos**: cada lado borra los suyos, sin límite. El archivo se borra de MinIO al
@@ -138,9 +139,10 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
 - **✓** cuando NATS confirma la publicación; **✓✓** cuando llega el `leido` de la papelería.
 - Los cambios en vivo los reparte el consumer después de guardar (`chat/nats.rs`), en memoria:
   sirve porque xplaya corre con **una réplica**. Con dos, habría que repartir por NATS.
-- **Fuera de horario**: el consumer, al guardar un mensaje del cliente con la tienda cerrada,
-  publica el aviso en `chat.{cliente}.automatico.mensaje`. Su id (UUID v5 del cliente y la hora
-  del cierre) es el mismo en todo el cierre: si ya está guardado, no se repite.
+- **Fuera de horario**: el consumer, al guardar un mensaje del cliente con el switch en cerrada
+  (`db::chat::cierre_de_la_papeleria`), publica el aviso en `chat.{cliente}.automatico.mensaje`.
+  Su id (UUID v5 del cliente y el `LastUpdated` del switch) es el mismo en todo el cierre: si ya
+  está guardado, no se repite.
 - Editar y eliminar desde la app se revisan con `reglas::aplicar` antes de publicar, para
   contestar el error al momento; el consumer los vuelve a revisar al llegar.
 

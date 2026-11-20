@@ -128,12 +128,13 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
     Ok(())
 }
 
-/// Si el cliente escribió con la tienda cerrada, la respuesta automática con el horario, una vez
-/// por cierre (`reglas::aviso_fuera_de_horario`). Se publica en el stream como cualquier mensaje y
+/// Si el cliente escribió con la papelería cerrada (el switch de la caja), la respuesta
+/// automática con el horario, una vez por cierre (`reglas::aviso_fuera_de_horario`). Se publica en el stream como cualquier mensaje y
 /// vuelve por aquí para guardarse. Si NATS falla, solo va al log: el mensaje del cliente ya se
 /// guardó, y reintentarlo no traería el aviso (el repetido se ignora).
 async fn fuera_de_horario(state: &AppState, cliente: uuid::Uuid, fecha: chrono::NaiveDateTime) -> Result<(), sqlx::Error> {
-    let Some(aviso) = reglas::aviso_fuera_de_horario(cliente, contrato::con_zona(fecha)) else {
+    let cierre = db::chat::cierre_de_la_papeleria(&state.pool).await?;
+    let Some(aviso) = reglas::aviso_fuera_de_horario(cliente, cierre, contrato::con_zona(fecha)) else {
         return Ok(());
     };
     if db::chat::guardado(&state.pool, aviso.id).await?.is_some() {

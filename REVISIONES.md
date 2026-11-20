@@ -4,6 +4,23 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: el aviso de "estamos cerrados" sigue al switch de la caja (2026-11-20)
+
+Antes salía según un horario fijo en el código; ahora, igual que el encabezado, según
+`Settings.PAPELERIA_ABIERTA`.
+
+- `src/db/chat.rs`, `cierre_de_la_papeleria`: con el switch en `'0'` devuelve su `LastUpdated`
+  (cuándo se cerró); abierta o sin fila, `None`.
+- `src/chat/reglas.rs`: `aviso_fuera_de_horario` recibe ese cierre en lugar de calcularlo. El id
+  del aviso sale del cliente y del cierre: uno por cliente en cada cierre. Se quitaron
+  `horario`, `abierto` e `inicio_del_cierre` y sus tests.
+- `src/chat/consumer.rs`: lee el switch al guardar cada mensaje del cliente.
+- Si la caja no pone `LastUpdated` al mover el switch, todos los cierres cuentan como uno y el
+  aviso sale una sola vez por cliente, para siempre.
+- `CHAT.md` al día.
+
+---
+
 ## Chat: encabezado con la papelería, abierta o cerrada según el switch de la caja (2026-11-20)
 
 El chat no decía con quién se habla. Ahora arriba sale como un contacto de WhatsApp.

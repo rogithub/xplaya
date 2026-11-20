@@ -5,7 +5,7 @@
 //! publica, xplaya o el POS), no la de cuando se procesa: si xplaya estuvo apagado un rato, una
 //! edición hecha a tiempo sigue valiendo.
 
-use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
+use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use uuid::Uuid;
 
 use super::contrato::{hora_tienda, Adjunto, Editado, Eliminado, Entrante, Evento, Lado, Leido, Mensaje, Tema, Tipo, VERSION};
@@ -262,33 +262,7 @@ pub fn chat_visible(clientes_prueba: Option<&str>, cliente: Uuid) -> bool {
     }
 }
 
-// ── Horario de la tienda ─────────────────────────────────────────────────────
-
-/// Apertura y cierre de un día (hora de la tienda). Domingo, cerrado.
-fn horario(dia: Weekday) -> Option<(NaiveTime, NaiveTime)> {
-    let h = |hora, minuto| NaiveTime::from_hms_opt(hora, minuto, 0).expect("hora válida");
-    match dia {
-        Weekday::Sun => None,
-        Weekday::Sat => Some((h(8, 0), h(14, 0))),
-        _ => Some((h(6, 30), h(18, 0))),
-    }
-}
-
-pub fn abierto(ahora: NaiveDateTime) -> bool {
-    horario(ahora.weekday()).is_some_and(|(abre, cierra)| (abre..cierra).contains(&ahora.time()))
-}
-
-/// Cuándo cerró la tienda por última vez, si ahora está cerrada.
-pub fn inicio_del_cierre(ahora: NaiveDateTime) -> Option<NaiveDateTime> {
-    if abierto(ahora) {
-        return None;
-    }
-    let hoy: NaiveDate = ahora.date();
-    (0..8)
-        .filter_map(|atras| hoy.checked_sub_days(chrono::Days::new(atras)))
-        .filter_map(|dia| horario(dia.weekday()).map(|(_, cierra)| dia.and_time(cierra)))
-        .find(|cierre| *cierre <= ahora)
-}
+// ── Papelería cerrada ───────────────────────────────────────────────────────
 
 pub const TEXTO_FUERA_DE_HORARIO: &str = "¡Hola! Ahorita estamos cerrados. Nuestro horario es de lunes a viernes de 6:30 a 18:00 y \
 sábados de 8:00 a 14:00. Te contestamos en cuanto abramos.";
@@ -296,11 +270,13 @@ sábados de 8:00 a 14:00. Te contestamos en cuanto abramos.";
 /// Para que el id del aviso salga igual cada vez (`aviso_fuera_de_horario`).
 const ESPACIO_AVISOS: Uuid = Uuid::from_u128(0x5c1d7e0a_2b3f_4a6c_9d8e_7f6a5b4c3d2e);
 
-/// La respuesta automática a un mensaje del cliente escrito a la hora `ahora` cuando la tienda
-/// está cerrada, o `None` si está abierta. Sale un segundo después, para quedar debajo. El id sale del cliente y de la hora del cierre: es el mismo para todos los
-/// mensajes de ese cierre, así que basta ver si ya está guardado para contestar una sola vez.
-pub fn aviso_fuera_de_horario(cliente: Uuid, ahora: DateTime<FixedOffset>) -> Option<Mensaje> {
-    let cierre = inicio_del_cierre(hora_tienda(ahora))?;
+/// La respuesta automática a un mensaje del cliente escrito a la hora `ahora` mientras la
+/// papelería está cerrada. `cierre` es cuándo se apagó el switch de la caja
+/// (`db::chat::cierre_de_la_papeleria`); sin cierre, no hay aviso. Sale un segundo después, para
+/// quedar debajo. El id sale del cliente y del cierre: es el mismo para todos los mensajes de
+/// ese cierre, así que basta ver si ya está guardado para contestar una sola vez.
+pub fn aviso_fuera_de_horario(cliente: Uuid, cierre: Option<NaiveDateTime>, ahora: DateTime<FixedOffset>) -> Option<Mensaje> {
+    let cierre = cierre?;
     let id = Uuid::new_v5(&ESPACIO_AVISOS, format!("fuera-de-horario/{cliente}/{cierre}").as_bytes());
     Some(Mensaje {
         v: VERSION,
@@ -591,44 +567,21 @@ mod tests {
         NaiveDateTime::parse_from_str(fecha, "%Y-%m-%d %H:%M").unwrap()
     }
 
-    #[test]
-    fn horario_de_la_tienda() {
-        // 2026-11-16 es lunes; 21 sábado; 22 domingo.
-        assert!(!abierto(el("2026-11-16 06:29")));
-        assert!(abierto(el("2026-11-16 06:30")));
-        assert!(abierto(el("2026-11-16 17:59")));
-        assert!(!abierto(el("2026-11-16 18:00")));
-        assert!(!abierto(el("2026-11-21 07:59")));
-        assert!(abierto(el("2026-11-21 08:00")));
-        assert!(abierto(el("2026-11-21 13:59")));
-        assert!(!abierto(el("2026-11-21 14:00")));
-        assert!(!abierto(el("2026-11-22 12:00")));
-    }
-
-    #[test]
-    fn cuando_cerro() {
-        assert_eq!(inicio_del_cierre(el("2026-11-16 12:00")), None);
-        assert_eq!(inicio_del_cierre(el("2026-11-16 20:00")), Some(el("2026-11-16 18:00")));
-        assert_eq!(inicio_del_cierre(el("2026-11-17 05:00")), Some(el("2026-11-16 18:00")), "de madrugada cuenta el de ayer");
-        assert_eq!(inicio_del_cierre(el("2026-11-21 15:00")), Some(el("2026-11-21 14:00")));
-        assert_eq!(inicio_del_cierre(el("2026-11-22 12:00")), Some(el("2026-11-21 14:00")), "domingo: desde el sábado");
-        assert_eq!(inicio_del_cierre(el("2026-11-23 06:00")), Some(el("2026-11-21 14:00")), "lunes temprano: también");
-        assert_eq!(inicio_del_cierre(el("2026-11-21 07:00")), Some(el("2026-11-20 18:00")), "sábado temprano: desde el viernes");
-    }
-
     fn a_las(fecha: &str) -> DateTime<FixedOffset> {
         DateTime::parse_from_rfc3339(&format!("{fecha}:00-05:00")).unwrap()
     }
 
     #[test]
     fn un_aviso_por_cierre() {
-        assert_eq!(aviso_fuera_de_horario(CLIENTE, a_las("2026-11-16T12:00")), None);
-        let noche = aviso_fuera_de_horario(CLIENTE, a_las("2026-11-16T20:00")).unwrap();
-        let madrugada = aviso_fuera_de_horario(CLIENTE, a_las("2026-11-17T05:00")).unwrap();
-        let siguiente = aviso_fuera_de_horario(CLIENTE, a_las("2026-11-17T19:00")).unwrap();
+        let ayer = Some(el("2026-11-16 18:00"));
+        let hoy = Some(el("2026-11-17 18:05"));
+        assert_eq!(aviso_fuera_de_horario(CLIENTE, None, a_las("2026-11-16T12:00")), None, "abierta: nada");
+        let noche = aviso_fuera_de_horario(CLIENTE, ayer, a_las("2026-11-16T20:00")).unwrap();
+        let madrugada = aviso_fuera_de_horario(CLIENTE, ayer, a_las("2026-11-17T05:00")).unwrap();
+        let siguiente = aviso_fuera_de_horario(CLIENTE, hoy, a_las("2026-11-17T19:00")).unwrap();
         assert_eq!(noche.id, madrugada.id, "mismo cierre, mismo aviso");
         assert_ne!(noche.id, siguiente.id);
-        assert_ne!(noche.id, aviso_fuera_de_horario(OTRO, a_las("2026-11-16T20:00")).unwrap().id);
+        assert_ne!(noche.id, aviso_fuera_de_horario(OTRO, ayer, a_las("2026-11-16T20:00")).unwrap().id);
         assert_eq!((noche.tipo, noche.fecha), (Tipo::Aviso, a_las("2026-11-16T20:00") + chrono::Duration::seconds(1)));
         // El consumer lo acepta del lado automático (y de ningún otro).
         let t = |lado| Tema { cliente: CLIENTE, lado, evento: Evento::Mensaje };
