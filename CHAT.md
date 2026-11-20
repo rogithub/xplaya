@@ -104,7 +104,12 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 - **Abierta / cerrada**: el switch de la caja guarda `Settings.PAPELERIA_ABIERTA` (`'1'`/`'0'`) y su
   `LastUpdated`. El encabezado del chat lo enseña (se lee al abrir el chat) y, cerrada, la respuesta
   automática con el horario sale una vez por cada cierre. Sin la fila: abierta.
-- **✓ enviado y ✓✓ leído** en los dos sentidos; **"escribiendo…"** en los dos sentidos.
+- **Estado**, como en WhatsApp: `Settings.PAPELERIA_ESTADO`, texto libre que pone la caja ("Hoy
+  cerramos a las 6"), hasta 80 caracteres. Sale bajo el nombre en el encabezado, junto al punto
+  verde/gris del switch; vacío o sin la fila, "Abierta · Contestamos pronto" / "Cerrada ·
+  Contestamos al abrir". No cambia la respuesta automática, que sigue al switch.
+- **✓ enviado y ✓✓ leído** en los dos sentidos; **"escribiendo…"** en los dos sentidos. En la app
+  sale donde WhatsApp: en lugar del estado, en el encabezado fijo, y en la fila de la lista.
 - **Editar**: solo texto, los primeros 15 min, con la marca "Editado"; no se guarda la versión anterior.
 - **Eliminar para todos**: cada lado borra los suyos, sin límite. El archivo se borra de MinIO al
   momento y el mensaje se quita del stream; queda "Mensaje eliminado". Al cliente: "Se borró de la app".
@@ -197,8 +202,8 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
 - **El POS solo lee `Mensajes`.** Lo que hace la caja (`mensaje`, `leido`, `editado`,
   `eliminado`) lo publica en `chat.{cliente}.papeleria.*` por JetStream, con el id como
   `Nats-Msg-Id`, y xplaya lo guarda igual que lo de la app. "Escribiendo" va por NATS núcleo.
-  En la BD escribe solo lo suyo: `Clientes.ChatBloqueado`, `PAPELERIA_ABIERTA` y
-  `CHAT_RESPUESTAS_RAPIDAS`.
+  En la BD escribe solo lo suyo: `Clientes.ChatBloqueado`, `PAPELERIA_ABIERTA`,
+  `PAPELERIA_ESTADO` y `CHAT_RESPUESTAS_RAPIDAS`.
 - **En vivo**: `ChatEnVivo` (una suscripción a `chat.>`, NATS núcleo) reparte a las
   conversaciones abiertas por SSE. Como xplaya, funciona con una réplica.
 - **Bandeja** (`/Chat`): nombre (o `NombreChat` y foto de perfil), último mensaje, hora, sin leer,

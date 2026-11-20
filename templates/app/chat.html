@@ -40,7 +40,7 @@
                             <small class="chats-hora" :class="sinLeer() && 'nuevo'" x-text="horaLista()"></small>
                         </span>
                         <span class="chats-abajo">
-                            <span class="chats-ultimo" x-text="ultimoTexto()"></span>
+                            <span class="chats-ultimo" :class="escribe && 'escribiendo'" x-text="escribe ? 'escribiendo…' : ultimoTexto()"></span>
                             <span class="chats-badge" x-show="sinLeer()" x-text="sinLeer() > 99 ? '99+' : sinLeer()"></span>
                         </span>
                     </span>
@@ -62,11 +62,12 @@
         <img class="chat-contacto-foto" src="/static/img/logo/v3/papeleria-insignia.svg" alt="" width="48" height="48">
         <div>
             <h2 class="chat-contacto-nombre">Papelería xplaya</h2>
-            {% if abierta %}
-            <p class="chat-contacto-estado abierta"><span class="chat-punto"></span>Abierta · Contestamos pronto</p>
-            {% else %}
-            <p class="chat-contacto-estado"><span class="chat-punto"></span>Cerrada · Contestamos al abrir</p>
-            {% endif %}
+            {# Como en WhatsApp: mientras la papelería escribe, esta línea dice "escribiendo…". Si no,
+               el estado de la caja (`PAPELERIA_ESTADO`) o, sin él, lo que toca según el switch. #}
+            <p class="chat-contacto-estado escribiendo" x-show="escribe" role="status">escribiendo…</p>
+            <p class="chat-contacto-estado{% if abierta %} abierta{% endif %}" x-show="!escribe"><span class="chat-punto"></span>
+                {%- if estado %}{{ estado }}{% elif abierta %}Abierta · Contestamos pronto{% else %}Cerrada · Contestamos al abrir{% endif -%}
+            </p>
         </div>
         <div class="chat-opciones" x-data="{ menu: false }" @click.outside="menu = false">
             <button type="button" class="chat-opciones-btn" @click="menu = !menu" :aria-expanded="menu" aria-label="Opciones del chat">
@@ -206,7 +207,6 @@
         </template>
     </ol>
 
-    <p class="chat-escribe" x-show="escribe" role="status">La papelería está escribiendo…</p>
     </div>
 
     {# Fuera de .chat-conv: su animación usa transform, y con eso `position: fixed` dejaría de

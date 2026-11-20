@@ -24,11 +24,15 @@ pub struct Ajustes {
     /// `PAPELERIA_ABIERTA`: el switch de la caja. Lo enseña el encabezado del chat. Sin la fila
     /// o con un valor que no sea `0`: abierta.
     pub papeleria_abierta: bool,
+    /// `PAPELERIA_ESTADO`: texto libre que la caja pone como estado, como en WhatsApp ("Hoy
+    /// cerramos a las 6"). Sale en el encabezado del chat en lugar de "Contestamos pronto/al abrir".
+    /// `None` si no está o está vacío.
+    pub estado: Option<String>,
 }
 
 impl Default for Ajustes {
     fn default() -> Self {
-        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100, papeleria_abierta: true }
+        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100, papeleria_abierta: true, estado: None }
     }
 }
 

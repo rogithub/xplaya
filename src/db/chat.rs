@@ -112,11 +112,14 @@ pub async fn eliminar(pool: &PgPool, id: Uuid, fecha: NaiveDateTime) -> Result<(
     Ok(())
 }
 
-/// Los ajustes `CHAT_*` y `PAPELERIA_ABIERTA` de `Settings`. Si falta uno o no es número, queda el de siempre.
+/// Largo máximo del estado que se enseña (el del POS debería limitarlo igual).
+const ESTADO_MAX: usize = 80;
+
+/// Los ajustes `CHAT_*`, `PAPELERIA_ABIERTA` y `PAPELERIA_ESTADO` de `Settings`. Si falta uno o no es número, queda el de siempre.
 pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
     let filas: Vec<(String, Option<String>)> =
         sqlx::query_as(
-            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO', 'PAPELERIA_ABIERTA')",
+            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO', 'PAPELERIA_ABIERTA', 'PAPELERIA_ESTADO')",
         )
             .fetch_all(pool)
             .await?;
@@ -132,6 +135,9 @@ pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
             "CHAT_MB_DOCUMENTO" => a.mb_documento = numero(valor).unwrap_or(a.mb_documento),
             "CHAT_MB_VIDEO" => a.mb_video = numero(valor).unwrap_or(a.mb_video),
             "PAPELERIA_ABIERTA" => a.papeleria_abierta = valor.is_none_or(|v| v.trim() != "0"),
+            "PAPELERIA_ESTADO" => {
+                a.estado = valor.map(|v| v.trim().chars().take(ESTADO_MAX).collect::<String>()).filter(|v| !v.is_empty())
+            }
             // Con la fila, aunque el valor sea NULL: vacía quiere decir todos (`chat_visible`).
             _ => a.clientes_prueba = Some(valor.unwrap_or_default()),
         }

@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: "escribiendo…" en el encabezado y estado con texto de la caja (2026-11-20)
+
+Como en WhatsApp: la línea bajo "Papelería xplaya" es el estado y, mientras la papelería
+escribe, dice "escribiendo…" (en el encabezado fijo ya no se pierde con el scroll; antes era un
+letrero al final de los mensajes). En la lista de chats, la fila también lo dice.
+
+- `src/db/chat.rs` + `src/chat/reglas.rs`: `Ajustes.estado`, de `Settings.PAPELERIA_ESTADO`
+  (recortado a 80, vacío = `None`).
+- `src/routes/chat.rs`: pasa `estado` al template.
+- `templates/app/chat.html`: el estado de la caja o, sin él, el texto según el switch; se quitó
+  `.chat-escribe`.
+- `CHAT.md`: "Estado". El campo para escribirlo en la caja lo hace el POS.
+
+---
+
 ## Chat: el encabezado de la conversación siempre visible (2026-11-20)
 
 Como en WhatsApp: al recorrer los mensajes, el encabezado (← · Papelería xplaya · ⋮) se queda

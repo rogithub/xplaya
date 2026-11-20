@@ -160,6 +160,7 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap, Query(p):
         en_app => true,
         nav => "chat",
         abierta => ajustes.papeleria_abierta,
+        estado => ajustes.estado,
         // La invitación a poner foto (Mi perfil); solo si se pueden subir.
         invitar_foto => sin_foto && state.minio.is_some(),
         chat => context! {

@@ -2208,7 +2208,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .chat-fallo { margin: 0; color: var(--warn); font-size: .8rem; }
 .chat-fallo button { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; text-decoration: underline; }
 
-.chat-escribe { margin: 8px 4px 0; color: var(--muted); font-size: .85rem; font-style: italic; }
+.chat-contacto-estado.escribiendo { color: var(--ok); font-style: italic; }
 
 /* Fijo sobre la barra de abajo; chat.js pone `bottom` con el alto de la barra. */
 .chat-redactor {
@@ -2531,3 +2531,4 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .recorte-error { margin: 0; color: #ffb4a0; }
 .recorte-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); }
 .recorte-botones .btn-sec, .recorte-botones .btn-qr { margin: 0; }
+.chats-ultimo.escribiendo { color: var(--ok); font-style: italic; }
