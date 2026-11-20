@@ -32,7 +32,7 @@
 
         <ul class="chats-lista">
             <li>
-                <button type="button" class="chats-fila" @click="abrirConversacion()">
+                <button type="button" class="chats-fila" @click="abrirConversacion()" @contextmenu.prevent="vaciar()">
                     <img class="chats-foto" src="/static/img/logo/v3/papeleria-insignia.svg" alt="" width="52" height="52">
                     <span class="chats-centro">
                         <span class="chats-arriba">
@@ -62,10 +62,18 @@
         <div>
             <h2 class="chat-contacto-nombre">Papelería xplaya</h2>
             {% if abierta %}
-            <p class="chat-contacto-estado abierta"><span class="chat-punto"></span>Abierta · Te contestamos en un rato</p>
+            <p class="chat-contacto-estado abierta"><span class="chat-punto"></span>Abierta · Contestamos pronto</p>
             {% else %}
-            <p class="chat-contacto-estado"><span class="chat-punto"></span>Cerrada · Te contestamos al abrir</p>
+            <p class="chat-contacto-estado"><span class="chat-punto"></span>Cerrada · Contestamos al abrir</p>
             {% endif %}
+        </div>
+        <div class="chat-opciones" x-data="{ menu: false }" @click.outside="menu = false">
+            <button type="button" class="chat-opciones-btn" @click="menu = !menu" :aria-expanded="menu" aria-label="Opciones del chat">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+            </button>
+            <div class="chat-opciones-menu" x-show="menu" x-transition.opacity>
+                <button type="button" @click="menu = false; vaciar()">🧹 Vaciar chat</button>
+            </div>
         </div>
     </header>
 

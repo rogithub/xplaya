@@ -80,6 +80,17 @@ pub async fn marcar_leidos(pool: &PgPool, cliente: Uuid, del_cliente: bool, hast
     Ok(hecho.rows_affected())
 }
 
+/// "Vaciar chat" en la app: el cliente deja de ver lo de `Fecha <= hasta` (hora de la tienda).
+/// Solo de su lado: no se borra nada y la caja sigue viendo todo.
+pub async fn vaciar(pool: &PgPool, cliente: Uuid, hasta: NaiveDateTime) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE clientes SET chatvaciado = $2 WHERE id = $1")
+        .bind(cliente)
+        .bind(hasta)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
 pub async fn editar(pool: &PgPool, id: Uuid, texto: &str, fecha: NaiveDateTime) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE mensajes SET texto = $2, fechaeditado = $3 WHERE id = $1 AND fechaeliminado IS NULL")
         .bind(id)
@@ -176,6 +187,7 @@ pub async fn conversacion(pool: &PgPool, cliente: Uuid, antes: Option<Uuid>, lim
          FROM mensajes m
          LEFT JOIN mensajes r ON r.id = m.respondea
          WHERE m.clienteid = $1
+           AND m.fecha > COALESCE((SELECT chatvaciado FROM clientes WHERE id = $1), '-infinity')
            AND ($2::uuid IS NULL OR (m.fecha, m.id) < (SELECT a.fecha, a.id FROM mensajes a WHERE a.id = $2 AND a.clienteid = $1))
          ORDER BY m.fecha DESC, m.id DESC
          LIMIT $3",
@@ -225,7 +237,8 @@ pub async fn bloqueado(pool: &PgPool, cliente: Uuid) -> Result<bool, sqlx::Error
 pub async fn sin_leer(pool: &PgPool, cliente: Uuid) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar(
         "SELECT COUNT(*) FROM mensajes
-         WHERE clienteid = $1 AND autor <> 'cliente' AND fechaleido IS NULL AND fechaeliminado IS NULL",
+         WHERE clienteid = $1 AND autor <> 'cliente' AND fechaleido IS NULL AND fechaeliminado IS NULL
+           AND fecha > COALESCE((SELECT chatvaciado FROM clientes WHERE id = $1), '-infinity')",
     )
     .bind(cliente)
     .fetch_one(pool)
@@ -435,6 +448,19 @@ pub(crate) mod tests {
         let todo = conversacion(&pool, c, None, 50).await.unwrap();
         assert_eq!(todo.last().unwrap().cita, None);
         assert!(todo.iter().any(|v| v.id == ids[0] && v.eliminado && v.texto.is_none()));
+
+        // Vaciar: la app ya no ve ni cuenta lo de antes; lo que llega después, sí.
+        assert_eq!(sin_leer(&pool, c).await.unwrap(), 1, "la respuesta de la papelería");
+        vaciar(&pool, c, hora("17:05:00")).await.unwrap();
+        assert!(conversacion(&pool, c, None, 50).await.unwrap().is_empty(), "lo de la misma hora también se va");
+        assert_eq!(sin_leer(&pool, c).await.unwrap(), 0);
+        let despues = nuevo(c, Lado::Papeleria, "17:20:00");
+        guardar(&pool, &despues).await.unwrap();
+        let todo = conversacion(&pool, c, None, 50).await.unwrap();
+        assert_eq!(todo.iter().map(|v| v.id).collect::<Vec<_>>(), vec![despues.id]);
+        assert_eq!(sin_leer(&pool, c).await.unwrap(), 1);
+        let filas: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mensajes WHERE clienteid = $1").bind(c).fetch_one(&pool).await.unwrap();
+        assert_eq!(filas, 5, "no se borra nada: la caja ve todo");
     }
 
     #[sqlx::test(migrations = false)]

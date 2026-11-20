@@ -4,6 +4,26 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: vaciar chat, solo del lado del cliente (2026-11-20)
+
+Como en WhatsApp: el cliente deja de ver la conversación vieja y la papelería la conserva.
+
+- BD (la puso el POS, en producción y dev): `Clientes.ChatVaciado TIMESTAMP NULL`, hora de la
+  tienda.
+- `src/db/chat.rs`: `vaciar`; `conversacion` y `sin_leer` ignoran lo de `Fecha <= ChatVaciado`.
+  La prueba `guardar_y_leer_lo_guardado` cubre que se oculta, que lo nuevo sí sale y que no se
+  borra ninguna fila.
+- `src/routes/chat.rs` + `routes/app.rs`: `POST /chat/vaciar` (204).
+- `templates/app/chat.html` / `static/app/chat.js`: ⋮ en el encabezado de la conversación con
+  "🧹 Vaciar chat", y en la lista dejar el dedo sobre la fila (`contextmenu`, Android). `vaciar()`
+  pregunta, llama al servidor y deja solo lo que aún no se manda.
+- El estado del encabezado se acortó a "Abierta · Contestamos pronto" / "Cerrada · Contestamos
+  al abrir", para que quepa junto al ⋮ (y si no, se corta con "…").
+- Probado en local con Playwright: ⋮ → Vaciar → confirmar deja la conversación vacía, sigue vacía
+  al recargar y el mensaje sigue en la BD.
+
+---
+
 ## Chat: lista de chats como en WhatsApp, sin un toque más lento (2026-11-20)
 
 `/chat` ahora abre en una lista con la papelería como contacto; al tocarla entra la

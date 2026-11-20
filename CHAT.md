@@ -150,6 +150,10 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
   conversación sin ir al servidor. Abrirla pone una entrada en el historial, así el "atrás" de
   Android regresa a la lista. Con `?producto=`, `?compartido=1` o `?abrir=1` (para avisos) se
   abre directo en la conversación. En la lista no se marca nada como leído.
+- **Vaciar chat** (⋮ de la conversación, o dejar el dedo sobre la fila en Android): `POST
+  /chat/vaciar` pone `Clientes.ChatVaciado` en la hora de la tienda. La app ya no ve ni cuenta
+  como no leído lo de `Fecha <= ChatVaciado` (`db::chat::conversacion` y `sin_leer`). Solo de su
+  lado: no se borra nada y la caja ve todo.
 
 ## Archivos y tarjetas (etapa 3b)
 

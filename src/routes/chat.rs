@@ -660,6 +660,13 @@ pub async fn leido(State(state): State<AppState>, headers: HeaderMap) -> Result<
     })
 }
 
+/// "Vaciar chat": desde ahora la app solo le enseña lo nuevo. Solo de su lado; la caja ve todo.
+pub async fn vaciar(State(state): State<AppState>, headers: HeaderMap) -> Result<StatusCode, StatusCode> {
+    let (cliente, _) = del_chat(&state, &headers).await?;
+    db::chat::vaciar(&state.pool, cliente, crate::chat::contrato::hora_tienda(ahora())).await.map_err(error_bd)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
 #[derive(Deserialize)]
 pub struct Edicion {
     texto: String,

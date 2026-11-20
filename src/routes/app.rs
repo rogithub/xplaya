@@ -93,6 +93,7 @@ pub fn router() -> Router<AppState> {
         .route("/chat/compartir", post(chat::compartir_sin_sw))
         .route("/chat/mensaje", post(chat::mandar))
         .route("/chat/leido", post(chat::leido))
+        .route("/chat/vaciar", post(chat::vaciar))
         .route("/chat/escribiendo", post(chat::escribiendo))
         .route("/chat/{id}/editar", post(chat::editar))
         .route("/chat/{id}/eliminar", post(chat::eliminar))

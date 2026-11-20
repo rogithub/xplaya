@@ -1930,7 +1930,8 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     font-size: 1.25rem;
     line-height: 1.2;
 }
-.chat-contacto-estado { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+.chat-contacto > div:not(.chat-opciones) { min-width: 0; }
+.chat-contacto-estado { margin: 2px 0 0; overflow: hidden; color: var(--muted); white-space: nowrap; text-overflow: ellipsis; font-size: .8rem; }
 .chat-punto {
     display: inline-block;
     width: 8px;
@@ -2407,6 +2408,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     -webkit-tap-highlight-color: transparent;
 }
 .chats-fila:active { background: var(--chip); }
+.chats-fila { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .chats-foto { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
 .chats-centro { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; }
 .chats-arriba, .chats-abajo { display: flex; align-items: center; gap: 8px; }
@@ -2434,3 +2436,41 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .chat-centro { transform: none; opacity: 1; }
 .chat-sin-animar .chat-entra { transition: none; }
 @media (prefers-reduced-motion: reduce) { .chat-entra { transition: none; } }
+
+/* ⋮ del encabezado de la conversación */
+.chat-opciones { position: relative; margin-left: auto; }
+.chat-opciones-btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+}
+.chat-opciones-btn svg { width: 22px; height: 22px; fill: currentColor; }
+.chat-opciones-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 20;
+    min-width: 180px;
+    padding: 6px;
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+}
+.chat-opciones-menu button {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.chat-opciones-menu button:active { background: var(--chip); }

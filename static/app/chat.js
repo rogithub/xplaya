@@ -339,6 +339,27 @@ document.addEventListener('alpine:init', () => {
             window.scrollTo(0, 0);
         },
 
+        // "Vaciar chat" (⋮ de la conversación, o dejar el dedo sobre la fila): solo de este lado,
+        // la papelería conserva todo. Lo que aún no se manda se queda.
+        async vaciar() {
+            if (!this.mensajes.some((m) => m.estado === 'guardado')) return;
+            if (!confirm('¿Vaciar el chat?\n\nSe borran los mensajes de tu celular. La papelería los conserva.')) return;
+            try {
+                const r = await fetch('/chat/vaciar', { method: 'POST' });
+                if (!r.ok) throw new Error(r.status);
+            } catch {
+                alert('No se pudo vaciar el chat. Revisa tu internet e intenta de nuevo.');
+                return;
+            }
+            this.mensajes.filter((m) => m.estado === 'guardado').forEach((m) => chatSoltarUrls(m.adjuntos));
+            this.mensajes = this.mensajes.filter((m) => m.estado !== 'guardado');
+            this.hayMas = false;
+            this.respondiendo = null;
+            this.editando = null;
+            this.abierto = null;
+            window.dispatchEvent(new CustomEvent('chat-leido'));
+        },
+
         // Para la fila de la lista: el último mensaje, sus no leídos y cuándo fue.
         ultimo() {
             return this.mensajes.length ? this.mensajes[this.mensajes.length - 1] : null;
