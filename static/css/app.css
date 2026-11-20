@@ -1893,8 +1893,42 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 
 /* ── Chat (templates/app/chat.html, static/app/chat.js) ─────────────────── */
 
-.chat-top { margin-bottom: 8px; }
-.chat-sub { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+.chat-contacto {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 2px 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+.chat-contacto-foto {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    object-fit: contain;
+}
+.chat-contacto-nombre {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.2;
+}
+.chat-contacto-estado { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+.chat-punto {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    vertical-align: 1px;
+}
+.chat-contacto-estado.abierta { color: var(--ok); }
+.chat-contacto-estado.abierta .chat-punto { background: var(--ok); }
 .chat-bloqueado {
     margin: 0 0 12px;
     padding: 12px 14px;

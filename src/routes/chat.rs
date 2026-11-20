@@ -158,6 +158,7 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap, Query(p):
     let ctx = context! {
         en_app => true,
         nav => "chat",
+        abierta => ajustes.papeleria_abierta,
         chat => context! {
             mensajes,
             bloqueado,

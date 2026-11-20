@@ -21,11 +21,14 @@ pub struct Ajustes {
     pub mb_documento: u64,
     /// `CHAT_MB_VIDEO`, con tope de `archivos::MB_VIDEO_TOPE`.
     pub mb_video: u64,
+    /// `PAPELERIA_ABIERTA`: el switch de la caja. Lo enseña el encabezado del chat. Sin la fila
+    /// o con un valor que no sea `0`: abierta.
+    pub papeleria_abierta: bool,
 }
 
 impl Default for Ajustes {
     fn default() -> Self {
-        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100 }
+        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100, papeleria_abierta: true }
     }
 }
 

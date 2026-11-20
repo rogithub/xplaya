@@ -11,9 +11,18 @@
 <script id="chat-datos" type="application/json">{{ chat | tojson }}</script>
 
 <section class="chat" x-data="chatApp" x-cloak>
-    <header class="app-top chat-top">
-        <h1 class="app-title">Chat</h1>
-        <p class="chat-sub">Escríbele a la papelería. Te contestamos en horario de la tienda.</p>
+    {# Con quién habla el cliente. Abierta/cerrada es el switch de la caja (`PAPELERIA_ABIERTA`),
+       leído al abrir el chat. #}
+    <header class="chat-contacto">
+        <img class="chat-contacto-foto" src="/static/img/logo/v3/papeleria-insignia.svg" alt="" width="48" height="48">
+        <div>
+            <h1 class="chat-contacto-nombre">Papelería xplaya</h1>
+            {% if abierta %}
+            <p class="chat-contacto-estado abierta"><span class="chat-punto"></span>Abierta · Te contestamos en un rato</p>
+            {% else %}
+            <p class="chat-contacto-estado"><span class="chat-punto"></span>Cerrada · Te contestamos al abrir</p>
+            {% endif %}
+        </div>
     </header>
 
     <p class="chat-bloqueado" x-show="bloqueado" role="status">

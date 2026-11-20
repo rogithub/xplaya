@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: encabezado con la papelería, abierta o cerrada según el switch de la caja (2026-11-20)
+
+El chat no decía con quién se habla. Ahora arriba sale como un contacto de WhatsApp.
+
+- `templates/app/chat.html`: el título "Chat" cambia por la insignia del logo, "Papelería
+  xplaya" y debajo "🟢 Abierta · Te contestamos en un rato" o "⚪ Cerrada · Te contestamos al
+  abrir". Estilos `.chat-contacto*` en `static/css/app.css`.
+- `PAPELERIA_ABIERTA` en `Settings` (`'1'`/`'0'`) la cambia el switch de la caja (repo del POS).
+  `db::chat::ajustes` la lee junto con los `CHAT_*` al abrir el chat (campo
+  `papeleria_abierta` en `chat::reglas::Ajustes`). Sin la fila o con otro valor que no sea `0`:
+  abierta. No se actualiza en vivo; se ve al volver a abrir el chat.
+- El aviso automático de "estamos cerrados" sigue usando el horario fijo de `reglas::horario`,
+  no el switch.
+
+---
+
 ## Chat: compartir sin service worker ya no da la página de error de Cloudflare (2026-11-20)
 
 Compartiendo una foto desde la galería salió la página de Cloudflare de "sitio caído"; al

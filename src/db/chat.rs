@@ -101,11 +101,11 @@ pub async fn eliminar(pool: &PgPool, id: Uuid, fecha: NaiveDateTime) -> Result<(
     Ok(())
 }
 
-/// Los ajustes `CHAT_*` de `Settings`. Si falta uno o no es número, queda el de siempre.
+/// Los ajustes `CHAT_*` y `PAPELERIA_ABIERTA` de `Settings`. Si falta uno o no es número, queda el de siempre.
 pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
     let filas: Vec<(String, Option<String>)> =
         sqlx::query_as(
-            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO')",
+            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO', 'PAPELERIA_ABIERTA')",
         )
             .fetch_all(pool)
             .await?;
@@ -120,6 +120,7 @@ pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
             }
             "CHAT_MB_DOCUMENTO" => a.mb_documento = numero(valor).unwrap_or(a.mb_documento),
             "CHAT_MB_VIDEO" => a.mb_video = numero(valor).unwrap_or(a.mb_video),
+            "PAPELERIA_ABIERTA" => a.papeleria_abierta = valor.is_none_or(|v| v.trim() != "0"),
             // Con la fila, aunque el valor sea NULL: vacía quiere decir todos (`chat_visible`).
             _ => a.clientes_prueba = Some(valor.unwrap_or_default()),
         }
