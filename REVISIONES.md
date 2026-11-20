@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: fondo con útiles de papelería (2026-11-20)
+
+Paso 4. La conversación tiene un fondo con dibujos tenues, como las apps de mensajes: un mosaico
+de 320 px con útiles (lápiz, tijeras, regla, clip, cuaderno, calculadora…) de los mismos íconos
+de línea. Va como máscara sobre `body::before` para que el color salga de los tokens
+(`--fondo-chat`, `--fondo-dibujo`) y cambie en modo oscuro. Solo dentro de la conversación.
+
+- `static/img/chat-fondo.svg` (nuevo).
+- `static/css/app.css`: `.en-conversacion body` y `::before`; el letrero del día con fondo propio.
+
+---
+
 ## Chat: palomitas y hora como en las apps de mensajes (2026-11-20)
 
 Paso 3. La hora y las palomitas flotan a la derecha de la última línea si caben (texto `inline`,

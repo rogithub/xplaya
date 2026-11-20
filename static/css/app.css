@@ -21,7 +21,9 @@
     --globo-mio: #D2EFEC;
     --globo-mio-ink: #18211F;
     --globo-sombra: 0 1px .5px rgb(11 20 26 / .13);
-    --visto: #2B8FD6;   /* ✓✓ leído: azul, el color que todos reconocen para "ya lo vio" */
+    --visto: #2B8FD6;
+    --fondo-chat: #E6ECEA;          /* fondo de la conversación, un poco más oscuro que --bg */
+    --fondo-dibujo: rgb(31 122 118 / .07);   /* los útiles dibujados encima, apenas visibles */   /* ✓✓ leído: azul, el color que todos reconocen para "ya lo vio" */
 
     /* Marca: fijos en ambos modos */
     --brand-dark: #231916;
@@ -52,6 +54,8 @@
         --globo-mio-ink: #F2ECE7;
         --globo-sombra: 0 1px .5px rgb(0 0 0 / .35);
         --visto: #5CB8F5;
+        --fondo-chat: #0F0D0C;
+        --fondo-dibujo: rgb(92 195 190 / .06);
     }
 }
 
@@ -2515,6 +2519,24 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 }
 .chat-opciones-menu button:active,
 .chat-opciones-menu a:active { background: var(--chip); }
+
+/* Fondo de la conversación: útiles de papelería dibujados muy tenues (static/img/chat-fondo.svg,
+   los mismos íconos de línea), como el fondo con dibujos de las apps de mensajes. Es una máscara
+   para que el color salga de los tokens y cambie en modo oscuro. */
+.en-conversacion body { background: var(--fondo-chat); }
+.en-conversacion body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--fondo-dibujo);
+    -webkit-mask: url("/static/img/chat-fondo.svg") 0 0 / 320px repeat;
+    mask: url("/static/img/chat-fondo.svg") 0 0 / 320px repeat;
+    pointer-events: none;
+}
+.en-conversacion .chat-contacto { background: var(--bg); }
+.en-conversacion .chat-redactor { background: var(--fondo-chat); }
+.en-conversacion .chat-dia { background: var(--surface); box-shadow: var(--globo-sombra); }
 
 /* Dentro de la conversación no va la barra de abajo (chat.js pone la clase): el redactor baja
    hasta el borde. */
