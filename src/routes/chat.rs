@@ -149,9 +149,10 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap, Query(p):
                 .map(|tarjeta| context! { tipo => "producto", ref => nid.to_string(), tarjeta }),
             None => None,
         };
-        Ok::<_, sqlx::Error>((mensajes, bloqueado, lista))
+        let sin_foto = db::perfil::de_cliente(&state.pool, cliente).await?.is_some_and(|p| p.fotoperfil.is_none());
+        Ok::<_, sqlx::Error>((mensajes, bloqueado, lista, sin_foto))
     };
-    let (mensajes, bloqueado, lista) = match datos.await {
+    let (mensajes, bloqueado, lista, sin_foto) = match datos.await {
         Ok(d) => d,
         Err(e) => return error_bd(e).into_response(),
     };
@@ -159,6 +160,8 @@ pub async fn pagina(State(state): State<AppState>, headers: HeaderMap, Query(p):
         en_app => true,
         nav => "chat",
         abierta => ajustes.papeleria_abierta,
+        // La invitación a poner foto (Mi perfil); solo si se pueden subir.
+        invitar_foto => sin_foto && state.minio.is_some(),
         chat => context! {
             mensajes,
             bloqueado,

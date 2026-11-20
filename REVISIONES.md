@@ -4,6 +4,33 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: Mi perfil, nombre y foto para el chat (2026-11-20)
+
+Para que la papelería sepa con quién habla, como en WhatsApp. El POS los enseña en su chat (lo
+hace el otro repo); aquí solo se escriben.
+
+- BD (la puso el POS, ya en producción y en dev): `Clientes.NombreChat VARCHAR(40)` y
+  `Clientes.FotoPerfil VARCHAR(100)`. `NombreChat` no reemplaza a `Nombre` (el de la caja).
+- `src/perfil.rs`: `preparar_foto` recorta al centro en cuadro y deja 256×256 JPEG (respeta el
+  EXIF); `limpiar_nombre` quita espacios de más, tope de 40 letras, vacío = quitarlo. Con tests.
+- `src/db/perfil.rs`: leer, guardar nombre, y `guardar_foto` que devuelve la llave anterior
+  para borrarla.
+- `src/routes/perfil.rs`: `GET /perfil`, `POST /perfil/nombre`, `POST /perfil/foto` (10 MB),
+  `POST /perfil/foto/quitar`, `GET /perfil/foto?v=…` (la suya). Llave nueva en cada foto
+  (`{cliente}/{uuid}.jpg`), así nadie se queda con la vieja en caché. Sin MinIO, solo nombre.
+- `src/minio.rs`: `BUCKET_PERFILES` = `papeleria-perfiles`. Infra:
+  `share/xplaya-perfiles/perfiles-minio.sh` (ya corrido en producción): bucket sin vencimiento
+  y la política `xplaya-impresiones` con los cuatro buckets. El respaldo a R2 lo copia solo.
+- `templates/app/perfil.html` + estilos `.perfil-*`: foto redonda (o la inicial), "Poner foto"
+  que se manda al elegir, "Quitar foto", y el nombre con el de la caja de sugerencia.
+- `templates/app/nav.html`: "Mi perfil" primero en la hoja de Más (siempre sale).
+- `templates/app/chat.html`: sin foto, una tarjetita "Pon tu foto y tu nombre…" que lleva a
+  Mi perfil; ✕ la cierra para siempre en ese celular (`localStorage.invitaFoto`).
+- Probado en local con sesión de prueba: subir dos veces deja un solo objeto en el bucket,
+  quitar lo borra, sin sesión manda a `/`. Capturas revisadas.
+
+---
+
 ## Chat: el aviso de "estamos cerrados" sigue al switch de la caja (2026-11-20)
 
 Antes salía según un horario fijo en el código; ahora, igual que el encabezado, según

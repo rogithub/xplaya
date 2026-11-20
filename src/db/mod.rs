@@ -1,5 +1,6 @@
 pub mod anuncios;
 pub mod chat;
+pub mod perfil;
 pub mod fotos;
 pub mod productos;
 pub mod pedidos;

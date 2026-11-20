@@ -23,6 +23,7 @@ mod middleware;
 mod minio;
 mod models;
 mod passkeys;
+mod perfil;
 mod push;
 mod routes;
 

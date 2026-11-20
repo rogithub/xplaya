@@ -1,0 +1,53 @@
+{% extends "app/base.html" %}
+{#
+  "Mi perfil" (routes/perfil.rs): el nombre y la foto con los que la papelería ve al cliente en el
+  chat. El nombre va en Clientes.NombreChat; la de la caja (Clientes.Nombre) solo se sugiere.
+  La foto se manda en cuanto se elige; el servidor la recorta cuadrada.
+#}
+{% block title %}Mi perfil — Papelería xplaya{% endblock %}
+{% block manifest %}<link rel="manifest" href="/manifest.webmanifest">{% endblock %}
+{% block content %}
+{% set nombre = perfil.nombrechat or perfil.nombre %}
+
+<header class="app-top">
+    <h1 class="app-title">Mi perfil</h1>
+</header>
+<p class="imp-intro">Así te ve la papelería cuando nos escribes por el chat.</p>
+
+{% if error %}<p class="alerta" role="alert">{{ error }}</p>{% endif %}
+{% if ok == "foto" %}<p class="imp-aviso ok" role="status">✅ Listo, ya tienes foto.</p>{% endif %}
+{% if ok == "quitada" %}<p class="imp-aviso ok" role="status">Quitamos tu foto.</p>{% endif %}
+{% if ok == "nombre" %}<p class="imp-aviso ok" role="status">✅ Guardamos tu nombre.</p>{% endif %}
+
+<section class="perfil-foto" x-data="{ subiendo: false }">
+    {% if perfil.fotoperfil %}
+    <img class="perfil-avatar" src="/perfil/foto?v={{ perfil.fotoperfil | urlencode }}" alt="Tu foto" width="128" height="128">
+    {% else %}
+    <span class="perfil-avatar perfil-inicial" aria-hidden="true">{{ (nombre | trim)[:1] | upper }}</span>
+    {% endif %}
+
+    {% if fotos %}
+    <form method="post" action="/perfil/foto" enctype="multipart/form-data" x-ref="form">
+        <label class="btn-qr perfil-elegir" :class="subiendo && 'ocupado'">
+            <span x-text="subiendo ? 'Subiendo…' : '{{ "📷 Cambiar foto" if perfil.fotoperfil else "📷 Poner foto" }}'"></span>
+            <input type="file" name="foto" accept="image/*" class="imp-archivo"
+                   @change="if ($event.target.files.length) { subiendo = true; $refs.form.submit() }" :disabled="subiendo">
+        </label>
+    </form>
+    {% if perfil.fotoperfil %}
+    <form method="post" action="/perfil/foto/quitar"
+          @submit="if (!confirm('¿Quitar tu foto?')) $event.preventDefault()">
+        <button type="submit" class="btn-link">Quitar foto</button>
+    </form>
+    {% endif %}
+    {% endif %}
+</section>
+
+<form class="perfil-nombre" method="post" action="/perfil/nombre">
+    <label class="campo-label" for="perfil-nombre">Tu nombre</label>
+    <input class="campo" id="perfil-nombre" name="nombre" maxlength="{{ max_nombre }}" autocomplete="given-name"
+           value="{{ perfil.nombrechat or "" }}" placeholder="{{ perfil.nombre }}">
+    <p class="inicio-nota">Como quieras que te digamos, por ejemplo “Lupita” o “Mamá de Luis”.</p>
+    <button type="submit" class="btn-sec campo-sig">Guardar nombre</button>
+</form>
+{% endblock %}

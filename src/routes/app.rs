@@ -27,7 +27,7 @@ use webauthn_rs::prelude::PublicKeyCredential;
 use crate::{
     db,
     impresion,
-    routes::{alta, alta::error_json, anuncio, chat, cuenta, fotos, google, imprimir, kiosko, monedero, notificaciones, tienda},
+    routes::{alta, alta::error_json, anuncio, chat, cuenta, fotos, google, imprimir, kiosko, monedero, notificaciones, perfil, tienda},
     AppState,
 };
 
@@ -72,6 +72,11 @@ pub fn router() -> Router<AppState> {
         .route("/anuncio/imagen", get(anuncio::imagen))
         .route("/anuncio/quitar", post(anuncio::quitar))
         .route("/anuncio/volver-a-mandar", post(anuncio::volver_a_mandar))
+        .route("/perfil", get(perfil::pagina))
+        .route("/perfil/nombre", post(perfil::nombre))
+        .route("/perfil/foto", get(perfil::foto))
+        .route("/perfil/foto", post(perfil::subir_foto).layer(DefaultBodyLimit::max(crate::perfil::MAX_BYTES + 512 * 1024)))
+        .route("/perfil/foto/quitar", post(perfil::quitar_foto))
         .route("/chat", get(chat::pagina))
         .route("/chat/anteriores", get(chat::anteriores))
         .route("/chat/eventos", get(chat::eventos))

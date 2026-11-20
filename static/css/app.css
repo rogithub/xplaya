@@ -1928,6 +1928,30 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     vertical-align: 1px;
 }
 .chat-contacto-estado.abierta { color: var(--ok); }
+.chat-invita {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px 6px 10px 12px;
+    border-radius: 14px;
+    background: var(--ok-bg);
+    color: var(--ink);
+    font-size: .9rem;
+    text-decoration: none;
+}
+.chat-invita-ico { font-size: 1.4rem; }
+.chat-invita-cerrar {
+    flex: none;
+    margin-left: auto;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: pointer;
+}
 .chat-contacto-estado.abierta .chat-punto { background: var(--ok); }
 .chat-bloqueado {
     margin: 0 0 12px;
@@ -2328,3 +2352,26 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 }
 @keyframes chat-latido { 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .chat-grabando-punto { animation: none; } }
+
+/* ── Mi perfil (templates/app/perfil.html) ─────────────────────────────────── */
+.perfil-foto { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 8px 0 24px; }
+.perfil-avatar {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    object-fit: cover;
+}
+.perfil-inicial {
+    display: grid;
+    place-items: center;
+    background: var(--chip);
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 3.2rem;
+    font-weight: 600;
+}
+.perfil-elegir { position: relative; width: auto; padding-inline: 22px; }
+.perfil-elegir.ocupado { opacity: .6; }
+.perfil-nombre { margin-bottom: 24px; }
+.perfil-nombre .inicio-nota { margin-top: 8px; }

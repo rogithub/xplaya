@@ -21,6 +21,8 @@ use crate::config::Config;
 pub const BUCKET: &str = "papeleria-impresiones";
 pub const BUCKET_ANUNCIOS: &str = "papeleria-anuncios";
 pub const BUCKET_CHAT: &str = "papeleria-chat";
+/// Fotos de perfil de los clientes (`perfil.rs`). Sin vencimiento; con respaldo a R2.
+pub const BUCKET_PERFILES: &str = "papeleria-perfiles";
 /// En vez del SHA-256 del cuerpo, para mandarlo como stream sin leerlo dos veces. S3 y MinIO lo
 /// aceptan; la firma sigue cubriendo método, llave, encabezados y fecha.
 const SIN_FIRMA_CUERPO: &str = "UNSIGNED-PAYLOAD";

@@ -25,6 +25,16 @@
         </div>
     </header>
 
+    {# Invitación a Mi perfil: sale mientras no tenga foto, hasta que la cierre (en este celular). #}
+    {% if invitar_foto %}
+    <a class="chat-invita" href="/perfil" x-data="{ ver: !localStorage.getItem('invitaFoto') }" x-show="ver">
+        <span class="chat-invita-ico" aria-hidden="true">📷</span>
+        <span><strong>Pon tu foto y tu nombre</strong> para que sepamos con quién hablamos.</span>
+        <button type="button" class="chat-invita-cerrar" aria-label="No mostrar otra vez"
+                @click.prevent="localStorage.setItem('invitaFoto', '1'); ver = false">✕</button>
+    </a>
+    {% endif %}
+
     <p class="chat-bloqueado" x-show="bloqueado" role="status">
         La papelería bloqueó tu chat. Si crees que es un error, pregúntanos en la tienda.
     </p>

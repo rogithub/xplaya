@@ -1,13 +1,13 @@
 {#
   Barra de abajo de la app: Chat · Monedero · Tienda · Carrito · Más. La incluye app/base.html
   cuando la página pasa `nav` (la pestaña activa). "Más" abre una hoja con lo que se usa menos
-  (Imprimir y Fotos, si están prendidos), el tamaño de letra y privacidad. Componente `menuApp`
+  (Mi perfil, e Imprimir y Fotos si están prendidos), el tamaño de letra y privacidad. Componente `menuApp`
   (static/app/app.js): la pestaña Chat solo sale a quien lo puede ver (`/chat/sin-leer`), con
   su globito de no leídos; el del carrito sale del store de cart.js.
 
   Íconos SVG de línea (no emoji) para que se vean iguales en todos los celulares.
 #}
-{% set en_mas = nav in ["imprimir", "fotos"] %}
+{% set en_mas = nav in ["imprimir", "fotos", "perfil"] %}
 <div x-data="menuApp" @keydown.escape.window="cerrar()">
     <nav class="app-nav" aria-label="Secciones de la app">
         <a href="/chat" class="app-tab {% if nav == 'chat' %}activo{% endif %}" {% if nav == "chat" %}aria-current="page"{% endif %}
@@ -59,8 +59,14 @@
             </button>
         </header>
 
-        {% if imprimir_activo or fotos_activo %}
         <ul class="hoja-lista">
+            <li><a href="/perfil" class="hoja-fila {% if nav == 'perfil' %}activo{% endif %}">
+                <span class="hoja-ico" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+                </span>
+                <span class="hoja-txt"><strong>Mi perfil</strong><small>Tu nombre y tu foto para el chat</small></span>
+                <span class="hoja-ir" aria-hidden="true">›</span>
+            </a></li>
             {% if imprimir_activo %}
             <li><a href="/imprimir" class="hoja-fila {% if nav == 'imprimir' %}activo{% endif %}">
                 <span class="hoja-ico" aria-hidden="true">
@@ -80,7 +86,6 @@
             </a></li>
             {% endif %}
         </ul>
-        {% endif %}
 
         <div class="hoja-letra">
             <span class="hoja-etiqueta">Tamaño de letra</span>
