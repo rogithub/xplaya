@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: caja de escribir en una pastilla, con clip y cámara adentro (2026-11-20)
+
+Paso 5. Como en las apps de mensajes: una pastilla con el texto y, adentro a la derecha, el clip y
+una cámara (nueva: `capture="environment"`, abre la del celular; se esconde mientras escribes).
+Afuera, el botón redondo micrófono/enviar. Sin borde de foco.
+
+- `templates/app/chat.html`: `.chat-pastilla` con el `textarea`, el clip y la cámara; input
+  `x-ref="camara"` que usa el mismo `elegir`.
+- `static/css/app.css`: `.chat-pastilla`; el clip ya no es un círculo aparte.
+
+---
+
 ## Chat: fondo con útiles de papelería (2026-11-20)
 
 Paso 4. La conversación tiene un fondo con dibujos tenues, como las apps de mensajes: un mosaico

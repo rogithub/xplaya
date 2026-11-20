@@ -251,11 +251,24 @@
             </template>
         </div>
         <div class="chat-escribir">
-            <template x-if="permiteArchivos">
-                <button type="button" class="chat-clip" x-show="!editando && !grabando" @click="$refs.archivos.click()"
-                        aria-label="Adjuntar archivos">{{ icono("clip") }}</button>
-            </template>
+            {# Como en las apps de mensajes: una pastilla con el texto y, adentro a la derecha, el clip
+               y la cámara (la cámara se esconde mientras escribes). Afuera, el botón redondo que es
+               micrófono o enviar. #}
+            <div class="chat-pastilla" x-show="!grabando">
+                <textarea x-ref="caja" x-model="texto" rows="1" maxlength="4000" :placeholder="lista ? 'Escribe tu pregunta' : 'Escribe un mensaje'"
+                          aria-label="Mensaje" enterkeyhint="send"
+                          @input="crecer($el); escribiendo()" @keydown="teclear($event)"></textarea>
+                <template x-if="permiteArchivos">
+                    <button type="button" class="chat-clip" x-show="!editando" @click="$refs.archivos.click()"
+                            aria-label="Adjuntar archivos">{{ icono("clip") }}</button>
+                </template>
+                <template x-if="permiteArchivos">
+                    <button type="button" class="chat-clip" x-show="!editando && !texto.trim()" @click="$refs.camara.click()"
+                            aria-label="Tomar una foto">{{ icono("camara") }}</button>
+                </template>
+            </div>
             <input type="file" multiple hidden x-ref="archivos" @change="elegir($event)">
+            <input type="file" accept="image/*" capture="environment" hidden x-ref="camara" @change="elegir($event)">
             {# Nota de voz: micrófono empieza, enviar la manda, el bote la tira. #}
             <div class="chat-grabando" x-show="grabando" role="status">
                 <button type="button" @click="terminarNota(true)" aria-label="Cancelar nota de voz">{{ icono("eliminar") }}</button>
@@ -263,9 +276,6 @@
                 <span x-text="tiempoNota()"></span>
                 <small>Grabando… toca {{ icono("enviar") }} para mandar</small>
             </div>
-            <textarea x-show="!grabando" x-ref="caja" x-model="texto" rows="1" maxlength="4000" :placeholder="lista ? 'Escribe tu pregunta' : 'Escribe un mensaje'"
-                      aria-label="Mensaje" enterkeyhint="send"
-                      @input="crecer($el); escribiendo()" @keydown="teclear($event)"></textarea>
             <button type="button" class="chat-enviar" x-show="microfono" @click="grabar()" aria-label="Grabar nota de voz">{{ icono("mic") }}</button>
             <button type="submit" class="chat-enviar" x-show="!microfono"
                     :disabled="!texto.trim() && !elegidos.length && !grabando && !lista" aria-label="Enviar">{{ icono("enviar") }}</button>

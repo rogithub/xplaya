@@ -2287,19 +2287,30 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 .chat-por-mandar .chat-tarjeta { flex: 1; width: auto; margin: 0; padding: 0; background: none; }
 .chat-por-mandar button { border: 0; background: none; color: var(--muted); font-size: 1.1rem; padding: 6px; }
 .chat-escribir { display: flex; align-items: flex-end; gap: 8px; }
-.chat-escribir textarea {
+.chat-pastilla {
     flex: 1;
-    min-height: 44px;
-    max-height: 160px;
-    padding: 11px 16px;
-    border: 1px solid var(--line);
-    border-radius: 22px;
+    min-width: 0;
+    display: flex;
+    align-items: flex-end;
+    min-height: 48px;
+    padding: 0 4px 0 0;
+    border-radius: 24px;
     background: var(--surface);
+    box-shadow: var(--globo-sombra);
+}
+.chat-pastilla textarea {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    max-height: 160px;
+    padding: 13px 4px 13px 18px;
+    border: 0;
+    background: none;
     color: var(--ink);
     font: inherit;
     resize: none;
 }
-.chat-escribir textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.chat-pastilla textarea:focus { outline: none; }
 .chat-enviar {
     flex: none;
     width: 44px;
@@ -2313,15 +2324,14 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 }
 .chat-enviar:disabled { opacity: .4; }
 
-/* ── Adjuntar archivos (📎) ── */
+/* ── Clip y cámara, dentro de la pastilla ── */
 .chat-clip {
     flex: none;
-    width: 44px;
-    height: 44px;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: var(--surface);
-    font-size: 1.15rem;
+    width: 40px;
+    height: 48px;
+    border: 0;
+    background: none;
+    color: var(--muted);
     cursor: pointer;
 }
 .chat-bandeja {
@@ -2591,7 +2601,7 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
 /* Íconos del chat: tamaños y grises como en las apps de mensajes (el ícono no compite con el texto). */
 .chat-enviar, .chat-clip { display: grid; place-items: center; padding: 0; }
 .chat-enviar .sim, .chat-clip .sim { width: 24px; height: 24px; }
-.chat-clip { color: var(--muted); }
+.chat-enviar { width: 48px; height: 48px; }
 .chat-invita-ico { display: grid; color: var(--accent); }
 .chat-invita-ico .sim { width: 26px; height: 26px; }
 .chat-invita-cerrar .sim, .chat-respondiendo .sim, .chat-por-mandar .sim, .chat-grabando button .sim { width: 20px; height: 20px; }
