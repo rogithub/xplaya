@@ -25,6 +25,23 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             window.addEventListener('popstate', () => { if (this.abierto) this.soltar(); });
+            // El cuadro mide 0 hasta que el x-show lo muestra, y a veces eso pasa después del
+            // $nextTick: se acomoda cuando de verdad tiene tamaño (y otra vez si giran el celular).
+            new ResizeObserver(() => this.redimensionar()).observe(this.$refs.cuadro);
+        },
+
+        redimensionar() {
+            const nuevo = this.$refs.cuadro.clientWidth;
+            if (!this.imagen || !nuevo || nuevo === this.lado) return;
+            if (!this.lado) { this.acomodar(); return; }
+            // Mismo encuadre, a la nueva medida.
+            const f = nuevo / this.lado;
+            this.lado = nuevo;
+            this.minima *= f;
+            this.escala *= f;
+            this.x *= f;
+            this.y *= f;
+            this.dibujar();
         },
 
         async elegir(evento) {
@@ -49,6 +66,7 @@ document.addEventListener('alpine:init', () => {
         // Tamaño del cuadro y la foto llenándolo, al centro.
         acomodar() {
             this.lado = this.$refs.cuadro.clientWidth;
+            if (!this.lado) return;   // aún oculto: lo hace `redimensionar` al aparecer
             this.minima = this.lado / Math.min(this.ancho, this.alto);
             this.escala = this.minima;
             this.zoom = 0;

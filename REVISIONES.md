@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Mi perfil: la foto salía negra al acomodarla (2026-11-20)
+
+En el celular, "Acomoda tu foto" a veces salía todo negro: el `$nextTick` medía el cuadro antes
+de que el `x-show` lo mostrara (0 px) y el canvas quedaba vacío.
+
+- `static/app/perfil.js`: `acomodar` no hace nada si el cuadro mide 0, y un `ResizeObserver`
+  (`redimensionar`) lo acomoda en cuanto tiene tamaño; si cambia de medida (girar el celular)
+  conserva el encuadre.
+
+---
+
 ## Mi perfil: acomodar la foto en el círculo antes de mandarla (2026-11-20)
 
 Antes el servidor la recortaba al centro a ciegas (en una foto de cuerpo entero la cara se
