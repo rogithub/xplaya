@@ -183,8 +183,8 @@
                                   x-text="m.subiendo ? 'Subiendo ' + m.subiendo.hechos + '/' + m.subiendo.total + ' · ' + m.subiendo.pct + '% ·' : ''"></span>
                             <span x-show="m.editado && !m.eliminado">Editado ·</span>
                             <span x-text="hora(m)"></span>
-                            <span class="chat-marca" x-show="mio(m) && !m.eliminado" :class="{ 'leido': m.leido }"
-                                  x-text="marca(m)" :title="etiquetaMarca(m)" :aria-label="etiquetaMarca(m)"></span>
+                            <span class="chat-marca" x-show="mio(m) && !m.eliminado" :class="{ 'leido': m.leido && m.estado === 'guardado', 'fallo': m.estado === 'error' }"
+                                  x-html="marca(m)" :title="etiquetaMarca(m)" :aria-label="etiquetaMarca(m)"></span>
                         </span>
                         <button type="button" class="chat-oir" x-show="puedeLeer && !mio(m) && !m.eliminado"
                                 @click.stop="leer(m)" aria-label="Leer en voz alta">{{ icono("oir") }}</button>

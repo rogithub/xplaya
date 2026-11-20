@@ -4,6 +4,18 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: palomitas y hora como en las apps de mensajes (2026-11-20)
+
+Paso 3. La hora y las palomitas flotan a la derecha de la última línea si caben (texto `inline`,
+pie `float: right`, globo `flow-root`); si no, bajan a su renglón. Palomitas en SVG: ✓ gris
+enviado, ✓✓ azul leído (`--visto`), relojito enviando, alerta si falló. El 🔊 queda junto a la hora.
+
+- `static/app/chat.js`: `marca(m)` devuelve SVG (`CHAT_ICONOS`: enviado, leido, enviando, fallo).
+- `templates/app/chat.html`: `.chat-marca` con `x-html` y clases `leido` / `fallo`.
+- `static/css/app.css`: `.chat-pie` flotante, `--visto`, el 🔊 sin el hueco de 40 px.
+
+---
+
 ## Chat: burbujas como en las apps de mensajes (2026-11-20)
 
 Paso 2. La burbuja del cliente era verde oscuro con letra blanca y muy redonda; ahora es clarita

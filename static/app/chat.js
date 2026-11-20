@@ -36,6 +36,11 @@ function chatPeso(bytes) {
 
 // Íconos de los archivos (Material Symbols, los mismos de templates/app/iconos.html).
 const CHAT_ICONOS = {
+    // Estado de los mensajes del cliente.
+    enviado: 'M378-246 154-470l43-43 181 181 384-384 43 43-427 427Z',
+    leido: 'M294-242 70-466l43-43 181 181 43 43-43 43Zm170 0L240-466l43-43 181 181 384-384 43 43-427 427Zm0-170-43-43 257-257 43 43-257 257Z',
+    enviando: 'm627-287 45-45-159-160v-201h-60v225l174 181ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-82 31.5-155t86-127.5Q252-817 325-848.5T480-880q82 0 155 31.5t127.5 86Q817-708 848.5-635T880-480q0 82-31.5 155t-86 127.5Q708-143 635-111.5T480-80Zm0-400Zm0 340q140 0 240-100t100-240q0-140-100-240T480-820q-140 0-240 100T140-480q0 140 100 240t240 100Z',
+    fallo: 'M479.98-280q14.02 0 23.52-9.48t9.5-23.5q0-14.02-9.48-23.52t-23.5-9.5q-14.02 0-23.52 9.48t-9.5 23.5q0 14.02 9.48 23.52t23.5 9.5ZM453-433h60v-253h-60v253Zm27.27 353q-82.74 0-155.5-31.5Q252-143 197.5-197.5t-86-127.34Q80-397.68 80-480.5t31.5-155.66Q143-709 197.5-763t127.34-85.5Q397.68-880 480.5-880t155.66 31.5Q709-817 763-763t85.5 127Q880-563 880-480.27q0 82.74-31.5 155.5Q817-252 763-197.68q-54 54.31-127 86Q563-80 480.27-80Zm.23-60Q622-140 721-239.5t99-241Q820-622 721.19-721T480-820q-141 0-240.5 98.81T140-480q0 141 99.5 240.5t241 99.5Zm-.5-340Z',
     imagen: 'M180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm56-97h489L578-473 446-302l-93-127-117 152Zm-56 97v-600 600Z',
     video: 'm140-800 74 152h130l-74-152h89l74 152h130l-74-152h89l74 152h130l-74-152h112q24 0 42 18t18 42v520q0 24-18 42t-42 18H140q-24 0-42-18t-18-42v-520q0-24 18-42t42-18Zm0 212v368h680v-368H140Zm0 0v368-368Z',
     audio: 'M393-120q-63 0-106.5-43.5T243-270q0-63 43.5-106.5T393-420q28 0 50.5 8t39.5 22v-450h234v135H543v435q0 63-43.5 106.5T393-120Z',
@@ -477,11 +482,11 @@ document.addEventListener('alpine:init', () => {
             return i === 0 || this.dia(this.mensajes[i]) !== this.dia(this.mensajes[i - 1]);
         },
 
-        // "Enviando…", ✓ o ✓✓ (solo en los del cliente).
+        // Relojito enviando, ✓ gris enviado, ✓✓ azul leído (solo en los del cliente). SVG: x-html.
         marca(m) {
-            if (m.estado === 'enviando') return '🕓';
-            if (m.estado === 'error') return '⚠️';
-            return m.leido ? '✓✓' : '✓';
+            if (m.estado === 'enviando') return chatIconoSvg('enviando');
+            if (m.estado === 'error') return chatIconoSvg('fallo');
+            return chatIconoSvg(m.leido ? 'leido' : 'enviado');
         },
 
         etiquetaMarca(m) {
