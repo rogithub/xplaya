@@ -2461,7 +2461,8 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     background: var(--surface);
     box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
 }
-.chat-opciones-menu button {
+.chat-opciones-menu button,
+.chat-opciones-menu a {
     display: block;
     width: 100%;
     padding: 12px 14px;
@@ -2471,9 +2472,19 @@ body:has(.app-nav) .app { padding-bottom: calc(96px + env(safe-area-inset-bottom
     color: var(--ink);
     font: inherit;
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
 }
-.chat-opciones-menu button:active { background: var(--chip); }
+.chat-opciones-menu button:active,
+.chat-opciones-menu a:active { background: var(--chip); }
+
+/* Dentro de la conversación no va la barra de abajo (chat.js pone la clase): el redactor baja
+   hasta el borde. */
+.en-conversacion .app-nav { display: none; }
+.en-conversacion body:has(.app-nav) .app { padding-bottom: 0; }
+.en-conversacion .chat-redactor { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+
+.chats-pista { margin: 18px 8px 0; color: var(--muted); font-size: .85rem; text-align: center; }
 
 /* Acomodar la foto de perfil (static/app/perfil.js) */
 .recorte {

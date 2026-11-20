@@ -47,6 +47,7 @@
                 </button>
             </li>
         </ul>
+        <p class="chats-pista">Para vaciar el chat, ábrelo y toca <strong>⋮</strong> arriba a la derecha.</p>
     </div>
 
     {# ── Conversación ── #}
@@ -72,6 +73,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
             </button>
             <div class="chat-opciones-menu" x-show="menu" x-transition.opacity>
+                <a href="/perfil">👤 Mi perfil</a>
                 <button type="button" @click="menu = false; vaciar()">🧹 Vaciar chat</button>
             </div>
         </div>

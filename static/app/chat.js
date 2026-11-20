@@ -315,6 +315,10 @@ document.addEventListener('alpine:init', () => {
             this.reintentar();
             this.marcarLeido();
             this.colocarRedactor();
+            // Dentro de la conversación no va la barra de abajo (como en WhatsApp): se sale con la
+            // ← o el "atrás" del celular. El CSS la esconde con esta clase.
+            this.$watch('vista', (v) => document.documentElement.classList.toggle('en-conversacion', v === 'conversacion'));
+            document.documentElement.classList.toggle('en-conversacion', this.vista === 'conversacion');
         },
 
         // ── Lista y conversación ──
@@ -325,7 +329,6 @@ document.addEventListener('alpine:init', () => {
             this.vista = 'conversacion';
             if (!animar) document.documentElement.classList.add('chat-sin-animar');
             this.$nextTick(() => {
-                this.colocarRedactor();
                 this.alFinal(false);
                 this.marcarLeido();
                 document.documentElement.classList.remove('chat-sin-animar');
@@ -487,7 +490,9 @@ document.addEventListener('alpine:init', () => {
             window.scrollTo({ top: document.documentElement.scrollHeight, behavior: suave ? 'smooth' : 'auto' });
         },
 
-        // El cuadro de texto va fijo sobre la barra de abajo; su alto cambia con el tamaño de letra.
+        // El cuadro de texto va fijo sobre la barra de abajo (o hasta abajo, en la conversación, donde
+        // la barra se esconde); su alto cambia con el tamaño de letra. Se llama una sola vez: el
+        // ResizeObserver lo reajusta cuando la barra aparece o desaparece.
         colocarRedactor() {
             const nav = document.querySelector('.app-nav');
             const r = this.$refs.redactor;

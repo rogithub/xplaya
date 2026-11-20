@@ -4,6 +4,21 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: sin barra de abajo dentro de la conversación (2026-11-20)
+
+Como en WhatsApp: en la lista de chats está la barra normal; al abrir la conversación se esconde
+y se sale con la ← o el "atrás" del celular. El redactor baja hasta el borde.
+
+- `static/app/chat.js`: un `$watch` de `vista` pone la clase `en-conversacion` en `<html>`;
+  `colocarRedactor` ya no se llama en cada apertura (su ResizeObserver lo reajusta solo cuando la
+  barra aparece o desaparece).
+- `static/css/app.css`: `.en-conversacion .app-nav { display: none }` y el `safe-area` del
+  redactor; `.chats-pista`.
+- `templates/app/chat.html`: "👤 Mi perfil" en el ⋮, y una pista bajo la lista para que se sepa
+  cómo vaciar el chat (dejar el dedo sobre la fila queda como atajo).
+
+---
+
 ## Mi perfil: la foto salía negra al acomodarla (2026-11-20)
 
 En el celular, "Acomoda tu foto" a veces salía todo negro: el `$nextTick` medía el cuadro antes
