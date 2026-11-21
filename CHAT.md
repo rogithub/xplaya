@@ -247,6 +247,14 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
 5. Chat en la caja (POS) — hecho y probado en producción (20 nov 2026), en `main` del POS. Falta
    abrirlo a todos (vaciar `CHAT_CLIENTES_PRUEBA`).
 6. Avisos con la app cerrada.
+   a) Al cliente — hecho (21 nov 2026): cuando escribe la papelería, Web Push "Papelería xplaya:
+   {texto}" (o "📷 Foto", "🎤 Nota de voz", "📎 3 archivos"…, `reglas::aviso_al_cliente`) con
+   `push::mandar_del_momento`, sin fila en `Notificaciones`. `tag: "chat"`: los seguidos se juntan
+   en uno que vuelve a sonar. El service worker no lo muestra si el chat está a la vista (salvo en
+   iPhone, que quita el permiso a quien no muestra avisos); al tocarlo abre `/chat?abrir=1` en la
+   ventana de la app. Solo para clientes con avisos activos.
+   b) A la papelería — pendiente: ntfy (`avisos.chat`) si un mensaje del cliente lleva
+   `CHAT_MINUTOS_AVISO` sin leerse en la caja.
 7. Marcar encargos.
 8. Asistente de IA: propone respuestas (`sugerencia`) que la caja aprueba; sus herramientas para
    Claude en `MCP_papeleria_poc`.

@@ -296,6 +296,51 @@ pub fn aviso_fuera_de_horario(cliente: Uuid, cierre: Option<NaiveDateTime>, ahor
     })
 }
 
+/// Largo máximo del texto en el aviso del celular (la notificación corta lo demás de todos modos).
+const AVISO_MAX: usize = 120;
+
+/// Lo que dice el aviso del celular cuando la papelería escribe y el cliente no tiene la app
+/// abierta (etapa 6, Web Push). Solo de lo que escribe la papelería: lo automático sale justo
+/// después de que el cliente escribió, y los avisos de "Avisar por la app" ya traen su propio
+/// aviso (`push::entregar`). Como en WhatsApp: el texto, o qué mandó si no trae texto.
+pub fn aviso_al_cliente(n: &Nuevo) -> Option<String> {
+    if n.autor != Lado::Papeleria {
+        return None;
+    }
+    let que = match n.adjuntos.as_slice() {
+        [] => None,
+        [a] => Some(match a.mime.split('/').next() {
+            _ if a.pdf.is_some() || a.mime == "application/pdf" => "📄 Documento",
+            Some("image") => "📷 Foto",
+            Some("video") => "🎥 Video",
+            Some("audio") => "🎤 Nota de voz",
+            _ => "📎 Archivo",
+        }.to_string()),
+        varios => Some(format!("📎 {} archivos", varios.len())),
+    };
+    let texto = n.texto.as_deref().map(str::trim).filter(|t| !t.is_empty()).map(|t| {
+        // Un solo renglón, y cortado por caracteres (no por bytes: hay acentos y emoji).
+        let t = t.split_whitespace().collect::<Vec<_>>().join(" ");
+        if t.chars().count() > AVISO_MAX {
+            format!("{}…", t.chars().take(AVISO_MAX).collect::<String>().trim_end())
+        } else {
+            t
+        }
+    });
+    let tarjeta = match n.tipo {
+        Tipo::Producto => Some("🛍️ Te mandó un producto"),
+        Tipo::Recibo => Some("🧾 Te mandó tu recibo"),
+        Tipo::Cotizacion => Some("🧾 Te mandó una cotización"),
+        Tipo::Texto | Tipo::Aviso => None,
+    };
+    match (que, texto) {
+        (Some(q), Some(t)) => Some(format!("{} {t}", q.split_once(' ').map_or(q.as_str(), |(icono, _)| icono))),
+        (Some(q), None) => Some(q),
+        (None, Some(t)) => Some(t),
+        (None, None) => tarjeta.map(str::to_string),
+    }
+}
+
 /// La cotización del carrito en el chat (`routes::chat::cotizacion_del_carrito`): al mandar su
 /// pedido desde la app, el cliente lo ve como tarjeta. El id sale del pedido, así que si se
 /// publica dos veces se guarda una sola.
@@ -603,5 +648,63 @@ mod tests {
         assert_eq!((c.tipo, c.referencia.as_deref()), (Tipo::Cotizacion, Some(ID.to_string().as_str())));
         let t = Tema { cliente: CLIENTE, lado: Lado::Automatico, evento: Evento::Mensaje };
         assert!(matches!(aplicar(&t, Entrante::Mensaje(c), None, 1, &Ajustes::default()), Cambio::Guardar(_)));
+    }
+
+    fn de_la_papeleria(texto: Option<&str>, adjuntos: Vec<Adjunto>) -> Nuevo {
+        Nuevo {
+            id: ID, cliente: CLIENTE, autor: Lado::Papeleria, tipo: Tipo::Texto,
+            texto: texto.map(str::to_string), adjuntos, referencia: None, responde_a: None,
+            secuencia: 1, fecha: hora("10:00:00").naive_local(),
+        }
+    }
+
+    fn con_mime(mime: &str) -> Adjunto {
+        Adjunto { mime: mime.into(), pdf: None, ..adjunto(CLIENTE) }
+    }
+
+    #[test]
+    fn aviso_al_cliente_solo_de_la_papeleria() {
+        let mut n = de_la_papeleria(Some("Ya están tus copias"), vec![]);
+        assert_eq!(aviso_al_cliente(&n).as_deref(), Some("Ya están tus copias"));
+        n.autor = Lado::Cliente;
+        assert_eq!(aviso_al_cliente(&n), None);
+        n.autor = Lado::Automatico;
+        assert_eq!(aviso_al_cliente(&n), None);
+    }
+
+    #[test]
+    fn aviso_al_cliente_en_un_renglon_y_cortado() {
+        let n = de_la_papeleria(Some("  Hola\n\nya   quedó  "), vec![]);
+        assert_eq!(aviso_al_cliente(&n).as_deref(), Some("Hola ya quedó"));
+        let largo = "ñ".repeat(200);
+        let aviso = aviso_al_cliente(&de_la_papeleria(Some(&largo), vec![])).unwrap();
+        assert_eq!(aviso.chars().count(), AVISO_MAX + 1);
+        assert!(aviso.ends_with('…'));
+    }
+
+    #[test]
+    fn aviso_al_cliente_dice_que_mando() {
+        let solo = |a: Adjunto| aviso_al_cliente(&de_la_papeleria(None, vec![a])).unwrap();
+        assert_eq!(solo(con_mime("image/jpeg")), "📷 Foto");
+        assert_eq!(solo(con_mime("video/mp4")), "🎥 Video");
+        assert_eq!(solo(con_mime("audio/webm")), "🎤 Nota de voz");
+        assert_eq!(solo(con_mime("application/pdf")), "📄 Documento");
+        assert_eq!(solo(adjunto(CLIENTE)), "📄 Documento"); // Word ya convertido
+        assert_eq!(solo(con_mime("application/zip")), "📎 Archivo");
+        let varios = de_la_papeleria(None, vec![con_mime("image/png"), con_mime("image/png")]);
+        assert_eq!(aviso_al_cliente(&varios).as_deref(), Some("📎 2 archivos"));
+        // Con texto: el ícono y el texto, como en WhatsApp.
+        let foto = de_la_papeleria(Some("Así quedó"), vec![con_mime("image/png")]);
+        assert_eq!(aviso_al_cliente(&foto).as_deref(), Some("📷 Así quedó"));
+    }
+
+    #[test]
+    fn aviso_al_cliente_de_una_tarjeta() {
+        let mut n = de_la_papeleria(None, vec![]);
+        assert_eq!(aviso_al_cliente(&n), None);
+        n.tipo = Tipo::Producto;
+        assert_eq!(aviso_al_cliente(&n).as_deref(), Some("🛍️ Te mandó un producto"));
+        n.texto = Some("¿Este?".into());
+        assert_eq!(aviso_al_cliente(&n).as_deref(), Some("¿Este?"));
     }
 }

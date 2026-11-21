@@ -2,7 +2,8 @@
 //! quien venga (`CHAT.md`). Misma forma que `fotos.rs`.
 //!
 //! Es un adaptador: lee el tema y el cuerpo, le pregunta a `reglas::aplicar` qué hacer y lo
-//! ejecuta. No decide nada. Después de guardar, avisa a la app en vivo (`nats.rs`).
+//! ejecuta. No decide nada. Después de guardar, avisa a la app en vivo (`nats.rs`) y, si
+//! escribió la papelería, al celular del cliente aunque tenga la app cerrada (`avisar_al_celular`).
 
 use std::time::Duration;
 
@@ -13,10 +14,12 @@ use super::contrato::{self, Entrante, Evento, Lado, Tema};
 use super::reglas::{self, Cambio};
 use super::tarjetas;
 use super::vista::{EnVivo, Vista};
-use crate::{db, AppState};
+use crate::{db, push, AppState};
 
 const STREAM: &str = "CHAT";
 const CONSUMER: &str = "xplaya";
+/// Cuánto guarda el servicio de push el aviso si el celular está apagado.
+const CADUCIDAD_AVISO: Duration = Duration::from_secs(24 * 60 * 60);
 
 /// Sin usuario de NATS no hace nada: el chat no funciona sin el stream.
 pub fn vigilar(state: AppState) {
@@ -98,6 +101,9 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
                     }
                 }
                 state.chat.avisar(n.cliente, EnVivo::Mensaje(Box::new(vista)));
+                if let Some(texto) = reglas::aviso_al_cliente(&n) {
+                    avisar_al_celular(state, n.cliente, texto);
+                }
                 if n.autor == Lado::Cliente {
                     fuera_de_horario(state, n.cliente, n.fecha).await?;
                 }
@@ -126,6 +132,25 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
         Cambio::Ignorar(motivo) => tracing::info!("chat: {tema} #{secuencia} ignorado: {motivo}"),
     }
     Ok(())
+}
+
+/// Web Push al celular del cliente (etapa 6), en una tarea aparte para no frenar el stream. Sin
+/// fila en `Notificaciones` ni reintentos: un mensaje del chat ya está en la app, el aviso solo
+/// lo trae al frente. Con `tag` "chat" los mensajes seguidos se reemplazan en uno que vuelve a
+/// sonar. Si el cliente tiene la conversación a la vista, el service worker no lo muestra.
+fn avisar_al_celular(state: &AppState, cliente: uuid::Uuid, texto: String) {
+    let Some(vapid) = state.vapid.clone() else { return };
+    let state = state.clone();
+    tokio::spawn(async move {
+        let cuerpo = serde_json::json!({
+            "titulo": "Papelería xplaya", "texto": texto, "url": "/chat?abrir=1", "tag": "chat",
+        });
+        match push::mandar_del_momento(&state, &vapid, cliente, cuerpo, CADUCIDAD_AVISO).await {
+            Ok(true) => tracing::info!("chat: aviso al celular de {cliente}"),
+            Ok(false) => {} // sin celular con avisos activos
+            Err(e) => tracing::warn!("chat: aviso al celular de {cliente}: {e}"),
+        }
+    });
 }
 
 /// Si el cliente escribió con la papelería cerrada (el switch de la caja), la respuesta

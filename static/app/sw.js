@@ -121,11 +121,26 @@ async function compartir(req) {
 
 const ICONO = '/static/img/favicon/web-app-manifest-192x192.png?v=4';
 
+// Los del chat (`tag: 'chat'`, chat/consumer.rs) no se muestran si el cliente tiene el chat a la
+// vista: ya lo está leyendo, como en WhatsApp. En iPhone sí, siempre: Apple quita el permiso a la
+// app que recibe avisos sin mostrarlos.
+const IPHONE = /iPhone|iPad|iPod/.test(self.navigator.userAgent);
+
+async function chatALaVista() {
+    const ventanas = await self.clients.matchAll({ type: 'window' });
+    return ventanas.some((v) => v.visibilityState === 'visible' && new URL(v.url).pathname === '/chat');
+}
+
 self.addEventListener('push', (event) => {
     let aviso = {};
     try { aviso = event.data ? event.data.json() : {}; } catch { /* sin JSON: aviso genérico */ }
+    event.waitUntil(mostrar(aviso));
+});
+
+async function mostrar(aviso) {
+    if (aviso.tag === 'chat' && !IPHONE && await chatALaVista()) return;
     const titulo = aviso.titulo || 'Papelería xplaya';
-    event.waitUntil(Promise.all([
+    await Promise.all([
         self.registration.showNotification(titulo, {
             body: aviso.texto || '',
             icon: ICONO,
@@ -134,8 +149,8 @@ self.addEventListener('push', (event) => {
             data: { id: aviso.id, url: aviso.url || '/' },
         }),
         marcar(aviso.id, 'recibida'),
-    ]));
-});
+    ]);
+}
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
@@ -145,11 +160,19 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil(Promise.all([abrir(destino), marcar(id, 'abierta')]));
 });
 
-// Si la app ya está abierta en esa página, la trae al frente; si no, abre una ventana.
+// Si la app ya está abierta en esa página, la trae al frente; si está abierta en otra página de
+// la app, la lleva ahí (así no se juntan ventanas); si no, abre una.
 async function abrir(destino) {
     const ventanas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const misma = ventanas.find((v) => v.url === destino);
     if (misma) return misma.focus();
+    const deLaApp = ventanas.find((v) => new URL(v.url).origin === new URL(destino).origin && 'navigate' in v);
+    if (deLaApp) {
+        try {
+            const v = await deLaApp.focus();
+            return await v.navigate(destino);
+        } catch { /* no se dejó: una ventana nueva */ }
+    }
     return self.clients.openWindow(destino);
 }
 

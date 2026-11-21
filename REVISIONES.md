@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: aviso al celular del cliente cuando escribe la papelería (2026-11-21)
+
+Etapa 6a. Con la app cerrada, al cliente le llega "Papelería xplaya: Ya están tus copias" (o qué
+le mandaron, si no trae texto), como en WhatsApp. Al tocarlo se abre la conversación.
+
+- `src/chat/reglas.rs`: `aviso_al_cliente(&Nuevo)`, función pura con pruebas: solo lo de la
+  papelería, un renglón, 120 caracteres, ícono de lo que mandó o de la tarjeta.
+- `src/chat/consumer.rs`: `avisar_al_celular` después de guardar, en una tarea aparte, con
+  `push::mandar_del_momento` (`tag: "chat"`, urgencia alta, caduca en 24 h).
+- `static/app/sw.js`: no muestra el aviso del chat si la conversación está a la vista (salvo en
+  iPhone); al tocar un aviso, usa la ventana de la app que ya está abierta.
+
+---
+
 ## CHAT.md: etapa 5 en main y probada (2026-11-20)
 
 - `CHAT.md`, "Etapas": el chat en la caja ya está en `main` del POS y probado en producción; falta
