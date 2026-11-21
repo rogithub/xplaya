@@ -42,10 +42,10 @@ pub async fn guardado(pool: &PgPool, id: Uuid) -> Result<Option<Guardado>, sqlx:
 pub async fn guardar(pool: &PgPool, n: &Nuevo) -> Result<bool, sqlx::Error> {
     let adjuntos = (!n.adjuntos.is_empty()).then(|| serde_json::to_value(&n.adjuntos)).transpose().map_err(|e| sqlx::Error::Encode(Box::new(e)))?;
     let hecho = sqlx::query(
-        "INSERT INTO mensajes (id, clienteid, autor, tipo, texto, adjuntos, ref, respondea, secuencia, fecha)
+        "INSERT INTO mensajes (id, clienteid, autor, tipo, texto, adjuntos, ref, respondea, secuencia, fecha, encargoid)
          SELECT $1, c.id, $3, $4, $5, $6, $7,
                 (SELECT m.id FROM mensajes m WHERE m.id = $8 AND m.clienteid = c.id),
-                $9, $10
+                $9, $10, $11
          FROM clientes c WHERE c.id = $2
          ON CONFLICT (id) DO NOTHING",
     )
@@ -59,9 +59,18 @@ pub async fn guardar(pool: &PgPool, n: &Nuevo) -> Result<bool, sqlx::Error> {
     .bind(n.responde_a)
     .bind(n.secuencia as i64)
     .bind(n.fecha)
+    .bind(n.encargo)
     .execute(pool)
     .await?;
     Ok(hecho.rows_affected() == 1)
+}
+
+/// ¿La papelería ligó este pedido (`Pedidos.Uid`) a la conversación de su cliente? (etapa 7)
+pub async fn pedido_del_chat(pool: &PgPool, pedido: Uuid) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM mensajes WHERE encargoid = $1)")
+        .bind(pedido)
+        .fetch_one(pool)
+        .await
 }
 
 /// Marca leídos los mensajes del cliente (`del_cliente`) o los que le escribieron, hasta `hasta`.
@@ -346,6 +355,7 @@ pub(crate) mod tests {
             }],
             referencia: None,
             responde_a: None,
+            encargo: None,
             secuencia: 5,
             fecha: hora(a_las),
         }
@@ -364,6 +374,21 @@ pub(crate) mod tests {
         assert_eq!((g.cliente, g.autor, g.fecha, g.eliminado, g.secuencia), (c, Lado::Cliente, n.fecha, false, Some(5)));
         assert_eq!(g.adjuntos, n.adjuntos);
         assert_eq!(guardado(&pool, Uuid::new_v4()).await.unwrap(), None);
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn el_pedido_ligado_al_chat(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        let c = cliente(&pool, "9840000001").await;
+        let pedido = Uuid::new_v4();
+        assert!(!pedido_del_chat(&pool, pedido).await.unwrap());
+        let mut n = nuevo(c, Lado::Papeleria, "17:42:00");
+        n.encargo = Some(pedido);
+        assert!(guardar(&pool, &n).await.unwrap());
+        assert!(pedido_del_chat(&pool, pedido).await.unwrap());
+        assert!(!pedido_del_chat(&pool, Uuid::new_v4()).await.unwrap());
     }
 
     #[sqlx::test(migrations = false)]

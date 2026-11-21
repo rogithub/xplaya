@@ -61,6 +61,9 @@ pub struct Nuevo {
     pub adjuntos: Vec<Adjunto>,
     pub referencia: Option<String>,
     pub responde_a: Option<Uuid>,
+    /// Pedido (`Pedidos.Uid`) al que la papelería ligó este mensaje (etapa 7). Solo de la
+    /// papelería o de xplaya: si lo manda el cliente, se descarta.
+    pub encargo: Option<Uuid>,
     /// Secuencia en el stream `CHAT`, para quitarlo de ahí si se elimina.
     pub secuencia: u64,
     pub fecha: NaiveDateTime,
@@ -134,6 +137,7 @@ fn mensaje(tema: &Tema, m: Mensaje, guardado: Option<&Guardado>, secuencia: u64)
         adjuntos: m.adjuntos,
         referencia,
         responde_a: m.responde_a,
+        encargo: m.encargo_id.filter(|_| matches!(tema.lado, Lado::Papeleria | Lado::Automatico)),
         secuencia,
         fecha: hora_tienda(m.fecha),
     })
@@ -297,6 +301,26 @@ pub fn aviso_fuera_de_horario(cliente: Uuid, cierre: Option<NaiveDateTime>, ahor
         encargo_id: None,
         fecha: ahora + chrono::Duration::seconds(1),
     })
+}
+
+/// "Avisar por la app" de un pedido ligado al chat (etapa 7): el mismo aviso, también en la
+/// conversación, con la tarjeta del pedido. El id es el de la notificación: si la entrega se
+/// reintenta, el mensaje no se repite. Lo publica xplaya como automático, así que no manda otro
+/// aviso al celular (`aviso_al_cliente`): el de la notificación basta.
+pub fn aviso_de_pedido(notificacion: Uuid, cliente: Uuid, pedido: Uuid, titulo: &str, texto: &str, ahora: DateTime<FixedOffset>) -> Mensaje {
+    let texto = [titulo.trim(), texto.trim()].iter().filter(|t| !t.is_empty()).copied().collect::<Vec<_>>().join("\n");
+    Mensaje {
+        v: VERSION,
+        id: notificacion,
+        cliente_id: cliente,
+        tipo: Tipo::Cotizacion,
+        texto: Some(texto).filter(|t| !t.is_empty()),
+        adjuntos: vec![],
+        responde_a: None,
+        referencia: Some(pedido.to_string()),
+        encargo_id: Some(pedido),
+        fecha: ahora,
+    }
 }
 
 /// Largo máximo del texto en el aviso del celular (la notificación corta lo demás de todos modos).
@@ -697,10 +721,38 @@ mod tests {
         assert!(matches!(aplicar(&t, Entrante::Mensaje(c), None, 1, &Ajustes::default()), Cambio::Guardar(_)));
     }
 
+    #[test]
+    fn el_encargo_solo_lo_liga_la_papeleria() {
+        let t = |lado| Tema { cliente: CLIENTE, lado, evento: Evento::Mensaje };
+        let mut m = cotizacion_del_carrito(CLIENTE, ID, a_las("2026-11-21T12:00"));
+        m.encargo_id = Some(ID);
+        let encargo = |lado| match aplicar(&t(lado), Entrante::Mensaje(m.clone()), None, 1, &Ajustes::default()) {
+            Cambio::Guardar(n) => n.encargo,
+            otro => panic!("{otro:?}"),
+        };
+        assert_eq!(encargo(Lado::Papeleria), Some(ID));
+        assert_eq!(encargo(Lado::Automatico), Some(ID));
+        assert_eq!(encargo(Lado::Cliente), None, "el cliente no liga pedidos");
+    }
+
+    #[test]
+    fn el_aviso_del_pedido_en_el_chat() {
+        let ahora = a_las("2026-11-21T12:00");
+        let m = aviso_de_pedido(OTRO, CLIENTE, ID, "¡Tu pedido está listo! 🎉", "Pedido No. 7 · Total: $50.00\n", ahora);
+        assert_eq!(m.id, OTRO, "el id de la notificación: no se repite al reintentar");
+        assert_eq!((m.tipo, m.referencia.as_deref(), m.encargo_id), (Tipo::Cotizacion, Some(ID.to_string().as_str()), Some(ID)));
+        assert_eq!(m.texto.as_deref(), Some("¡Tu pedido está listo! 🎉\nPedido No. 7 · Total: $50.00"));
+        let t = Tema { cliente: CLIENTE, lado: Lado::Automatico, evento: Evento::Mensaje };
+        match aplicar(&t, Entrante::Mensaje(m), None, 1, &Ajustes::default()) {
+            Cambio::Guardar(n) => assert_eq!(aviso_al_cliente(&n), None, "sin segundo aviso al celular"),
+            otro => panic!("{otro:?}"),
+        }
+    }
+
     fn de_la_papeleria(texto: Option<&str>, adjuntos: Vec<Adjunto>) -> Nuevo {
         Nuevo {
             id: ID, cliente: CLIENTE, autor: Lado::Papeleria, tipo: Tipo::Texto,
-            texto: texto.map(str::to_string), adjuntos, referencia: None, responde_a: None,
+            texto: texto.map(str::to_string), adjuntos, referencia: None, responde_a: None, encargo: None,
             secuencia: 1, fecha: hora("10:00:00").naive_local(),
         }
     }

@@ -57,16 +57,45 @@ const TTL: Duration = Duration::from_secs(24 * 60 * 60);
 /// (otra tarea la mandó, o el Id no existe), no hace nada: se puede llamar de más.
 /// `origen` ("nats" o "revisión") solo es para el log: saber quién la entregó.
 pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -> Result<(), Reintentar> {
+    if let Some(aviso) = mandar(state, vapid, id, origen).await? {
+        al_chat(state, id, &aviso).await;
+    }
+    Ok(())
+}
+
+/// Etapa 7: si es el aviso de un pedido que la papelería ligó al chat, sale también en la
+/// conversación (`reglas::aviso_de_pedido`), haya llegado al celular o no. Si NATS o la BD
+/// fallan, solo va al log: la notificación ya se entregó.
+async fn al_chat(state: &AppState, id: Uuid, aviso: &db::notificaciones::Pendiente) {
+    use crate::chat::{contrato::{Evento, Lado, Tema}, reglas};
+    let (true, Some(pedido)) = (aviso.tipo == "pedido_listo", aviso.referencia) else { return };
+    match db::chat::pedido_del_chat(&state.pool, pedido).await {
+        Ok(true) => {}
+        Ok(false) => return,
+        Err(e) => return tracing::warn!("notificaciones: {id} al chat: BD: {e}"),
+    }
+    let cliente = aviso.cliente_id;
+    let m = reglas::aviso_de_pedido(id, cliente, pedido, &aviso.titulo, &aviso.texto, chrono::Utc::now().fixed_offset());
+    let tema = Tema { cliente, lado: Lado::Automatico, evento: Evento::Mensaje };
+    if let Err(e) = state.chat.publicar(&tema, &m, Some(m.id)).await {
+        tracing::warn!("notificaciones: {id} al chat de {cliente}: {e}");
+    }
+}
+
+/// Manda la notificación y la marca. Devuelve lo que se tomó (ya marcado y confirmado), o `None`
+/// si no estaba pendiente.
+async fn mandar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -> Result<Option<db::notificaciones::Pendiente>, Reintentar> {
     let r = |e: sqlx::Error| Reintentar(format!("BD: {e}"));
     // La transacción mantiene la fila bloqueada mientras se manda (ver `tomar`).
     let mut tx = state.pool.begin().await.map_err(r)?;
     let Some(aviso) = db::notificaciones::tomar(&mut tx, id).await.map_err(r)? else {
-        return Ok(());
+        return Ok(None);
     };
     let Some(destino) = db::notificaciones::destino(&mut tx, aviso.cliente_id).await.map_err(r)? else {
         db::notificaciones::marcar(&mut tx, id, "sin_app", None, None).await.map_err(r)?;
         tracing::info!("notificaciones: {id} sin_app ({origen})");
-        return tx.commit().await.map_err(r);
+        tx.commit().await.map_err(r)?;
+        return Ok(Some(aviso));
     };
     let celular = Some(destino.celular_id);
 
@@ -87,7 +116,8 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -
         Err(e) => {
             // Datos de suscripción que no sirven: no tiene caso reintentar.
             db::notificaciones::marcar(&mut tx, id, "fallida", celular, Some(&e)).await.map_err(r)?;
-            return tx.commit().await.map_err(r);
+            tx.commit().await.map_err(r)?;
+            return Ok(Some(aviso));
         }
     };
 
@@ -112,7 +142,8 @@ pub async fn entregar(state: &AppState, vapid: &Vapid, id: Uuid, origen: &str) -
         db::notificaciones::marcar(&mut tx, id, "fallida", celular, Some(&error)).await.map_err(r)?;
         tracing::warn!("notificaciones: {id} fallida: {error} ({origen})");
     }
-    tx.commit().await.map_err(r)
+    tx.commit().await.map_err(r)?;
+    Ok(Some(aviso))
 }
 
 /// Aviso que solo sirve en el momento (la cuenta de la caja, `caja.rs`): sin fila en

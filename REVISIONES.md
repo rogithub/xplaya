@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: el aviso de un pedido ligado también sale en la conversación (2026-11-21)
+
+Etapa 7, parte de xplaya. Cuando la caja liga un mensaje a un pedido, el mensaje de la papelería
+trae `encargoId` y se guarda en `Mensajes.EncargoId`. Si después la caja da "📲 Avisar por la app"
+para ese pedido, xplaya entrega la notificación como siempre y además escribe el mismo aviso en el
+chat ("¡Tu pedido está listo! 🎉…") con la tarjeta del pedido. Llega un solo aviso al celular.
+
+- `src/chat/reglas.rs`: `Nuevo.encargo`, que solo se acepta de la papelería o de xplaya;
+  `aviso_de_pedido`, con el id de la notificación para que no se repita. Con pruebas.
+- `src/db/chat.rs`: `guardar` guarda `EncargoId`; `pedido_del_chat`, con `#[sqlx::test]`.
+- `src/db/notificaciones.rs`: `tomar` también lee `ReferenciaId` (`Pendiente` con `FromRow`).
+- `src/push.rs`: `entregar` = `mandar` + `al_chat`.
+- BD: `Mensajes.EncargoId` e `idx_mensajes_encargo` (en el repo del POS).
+
 ## Chat: diseño de la etapa 7, marcar encargos (2026-11-21)
 
 Solo documentación, sin código. Decisiones en `CHAT.md` › Etapas › 7: ligar un mensaje a un pedido
