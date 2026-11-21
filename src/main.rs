@@ -150,6 +150,7 @@ async fn main() {
     push::vigilar(state.clone());
     fotos::vigilar(state.clone());
     chat::vigilar(state.clone());
+    chat::sin_contestar::vigilar(state.clone());
     // La cuenta de la caja en vivo (NATS caja.cuenta).
     caja::vigilar(state.clone());
     // Borra los PDFs del autoservicio de impresión a los 7 días.

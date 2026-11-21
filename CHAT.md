@@ -124,7 +124,7 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
 - **Carrito y cotización separados**: al enviar el carrito, su cotización aparece en el chat.
 - **Leer en voz alta** (🔊, voz del celular) y **tamaño de letra** A−/A+ para toda la app.
 - **Avisos**: aviso flotante en el POS; si nadie lee en 5 min, ntfy al celular de la papelería
-  (`avisos.chat`). Web Push al cliente con la app cerrada. Los avisos de "Avisar por la app" aparecen
+  (`avisos.papeleria-chat`). Web Push al cliente con la app cerrada. Los avisos de "Avisar por la app" aparecen
   también en el chat.
 - **Privacidad**: el aviso (LFPDPPP) ya lo cubre en `templates/pages/terminos.html#privacidad`:
   el chat, los archivos y notas de voz por 90 días, y la foto y el nombre de Mi perfil. Si un
@@ -253,8 +253,12 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
    en uno que vuelve a sonar. El service worker no lo muestra si el chat está a la vista (salvo en
    iPhone, que quita el permiso a quien no muestra avisos); al tocarlo abre `/chat?abrir=1` en la
    ventana de la app. Solo para clientes con avisos activos.
-   b) A la papelería — pendiente: ntfy (`avisos.chat`) si un mensaje del cliente lleva
-   `CHAT_MINUTOS_AVISO` sin leerse en la caja.
+   b) A la papelería — hecho (21 nov 2026): si un mensaje del cliente lleva `CHAT_MINUTOS_AVISO`
+   (5; `0` lo apaga) sin leerse en la caja, ntfy al celular de la papelería por
+   `avisos.papeleria-chat` (topic `papeleria-chat`), con "Abrir en la caja"
+   (`https://papeleria.xplaya.com/Chat/Conversacion/{cliente}`). Una vez por racha: la revisión de
+   cada minuto (`chat/sin_contestar.rs`) avisa las rachas cuyo primer mensaje sin leer cumplió la
+   espera en ese minuto (`reglas::ventana_de_aviso`). Con el switch en Cerrada no avisa.
 7. Marcar encargos.
 8. Asistente de IA: propone respuestas (`sugerencia`) que la caja aprueba; sus herramientas para
    Claude en `MCP_papeleria_poc`.

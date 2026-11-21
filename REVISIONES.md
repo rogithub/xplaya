@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: aviso por ntfy a la papelería si nadie contesta (2026-11-21)
+
+Etapa 6b. Si un mensaje del cliente lleva `CHAT_MINUTOS_AVISO` (5) sin leerse en la caja, al
+celular de la papelería le llega "Chat sin contestar: Ana · ¿Tienen opalina? · 3 sin leer…" con
+botón "Abrir en la caja". Una vez por racha; con el switch en Cerrada, nada.
+
+- `src/chat/reglas.rs`: `SinContestar`, `ventana_de_aviso` y `aviso_a_la_papeleria` (puras, con
+  pruebas); `Ajustes.minutos_aviso`.
+- `src/db/chat.rs`: `CHAT_MINUTOS_AVISO` en `ajustes`; `sin_contestar(desde, hasta)` con
+  `#[sqlx::test]`.
+- `src/chat/sin_contestar.rs` (nuevo): revisión cada minuto; `main.rs` la arranca.
+- `src/avisos.rs`: `chat_sin_contestar` → `avisos.papeleria-chat`.
+- k3s-manifests: permiso de NATS para `avisos.papeleria-chat` (reiniciar NATS).
+
+---
+
 ## Chat: aviso al celular del cliente cuando escribe la papelería (2026-11-21)
 
 Etapa 6a. Con la app cerrada, al cliente le llega "Papelería xplaya: Ya están tus copias" (o qué

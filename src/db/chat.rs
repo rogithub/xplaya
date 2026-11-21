@@ -9,7 +9,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::chat::contrato::{Adjunto, Lado};
-use crate::chat::reglas::{Ajustes, Guardado, Nuevo};
+use crate::chat::reglas::{Ajustes, Guardado, Nuevo, SinContestar};
 use crate::chat::vista::{adjuntos_vista, Vista};
 
 /// Cliente, autor, fecha, si se eliminó, adjuntos y secuencia.
@@ -119,7 +119,7 @@ const ESTADO_MAX: usize = 80;
 pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
     let filas: Vec<(String, Option<String>)> =
         sqlx::query_as(
-            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO', 'PAPELERIA_ABIERTA', 'PAPELERIA_ESTADO')",
+            "SELECT key, value FROM settings WHERE key IN ('CHAT_MINUTOS_EDITAR', 'CHAT_CLIENTES_PRUEBA', 'CHAT_MB_DOCUMENTO', 'CHAT_MB_VIDEO', 'PAPELERIA_ABIERTA', 'PAPELERIA_ESTADO', 'CHAT_MINUTOS_AVISO')",
         )
             .fetch_all(pool)
             .await?;
@@ -135,6 +135,12 @@ pub async fn ajustes(pool: &PgPool) -> Result<Ajustes, sqlx::Error> {
             "CHAT_MB_DOCUMENTO" => a.mb_documento = numero(valor).unwrap_or(a.mb_documento),
             "CHAT_MB_VIDEO" => a.mb_video = numero(valor).unwrap_or(a.mb_video),
             "PAPELERIA_ABIERTA" => a.papeleria_abierta = valor.is_none_or(|v| v.trim() != "0"),
+            // Vacío o que no es número: los 5 de siempre. `0` sí vale: apaga el aviso.
+            "CHAT_MINUTOS_AVISO" => {
+                if let Some(m) = valor.and_then(|m| m.trim().parse().ok()) {
+                    a.minutos_aviso = m;
+                }
+            }
             "PAPELERIA_ESTADO" => {
                 a.estado = valor.map(|v| v.trim().chars().take(ESTADO_MAX).collect::<String>()).filter(|v| !v.is_empty())
             }
@@ -249,6 +255,46 @@ pub async fn sin_leer(pool: &PgPool, cliente: Uuid) -> Result<i64, sqlx::Error> 
     .bind(cliente)
     .fetch_one(pool)
     .await
+}
+
+/// Clientes cuya racha de mensajes sin leer en la caja empezó en `(desde, hasta]`
+/// (`reglas::ventana_de_aviso`): el primero sin leer cayó ahí, así que cada racha sale una sola
+/// vez. Con cuántos van y el más reciente, para el aviso a la papelería.
+pub async fn sin_contestar(pool: &PgPool, desde: NaiveDateTime, hasta: NaiveDateTime) -> Result<Vec<SinContestar>, sqlx::Error> {
+    #[derive(sqlx::FromRow)]
+    struct Fila {
+        clienteid: Uuid,
+        nombre: Option<String>,
+        cuantos: i64,
+        ultimo_texto: Option<String>,
+        ultimo_con_archivos: bool,
+    }
+    let filas: Vec<Fila> = sqlx::query_as(
+        "SELECT m.clienteid,
+                COALESCE(NULLIF(trim(c.nombrechat), ''), c.nombre) AS nombre,
+                COUNT(*) AS cuantos,
+                (array_agg(m.texto ORDER BY m.fecha DESC))[1] AS ultimo_texto,
+                (array_agg(jsonb_array_length(COALESCE(m.adjuntos, '[]'::jsonb)) > 0 ORDER BY m.fecha DESC))[1] AS ultimo_con_archivos
+         FROM mensajes m
+         JOIN clientes c ON c.id = m.clienteid
+         WHERE m.autor = 'cliente' AND m.fechaleido IS NULL AND m.fechaeliminado IS NULL
+         GROUP BY m.clienteid, c.nombrechat, c.nombre
+         HAVING MIN(m.fecha) > $1 AND MIN(m.fecha) <= $2",
+    )
+    .bind(desde)
+    .bind(hasta)
+    .fetch_all(pool)
+    .await?;
+    Ok(filas
+        .into_iter()
+        .map(|f| SinContestar {
+            cliente: f.clienteid,
+            nombre: f.nombre.unwrap_or_default(),
+            cuantos: f.cuantos,
+            ultimo_texto: f.ultimo_texto,
+            ultimo_con_archivos: f.ultimo_con_archivos,
+        })
+        .collect())
 }
 
 #[cfg(test)]
@@ -524,5 +570,32 @@ pub(crate) mod tests {
         eliminar(&pool, dos.id, hora("17:10:00")).await.unwrap();
         let todo = conversacion(&pool, c, None, 50).await.unwrap();
         assert_eq!((todo[0].adjuntos.len(), todo[0].zip.as_deref()), (0, None), "eliminado: sin archivos");
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn sin_contestar_avisa_cada_racha_una_vez(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        let ana = cliente(&pool, "9840000011").await;
+        let beto = cliente(&pool, "9840000012").await;
+        sqlx::query("UPDATE clientes SET nombrechat = 'Ana' WHERE id = $1").bind(ana).execute(&pool).await.unwrap();
+        // Ana: dos sin leer, la racha empezó a las 10:00. El último, sin texto.
+        guardar(&pool, &nuevo(ana, Lado::Cliente, "10:00:00")).await.unwrap();
+        let mut ultimo = nuevo(ana, Lado::Cliente, "10:03:00");
+        ultimo.texto = None;
+        guardar(&pool, &ultimo).await.unwrap();
+        // Beto: escribió a las 10:00, pero la caja ya lo leyó.
+        guardar(&pool, &nuevo(beto, Lado::Cliente, "10:00:30")).await.unwrap();
+        marcar_leidos(&pool, beto, true, hora("10:01:00")).await.unwrap();
+        // Lo que escribe la papelería no cuenta.
+        guardar(&pool, &nuevo(beto, Lado::Papeleria, "10:00:40")).await.unwrap();
+
+        let r = sin_contestar(&pool, hora("09:59:00"), hora("10:00:00")).await.unwrap();
+        assert_eq!(r, vec![SinContestar {
+            cliente: ana, nombre: "Ana".into(), cuantos: 2, ultimo_texto: None, ultimo_con_archivos: true,
+        }]);
+        // La siguiente ventana ya no la vuelve a avisar: su racha empezó antes.
+        assert!(sin_contestar(&pool, hora("10:00:00"), hora("10:05:00")).await.unwrap().is_empty());
     }
 }

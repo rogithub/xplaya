@@ -28,11 +28,14 @@ pub struct Ajustes {
     /// cerramos a las 6"). Sale en el encabezado del chat en lugar de "Contestamos pronto/al abrir".
     /// `None` si no está o está vacío.
     pub estado: Option<String>,
+    /// `CHAT_MINUTOS_AVISO`: minutos que un mensaje del cliente espera sin leerse en la caja antes
+    /// del aviso por ntfy al celular de la papelería (`aviso_a_la_papeleria`). `0`: sin aviso.
+    pub minutos_aviso: u64,
 }
 
 impl Default for Ajustes {
     fn default() -> Self {
-        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100, papeleria_abierta: true, estado: None }
+        Self { minutos_editar: 15, clientes_prueba: None, mb_documento: 25, mb_video: 100, papeleria_abierta: true, estado: None, minutos_aviso: 5 }
     }
 }
 
@@ -339,6 +342,50 @@ pub fn aviso_al_cliente(n: &Nuevo) -> Option<String> {
         (None, Some(t)) => Some(t),
         (None, None) => tarjeta.map(str::to_string),
     }
+}
+
+/// Un cliente con mensajes que la caja no ha leído (`db::chat::sin_contestar`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct SinContestar {
+    pub cliente: Uuid,
+    /// `NombreChat` si lo puso en Mi perfil; si no, el de `Clientes`.
+    pub nombre: String,
+    pub cuantos: i64,
+    /// El más reciente: su texto y si trae archivos.
+    pub ultimo_texto: Option<String>,
+    pub ultimo_con_archivos: bool,
+}
+
+/// Qué mensajes avisar en esta revisión: los que su racha sin leer empezó entre `(antes, ahora]`
+/// menos `minutos`. La revisión corre cada minuto; con la ventana desde la revisión anterior,
+/// cada racha cae en una sola vuelta, aunque una se atrase. `None`: avisos apagados (`0`).
+pub fn ventana_de_aviso(antes: NaiveDateTime, ahora: NaiveDateTime, minutos: u64) -> Option<(NaiveDateTime, NaiveDateTime)> {
+    if minutos == 0 || ahora <= antes {
+        return None;
+    }
+    let espera = chrono::Duration::minutes(minutos as i64);
+    Some((antes - espera, ahora - espera))
+}
+
+/// Título y texto del aviso por ntfy al celular de la papelería: "Chat sin contestar: Ana" ·
+/// "¿Tienen opalina? · 3 sin leer, el primero hace 5 min".
+pub fn aviso_a_la_papeleria(s: &SinContestar, minutos: u64) -> (String, String) {
+    let primer_nombre = s.nombre.split_whitespace().next().unwrap_or("un cliente");
+    let ultimo = s.ultimo_texto.as_deref().map(str::trim).filter(|t| !t.is_empty())
+        .map(|t| {
+            let t = t.split_whitespace().collect::<Vec<_>>().join(" ");
+            if t.chars().count() > AVISO_MAX {
+                format!("{}…", t.chars().take(AVISO_MAX).collect::<String>().trim_end())
+            } else {
+                t
+            }
+        })
+        .unwrap_or_else(|| if s.ultimo_con_archivos { "📎 Mandó archivos".into() } else { "Mensaje nuevo".into() });
+    let cuantos = if s.cuantos == 1 { "1 sin leer".to_string() } else { format!("{} sin leer", s.cuantos) };
+    (
+        format!("Chat sin contestar: {primer_nombre}"),
+        format!("{ultimo}\n{cuantos}, el primero hace {minutos} min"),
+    )
 }
 
 /// La cotización del carrito en el chat (`routes::chat::cotizacion_del_carrito`): al mandar su
@@ -706,5 +753,31 @@ mod tests {
         assert_eq!(aviso_al_cliente(&n).as_deref(), Some("🛍️ Te mandó un producto"));
         n.texto = Some("¿Este?".into());
         assert_eq!(aviso_al_cliente(&n).as_deref(), Some("¿Este?"));
+    }
+
+    fn sin_contestar(texto: Option<&str>, archivos: bool, cuantos: i64) -> SinContestar {
+        SinContestar {
+            cliente: CLIENTE, nombre: "Ana López".into(), cuantos,
+            ultimo_texto: texto.map(str::to_string), ultimo_con_archivos: archivos,
+        }
+    }
+
+    #[test]
+    fn aviso_a_la_papeleria_con_texto_y_cuantos() {
+        let (titulo, texto) = aviso_a_la_papeleria(&sin_contestar(Some("¿Tienen\nopalina?"), false, 3), 5);
+        assert_eq!(titulo, "Chat sin contestar: Ana");
+        assert_eq!(texto, "¿Tienen opalina?\n3 sin leer, el primero hace 5 min");
+        let (_, texto) = aviso_a_la_papeleria(&sin_contestar(None, true, 1), 5);
+        assert_eq!(texto, "📎 Mandó archivos\n1 sin leer, el primero hace 5 min");
+    }
+
+    #[test]
+    fn ventana_de_aviso_cubre_desde_la_revision_anterior() {
+        let h = |t: &str| hora(t).naive_local();
+        assert_eq!(ventana_de_aviso(h("10:00:00"), h("10:01:00"), 5), Some((h("09:55:00"), h("09:56:00"))));
+        // Si una vuelta se atrasó, la siguiente cubre todo lo que faltó.
+        assert_eq!(ventana_de_aviso(h("10:00:00"), h("10:03:30"), 5), Some((h("09:55:00"), h("09:58:30"))));
+        assert_eq!(ventana_de_aviso(h("10:00:00"), h("10:01:00"), 0), None);
+        assert_eq!(ventana_de_aviso(h("10:01:00"), h("10:01:00"), 5), None);
     }
 }

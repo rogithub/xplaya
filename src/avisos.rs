@@ -11,6 +11,8 @@
 //!   POS (topic `papeleria-kiosko`).
 //! - `pedido_nuevo`: un pedido en línea (carrito de xplaya.com o tienda de la app), con botones a
 //!   la cotización y al WhatsApp del cliente (topic `pedidos`).
+//! - `chat_sin_contestar`: un cliente escribió por el chat de la app y nadie lo ha leído en la caja
+//!   (`chat/sin_contestar.rs`), con botón a la conversación en el POS (topic `papeleria-chat`).
 //!
 //! Son un camino más, por si nadie está viendo el POS. Si NATS no está (o no hay usuario), no pasa
 //! nada: lo importante ya está en la BD y el POS lo muestra. Por eso se publica en una tarea aparte
@@ -31,6 +33,12 @@ const SUBJECT_PAPELERIA: &str = "avisos.papeleria-kiosko";
 
 /// Topic de ntfy `pedidos` (lo leen `dayana` y `ro`).
 const SUBJECT_PEDIDOS: &str = "avisos.pedidos";
+
+/// Topic de ntfy `papeleria-chat` (lo leen `dayana` por `papeleria-*` y `ro`).
+const SUBJECT_CHAT: &str = "avisos.papeleria-chat";
+
+/// La conversación en la caja; por https, que es como se abre desde el celular.
+const POS_CONVERSACION: &str = "https://papeleria.xplaya.com/Chat/Conversacion";
 
 #[derive(Clone)]
 pub struct Avisos {
@@ -186,6 +194,21 @@ impl Avisos {
             });
             avisos.publicar(SUBJECT_PEDIDOS, aviso.to_string());
         });
+    }
+
+    /// Un cliente lleva `CHAT_MINUTOS_AVISO` esperando respuesta en el chat. `titulo` y `mensaje`
+    /// los arma `chat::reglas::aviso_a_la_papeleria`.
+    pub fn chat_sin_contestar(&self, cliente: Uuid, titulo: String, mensaje: String) {
+        let conversacion = format!("{POS_CONVERSACION}/{cliente}");
+        let aviso = json!({
+            "title": titulo,
+            "message": mensaje,
+            "priority": 4,
+            "tags": ["speech_balloon"],
+            "click": conversacion,
+            "actions": [{ "action": "view", "label": "Abrir en la caja", "url": conversacion }],
+        });
+        self.publicar(SUBJECT_CHAT, aviso.to_string());
     }
 
     fn publicar(&self, subject: &'static str, cuerpo: String) {
