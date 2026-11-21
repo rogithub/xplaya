@@ -367,7 +367,7 @@ document.addEventListener('alpine:init', () => {
         // la papelería conserva todo. Lo que aún no se manda se queda.
         async vaciar() {
             if (!this.mensajes.some((m) => m.estado === 'guardado')) return;
-            if (!confirm('¿Vaciar el chat?\n\nSe borran los mensajes de tu celular. La papelería los conserva.')) return;
+            if (!confirm('¿Vaciar el chat?\n\nSe borran los mensajes de tu celular.')) return;
             try {
                 const r = await fetch('/chat/vaciar', { method: 'POST' });
                 if (!r.ok) throw new Error(r.status);

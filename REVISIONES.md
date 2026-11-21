@@ -4,6 +4,13 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: "Vaciar chat" ya no dice que la papelería conserva todo (2026-11-21)
+
+No es cierto: los archivos se borran una vez impresos (y a los 90 días). El aviso ahora solo dice
+"Se borran los mensajes de tu celular."
+
+- `static/app/chat.js`: texto del `confirm` de `vaciar()`.
+
 ## Chat: el aviso de un pedido ligado también sale en la conversación (2026-11-21)
 
 Etapa 7, parte de xplaya. Cuando la caja liga un mensaje a un pedido, el mensaje de la papelería
