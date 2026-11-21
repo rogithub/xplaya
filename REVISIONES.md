@@ -4,6 +4,15 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: diseño de la etapa 7, marcar encargos (2026-11-21)
+
+Solo documentación, sin código. Decisiones en `CHAT.md` › Etapas › 7: ligar un mensaje a un pedido
+nuevo o existente, tarjeta del pedido al día en el chat, estado nuevo Listo (`3`) con aviso al
+cliente solo al pasar a Listo, sin fecha de entrega ni "Mis encargos", y en la caja la lista de
+Pedidos con marca de "chat".
+
+- `CHAT.md`: etapa 7.
+
 ## Chat: aviso por ntfy a la papelería si nadie contesta (2026-11-21)
 
 Etapa 6b. Si un mensaje del cliente lleva `CHAT_MINUTOS_AVISO` (5) sin leerse en la caja, al

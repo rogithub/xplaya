@@ -259,7 +259,18 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
    (`https://papeleria.xplaya.com/Chat/Conversacion/{cliente}`). Una vez por racha: la revisión de
    cada minuto (`chat/sin_contestar.rs`) avisa las rachas cuyo primer mensaje sin leer cumplió la
    espera en ese minuto (`reglas::ventana_de_aviso`). Con el switch en Cerrada no avisa.
-7. Marcar encargos.
+7. Marcar encargos — diseño acordado el 21 nov 2026, sin programar:
+   - En la caja, un mensaje del cliente se liga a un pedido (`Pedidos`): uno nuevo con el texto
+     del mensaje ya puesto, o uno que ya existe. Queda en `encargoId`.
+   - El cliente ve en su chat la tarjeta del pedido (productos, total, estado), que se actualiza
+     sola. Sin lista de "Mis encargos" en la app.
+   - Estado nuevo **Listo** en `Pedidos.Estatus` con el valor `3`, para no mover 0, 1 y 2. Orden:
+     Nuevo → Listo → Pagado → Entregado.
+   - Al pasar a Listo, y solo entonces, mensaje automático en el chat y Web Push al cliente.
+     Pagado y Entregado ocurren con el cliente enfrente: solo cambia la tarjeta.
+   - Sin fecha de entrega.
+   - En la caja se ven en la lista de Pedidos que ya existe, con marca de "chat" y botón para abrir
+     la conversación.
 8. Asistente de IA: propone respuestas (`sugerencia`) que la caja aprueba; sus herramientas para
    Claude en `MCP_papeleria_poc`.
 
