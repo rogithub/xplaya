@@ -94,8 +94,8 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
   `CHAT_MINUTOS_EDITAR` (15), `CHAT_MB_DOCUMENTO` (25), `CHAT_MB_VIDEO` (100).
 - **`CHAT_CLIENTES_PRUEBA`** (`Settings`): quién ve el chat en la app. **Sin la fila, nadie**; con
   la fila vacía (o NULL), todos; si no, los `Clientes.Id` separados por coma. No está en los
-  scripts del POS a propósito: se agrega a mano con los clientes de prueba y se vacía cuando la
-  caja pueda contestar (etapa 5).
+  scripts del POS a propósito: se agregó a mano con los clientes de prueba y se vació (NULL) el
+  23 nov 2026, abriendo el chat a todos.
 - **Archivos**: MinIO, bucket `papeleria-chat`, **90 días** y sin copia a R2. Después, en el chat sale
   "Archivo vencido" con su nombre.
 
@@ -244,8 +244,8 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
    foto, video, PDF, Word, nota de voz, tarjetas, carrito y compartir desde Android. Para que
    salga en el menú de compartir hubo que reinstalar la app (Android guardaba el manifest viejo).
 4. (unida a 3b)
-5. Chat en la caja (POS) — hecho y probado en producción (20 nov 2026), en `main` del POS. Falta
-   abrirlo a todos (vaciar `CHAT_CLIENTES_PRUEBA`).
+5. Chat en la caja (POS) — hecho y probado en producción (20 nov 2026), en `main` del POS.
+   Abierto a todos el 23 nov 2026 (`CHAT_CLIENTES_PRUEBA` en NULL).
 6. Avisos con la app cerrada.
    a) Al cliente — hecho (21 nov 2026): cuando escribe la papelería, Web Push "Papelería xplaya:
    {texto}" (o "📷 Foto", "🎤 Nota de voz", "📎 3 archivos"…, `reglas::aviso_al_cliente`) con
