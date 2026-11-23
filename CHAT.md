@@ -315,13 +315,15 @@ la caja; ✓✓ azules, que alguien lo leyó.
 
 9. Entregado (✓✓ grises) — diseño del 23 nov 2026, arriba en "Entregado". Programado en el POS
    (columna y publicar desde `/Chat/SinLeer`) y en xplaya (contrato, guardar y pintar). Falta
-   `chat.*.*.entregado` en el stream `CHAT` (script en el share) y desplegar en orden: columna,
+   correr `entregado-chat-nats.sh` (share) y desplegar en orden: columna,
    stream, xplaya y al final el POS.
 
 ## Etapa 2 en el cluster
 
 Scripts en el share (`/home/ro/srv/share/xplaya-chat/`), en curicaueri:
 
+- `entregado-chat-nats.sh` (etapa 9): agrega `chat.*.*.entregado` al stream `CHAT`, sin reiniciar
+  NATS ni tocar permisos.
 - `crear-chat-nats.sh`: después de que ArgoCD sincronice los permisos, reinicia NATS y crea el
   stream y el consumer.
 - `chat-minio.sh`: crea el bucket `papeleria-chat` con borrado a 90 días y amplía la política
@@ -329,7 +331,7 @@ Scripts en el share (`/home/ro/srv/share/xplaya-chat/`), en curicaueri:
 
 ```
 # Lo que crea crear-chat-nats.sh (usuario ro)
-nats stream add CHAT --defaults --subjects "chat.*.*.mensaje,chat.*.*.leido,chat.*.*.editado,chat.*.*.eliminado,chat.*.*.sugerencia" --storage file --retention limits --max-age 30d --max-bytes 512MB --replicas 1 --discard old --dupe-window 2m
+nats stream add CHAT --defaults --subjects "chat.*.*.mensaje,chat.*.*.leido,chat.*.*.entregado,chat.*.*.editado,chat.*.*.eliminado,chat.*.*.sugerencia" --storage file --retention limits --max-age 30d --max-bytes 512MB --replicas 1 --discard old --dupe-window 2m
 nats consumer add CHAT xplaya --defaults --pull --deliver all --ack explicit --wait 30s --max-deliver 10
 ```
 
