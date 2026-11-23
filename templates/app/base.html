@@ -52,7 +52,7 @@
     <main class="app">
         {% if en_app %}
         <p class="sin-red" x-data="conexion" x-show="!enLinea" x-cloak role="status">
-            Sin conexión: puede que tu saldo no esté al día.
+            Sin internet: conéctate a una red wifi o usa tus datos.
         </p>
         {% endif %}
         {% if nav %}{% include "app/instalar.html" %}{% endif %}

@@ -4,6 +4,13 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: el aviso sin internet ya no habla del saldo (2026-11-23)
+
+Decía "Sin conexión: puede que tu saldo no esté al día." Mencionar el saldo no cae bien y no ayuda;
+ahora dice qué hacer: "Sin internet: conéctate a una red wifi o usa tus datos."
+
+- `templates/app/base.html`: texto de `.sin-red`.
+
 ## Chat: ✓✓ grises cuando el mensaje del cliente ya está en la caja (2026-11-23)
 
 Etapa 9, parte de xplaya. El POS publica `chat.{cliente}.papeleria.entregado` cuando una pantalla
