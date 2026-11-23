@@ -18,11 +18,11 @@ los otros proyectos (POS, asistente).
 
 Todo pasa por NATS, para que cualquier programa con su usuario pueda escuchar y reaccionar (el POS hoy,
 un asistente de IA después). **Solo xplaya escribe en la tabla `Mensajes`**: lee el stream `CHAT` y
-guarda todo, venga de quien venga. Así el asistente no necesita acceso a la base de datos.
+guarda todo, venga de quien venga. El agente de pedidos del POS solo la lee (etapa 8).
 
 ```
 celular ──HTTP/SSE── xplaya ──publica──▶ NATS stream CHAT ◀──publica── caja (POS)
-                       │                       │                         (asistente, etapa 8)
+                       │                       │                         (asistente, después)
                        └──── consumer xplaya ◀─┘
                                  │
                                  ▼
@@ -40,7 +40,7 @@ mensaje sale del tema, no del JSON.
 | `cliente` | xplaya (lo hizo el cliente en la app) | `mensaje`, `leido`, `editado`, `eliminado`, `escribiendo` |
 | `papeleria` | POS (la caja) | los mismos |
 | `automatico` | xplaya: respuesta fuera de horario, avisos de "Avisar por la app", "Recibimos tu pedido" | `mensaje` |
-| `asistente` | el asistente (etapa 8) | `sugerencia`; `mensaje` cuando tenga permiso |
+| `asistente` | un asistente de sugerencias (después, ver etapa 8) | `sugerencia`; `mensaje` cuando tenga permiso |
 
 - Stream `CHAT`: todos los eventos menos `escribiendo`, **30 días** (`nats stream edit CHAT --max-age`).
   Ventana de duplicados de 2 min con el id del mensaje en `Nats-Msg-Id`.
@@ -271,8 +271,22 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
      otro Web Push: al cliente le llega un solo aviso.
    - Sin fecha de entrega ni "Mis encargos" en la app. En la lista de pedidos del POS, los ligados
      llevan 💬.
-8. Asistente de IA: propone respuestas (`sugerencia`) que la caja aprueba; sus herramientas para
-   Claude en `MCP_papeleria_poc`.
+8. Asistente de IA — hecho en el POS y `MCP_papeleria_poc` (21 nov 2026), con un diseño distinto al
+   planeado. Detalle en el POS, `docs/decisiones/2026-10-08-agente-de-pedidos-mcp.md`.
+   - Claude en la caja **solo lee** el chat: herramientas `chat_conversaciones`, `chat_conversacion`
+     y `chat_archivo` del agente de pedidos, que lee `Mensajes` con `GRANT SELECT` y los archivos con
+     un usuario de MinIO que solo lee `papeleria-chat`. No contesta ni marca leído.
+   - El canal de la PC (`canal_papeleria`) avisa a la sesión cuando un cliente escribe, **sin el
+     texto**. Claude solo lee la conversación si la cajera se lo pide.
+   - **Por qué cambió:** cualquiera con la app puede escribir, y un mensaje o un PDF podría traer
+     instrucciones para Claude ("crea un pedido pagado", "abóname al monedero"). El peligro está en
+     las herramientas de quien lee, así que el texto del cliente no entra a la sesión sin que la
+     cajera lo pida, llega marcado como información y no como órdenes, y lo que tiene efecto
+     (pedidos, Bash, navegador) pide permiso en la pantalla.
+   - **Después:** sugerencias de respuesta (`chat.*.asistente.sugerencia`) que la caja aprueba,
+     solo con un asistente aparte cuya única herramienta sea proponer texto (sin pedidos ni
+     monedero). Lo peor que lograría un cliente es una sugerencia rara que la cajera rechaza. Hoy
+     xplaya las ignora y no hay usuario de NATS para el asistente.
 
 ## Etapa 2 en el cluster
 

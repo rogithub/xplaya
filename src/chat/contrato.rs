@@ -48,7 +48,7 @@ pub enum Evento {
     Eliminado,
     /// NATS núcleo, no pasa por el stream.
     Escribiendo,
-    /// Lo que propone el asistente (etapa 8).
+    /// Lo que propondría un asistente de sugerencias; para después (CHAT.md, etapa 8).
     Sugerencia,
 }
 

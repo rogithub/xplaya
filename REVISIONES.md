@@ -4,6 +4,15 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: la etapa 8 queda como se hizo en el POS (2026-11-23)
+
+El asistente se hizo de solo lectura (Claude en la caja ve el chat cuando la cajera lo pide) en vez
+de sugerencias por NATS, por el riesgo de que un cliente le dé instrucciones a Claude. Las
+sugerencias quedan para después, con un asistente sin más herramientas que proponer texto.
+
+- `CHAT.md`: etapa 8 con lo hecho, por qué cambió y qué queda para después.
+- `src/chat/reglas.rs`, `src/chat/contrato.rs`: los textos de `sugerencia` ya no dicen "etapa 8".
+
 ## Chat: "Vaciar chat" ya no dice que la papelería conserva todo (2026-11-21)
 
 No es cierto: los archivos se borran una vez impresos (y a los 90 días). El aviso ahora solo dice

@@ -94,7 +94,7 @@ pub fn aplicar(tema: &Tema, entrante: Entrante, guardado: Option<&Guardado>, sec
         Entrante::Leido(l) => leido(tema, l),
         Entrante::Editado(e) => editado(tema, e, guardado, ajustes),
         Entrante::Eliminado(e) => eliminado(tema, e, guardado),
-        Entrante::Sugerencia => Cambio::Ignorar("las sugerencias del asistente llegan en la etapa 8"),
+        Entrante::Sugerencia => Cambio::Ignorar("las sugerencias del asistente son para después (CHAT.md, etapa 8)"),
     }
 }
 
