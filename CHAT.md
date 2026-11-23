@@ -313,9 +313,10 @@ la caja; ✓✓ azules, que alguien lo leyó.
      monedero). Lo peor que lograría un cliente es una sugerencia rara que la cajera rechaza. Hoy
      xplaya las ignora y no hay usuario de NATS para el asistente.
 
-9. Entregado (✓✓ grises) — diseño del 23 nov 2026, arriba en "Entregado". Pasos: columna y
-   publicar desde `/Chat/SinLeer` (POS); contrato, guardar y pintar (xplaya); `chat.*.*.entregado`
-   en el stream `CHAT` (script en el share).
+9. Entregado (✓✓ grises) — diseño del 23 nov 2026, arriba en "Entregado". Programado en el POS
+   (columna y publicar desde `/Chat/SinLeer`) y en xplaya (contrato, guardar y pintar). Falta
+   `chat.*.*.entregado` en el stream `CHAT` (script en el share) y desplegar en orden: columna,
+   stream, xplaya y al final el POS.
 
 ## Etapa 2 en el cluster
 

@@ -44,6 +44,8 @@ impl Lado {
 pub enum Evento {
     Mensaje,
     Leido,
+    /// Lo del cliente ya está en una pantalla de la caja (✓✓ grises; CHAT.md, etapa 9).
+    Entregado,
     Editado,
     Eliminado,
     /// NATS núcleo, no pasa por el stream.
@@ -57,6 +59,7 @@ impl Evento {
         match texto {
             "mensaje" => Some(Self::Mensaje),
             "leido" => Some(Self::Leido),
+            "entregado" => Some(Self::Entregado),
             "editado" => Some(Self::Editado),
             "eliminado" => Some(Self::Eliminado),
             "escribiendo" => Some(Self::Escribiendo),
@@ -69,6 +72,7 @@ impl Evento {
         match self {
             Self::Mensaje => "mensaje",
             Self::Leido => "leido",
+            Self::Entregado => "entregado",
             Self::Editado => "editado",
             Self::Eliminado => "eliminado",
             Self::Escribiendo => "escribiendo",
@@ -166,7 +170,9 @@ pub struct Mensaje {
     pub fecha: DateTime<FixedOffset>,
 }
 
-/// `chat.{cliente}.{lado}.leido`: ese lado leyó todo lo del otro lado hasta `hasta`.
+/// `chat.{cliente}.{lado}.leido`: ese lado leyó todo lo del otro lado hasta `hasta`. La misma forma
+/// sirve para `chat.{cliente}.papeleria.entregado`: lo del cliente hasta `hasta` ya está en una
+/// pantalla de la caja.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Leido {
@@ -201,6 +207,7 @@ pub struct Eliminado {
 pub enum Entrante {
     Mensaje(Mensaje),
     Leido(Leido),
+    Entregado(Leido),
     Editado(Editado),
     Eliminado(Eliminado),
     Sugerencia,
@@ -240,6 +247,7 @@ pub fn leer(evento: Evento, cuerpo: &[u8]) -> Result<Entrante, NoSeLee> {
     Ok(match evento {
         Evento::Mensaje => Entrante::Mensaje(serde_json::from_slice(cuerpo).map_err(json)?),
         Evento::Leido => Entrante::Leido(serde_json::from_slice(cuerpo).map_err(json)?),
+        Evento::Entregado => Entrante::Entregado(serde_json::from_slice(cuerpo).map_err(json)?),
         Evento::Editado => Entrante::Editado(serde_json::from_slice(cuerpo).map_err(json)?),
         Evento::Eliminado => Entrante::Eliminado(serde_json::from_slice(cuerpo).map_err(json)?),
         Evento::Sugerencia => Entrante::Sugerencia,
@@ -286,6 +294,7 @@ mod tests {
         ida_y_vuelta::<Mensaje>("mensaje-voz.json");
         ida_y_vuelta::<Mensaje>("mensaje-tarjeta.json");
         ida_y_vuelta::<Leido>("leido.json");
+        ida_y_vuelta::<Leido>("entregado.json");
         ida_y_vuelta::<Editado>("editado.json");
         ida_y_vuelta::<Eliminado>("eliminado.json");
     }
@@ -294,6 +303,7 @@ mod tests {
     fn leer_segun_el_evento() {
         assert!(matches!(leer(Evento::Mensaje, &ejemplo("mensaje.json")), Ok(Entrante::Mensaje(_))));
         assert!(matches!(leer(Evento::Leido, &ejemplo("leido.json")), Ok(Entrante::Leido(_))));
+        assert!(matches!(leer(Evento::Entregado, &ejemplo("entregado.json")), Ok(Entrante::Entregado(_))));
         assert!(matches!(leer(Evento::Editado, &ejemplo("editado.json")), Ok(Entrante::Editado(_))));
         assert!(matches!(leer(Evento::Eliminado, &ejemplo("eliminado.json")), Ok(Entrante::Eliminado(_))));
         // Un leído con el cuerpo de un mensaje no es un leído.

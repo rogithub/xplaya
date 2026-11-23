@@ -5,7 +5,8 @@
 // - Lo que escribe el cliente se queda en "enviando…" hasta que el servidor dice que NATS lo
 //   tiene (✓). Sin señal se guarda en localStorage y se vuelve a mandar al regresar la conexión;
 //   el id lo pone el celular, así un reintento nunca sale dos veces.
-// - ✓✓ cuando la papelería lo leyó (evento `leido` con `delCliente`).
+// - ✓✓ grises cuando ya está en una pantalla de la caja (evento `entregado`, CHAT.md etapa 9) y
+//   azules cuando la papelería lo leyó (evento `leido` con `delCliente`).
 
 const CHAT_PENDIENTES = 'xp_chat_pendientes';
 const CHAT_REINTENTO_MS = 15000;
@@ -416,7 +417,7 @@ document.addEventListener('alpine:init', () => {
             return {
                 id: p.id, autor: 'cliente', tipo: p.tipo || 'texto', ref: p.ref || null, tarjeta: p.tarjeta || null,
                 texto: p.texto, respondeA: p.respondeA || null,
-                cita: p.cita || null, fecha: p.fecha, leido: false, editado: false, eliminado: false, estado,
+                cita: p.cita || null, fecha: p.fecha, leido: false, entregado: false, editado: false, eliminado: false, estado,
                 adjuntos: (p.adjuntos || []).map((a) => ({ ...a, local: true })), zip: null,
             };
         },
@@ -482,17 +483,19 @@ document.addEventListener('alpine:init', () => {
             return i === 0 || this.dia(this.mensajes[i]) !== this.dia(this.mensajes[i - 1]);
         },
 
-        // Relojito enviando, ✓ gris enviado, ✓✓ azul leído (solo en los del cliente). SVG: x-html.
+        // Relojito enviando, ✓ gris enviado, ✓✓ gris entregado (ya está en la caja), ✓✓ azul leído
+        // (solo en los del cliente; el azul lo pone la clase `leido`). SVG: x-html.
         marca(m) {
             if (m.estado === 'enviando') return chatIconoSvg('enviando');
             if (m.estado === 'error') return chatIconoSvg('fallo');
-            return chatIconoSvg(m.leido ? 'leido' : 'enviado');
+            return chatIconoSvg(m.leido || m.entregado ? 'leido' : 'enviado');
         },
 
         etiquetaMarca(m) {
             if (m.estado === 'enviando') return 'Enviando…';
             if (m.estado === 'error') return 'No se mandó';
-            return m.leido ? 'Leído' : 'Enviado';
+            if (m.leido) return 'Leído';
+            return m.entregado ? 'Entregado' : 'Enviado';
         },
 
         textoCita(m) {
@@ -555,6 +558,12 @@ document.addEventListener('alpine:init', () => {
                 const hasta = chatFecha(d.hasta);
                 this.mensajes.forEach((m) => {
                     if (this.mio(m) === d.delCliente && m.estado === 'guardado' && chatFecha(m.fecha) <= hasta) m.leido = true;
+                });
+            });
+            es.addEventListener('entregado', (e) => {
+                const hasta = chatFecha(datos(e).hasta);
+                this.mensajes.forEach((m) => {
+                    if (this.mio(m) && m.estado === 'guardado' && chatFecha(m.fecha) <= hasta) m.entregado = true;
                 });
             });
             es.addEventListener('editado', (e) => {

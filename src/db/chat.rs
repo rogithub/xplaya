@@ -89,6 +89,21 @@ pub async fn marcar_leidos(pool: &PgPool, cliente: Uuid, del_cliente: bool, hast
     Ok(hecho.rows_affected())
 }
 
+/// ✓✓ grises: lo del cliente hasta `hasta` ya está en una pantalla de la caja. Lo leído ya cuenta
+/// como entregado, así que no se toca. Regresa cuántos cambió (0 si la caja lo repitió).
+pub async fn marcar_entregados(pool: &PgPool, cliente: Uuid, hasta: NaiveDateTime) -> Result<u64, sqlx::Error> {
+    let hecho = sqlx::query(
+        "UPDATE mensajes SET fechaentregado = $2
+         WHERE clienteid = $1 AND autor = 'cliente'
+           AND fecha <= $2 AND fechaentregado IS NULL AND fechaleido IS NULL AND fechaeliminado IS NULL",
+    )
+    .bind(cliente)
+    .bind(hasta)
+    .execute(pool)
+    .await?;
+    Ok(hecho.rows_affected())
+}
+
 /// "Vaciar chat" en la app: el cliente deja de ver lo de `Fecha <= hasta` (hora de la tienda).
 /// Solo de su lado: no se borra nada y la caja sigue viendo todo.
 pub async fn vaciar(pool: &PgPool, cliente: Uuid, hasta: NaiveDateTime) -> Result<(), sqlx::Error> {
@@ -190,6 +205,7 @@ struct FilaVista {
     cita: Option<String>,
     fecha: NaiveDateTime,
     leido: bool,
+    entregado: bool,
     editado: bool,
     eliminado: bool,
     adjuntos: Option<serde_json::Value>,
@@ -203,7 +219,8 @@ pub async fn conversacion(pool: &PgPool, cliente: Uuid, antes: Option<Uuid>, lim
     let filas: Vec<FilaVista> = sqlx::query_as(
         "SELECT m.id, m.autor, m.tipo, m.texto, m.respondea,
                 CASE WHEN r.fechaeliminado IS NULL THEN LEFT(r.texto, $4) END AS cita,
-                m.fecha, m.fechaleido IS NOT NULL AS leido, m.fechaeditado IS NOT NULL AS editado,
+                m.fecha, m.fechaleido IS NOT NULL AS leido, m.fechaentregado IS NOT NULL AS entregado,
+                m.fechaeditado IS NOT NULL AS editado,
                 m.fechaeliminado IS NOT NULL AS eliminado, m.adjuntos, m.ref AS referencia
          FROM mensajes m
          LEFT JOIN mensajes r ON r.id = m.respondea
@@ -234,6 +251,7 @@ pub async fn conversacion(pool: &PgPool, cliente: Uuid, antes: Option<Uuid>, lim
                 cita: f.cita,
                 fecha: f.fecha,
                 leido: f.leido,
+                entregado: f.entregado,
                 editado: f.editado,
                 eliminado: f.eliminado,
                 adjuntos,
@@ -389,6 +407,30 @@ pub(crate) mod tests {
         assert!(guardar(&pool, &n).await.unwrap());
         assert!(pedido_del_chat(&pool, pedido).await.unwrap());
         assert!(!pedido_del_chat(&pool, Uuid::new_v4()).await.unwrap());
+    }
+
+    #[sqlx::test(migrations = false)]
+    async fn entregados_solo_lo_del_cliente_sin_leer(pool: PgPool) {
+        if !con_schema(&pool).await {
+            return;
+        }
+        let c = cliente(&pool, "9840000001").await;
+        let leido = nuevo(c, Lado::Cliente, "17:00:00");
+        let antes = nuevo(c, Lado::Cliente, "17:01:00");
+        let nuestro = nuevo(c, Lado::Papeleria, "17:02:00");
+        let despues = nuevo(c, Lado::Cliente, "17:10:00");
+        for n in [&leido, &antes, &nuestro, &despues] {
+            guardar(&pool, n).await.unwrap();
+        }
+        marcar_leidos(&pool, c, true, hora("17:00:00")).await.unwrap();
+        assert_eq!(marcar_entregados(&pool, c, hora("17:05:00")).await.unwrap(), 1, "solo el de las 17:01");
+        assert_eq!(marcar_entregados(&pool, c, hora("17:05:00")).await.unwrap(), 0, "repetido: no cambia nada");
+        let vista = conversacion(&pool, c, None, 10).await.unwrap();
+        let entregado = |id| vista.iter().find(|v| v.id == id).unwrap().entregado;
+        assert!(entregado(antes.id));
+        assert!(!entregado(leido.id), "leído ya cuenta como entregado");
+        assert!(!entregado(nuestro.id));
+        assert!(!entregado(despues.id));
     }
 
     #[sqlx::test(migrations = false)]

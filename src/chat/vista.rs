@@ -23,6 +23,8 @@ pub struct Vista {
     /// Hora de la tienda.
     pub fecha: NaiveDateTime,
     pub leido: bool,
+    /// Ya está en una pantalla de la caja (✓✓ grises). Solo en los del cliente.
+    pub entregado: bool,
     pub editado: bool,
     pub eliminado: bool,
     /// Los archivos, con sus URLs. Vacío si no hay o si se eliminó.
@@ -98,6 +100,7 @@ impl From<&Nuevo> for Vista {
             cita: None,
             fecha: n.fecha,
             leido: false,
+            entregado: false,
             editado: false,
             eliminado: false,
             adjuntos,
@@ -118,6 +121,8 @@ pub enum EnVivo {
     /// papelería (desde otro celular o pestaña).
     #[serde(rename_all = "camelCase")]
     Leido { del_cliente: bool, hasta: NaiveDateTime },
+    /// Lo del cliente hasta `hasta` ya está en una pantalla de la caja (✓✓ grises).
+    Entregado { hasta: NaiveDateTime },
     Editado { id: Uuid, texto: String, fecha: NaiveDateTime },
     Eliminado { id: Uuid, fecha: NaiveDateTime },
     /// La papelería está escribiendo (NATS núcleo, no se guarda).
@@ -129,6 +134,7 @@ impl EnVivo {
         match self {
             EnVivo::Mensaje(_) => "mensaje",
             EnVivo::Leido { .. } => "leido",
+            EnVivo::Entregado { .. } => "entregado",
             EnVivo::Editado { .. } => "editado",
             EnVivo::Eliminado { .. } => "eliminado",
             EnVivo::Escribiendo => "escribiendo",
@@ -150,6 +156,9 @@ mod tests {
             serde_json::json!({ "evento": "leido", "delCliente": true, "hasta": "2026-11-19T17:42:00" })
         );
         assert_eq!(serde_json::to_value(EnVivo::Escribiendo).unwrap(), serde_json::json!({ "evento": "escribiendo" }));
+        let e = EnVivo::Entregado { hasta: hora };
+        assert_eq!(e.nombre(), "entregado");
+        assert_eq!(serde_json::to_value(&e).unwrap(), serde_json::json!({ "evento": "entregado", "hasta": "2026-11-19T17:42:00" }));
     }
 
     #[test]

@@ -81,7 +81,7 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
         Entrante::Mensaje(m) => Some(m.id),
         Entrante::Editado(e) => Some(e.id),
         Entrante::Eliminado(e) => Some(e.id),
-        Entrante::Leido(_) | Entrante::Sugerencia => None,
+        Entrante::Leido(_) | Entrante::Entregado(_) | Entrante::Sugerencia => None,
     };
     let guardado = match id {
         Some(id) => db::chat::guardado(&state.pool, id).await?,
@@ -114,6 +114,12 @@ async fn procesar(state: &AppState, js: &jetstream::Context, tema: &str, cuerpo:
         Cambio::MarcarLeidos { cliente, del_cliente, hasta } => {
             db::chat::marcar_leidos(&state.pool, cliente, del_cliente, hasta).await?;
             state.chat.avisar(cliente, EnVivo::Leido { del_cliente, hasta });
+        }
+        Cambio::MarcarEntregados { cliente, hasta } => {
+            // Cada pestaña del POS lo repite hasta que se guarda: solo se avisa si cambió algo.
+            if db::chat::marcar_entregados(&state.pool, cliente, hasta).await? > 0 {
+                state.chat.avisar(cliente, EnVivo::Entregado { hasta });
+            }
         }
         Cambio::Editar { id, texto, fecha } => {
             db::chat::editar(&state.pool, id, &texto, fecha).await?;

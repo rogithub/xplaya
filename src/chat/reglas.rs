@@ -75,6 +75,9 @@ pub enum Cambio {
     /// Marca leídos los mensajes del cliente (si leyó la papelería) o los que le escribieron al
     /// cliente (si leyó él), hasta esa hora.
     MarcarLeidos { cliente: Uuid, del_cliente: bool, hasta: NaiveDateTime },
+    /// Marca entregados (✓✓ grises) los mensajes del cliente hasta esa hora: ya están en una
+    /// pantalla de la caja.
+    MarcarEntregados { cliente: Uuid, hasta: NaiveDateTime },
     Editar { id: Uuid, texto: String, fecha: NaiveDateTime },
     /// Borra texto y adjuntos del mensaje; `llaves` son los archivos a borrar de MinIO y
     /// `secuencia`, el mensaje a quitar del stream.
@@ -92,6 +95,7 @@ pub fn aplicar(tema: &Tema, entrante: Entrante, guardado: Option<&Guardado>, sec
     match entrante {
         Entrante::Mensaje(m) => mensaje(tema, m, guardado, secuencia),
         Entrante::Leido(l) => leido(tema, l),
+        Entrante::Entregado(l) => entregado(tema, l),
         Entrante::Editado(e) => editado(tema, e, guardado, ajustes),
         Entrante::Eliminado(e) => eliminado(tema, e, guardado),
         Entrante::Sugerencia => Cambio::Ignorar("las sugerencias del asistente son para después (CHAT.md, etapa 8)"),
@@ -153,6 +157,18 @@ fn leido(tema: &Tema, l: Leido) -> Cambio {
         Lado::Automatico | Lado::Asistente => return Cambio::Ignorar("solo leen el cliente y la papelería"),
     };
     Cambio::MarcarLeidos { cliente: l.cliente_id, del_cliente, hasta: hora_tienda(l.hasta) }
+}
+
+/// Solo la papelería dice que le llegó lo del cliente (CHAT.md, etapa 9): lo de la caja no lleva
+/// "entregado".
+fn entregado(tema: &Tema, l: Leido) -> Cambio {
+    if l.cliente_id != tema.cliente {
+        return Cambio::Ignorar("el cliente del entregado no es el del tema");
+    }
+    if tema.lado != Lado::Papeleria {
+        return Cambio::Ignorar("solo la papelería marca entregado");
+    }
+    Cambio::MarcarEntregados { cliente: l.cliente_id, hasta: hora_tienda(l.hasta) }
 }
 
 fn editado(tema: &Tema, e: Editado, guardado: Option<&Guardado>, ajustes: &Ajustes) -> Cambio {
@@ -559,6 +575,22 @@ mod tests {
         assert!(matches!(leyo_el_cliente, Cambio::MarcarLeidos { del_cliente: false, .. }));
         let asistente = aplicar(&tema(Lado::Asistente, Evento::Leido), Entrante::Leido(l), None, 1, &Ajustes::default());
         assert!(matches!(asistente, Cambio::Ignorar(_)));
+    }
+
+    #[test]
+    fn entregado_solo_lo_marca_la_papeleria() {
+        let l = Leido { v: 1, cliente_id: CLIENTE, hasta: hora("17:45:00") };
+        let entregar = |lado| aplicar(&tema(lado, Evento::Entregado), Entrante::Entregado(l.clone()), None, 1, &Ajustes::default());
+        assert_eq!(
+            entregar(Lado::Papeleria),
+            Cambio::MarcarEntregados { cliente: CLIENTE, hasta: hora_tienda(hora("17:45:00")) }
+        );
+        for lado in [Lado::Cliente, Lado::Automatico, Lado::Asistente] {
+            assert!(matches!(entregar(lado), Cambio::Ignorar(_)), "{lado:?}");
+        }
+        let de_otro = Leido { cliente_id: OTRO, ..l.clone() };
+        let ajeno = aplicar(&tema(Lado::Papeleria, Evento::Entregado), Entrante::Entregado(de_otro), None, 1, &Ajustes::default());
+        assert!(matches!(ajeno, Cambio::Ignorar(_)));
     }
 
     fn editar(lado: Lado, a_las: &str, g: Option<&Guardado>) -> Cambio {

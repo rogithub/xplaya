@@ -312,6 +312,7 @@ mod tests {
             cita: None,
             fecha: chrono::NaiveDateTime::default(),
             leido: false,
+            entregado: false,
             editado: false,
             eliminado,
             adjuntos: vec![],

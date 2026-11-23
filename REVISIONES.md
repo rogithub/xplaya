@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Chat: ✓✓ grises cuando el mensaje del cliente ya está en la caja (2026-11-23)
+
+Etapa 9, parte de xplaya. El POS publica `chat.{cliente}.papeleria.entregado` cuando una pantalla
+de la caja consulta `/Chat/SinLeer`; xplaya llena `Mensajes.FechaEntregado` y la app pinta ✓✓
+grises ("Entregado"). Las azules siguen siendo leído.
+
+- `src/chat/contrato.rs`: `Evento::Entregado`, con la forma de `Leido`; ejemplo en
+  `contratos/chat-v1/entregado.json`.
+- `src/chat/reglas.rs`: `entregado`, solo del lado de la papelería → `Cambio::MarcarEntregados`.
+- `src/db/chat.rs`: `marcar_entregados` (sin tocar lo leído) y `entregado` en la vista; prueba con
+  `#[sqlx::test]`.
+- `src/chat/consumer.rs`, `src/chat/vista.rs`: guarda y avisa por SSE (`entregado`) solo si cambió algo.
+- `static/app/chat.js`: ✓✓ grises con `entregado`, azules con `leido`.
+
 ## Chat: la etapa 8 queda como se hizo en el POS (2026-11-23)
 
 El asistente se hizo de solo lectura (Claude en la caja ve el chat cuando la cajera lo pide) en vez
