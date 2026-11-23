@@ -108,7 +108,8 @@ El autor no va en el JSON: es el lado del tema (`cliente`, `papeleria`, `automat
   cerramos a las 6"), hasta 80 caracteres. Sale bajo el nombre en el encabezado, junto al punto
   verde/gris del switch; vacío o sin la fila, "Abierta · Contestamos pronto" / "Cerrada ·
   Contestamos al abrir". No cambia la respuesta automática, que sigue al switch.
-- **✓ enviado y ✓✓ leído** en los dos sentidos; **"escribiendo…"** en los dos sentidos. En la app
+- **✓ enviado y ✓✓ leído** en los dos sentidos, y **✓✓ grises (entregado)** en lo que manda el
+  cliente (etapa 9); **"escribiendo…"** en los dos sentidos. En la app
   sale donde WhatsApp: en lugar del estado, en el encabezado fijo, y en la fila de la lista.
 - **Editar**: solo texto, los primeros 15 min, con la marca "Editado"; no se guarda la versión anterior.
 - **Eliminar para todos**: cada lado borra los suyos, sin límite. El archivo se borra de MinIO al
@@ -142,7 +143,8 @@ celular ─POST /chat/mensaje─▶ xplaya ─publica (Nats-Msg-Id = id)─▶ C
 - Rutas en `src/routes/chat.rs`; pantalla en `templates/app/chat.html` y `static/app/chat.js`.
 - El **id** lo genera el celular (un reintento sin señal no se guarda dos veces: `Nats-Msg-Id` en
   el stream y `ON CONFLICT` en la tabla). La **fecha** la pone xplaya al publicar.
-- **✓** cuando NATS confirma la publicación; **✓✓** cuando llega el `leido` de la papelería.
+- **✓** cuando NATS confirma la publicación; **✓✓ grises** cuando llega el `entregado` de la
+  papelería (etapa 9); **✓✓ azules** cuando llega su `leido`.
 - Los cambios en vivo los reparte el consumer después de guardar (`chat/nats.rs`), en memoria:
   sirve porque xplaya corre con **una réplica**. Con dos, habría que repartir por NATS.
 - **Fuera de horario**: el consumer, al guardar un mensaje del cliente con el switch en cerrada
@@ -211,7 +213,8 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
   🚫 si está bloqueado, y el switch de abierta/cerrada.
 - **Conversación** (`/Chat/Conversacion/{cliente}`): texto, archivos, responder, editar (15 min),
   eliminar, ✓/✓✓, escribiendo, respuestas rápidas (⚡, editables ahí) y bloquear. Marca leído
-  cuando está a la vista, hasta el último mensaje del cliente. Si el cliente vació su chat, lo
+  cuando está a la vista, hasta ahora (no hasta el último guardado: el mensaje que acaba de ver
+  puede no estar todavía en la tabla). Si el cliente vació su chat, lo
   dice arriba; la caja sigue viendo todo.
 - **Archivos desde la caja**: el POS sube directo a MinIO (`papeleria-chat`,
   `{cliente}/{mensaje}/{archivo}`) y arma el adjunto (tipo por los primeros bytes, sin miniatura
@@ -221,6 +224,28 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
 - **No hace (por ahora)**: notas de voz desde la caja (el POS va por http y el micrófono pide
   https) ni mandar tarjetas.
 - **Sin NATS** (local y E2E): `NullChatPublisher`; la caja lee, pero mandar dice "No se mandó".
+
+## Entregado: ✓✓ grises (etapa 9)
+
+Los clientes vienen de WhatsApp: quieren saber que su mensaje **nos llegó**, aunque tardemos en
+contestar. ✓ dice que salió del celular (tenía internet); ✓✓ grises, que ya está en una pantalla de
+la caja; ✓✓ azules, que alguien lo leyó.
+
+- **Solo cliente → caja.** Lo que manda la caja sigue con ✓ y ✓✓ azules.
+- **"Entregado" = una pantalla del POS lo ve**, no el servidor del POS (siempre está prendido en el
+  cluster y diría lo mismo que ✓). El aviso flotante de todas las pantallas consulta
+  `/Chat/SinLeer` cada 5 s: en esa consulta, si hay mensajes del cliente sin `FechaEntregado`, el POS
+  publica `chat.{cliente}.papeleria.entregado` por cada cliente, `hasta` = la fecha del último de
+  ellos (sale de la tabla, así que ya está guardado). Con la caja apagada se queda en ✓; al
+  prenderla, a los 5 s se marcan todos. Varias pestañas publican lo mismo: no importa, solo se
+  llena lo que está vacío.
+- **Contrato**: `entregado` con la misma forma que `leido` (`v`, `clienteId`, `hasta`;
+  `contratos/chat-v1/entregado.json`). Solo vale del lado `papeleria`. Va en el stream `CHAT`
+  (hay que agregarle `chat.*.*.entregado`).
+- **Datos**: `Mensajes.FechaEntregado` (repo del POS). Leído implica entregado: la app pinta
+  azules si hay `FechaLeido`, grises si solo hay `FechaEntregado`.
+- **xplaya**: guarda `FechaEntregado` de los mensajes del cliente con `fecha <= hasta` que no la
+  tengan, y lo reparte por SSE (`entregado`) como el leído.
 
 ## Reglas del código
 
@@ -287,6 +312,10 @@ caja ─POST /Chat/Mandar─▶ POS ─publica (Nats-Msg-Id = id)─▶ CHAT ─
      solo con un asistente aparte cuya única herramienta sea proponer texto (sin pedidos ni
      monedero). Lo peor que lograría un cliente es una sugerencia rara que la cajera rechaza. Hoy
      xplaya las ignora y no hay usuario de NATS para el asistente.
+
+9. Entregado (✓✓ grises) — diseño del 23 nov 2026, arriba en "Entregado". Pasos: columna y
+   publicar desde `/Chat/SinLeer` (POS); contrato, guardar y pintar (xplaya); `chat.*.*.entregado`
+   en el stream `CHAT` (script en el share).
 
 ## Etapa 2 en el cluster
 
