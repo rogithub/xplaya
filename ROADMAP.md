@@ -60,7 +60,9 @@ Diseño completo en `APP_MONEDERO.md`. Se trabaja en la rama `develop`.
   muestra la cuenta mientras se arma y al cobrar el monedero ganado y el saldo nuevo; Web Push al
   abrirla y al cobrar si la app no está en pantalla. POS → NATS `caja.cuenta` → SSE. Nota de
   diseño: `inventario_papeleria/docs/decisiones/2026-11-12-cuenta-en-vivo-en-la-app.md`.
-- ⬜ Notificaciones: pedido listo, abonos y vencimiento (diseño en `APP_MONEDERO.md`)
+- ✅ Notificación "pedido listo" (y "pagado"): Web Push desde la caja; desde el 24 nov 2026 la manda
+  el mismo botón "Ya está listo" del POS que marca el pedido (`PedidoListoService`).
+- ⬜ Notificaciones de abonos y vencimiento del monedero (diseño en `APP_MONEDERO.md`)
 - ⬜ **Recordatorio de pago de servicios** (más adelante): clientes que pagan agua, luz o teléfono
   en la tienda reciben aviso antes de su fecha de corte. Usa la misma tabla `Notificaciones` (un
   tipo nuevo). Falta decidir de dónde sale la fecha: registrada en el POS por servicio del cliente,
