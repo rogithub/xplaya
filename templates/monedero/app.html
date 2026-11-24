@@ -17,9 +17,10 @@
 {% endblock %}
 {# Con el celular ligado la app abre en `/` (sesión o huella); si no, directo en este monedero. #}
 {% block manifest %}{% if con_sesion %}<link rel="manifest" href="/manifest.webmanifest">{% else %}<link rel="manifest" href="/monedero/{{ cliente_id }}/manifest.webmanifest">{% endif %}{% endblock %}
+{% block scripts_sitio %}<script defer src="{{ estatico("js/monedero.js") }}"></script>{% endblock %}
 {% block content %}
 
-{# x-data (monederoPantalla en app.js): el QR a pantalla completa, la hoja de pago por
+{# x-data (monederoPantalla en js/monedero.js): el QR a pantalla completa, la hoja de pago por
    transferencia y la vista del historial (en la misma página, con "← Monedero"). #}
 <div x-data="monederoPantalla()" @keydown.escape.window="qr = false; pago = false">
 

@@ -4,6 +4,16 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Monedero: la tarjeta vuelve a cargar en xplaya.com (2026-11-24)
+
+Desde el 17 nov, `xplaya.com/monedero/{id}` (el botón "Ver Monedero" del recibo) salía en blanco:
+la tarjeta usa `monederoPantalla()`, que vivía en `app.js`, y ese archivo solo se carga en
+app.xplaya.com (registra el service worker). Alpine no encontraba el componente y dejaba todo oculto.
+
+- `static/js/monedero.js`: `monederoPantalla` pasa aquí sin cambios; se quita de `static/app/app.js`.
+- `templates/app/base.html`: bloque `scripts_sitio`, fuera de `en_app`, antes de Alpine.
+- `templates/monedero/app.html`: carga `js/monedero.js` en ese bloque (sirve a los dos dominios).
+
 ## App: el aviso sin internet ya no habla del saldo (2026-11-23)
 
 Decía "Sin conexión: puede que tu saldo no esté al día." Mencionar el saldo no cae bien y no ayuda;

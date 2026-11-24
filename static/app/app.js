@@ -544,39 +544,6 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('alpine:init', () => {
     const PESOS = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-    // Pantalla del monedero (monedero/app.html): el QR para la caja, la hoja de pago por
-    // transferencia (copiar cada dato por separado) y el historial en su propia vista.
-    Alpine.data('monederoPantalla', () => ({
-        qr: false,
-        pago: false,
-        vista: 'inicio',
-        copiado: '',
-
-        verHistorial() {
-            this.vista = 'historial';
-            window.scrollTo(0, 0);
-        },
-
-        async copiar(que, texto) {
-            try {
-                await navigator.clipboard.writeText(texto);
-            } catch {
-                // Navegadores sin la API de portapapeles: el truco de siempre.
-                const t = document.createElement('textarea');
-                t.value = texto;
-                t.setAttribute('readonly', '');
-                t.style.position = 'fixed';
-                t.style.opacity = '0';
-                document.body.appendChild(t);
-                t.select();
-                document.execCommand('copy');
-                t.remove();
-            }
-            this.copiado = que;
-            setTimeout(() => { if (this.copiado === que) this.copiado = ''; }, 2000);
-        },
-    }));
-
     Alpine.data('cuentaCaja', () => ({
         cuenta: null,
         // Al cobrar: monedero ganado y saldo nuevo (/cuenta/venta/{id}).

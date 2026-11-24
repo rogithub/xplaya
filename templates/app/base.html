@@ -40,6 +40,8 @@
     {# JS de una sola página (registra sus componentes en alpine:init, antes de Alpine). #}
     {% block scripts %}{% endblock %}
     {% endif %}
+    {# JS de una página que también se sirve en xplaya.com (fuera de la app), antes de Alpine. #}
+    {% block scripts_sitio %}{% endblock %}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <script defer src="https://analytics.xplaya.com/script.js"
             data-website-id="e301a863-f0ac-409c-b365-d26da2e2f20d"></script>
