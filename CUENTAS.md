@@ -74,5 +74,5 @@ Pueden ser complejidad que no hace falta; decidir con datos:
 
 - Límites de cuentas nuevas por IP (en memoria).
 - Vigencia del código desde la app (¿24 h en vez de 15 min, por si lo piden de noche?).
-- Abrir el chat a las cuentas nuevas (hoy `CHAT_CLIENTES_PRUEBA`, `src/chat/reglas.rs`).
+- Si el chat (abierto a todos los clientes desde el 23 nov 2026) se abre también a las cuentas sin verificar.
 - Un nivel de "crédito" en la confianza.

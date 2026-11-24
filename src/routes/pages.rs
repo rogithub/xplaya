@@ -59,8 +59,9 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 
 - [App de la papelería]({app}/?utm_medium=ia&utm_campaign=llms-txt): app web para el celular
   (se instala desde el navegador, sin tienda de aplicaciones) para quien ya compró en la tienda:
-  saldo y tarjeta del Monedero Electrónico, mandar archivos a imprimir desde el celular y pasar a
-  recogerlos, y avisos cuando su pedido está listo. Se activa con la primera compra: desde el
+  chat directo con la papelería (preguntas, cotizaciones y archivos), mandar archivos a imprimir
+  desde el celular y pasar a recogerlos, saldo y tarjeta del Monedero Electrónico, y avisos cuando
+  su pedido está listo. Se activa con la primera compra: desde el
   enlace del ticket digital o en el kiosko de la tienda.
 
 ## Información

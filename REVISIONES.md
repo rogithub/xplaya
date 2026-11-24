@@ -7,9 +7,9 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 ## llms.txt: la app para clientes, medida en Umami (2026-11-24)
 
 - `src/routes/pages.rs` (`llms_txt`): sección "App para clientes" con el enlace
-  `{APP_URL}/?utm_medium=ia&utm_campaign=llms-txt`. Describe solo lo que ya tiene cualquier
-  cliente (monedero, imprimir desde el celular, avisos) y que se activa con la primera compra; el
-  chat no se menciona mientras siga limitado por `CHAT_CLIENTES_PRUEBA`.
+  `{APP_URL}/?utm_medium=ia&utm_campaign=llms-txt`. Describe lo que ya tiene cualquier cliente
+  (chat, imprimir desde el celular, monedero, avisos; el chat está abierto a todos desde el 23 nov)
+  y que se activa con la primera compra.
 - `utm_source` se deja libre: ChatGPT agrega `utm_source=chatgpt.com` a sus enlaces.
 - Sin tabla `Visitas`: Umami ya está en los dos sitios y muestra las fuentes y el reporte UTM.
 - `ROADMAP.md` (paso 2 ✅) y `CUENTAS.md` (cuándo retomarlo) apuntan a Umami.
