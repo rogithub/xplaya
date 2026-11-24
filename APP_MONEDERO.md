@@ -56,8 +56,8 @@ el navegador); lo que de verdad comprueba el teléfono es el código por WhatsAp
 
 - El cliente lo escanea con su celular y captura **nombre y teléfono**.
 - En todas las pantallas del POS aparece un aviso con su nombre, su teléfono y un **código de 4
-  dígitos**, con el botón **Enviar por WhatsApp** (abre el chat con ese número, aunque no esté en
-  contactos, con el mensaje ya escrito).
+  dígitos**, con los botones **Copiar teléfono** y **Copiar código** para mandarlo desde el WhatsApp
+  Web que la caja ya tiene abierto (los enlaces `wa.me` abrían otra ventana encima y se quitaron).
 - El mismo código llega también por **ntfy al celular de la papelería** (12 nov 2026), con un botón
   que abre WhatsApp con el mensaje ya escrito: sirve si nadie está viendo el POS. xplaya publica en
   NATS `avisos.papeleria-kiosko` (`src/avisos.rs`) y el puente
@@ -124,6 +124,9 @@ Si el celular de un cliente nuevo no puede crear passkeys, "Solo abona mi compra
 y abona la compra sin ligar el celular; lo ve en la web, como hasta hoy.
 
 #### Alta desde el celular — POSPUESTA (12 nov 2026)
+
+**Reemplazada (24 nov 2026)** por las cuentas sin verificar de `CUENTAS.md`, también pospuestas: con
+el chat propio, el código se pide desde una cuenta que ya existe en la app.
 
 **Pospuesta:** por ahora el alta es solo en la tienda (kiosko) o con el enlace del recibo. No hay
 código ni cambios de BD de esto; queda el diseño por si se retoma. (Lo que sí se hizo: el aviso por

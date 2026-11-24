@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## CUENTAS.md: cuentas sin verificar, diseño pospuesto (2026-11-24)
+
+Solo documentación. Diseño para que cualquiera cree cuenta en la app sin teléfono (cliente con
+`Telefono` NULL) y se verifique después con el código del kiosko o en la caja. Se pospone: la app
+tiene un usuario; primero se mide cuánto llega desde las IA.
+
+- `CUENTAS.md`: el diseño y cuándo retomarlo.
+- `APP_MONEDERO.md`: el aviso del POS ya no tiene "Enviar por WhatsApp" (es Copiar código); el alta
+  desde el celular apunta a `CUENTAS.md`.
+- `ROADMAP.md`: pasos 1 (confianza en la venta) y 2 (medir visitas desde IA).
+
 ## Monedero: la tarjeta vuelve a cargar en xplaya.com (2026-11-24)
 
 Desde el 17 nov, `xplaya.com/monedero/{id}` (el botón "Ver Monedero" del recibo) salía en blanco:
