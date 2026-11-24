@@ -19,7 +19,6 @@ mod google;
 mod impresion;
 mod ipp;
 mod kiosko;
-mod middleware;
 mod minio;
 mod models;
 mod passkeys;

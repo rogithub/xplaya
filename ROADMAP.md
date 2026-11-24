@@ -276,7 +276,7 @@ en NATS y usar un topic `papeleria-*` (así le llega a `dayana` y a `ro` sin toc
 
 ### Pendiente sin fecha
 
-- ⬜ **ANALYTICS** — middleware que inserta en `Visitas`, gestión `SessionId` en cookie, excluir `/static/*`
+- ✖ ~~**ANALYTICS** — middleware que inserta en `Visitas`~~: descartado el 24 nov 2026, lo cubre Umami (`analytics.xplaya.com`).
 
 ---
 

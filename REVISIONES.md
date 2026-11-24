@@ -13,6 +13,8 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 - `utm_source` se deja libre: ChatGPT agrega `utm_source=chatgpt.com` a sus enlaces.
 - Sin tabla `Visitas`: Umami ya está en los dos sitios y muestra las fuentes y el reporte UTM.
 - `ROADMAP.md` (paso 2 ✅) y `CUENTAS.md` (cuándo retomarlo) apuntan a Umami.
+- Fuera los restos de la "Fase 7" (tabla `Visitas`): el módulo vacío `src/middleware/`, el
+  `// pub mod visitas` de `src/db/mod.rs` y sus renglones en `CLAUDE.md`; en `ROADMAP.md`, descartado.
 
 ---
 

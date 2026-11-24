@@ -73,18 +73,13 @@ xplaya/
 │   │   ├── mod.rs           # Pool de conexiones sqlx
 │   │   ├── productos.rs     # Queries de catálogo
 │   │   ├── pedidos.rs       # Crear cliente + pedido
-│   │   ├── monedero.rs      # Balance y historial de cashback
-│   │   └── visitas.rs       # INSERT en tabla Visitas
+│   │   └── monedero.rs      # Balance y historial de cashback
 │   ├── routes/
 │   │   ├── mod.rs           # Registro de todas las rutas
 │   │   ├── productos.rs     # GET /productos, GET /productos/:id
 │   │   ├── carrito.rs       # GET /carrito, POST /pedidos
 │   │   ├── monedero.rs      # GET /monedero/:guid, GET /saldo, GET /recibo/:guid
 │   │   └── pages.rs         # GET /resena, GET /terminos (páginas estáticas)
-│   ├── middleware/
-│   │   ├── mod.rs
-│   │   ├── session.rs       # Gestión de SessionId en cookie
-│   │   └── analytics.rs     # Insertar visita en cada request
 │   └── models/
 │       ├── mod.rs
 │       ├── producto.rs      # Structs de producto
