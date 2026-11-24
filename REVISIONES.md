@@ -4,6 +4,15 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## ROADMAP: confianza en caja terminada (2026-11-24)
+
+Solo documentación. El paso 1 se hizo en el POS (`inventario_papeleria`, merge `baeca5d`): distintivo
+de confianza al agregar un cliente a la venta, "Ya está listo" en los pedidos y "no confiable" con
+motivo e historial en Editar cliente. xplaya no cambia: la vista `v_confianza_clientes` vive en el POS
+y la usará `CUENTAS.md` si se retoma.
+
+---
+
 ## CUENTAS.md: cuentas sin verificar, diseño pospuesto (2026-11-24)
 
 Solo documentación. Diseño para que cualquiera cree cuenta en la app sin teléfono (cliente con
