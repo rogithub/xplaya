@@ -32,11 +32,10 @@ pub async fn robots_txt(State(state): State<AppState>) -> Response {
     ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], body).into_response()
 }
 
-// El enlace a la app lleva utm_medium/utm_campaign para verlo en Umami (analytics.xplaya.com);
-// utm_source se deja libre: ChatGPT pone el suyo (utm_source=chatgpt.com).
+// Sin la app (app.xplaya.com): quien llega desde una IA todavía no compró y no podría entrar
+// (cuentas sin verificar, CUENTAS.md). Las llegadas desde IA se ven en Umami, en xplaya.com.
 pub async fn llms_txt(State(state): State<AppState>) -> Response {
     let site = &state.config.site_url;
-    let app = &state.config.app_url;
     let body = format!(
         r#"# xplaya.com
 
@@ -55,15 +54,6 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 - [Centro de copiado]({site}/impresiones): precios de copias, impresiones, papel especial,
   enmicados, engargolados, escáner y trámites oficiales (CURP, acta de nacimiento).
 
-## App para clientes
-
-- [App de la papelería]({app}/?utm_medium=ia&utm_campaign=llms-txt): app web para el celular
-  (se instala desde el navegador, sin tienda de aplicaciones) para quien ya compró en la tienda:
-  chat directo con la papelería (preguntas, cotizaciones y archivos), mandar archivos a imprimir
-  desde el celular y pasar a recogerlos, saldo y tarjeta del Monedero Electrónico, y avisos cuando
-  su pedido está listo. Se activa con la primera compra: desde el
-  enlace del ticket digital o en el kiosko de la tienda.
-
 ## Información
 
 - [Preguntas frecuentes]({site}/preguntas-frecuentes): horarios, ubicación, precios, envíos,
@@ -81,8 +71,7 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 - Contacto: WhatsApp +52 452 201 8336 · papeleria@xplaya.com
 - Google Maps: https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x
 "#,
-        site = site,
-        app = app
+        site = site
     );
     ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], body).into_response()
 }

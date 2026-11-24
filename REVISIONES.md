@@ -4,6 +4,17 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## llms.txt: sin la app (2026-11-24)
+
+- `src/routes/pages.rs` (`llms_txt`): se quita la sección "App para clientes". Quien llega desde
+  una IA todavía no compró y en la app solo vería "pídelo en caja"; mejor que la IA lo mande a
+  xplaya.com (catálogo, servicios, WhatsApp, ubicación).
+- Medir no la necesita: Umami ya ve en xplaya.com las llegadas desde chatgpt.com, perplexity.ai…
+- `ROADMAP.md` y `CUENTAS.md` al día. Si se retoman las cuentas sin verificar, ahí sí entra la app
+  en `llms.txt`.
+
+---
+
 ## llms.txt: la app para clientes, medida en Umami (2026-11-24)
 
 - `src/routes/pages.rs` (`llms_txt`): sección "App para clientes" con el enlace

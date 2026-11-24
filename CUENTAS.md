@@ -3,7 +3,7 @@
 **POSPUESTO (24 nov 2026).** Diseño acordado, sin código ni cambios de BD. La app se lanzó esa semana
 con un usuario; primero se mide cuánta gente llega desde las IA (ChatGPT ya nos manda clientes).
 
-**Retomarlo cuando** las visitas desde IA (Umami en `analytics.xplaya.com`: fuentes y `utm_campaign=llms-txt`) lleguen a un número que valga la
+**Retomarlo cuando** las visitas desde IA a xplaya.com (Umami en `analytics.xplaya.com`: fuentes chatgpt.com, perplexity.ai…) lleguen a un número que valga la
 pena, o cuando alguien sin cuenta pida imprimir o escribirnos a distancia.
 
 ## Idea
