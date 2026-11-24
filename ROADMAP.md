@@ -269,7 +269,9 @@ en NATS y usar un topic `papeleria-*` (así le llega a `dayana` y a `ro` sin toc
   listo"; separa encargos hechos de cotizaciones), vista `v_confianza_clientes` y distintivo de color
   al agregar un cliente en Ventas/Nuevo y Ventas/Touch. La marca pide motivo y queda en
   `ClientesConfianzaHistorial`. Reemplaza la marca a mano en WhatsApp.
-- ⬜ **Paso 2 — Medir visitas desde IA**: la app en `llms.txt` (`?desde=ia`) y `utm_source` en `Visitas`.
+- ✅ **Paso 2 — Medir visitas desde IA** (24 nov 2026): la app en `llms.txt` con
+  `?utm_medium=ia&utm_campaign=llms-txt`. Se mide en Umami (`analytics.xplaya.com`, ya en los dos
+  sitios): fuentes (chatgpt.com, perplexity.ai…) y el reporte UTM. Sin tabla nueva.
 - ⏸ **Cuentas sin verificar** (`CUENTAS.md`): pospuesto hasta tener datos del paso 2.
 
 ### Pendiente sin fecha
