@@ -6,7 +6,8 @@
 // 2. Mostrar los avisos (Web Push) aunque la app esté cerrada, y contarle al servidor
 //    cuándo llegaron y cuándo los tocó el cliente (routes/notificaciones.rs).
 //
-//  - Páginas: red primero; si no hay red, la última copia guardada.
+//  - Páginas: red primero; si no hay red, o el servidor no contesta (Cloudflare responde por
+//    él con su página de error), la última copia guardada o la página "sin conexión".
 //  - /static, Alpine y las fuentes: caché primero (no cambian sin cambiar de URL).
 //
 // Si cambias este archivo de forma que la caché vieja ya no sirva, sube VERSION.
@@ -23,7 +24,17 @@ const CACHE_PRIMERO = [
     'https://fonts.gstatic.com',
 ];
 
-self.addEventListener('install', () => self.skipWaiting());
+// El logo de la página "sin conexión": se guarda al instalar para que esté aunque el servidor no conteste.
+const LOGO = '/static/img/logo/v3/papeleria-insignia.svg';
+
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(VERSION)
+            .then((cache) => cache.add(LOGO))
+            .catch(() => {})          // sin el logo la página sigue sirviendo
+            .then(() => self.skipWaiting())
+    );
+});
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
@@ -54,20 +65,70 @@ self.addEventListener('fetch', (event) => {
 
 async function redPrimero(req) {
     const cache = await caches.open(VERSION);
+    let resp;
     try {
-        const resp = await fetch(req);
-        if (resp.ok) cache.put(req, resp.clone());
-        return resp;
+        resp = await fetch(req);
     } catch {
-        const guardada = await cache.match(req);
-        if (guardada) return guardada;
-        return new Response(
-            '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width">' +
-            '<body style="font-family:system-ui;padding:2rem;text-align:center">' +
-            '<p>Sin conexión. Abre la app cuando tengas internet.</p></body>',
-            { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        return guardadaOSinConexion(cache, req);
     }
+    // Si el servidor está caído (sin luz en la papelería), Cloudflare contesta por él con su
+    // página de error: 502–504 o sus propios 520–530. Para el cliente es lo mismo que no tener red.
+    if (servidorCaido(resp.status)) return guardadaOSinConexion(cache, req);
+    if (resp.ok) cache.put(req, resp.clone());
+    return resp;
 }
+
+function servidorCaido(status) {
+    return (status >= 502 && status <= 504) || (status >= 520 && status <= 530);
+}
+
+async function guardadaOSinConexion(cache, req) {
+    const guardada = await cache.match(req);
+    if (guardada) return guardada;
+    return new Response(SIN_CONEXION, {
+        status: 503,
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
+}
+
+// No sabemos si falla el internet del cliente o el de la papelería: el texto sirve para los dos.
+// Se recarga sola cada 30 s, así el cliente no tiene que hacer nada cuando vuelva.
+const SIN_CONEXION = `<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#EEF2F1">
+<title>Papelería xplaya · Sin conexión</title>
+<style>
+  :root { --bg:#EEF2F1; --surface:#FFFFFF; --ink:#18211F; --muted:#56635F; --accent:#1F7A76; --on-accent:#FFFFFF; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141110; --surface:#1F1917; --ink:#F2ECE7; --muted:#A99F98; --accent:#5CC3BE; --on-accent:#141110; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100dvh; display:grid; place-items:center; padding:1.5rem;
+         background:var(--bg); color:var(--ink); font-family:system-ui, sans-serif; text-align:center; }
+  main { max-width:22rem; background:var(--surface); border-radius:1.25rem; padding:2rem 1.5rem; }
+  img { width:96px; height:96px; }
+  h1 { font-size:1.35rem; margin:1rem 0 .5rem; }
+  p { color:var(--muted); line-height:1.5; margin:.5rem 0; }
+  button { margin-top:1.25rem; font:inherit; font-weight:600; color:var(--on-accent); background:var(--accent);
+           border:0; border-radius:999px; padding:.75rem 1.75rem; cursor:pointer; }
+  small { display:block; margin-top:1rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <img src="${LOGO}" alt="Papelería xplaya" onerror="this.remove()">
+  <h1>No pudimos conectar</h1>
+  <p>Puede ser tu internet o el de la papelería (a veces se va la luz). Tu saldo está seguro.</p>
+  <p>En cuanto vuelva la conexión, la app abre sola.</p>
+  <button onclick="location.reload()">Intentar de nuevo</button>
+  <small>Lo volvemos a intentar cada 30 segundos.</small>
+</main>
+<script>setTimeout(() => location.reload(), 30000);</script>
+</body>
+</html>`;
 
 async function cachePrimero(req) {
     const cache = await caches.open(VERSION);

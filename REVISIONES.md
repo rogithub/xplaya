@@ -4,6 +4,20 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: página propia cuando el servidor está caído (2026-11-25)
+
+- `static/app/sw.js` (`redPrimero`): con el k3s caído (corte de luz) Cloudflare contesta por el
+  servidor con su página de error, y el service worker la dejaba pasar porque el `fetch` no falla.
+  Ahora 502–504 y 520–530 cuentan como "sin red": se muestra la última copia guardada (monedero y
+  QR) o, si no hay, la página `SIN_CONEXION`: logo, "No pudimos conectar", botón para reintentar y
+  recarga sola cada 30 s. Colores de `app.css`, en claro y oscuro.
+- El logo (`LOGO`) se guarda al instalar el service worker, para que salga sin servidor.
+- Solo cubre a quien ya abrió la app con el `sw.js` nuevo. Quien llega por primera vez, o a
+  xplaya.com, sigue viendo la página de Cloudflare: eso se resuelve en Cloudflare (Custom Error
+  Pages o un Worker), pendiente.
+
+---
+
 ## llms.txt: sin la app (2026-11-24)
 
 - `src/routes/pages.rs` (`llms_txt`): se quita la sección "App para clientes". Quien llega desde
