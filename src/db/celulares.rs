@@ -125,6 +125,28 @@ pub async fn registrar_uso(
     Ok(())
 }
 
+/// La app se abrió desde el ícono (`POST /celular/uso`): la primera vez queda en
+/// `FechaInstalada`, siempre en `FechaUltimaComoApp`. `sistema` lo manda el celular
+/// ("Android 15"); si no lo supo, se queda el que había.
+pub async fn registrar_como_app(
+    pool: &PgPool,
+    celular_id: Uuid,
+    sistema: Option<&str>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE clientecelulares
+            SET fechainstalada = COALESCE(fechainstalada, NOW()),
+                fechaultimacomoapp = NOW(),
+                sistema = COALESCE($2, sistema)
+          WHERE id = $1",
+    )
+    .bind(celular_id)
+    .bind(sistema)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 // ── Sesiones ────────────────────────────────────────────────────────────────
 
 /// Crea una sesión y devuelve el token para la cookie. En la BD solo queda su hash:
@@ -199,7 +221,8 @@ pub async fn guardar_push(
     sqlx::query(
         "UPDATE clientecelulares
             SET pushendpoint = $2, pushp256dh = $3, pushauth = $4,
-                fechapush = CASE WHEN pushendpoint = $2 THEN fechapush ELSE NOW() END
+                fechapush = CASE WHEN pushendpoint = $2 THEN fechapush ELSE NOW() END,
+                fechapushquitado = NULL
           WHERE id = $1",
     )
     .bind(celular_id)

@@ -22,6 +22,44 @@ const navegadorAndroid = () => (/Firefox\//.test(navigator.userAgent) ? 'firefox
 // Abierta desde el ícono: su propia ventana, sin barra del navegador.
 const abiertaComoApp = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
+// ── Uso como app: si se abrió desde el ícono, se le dice al servidor (FechaInstalada,
+// FechaUltimaComoApp y Sistema en ClienteCelulares) a lo más una vez al día. Sin sesión
+// contesta 401 y se vuelve a intentar la próxima vez que se abra. ──
+async function sistemaDelCelular() {
+    const ua = navigator.userAgent;
+    // Chrome ya dice "Android 10" a todos en el user agent; la versión real viene aquí.
+    if (navigator.userAgentData?.getHighEntropyValues) {
+        try {
+            const d = await navigator.userAgentData.getHighEntropyValues(['platformVersion']);
+            if (d.platform === 'Android' && d.platformVersion) {
+                const [mayor, menor] = d.platformVersion.split('.');
+                return `Android ${mayor}${menor && menor !== '0' ? '.' + menor : ''}`;
+            }
+        } catch { /* sigue con el user agent */ }
+    }
+    const android = ua.match(/Android (\d+(?:\.\d+)?)/);
+    if (android) return `Android ${android[1]}`;
+    // iPhone: la app instalada no trae "Version/"; desde iOS 26 el user agent dice 18.6.
+    const ios = ua.match(/OS (\d+)_(\d+)/);
+    if (ios && esIos()) return `iOS ${ios[1]}${ios[2] !== '0' ? '.' + ios[2] : ''}`;
+    return null;
+}
+
+async function avisarUsoComoApp() {
+    if (!abiertaComoApp()) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    try { if (localStorage.getItem('xp_uso_app') === hoy) return; } catch { /* sin localStorage: se manda */ }
+    try {
+        const r = await fetch('/celular/uso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sistema: await sistemaDelCelular() }),
+        });
+        if (r.ok) localStorage.setItem('xp_uso_app', hoy);
+    } catch { /* sin red: la próxima vez */ }
+}
+window.addEventListener('load', avisarUsoComoApp);
+
 // Chrome de Android: ¿ya está instalada? (manifest con related_applications)
 async function yaInstalada() {
     if (!navigator.getInstalledRelatedApps) return false;

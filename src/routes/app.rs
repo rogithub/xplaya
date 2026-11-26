@@ -119,6 +119,7 @@ pub fn router() -> Router<AppState> {
         .route("/google/alta", post(google::alta))
         .route("/google/entrar", get(google::entrar))
         .route("/google/regreso", get(google::regreso))
+        .route("/celular/uso", post(uso_como_app))
         .route("/notificaciones/suscripcion", post(notificaciones::suscribir))
         .route("/notificaciones/{id}/recibida", post(notificaciones::recibida))
         .route("/notificaciones/{id}/abierta", post(notificaciones::abierta))
@@ -489,6 +490,43 @@ pub async fn entrar_fin(State(state): State<AppState>, Json(body): Json<EntrarFi
 // ── /robots.txt ─────────────────────────────────────────────────────────────
 
 /// La app solo tiene datos personales: nada que indexar.
+#[derive(Deserialize)]
+struct UsoComoApp {
+    sistema: Option<String>,
+}
+
+/// POST /celular/uso — la app se abrió desde el ícono (`display-mode: standalone`). La manda
+/// `app.js` a lo más una vez al día; sin sesión no hay celular que marcar. Siempre 204 con
+/// sesión: no hay nada que decirle al celular.
+async fn uso_como_app(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<UsoComoApp>,
+) -> StatusCode {
+    let Some(token) = token_sesion(&headers) else { return StatusCode::UNAUTHORIZED };
+    let celular = match db::celulares::celular_de_sesion(&state.pool, token).await {
+        Ok(Some(id)) => id,
+        Ok(None) => return StatusCode::UNAUTHORIZED,
+        Err(e) => {
+            tracing::error!("celular_de_sesion: {e}");
+            return StatusCode::INTERNAL_SERVER_ERROR;
+        }
+    };
+    let sistema = body.sistema.as_deref().filter(|s| sistema_valido(s));
+    match db::celulares::registrar_como_app(&state.pool, celular, sistema).await {
+        Ok(()) => StatusCode::NO_CONTENT,
+        Err(e) => {
+            tracing::error!("registrar_como_app: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+/// "Android 15", "iOS 18.1": corto y sin nada raro, porque lo escribe el celular.
+fn sistema_valido(s: &str) -> bool {
+    !s.is_empty() && s.len() <= 40 && s.chars().all(|c| c.is_ascii_alphanumeric() || c == ' ' || c == '.')
+}
+
 async fn robots_txt() -> Response {
     (
         [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],

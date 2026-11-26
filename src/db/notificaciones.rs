@@ -83,12 +83,14 @@ pub async fn marcar(
 }
 
 /// El servicio de push dijo que la suscripción ya no existe (desinstaló la app o quitó el
-/// permiso): se borra para no volver a intentarlo. La app la rehace si vuelve a aceptar.
+/// permiso): se borra para no volver a intentarlo, y `FechaPushQuitado` dice cuándo (así se
+/// distingue "nunca aceptó" de "lo quitó"). La app la rehace si vuelve a aceptar.
 pub async fn quitar_push(tx: &mut PgConnection, celular_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE clientecelulares
-            SET pushendpoint = NULL, pushp256dh = NULL, pushauth = NULL, fechapush = NULL
-          WHERE id = $1",
+            SET pushendpoint = NULL, pushp256dh = NULL, pushauth = NULL, fechapush = NULL,
+                fechapushquitado = NOW()
+          WHERE id = $1 AND pushendpoint IS NOT NULL",
     )
     .bind(celular_id)
     .execute(&mut *tx)

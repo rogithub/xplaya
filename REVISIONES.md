@@ -4,6 +4,23 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## App: cuándo se abre como app, el sistema y los avisos quitados (2026-11-26)
+
+Columnas nuevas en `ClienteCelulares` (las define el POS, `dbchanges/updates.sql`).
+
+- `static/app/app.js` (`avisarUsoComoApp`): si la app se abrió desde el ícono
+  (`display-mode: standalone`), manda `POST /celular/uso` a lo más una vez al día (`xp_uso_app` en
+  localStorage; sin sesión o sin red, otra vez la próxima). `sistemaDelCelular` saca "Android 15"
+  de `userAgentData` (Chrome ya dice "Android 10" en el user agent) o "iOS 18.1" del user agent
+  (desde iOS 26 dice 18.6).
+- `src/routes/app.rs` (`uso_como_app`) y `src/db/celulares.rs` (`registrar_como_app`):
+  `FechaInstalada` la primera vez, `FechaUltimaComoApp` siempre, `Sistema` si viene bien formado.
+- `src/db/notificaciones.rs` (`quitar_push`): guarda `FechaPushQuitado` cuando el push dice que la
+  suscripción ya no existe; `guardar_push` la borra si vuelve a aceptar.
+- Que el cliente toque un aviso ya se guardaba: `Notificaciones.FechaAbierto`.
+
+---
+
 ## Sitio y llms.txt: lo que preguntan quienes vienen de fuera (2026-11-26)
 
 Una clienta de España llegó por una IA un domingo y compró impresiones: el canal ya trae gente.
