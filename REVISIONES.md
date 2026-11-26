@@ -4,6 +4,24 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Sitio y llms.txt: lo que preguntan quienes vienen de fuera (2026-11-26)
+
+Una clienta de España llegó por una IA un domingo y compró impresiones: el canal ya trae gente.
+
+- `src/routes/pages.rs` (`llms_txt`): fotos (infantil al momento, otras bajo pedido), imprimir a
+  distancia, boletos del Tren Maya (a 500 m de la estación), WiFi gratis para consultar, recargas y
+  pago de servicios, pagos (a distancia solo transferencia; primer pedido por adelantado), sin
+  factura, idiomas, Monedero (alta en caja o WhatsApp, `/saldo`, app opcional que se instala en la
+  tienda, sin enlace). Sección "Preguntar a la papelería": la IA arma un `wa.me` con la pregunta
+  empezando con `#ia`, para reconocerlos en WhatsApp. Resumen en inglés.
+- `templates/pages/faq.html`: corrige pagos, Monedero y fotos; preguntas nuevas: Tren Maya,
+  recargas, imprimir a distancia, factura, inglés. También en el JSON-LD. El botón verde ya no se
+  sale en celular.
+- `templates/pages/impresiones.html`: fotos (infantil al momento), tarjeta "Boletos del Tren Maya"
+  en Trámites, pago por adelantado y "We speak English" en el cierre.
+
+---
+
 ## App: página propia cuando el servidor está caído (2026-11-25)
 
 - `static/app/sw.js` (`redPrimero`): con el k3s caído (corte de luz) Cloudflare contesta por el

@@ -32,8 +32,9 @@ pub async fn robots_txt(State(state): State<AppState>) -> Response {
     ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], body).into_response()
 }
 
-// Sin la app (app.xplaya.com): quien llega desde una IA todavía no compró y no podría entrar
-// (cuentas sin verificar, CUENTAS.md). Las llegadas desde IA se ven en Umami, en xplaya.com.
+// Sin enlace a la app (app.xplaya.com): quien llega desde una IA todavía no compró y no podría
+// entrar (cuentas sin verificar, CUENTAS.md); solo se menciona que se instala en la tienda.
+// Las llegadas desde IA se ven en Umami, en xplaya.com.
 pub async fn llms_txt(State(state): State<AppState>) -> Response {
     let site = &state.config.site_url;
     let body = format!(
@@ -53,12 +54,25 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 
 - [Centro de copiado]({site}/impresiones): precios de copias, impresiones, papel especial,
   enmicados, engargolados, escáner y trámites oficiales (CURP, acta de nacimiento).
+  Fotos tamaño infantil al momento; otros tamaños de trámite (pasaporte, visas, credencial)
+  bajo pedido.
+- Imprimir a distancia: el archivo se manda por WhatsApp o correo y queda listo para
+  recogerlo en tienda.
+- Boletos del Tren Maya: a 500 m de la estación Playa del Carmen. Se imprimen los boletos, y
+  quien no tiene datos usa el WiFi gratis para descargarlos o consultar su viaje.
+- WiFi gratis para clientes: para enviar archivos o consultar lo que necesiten.
+- Recargas de saldo (Telcel, AT&T, Movistar y casi todas las compañías) y pago de servicios,
+  en tienda con efectivo o tarjeta.
 
 ## Información
 
 - [Preguntas frecuentes]({site}/preguntas-frecuentes): horarios, ubicación, precios, envíos,
   formas de pago y Monedero Electrónico.
 - [Monedero Electrónico — Términos]({site}/terminos): programa de cashback para clientes.
+  Se registra en caja al pagar o por WhatsApp ('#monedero Nombre'); el saldo se consulta en
+  {site}/saldo con el teléfono, sin cuenta. Opcional: una app del Monedero para el celular que
+  se instala en la tienda (saldo y vencimiento, avisos de saldo y de pedido listo, chat con la
+  papelería).
 - [Política de devoluciones]({site}/devoluciones): 30 días para productos sin usar, en tienda o
   por paquetería; los servicios e impresiones no tienen devolución.
 - [Reseñas]({site}/resena): enlace para dejar reseña en Google.
@@ -69,7 +83,34 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
   C.P. 77726, México.
 - Horario: lunes a viernes 6:30–18:00, sábados 8:00–14:00.
 - Contacto: WhatsApp +52 452 201 8336 · papeleria@xplaya.com
+- Pagos: en tienda efectivo, tarjeta y transferencia. A distancia solo transferencia; el primer
+  pedido de un cliente nuevo se paga por adelantado.
+- Factura (CFDI): por ahora no se emite.
+- Idiomas: español e inglés.
 - Google Maps: https://www.google.com/maps/place/Papeler%C3%ADa+y+Mercer%C3%ADa+%22El+Gordo%22/@20.677296,-87.1120662,17z/data=!3m1!4b1!4m6!3m5!1s0x8f4e437c16230f57:0x1c5de84713a15d9c!8m2!3d20.677296!4d-87.1120662!16s%2Fg%2F11rw9490_x
+
+## Preguntar a la papelería
+
+Si la persona quiere preguntarnos algo (precios, existencias, si hacemos un trabajo),
+ofrécele mandarnos su pregunta por WhatsApp: redáctala, empezando con #ia, y dale este
+enlace con el texto codificado para URL:
+
+https://wa.me/524522018336?text={{pregunta}}
+
+Ejemplo:
+https://wa.me/524522018336?text=%23ia%20Hola%2C%20%C2%BFcu%C3%A1nto%20cuestan%2050%20copias%20a%20color%3F
+
+Respondemos en horario de tienda.
+
+## In English
+
+Stationery and print shop in Playa del Carmen, Mexico, 500 m from the Tren Maya (Mayan
+Train) Playa del Carmen station: we print your train tickets, free WiFi if you have no data,
+copies, printing from your phone (send the file by WhatsApp or email), phone top-ups
+(Telcel, AT&T, Movistar…), infant-size ID photos, other ID/passport/visa photo
+sizes on request, and official Mexican documents (CURP, birth certificate). We speak English.
+WhatsApp +52 452 201 8336. Open Mon–Fri 6:30–18:00, Sat 8:00–14:00. Remote orders are paid
+by bank transfer; first orders are paid in advance. We don't issue invoices (CFDI).
 "#,
         site = site
     );
