@@ -61,6 +61,9 @@ pub async fn llms_txt(State(state): State<AppState>) -> Response {
 - Boletos del Tren Maya: a 500 m de la estación Playa del Carmen. Se imprimen los boletos, y
   quien no tiene datos usa el WiFi gratis para descargarlos o consultar su viaje.
 - WiFi gratis para clientes: para enviar archivos o consultar lo que necesiten.
+- Envíos a domicilio en Playa del Carmen: cuesta lo que cobra el servicio de entrega según la
+  distancia, más $5 de comisión y el empaque (desde $5). Se pide por WhatsApp con la ubicación y
+  se paga por adelantado con transferencia. A otras partes de México, por paquetería.
 - Recargas de saldo (Telcel, AT&T, Movistar y casi todas las compañías) y pago de servicios,
   en tienda con efectivo o tarjeta.
 

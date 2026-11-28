@@ -4,6 +4,19 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Preguntas frecuentes y llms.txt: envíos a domicilio en Playa (2026-11-28)
+
+Antes de construir algo en la app, se mide si hay demanda de envíos (`ENVIOS.md`).
+
+- `templates/pages/faq.html`: la respuesta "¿Hacen envíos a domicilio…?" (visible y JSON-LD)
+  ahora explica el envío en Playa del Carmen. Cuesta lo que cobra el servicio de entrega, más $5
+  de comisión y el empaque (desde $5). Se pide por WhatsApp con la ubicación y se paga por
+  adelantado con transferencia. Al resto de México sigue siendo por paquetería. No nombra al
+  proveedor.
+- `src/routes/pages.rs` (`llms_txt`): el mismo dato en "Servicios".
+
+---
+
 ## Envíos a domicilio: plan de la parte de xplaya (2026-11-28)
 
 Solo documentación; todavía no hay código.
