@@ -276,6 +276,21 @@ en NATS y usar un topic `papeleria-*` (así le llega a `dayana` y a `ro` sin toc
   tabla nueva. La app **no** va en `llms.txt`: sin cuenta, quien llega desde una IA no puede entrar.
 - ⏸ **Cuentas sin verificar** (`CUENTAS.md`): pospuesto hasta tener datos del paso 2.
 
+### Envíos a domicilio (plan acordado 2026-11-28)
+
+Diseño, reglas y decisiones en `ENVIOS.md`. Envíos locales con un proveedor de viajes (hoy Didi)
+pedido por la tienda; `api_paqueteria` en pausa.
+
+- ✅ **Etapa 1 en el POS** (repo `inventario_papeleria`, 27 nov 2026): tabla `Envios`, diálogo 🚚
+  en Pedidos/Mes, tres renglones (Paquetería, Comisión de envío, Empaque) y estados por fechas.
+- ✅ **La cotización ya muestra los renglones sin el proveedor**: no requirió cambios.
+- ⬜ **Etapa A — el cliente manda su ubicación** desde `/cotizacion/{uid}`. xplaya escribe en
+  `Envios` y avisa por el chat y por `avisos.pedidos`. En el POS: que el diálogo 🚚 abierto no
+  pise lo del cliente (ver los riesgos en `ENVIOS.md`). Entrar en modo plan antes de empezar.
+- ⬜ **Etapa B — avance del envío** en la cotización, y avisos push `envio_cotizado` y
+  `envio_salio` (los publica el POS).
+- ⬜ **Etapa C — enlace de seguimiento** del proveedor (columna nueva en `Envios`, en el POS).
+
 ### Pendiente sin fecha
 
 - ✖ ~~**ANALYTICS** — middleware que inserta en `Visitas`~~: descartado el 24 nov 2026, lo cubre Umami (`analytics.xplaya.com`).

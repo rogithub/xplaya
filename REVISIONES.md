@@ -4,6 +4,22 @@ Bitácora de cambios paso a paso. Las entradas más recientes van arriba.
 
 ---
 
+## Envíos a domicilio: plan de la parte de xplaya (2026-11-28)
+
+Solo documentación; todavía no hay código.
+
+- `ENVIOS.md` (nuevo): reglas del negocio, lo que ya hace el POS (tabla `Envios`, estados por
+  fechas) y las etapas A (el cliente manda su ubicación desde la cotización), B (avance y avisos
+  push) y C (seguimiento). Tiene las cuatro decisiones tomadas y los riesgos que se encontraron en
+  el código del POS. El principal: el diálogo 🚚 abierto puede pisar las referencias que mandó el
+  cliente.
+- `ROADMAP.md`: sección "Envíos a domicilio" con las etapas.
+- Fuera de este repo: se actualizó la decisión del POS
+  (`docs/decisiones/2026-11-27-envios-a-domicilio.md`) y `api_paqueteria/PLAN_DE_DESARROLLO.md`
+  quedó marcado en pausa.
+
+---
+
 ## App: cuándo se abre como app, el sistema y los avisos quitados (2026-11-26)
 
 Columnas nuevas en `ClienteCelulares` (las define el POS, `dbchanges/updates.sql`).
